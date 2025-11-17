@@ -1,0 +1,39 @@
+/* This file has been moved to animations.css. You can delete this file. */
+.fade-enter {
+  opacity: 0;
+  /* transform: translateY(16px); */
+}
+.fade-enter-active {
+  opacity: 1;
+  transform: none;
+  transition: opacity 400ms, transform 400ms;
+}
+.fade-exit {
+  opacity: 1;
+  transform: none;
+}
+.fade-exit-active {
+  opacity: 0;
+  /* transform: translateY(-16px); */
+  transition: opacity 400ms, transform 400ms;
+}
+
+/* Card diagonal fade-in/out */
+.card-fade-enter {
+  opacity: 0;
+  transform: translateY(24px) translateX(24px) scale(0.98);
+}
+.card-fade-enter-active {
+  opacity: 1;
+  transform: none;
+  transition: opacity 400ms, transform 400ms;
+}
+.card-fade-exit {
+  opacity: 1;
+  transform: none;
+}
+.card-fade-exit-active {
+  opacity: 0;
+  transform: translateY(-24px) translateX(-24px) scale(0.98);
+  transition: opacity 400ms, transform 400ms;
+}

@@ -1,0 +1,12 @@
+{
+  "watch": ["server", "types"],
+  "ext": "ts,js,json",
+  "ignore": ["dist", "node_modules", "client"],
+  "exec": "node --inspect=9229 --enable-source-maps --require ts-node/register --require source-map-support/register server/server.ts",
+  "env": {
+    "NODE_ENV": "development",
+    "TS_NODE_PROJECT": "./tsconfig.json",
+    "TS_NODE_COMPILER_OPTIONS": "{\"sourceMap\":true,\"inlineSourceMap\":false,\"inlineSources\":true}"
+  },
+  "delay": 1000
+}

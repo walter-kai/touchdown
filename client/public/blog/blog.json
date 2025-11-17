@@ -1,0 +1,43 @@
+[
+    {
+    "version": "Incubator Day 1",
+    "date": "2025-07-17",
+    "title": "Atrium Academy Uniswap Hook Incubator Begins",
+    "description": "Today marks the first day of the Atrium Academy Uniswap Hook Incubator! We're diving deep into the Uniswap V4 hook architecture, collaborating with top DeFi builders to push the boundaries of custom liquidity logic and dynamic fees. Follow our journey as we innovate on permissionless infrastructure and shape the future of Dexter City.",
+    "type": "roadmap",
+    "status": "released",
+    "link": "https://atrium.academy/uniswap",
+    "linkText": "See the Incubator Details"
+  },
+  {
+    "version": "Official",
+    "date": "2025-06-07",
+    "title": "Whitepaper Release",
+    "description": "Officially launched our comprehensive Whitepaper, outlining the vision, technology, and future of Dexter City. The paper goes deep into the architectural design of the ecosystem, including how various smart contract components interact, our governance model, economic incentives, and long-term scalability plans. It’s a must-read for investors seeking a technical and strategic understanding of our project.",
+    "type": "major",
+    "status": "released",
+    "link": "https://waltyao.notion.site/Dexter-City-Whitepaper-20ab9d3af59081718adaf1247361135f",
+    "linkText": "Read the Whitepaper",
+    "image": "/x/blog/whitepaper.png"
+  },
+  {
+    "version": "HR",
+    "date": "2025-05-01",
+    "title": "Smart Contract Developer Onboarding",
+    "description": "Welcomed a seasoned smart contract developer with extensive experience across ERC-20 blockchains including Ethereum, Solana, and Skale. We previously worked together at TENAMINT (tenamint.com), where I managed his integration of smart contracts into our live application. His deep familiarity with production-grade blockchain systems adds immediate strength to our engineering team.",
+    "type": "team",
+    "status": "released",
+    "link": null
+  },
+  {
+    "version": "Upcoming",
+    "date": "2025-07-01",
+    "title": "Uniswap v4 Hook Incubator Participation",
+    "description": "Excited to announce our acceptance into the Uniswap v4 Hook Incubator cohort, commencing in July. As part of this program hosted by Atrium Academy, we’ll be diving deep into building powerful new functionality on top of Uniswap v4's hooks framework. This will help us innovate around custom liquidity logic, dynamic fees, and permissionless DeFi infrastructure as we shape Dexter City’s future.",
+    "type": "roadmap",
+    "status": "beta",
+    "link": "https://atrium.academy/uniswap",
+    "linkText": "Learn More"
+  }
+  
+]
