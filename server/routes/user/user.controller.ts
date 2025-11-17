@@ -3,7 +3,7 @@ import userService from "./user.service";
 import ApiError from "../../utils/api-error";
 import catchAsync from "../../utils/catch-async";
 import User, { UserArgs } from "../../../types/User";
-// import { db } from "../firebase/firebase.config";
+import { db } from "../firebase/firebase.config";
 import { AuthenticatedRequest } from "../../middleware/auth";
 
 const setUserChatId = catchAsync(async (req: Request, res: Response): Promise<Response> => {
@@ -25,12 +25,12 @@ const updateUser = catchAsync(async (req: AuthenticatedRequest, res: Response): 
 
   try {
     // Get current user document
-    // const userDocRef = db.collection('users').doc(walletAddress);
-    // const userDoc = await userDocRef.get();
+    const userDocRef = db.collection('users').doc(walletAddress);
+    const userDoc = await userDocRef.get();
     
-    // if (!userDoc.exists) {
-    //   throw new ApiError(404, "User not found");
-    // }
+    if (!userDoc.exists) {
+      throw new ApiError(404, "User not found");
+    }
 
     // Prepare update data (only include defined fields)
     const updateData: any = {};
@@ -41,25 +41,25 @@ const updateUser = catchAsync(async (req: AuthenticatedRequest, res: Response): 
     if (photoUrl !== undefined) updateData.photoUrl = photoUrl;
 
     // Update the document
-    // await userDocRef.update(updateData);
+    await userDocRef.update(updateData);
 
     // Get updated document
-    // const updatedDoc = await userDocRef.get();
-    // const updatedData = updatedDoc.data();
+    const updatedDoc = await userDocRef.get();
+    const updatedData = updatedDoc.data();
 
     // Format response
-    // const user = {
-    //   walletAddress,
-    //   username: updatedData?.username || '',
-    //   email: updatedData?.email || '',
-    //   createdAt: updatedData?.createdAt?.toDate() || new Date(),
-    //   lastLogin: updatedData?.lastLogin?.toDate() || new Date(),
-    //   referralId: updatedData?.referralId || null,
-    //   telegramId: updatedData?.telegramId || null,
-    //   photoUrl: updatedData?.photoUrl || null,
-    // };
+    const user = {
+      walletAddress,
+      username: updatedData?.username || '',
+      email: updatedData?.email || '',
+      createdAt: updatedData?.createdAt?.toDate() || new Date(),
+      lastLogin: updatedData?.lastLogin?.toDate() || new Date(),
+      referralId: updatedData?.referralId || null,
+      telegramId: updatedData?.telegramId || null,
+      photoUrl: updatedData?.photoUrl || null,
+    };
 
-    return res.json({ message: "User updated successfully",  });
+    return res.json({ message: "User updated successfully", user });
   } catch (error) {
     console.error('Error updating user:', error);
     throw new ApiError(500, "Failed to update user profile");
@@ -109,11 +109,10 @@ const checkUsernameAvailability = catchAsync(async (req: Request, res: Response)
   if (!username || typeof username !== 'string') {
     throw new ApiError(400, "Username is required");
   }
-  // const usersRef = db.collection('users');
-  // const q = usersRef.where('username', '==', username);
-  // const snapshot = await q.get();
-  // const available = snapshot.empty;
-  const available = true;
+  const usersRef = db.collection('users');
+  const q = usersRef.where('username', '==', username);
+  const snapshot = await q.get();
+  const available = snapshot.empty;
   return res.json({ available });
 });
 
@@ -129,24 +128,24 @@ const getCurrentUserProfile = catchAsync(async (req: AuthenticatedRequest, res: 
   
   try {
     // Get user from Firestore using Admin SDK
-    // const userDoc = await db.collection('users').doc(walletAddress).get();
+    const userDoc = await db.collection('users').doc(walletAddress).get();
     
-    // if (!userDoc.exists) {
-    //   throw new ApiError(404, "User profile not found");
-    // }
+    if (!userDoc.exists) {
+      throw new ApiError(404, "User profile not found");
+    }
 
-    // const userData = userDoc.data();
+    const userData = userDoc.data();
     
     // Convert Firestore timestamps to dates
     const user = {
       walletAddress,
-      // username: userData?.username || '',
-      // email: userData?.email || '',
-      // createdAt: userData?.createdAt?.toDate() || new Date(),
-      // lastLogin: userData?.lastLogin?.toDate() || new Date(),
-      // referralId: userData?.referralId || null,
-      // telegramId: userData?.telegramId || null,
-      // photoUrl: userData?.photoUrl || null,
+      username: userData?.username || '',
+      email: userData?.email || '',
+      createdAt: userData?.createdAt?.toDate() || new Date(),
+      lastLogin: userData?.lastLogin?.toDate() || new Date(),
+      referralId: userData?.referralId || null,
+      telegramId: userData?.telegramId || null,
+      photoUrl: userData?.photoUrl || null,
     };
 
     return res.json({ user });

@@ -1,8 +1,8 @@
-import admin from "firebase-admin"; // Import admin SDK
+import admin from "firebase-admin";
 import User, { FireStoreUser, UserArgs} from "../../../types/User";
 
 import logger from "../../utils/logger";
-// import { db } from "../firebase/firebase.config";
+import { db } from "../firebase/firebase.config";
 import ApiError from "../../utils/api-error";
 
 // Initialize Firestore using Firebase Admin SDK
@@ -41,40 +41,40 @@ function convertTimestampToDate(timestamp: any): Date {
 async function updateUser(user: User, breadcrumb?: string): Promise<User> {
   const newBreadcrumb = `updateUser(${user.walletId}):${breadcrumb}`;
 
-  // const usersRef = db.collection('users');
+  const usersRef = db.collection('users');
 
   // Update data directly in the update call
   try {
-    // // Use walletId as document ID directly
-    // const userDocRef = usersRef.doc(user.walletId);
-    // const userDoc = await userDocRef.get();
+    // Use walletId as document ID directly
+    const userDocRef = usersRef.doc(user.walletId);
+    const userDoc = await userDocRef.get();
 
-    // if (!userDoc.exists) {
-    //   throw new ApiError(404, `User with walletId ${user.walletId} not found.`);
-    // }
+    if (!userDoc.exists) {
+      throw new ApiError(404, `User with walletId ${user.walletId} not found.`);
+    }
 
-    // // Convert Date objects to Firestore Timestamps before storing
-    // const updateData = {
-    //   ...user,
-    //   dateCreated: Timestamp.fromDate(user.dateCreated),
-    //   lastLoggedIn: Timestamp.fromDate(user.lastLoggedIn),
-    // };
+    // Convert Date objects to Firestore Timestamps before storing
+    const updateData = {
+      ...user,
+      dateCreated: Timestamp.fromDate(user.dateCreated),
+      lastLoggedIn: Timestamp.fromDate(user.lastLoggedIn),
+    };
 
-    // await userDocRef.update(updateData);
+    await userDocRef.update(updateData);
 
-    // logger.info(`Updated user with walletId ${user.walletId}.`);
+    logger.info(`Updated user with walletId ${user.walletId}.`);
 
-    // const updatedUserSnapshot = await userDocRef.get();
-    // const updatedUserData = updatedUserSnapshot.data() as FireStoreUser;
+    const updatedUserSnapshot = await userDocRef.get();
+    const updatedUserData = updatedUserSnapshot.data() as FireStoreUser;
 
-    // // Convert Firestore Timestamps to Date objects
-    // const dateCreated = convertTimestampToDate(updatedUserData.dateCreated);
-    // const lastLoggedIn = convertTimestampToDate(updatedUserData.lastLoggedIn);
+    // Convert Firestore Timestamps to Date objects
+    const dateCreated = convertTimestampToDate(updatedUserData.dateCreated);
+    const lastLoggedIn = convertTimestampToDate(updatedUserData.lastLoggedIn);
 
     return new User({
-      // ...updatedUserData,
-      // dateCreated,
-      // lastLoggedIn,
+      ...updatedUserData,
+      dateCreated,
+      lastLoggedIn,
     });
   } catch (error) {
     logger.error(`Error updating user: ${error}, breadcrumb: ${newBreadcrumb}`);
@@ -101,8 +101,8 @@ async function createUser(
 ): Promise<User> {
   const newBreadcrumb = `createUser(${args.walletId}):${breadcrumb}`;
   const timeNow = Timestamp.now();
-// 
-  // const usersRef = db.collection("users");
+
+  const usersRef = db.collection("users");
 
   logger.info(
     JSON.stringify({
@@ -112,25 +112,25 @@ async function createUser(
   );
 
   // Check if a user with the same walletId already exists
-  // const userDocRef = usersRef.doc(args.walletId);
-  // const userDoc = await userDocRef.get();
+  const userDocRef = usersRef.doc(args.walletId);
+  const userDoc = await userDocRef.get();
 
-  // if (userDoc.exists) {
-  //   // User exists, return existing user data
-  //   const existingUserData = userDoc.data() as FireStoreUser;
+  if (userDoc.exists) {
+    // User exists, return existing user data
+    const existingUserData = userDoc.data() as FireStoreUser;
 
-  //   logger.info(`User with walletId ${args.walletId} already exists.`);
+    logger.info(`User with walletId ${args.walletId} already exists.`);
 
-  //   // Convert Firestore Timestamps to Date objects
-  //   const existingDateCreated = convertTimestampToDate(existingUserData.dateCreated);
-  //   const existingLastLoggedIn = convertTimestampToDate(existingUserData.lastLoggedIn);
+    // Convert Firestore Timestamps to Date objects
+    const existingDateCreated = convertTimestampToDate(existingUserData.dateCreated);
+    const existingLastLoggedIn = convertTimestampToDate(existingUserData.lastLoggedIn);
 
-  //   return new User({
-  //     ...existingUserData,
-  //     dateCreated: existingDateCreated, // Keep the original creation date
-  //     lastLoggedIn: existingLastLoggedIn,
-  //   });
-  // }
+    return new User({
+      ...existingUserData,
+      dateCreated: existingDateCreated, // Keep the original creation date
+      lastLoggedIn: existingLastLoggedIn,
+    });
+  }
 
   // Set the `dateCreated` to the current timestamp for new users
   const userPayload: FireStoreUser = {
@@ -140,22 +140,22 @@ async function createUser(
   };
 
   // Create a new document with walletId as the document ID
-  // await userDocRef.set(userPayload);
+  await userDocRef.set(userPayload);
 
   logger.info(`Created new user with walletId as document ID: ${args.walletId}.`);
 
   // Retrieve the newly created user's data
-  // const newUserSnapshot = await userDocRef.get();
-  // const newUserData = newUserSnapshot.data() as FireStoreUser;
+  const newUserSnapshot = await userDocRef.get();
+  const newUserData = newUserSnapshot.data() as FireStoreUser;
 
-  // // Convert Firestore Timestamps to Date objects
-  // const newDateCreated = convertTimestampToDate(newUserData.dateCreated);
-  // const newLastLoggedIn = convertTimestampToDate(newUserData.lastLoggedIn);
+  // Convert Firestore Timestamps to Date objects
+  const newDateCreated = convertTimestampToDate(newUserData.dateCreated);
+  const newLastLoggedIn = convertTimestampToDate(newUserData.lastLoggedIn);
 
   return new User({
-    // ...newUserData,
-    // dateCreated: newDateCreated,
-    // lastLoggedIn: newLastLoggedIn,
+    ...newUserData,
+    dateCreated: newDateCreated,
+    lastLoggedIn: newLastLoggedIn,
   });
 }
 
@@ -170,28 +170,28 @@ const getUserByWalletId = async (
     throw new ApiError(400, `Invalid walletId provided. ${newBreadcrumb}`);
   }
 
-  // const usersCollection = db.collection("users");
+  const usersCollection = db.collection("users");
   // Use walletId as document ID directly for better performance
-  // const userDocRef = usersCollection.doc(walletId);
-  // const userDoc = await userDocRef.get();
+  const userDocRef = usersCollection.doc(walletId);
+  const userDoc = await userDocRef.get();
 
-  // logger.info(JSON.stringify({ breadcrumb: newBreadcrumb, docExists: userDoc.exists }));
+  logger.info(JSON.stringify({ breadcrumb: newBreadcrumb, docExists: userDoc.exists }));
 
-  // if (!userDoc.exists) {
-  //   logger.info(JSON.stringify({ breadcrumb: newBreadcrumb, message: "No user found." }));
-  //   return null;
-  // }
+  if (!userDoc.exists) {
+    logger.info(JSON.stringify({ breadcrumb: newBreadcrumb, message: "No user found." }));
+    return null;
+  }
 
-  // const queryData = userDoc.data() as FireStoreUser;
+  const queryData = userDoc.data() as FireStoreUser;
 
   // Convert Firestore Timestamps to Date objects
-  // const lastLoggedIn = convertTimestampToDate(queryData.lastLoggedIn);
-  // const dateCreated = convertTimestampToDate(queryData.dateCreated);
+  const lastLoggedIn = convertTimestampToDate(queryData.lastLoggedIn);
+  const dateCreated = convertTimestampToDate(queryData.dateCreated);
 
   const user = new User({
-    // ...queryData,
-    // dateCreated,
-    // lastLoggedIn,
+    ...queryData,
+    dateCreated,
+    lastLoggedIn,
   });
 
   logger.info(JSON.stringify({ breadcrumb: newBreadcrumb, user }));
@@ -280,43 +280,42 @@ const setUserChatId = async (
   const newBreadcrumb = `setUserChatId(${telegramId}):${breadcrumb}`;
   logger.info(JSON.stringify({ breadcrumb: newBreadcrumb }));
 
-  // const usersRef = db.collection('users');
-  // const q = usersRef.where("telegramId", "==", telegramId);
-  // const usersSnapshot = await q.get();
+  const usersRef = db.collection('users');
+  const q = usersRef.where("telegramId", "==", telegramId);
+  const usersSnapshot = await q.get();
 
-//   if (usersSnapshot.empty) {
-//     logger.warn(`User with telegramId ${telegramId} not found`);
-//     return;
-//   }
+  if (usersSnapshot.empty) {
+    logger.warn(`User with telegramId ${telegramId} not found`);
+    return;
+  }
 
-//   const userDocRef = usersSnapshot.docs[0].ref;
-//   await userDocRef.update({ chatId });
-//   logger.info(JSON.stringify({ breadcrumb: newBreadcrumb, chatId }));
+  const userDocRef = usersSnapshot.docs[0].ref;
+  await userDocRef.update({ chatId });
+  logger.info(JSON.stringify({ breadcrumb: newBreadcrumb, chatId }));
 };
 
 // Get all users
 const getAllUsers = async (breadcrumb?: string): Promise<ReadonlyArray<User>> => {
   const newBreadcrumb = `getAllUsers():${breadcrumb}`;
-  // const usersRef = db.collection('users');
-  // const snapshot = await usersRef.get();
+  const usersRef = db.collection('users');
+  const snapshot = await usersRef.get();
 
-  // logger.info(JSON.stringify({ breadcrumb: newBreadcrumb, snapshotSize: snapshot.size }));
+  logger.info(JSON.stringify({ breadcrumb: newBreadcrumb, snapshotSize: snapshot.size }));
 
-  // return snapshot.docs.map((el: { data: () => any; }) => {
-  //   const firestoreUser = el.data() as FireStoreUser;
+  return snapshot.docs.map((el: { data: () => any; }) => {
+    const firestoreUser = el.data() as FireStoreUser;
     
-  //   // Convert Firestore Timestamps to Date objects
-  //   const lastLoggedIn = convertTimestampToDate(firestoreUser.lastLoggedIn);
-  //   const dateCreated = convertTimestampToDate(firestoreUser.dateCreated);
+    // Convert Firestore Timestamps to Date objects
+    const lastLoggedIn = convertTimestampToDate(firestoreUser.lastLoggedIn);
+    const dateCreated = convertTimestampToDate(firestoreUser.dateCreated);
 
-  //   return new User({
-  //     ...firestoreUser,
-  //     // id: el.id,
-  //     dateCreated,
-  //     lastLoggedIn,
-  //   });
-  // });
-  return [];
+    return new User({
+      ...firestoreUser,
+      // id: el.id,
+      dateCreated,
+      lastLoggedIn,
+    });
+  });
 };
 
 // Get users with pagination support
@@ -341,7 +340,7 @@ const getUsers = async (
     paginationFunc = "startAfter",
   } = args;
 
-  // const usersRef = db.collection('users');
+  const usersRef = db.collection('users');
   let startsAfterArgs: unknown[] = offsetValues;
   if (offsetDocId) {
     startsAfterArgs.push(offsetDocId);
@@ -351,26 +350,25 @@ const getUsers = async (
   //   queryConstraints.push(paginationFunc === "startAfter" ? startAfter(...startsAfterArgs) : startAt(...startsAfterArgs));
   // }
 
-  // const q = usersRef.orderBy("someField").limit(limitNum); // Adjust this as necessary
-  // const snapshot = await usersRef.get();
+  const q = usersRef.orderBy("dateCreated", orderDirection).limit(limitNum);
+  const snapshot = await q.get();
 
-  // logger.info(JSON.stringify({ breadcrumb: newBreadcrumb, snapshotSize: snapshot.size }));
+  logger.info(JSON.stringify({ breadcrumb: newBreadcrumb, snapshotSize: snapshot.size }));
 
-  // return snapshot.docs.map((el: { data: () => any; }) => {
-  //   const firestoreUser = el.data() as FireStoreUser;
+  return snapshot.docs.map((el: { data: () => any; }) => {
+    const firestoreUser = el.data() as FireStoreUser;
     
-  //   // Convert Firestore Timestamps to Date objects
-  //   const lastLoggedIn = convertTimestampToDate(firestoreUser.lastLoggedIn);
-  //   const dateCreated = convertTimestampToDate(firestoreUser.dateCreated);
+    // Convert Firestore Timestamps to Date objects
+    const lastLoggedIn = convertTimestampToDate(firestoreUser.lastLoggedIn);
+    const dateCreated = convertTimestampToDate(firestoreUser.dateCreated);
 
-  //   return new User({
-  //     ...firestoreUser,
-  //     // id: el.id,
-  //     dateCreated,
-  //     lastLoggedIn,
-  //   });
-  // });
-  return [];
+    return new User({
+      ...firestoreUser,
+      // id: el.id,
+      dateCreated,
+      lastLoggedIn,
+    });
+  });
 };
 
 

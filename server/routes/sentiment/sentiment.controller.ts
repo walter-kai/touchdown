@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import axios from "axios";
-// import { db } from "../firebase/firebase.config";
+import { db } from "../firebase/firebase.config";
 
 interface SentimentDataPoint {
   t: number;
@@ -31,11 +31,11 @@ interface SentimentApiResponse {
 
 export async function getSentiments(req: Request, res: Response) {
   try {
-    // const snapshot = await db.collection('sentiment').get();
+    const snapshot = await db.collection('sentiment').get();
     const sentiments: any[] = [];
-    // snapshot.forEach((doc: any) => {
-    //   sentiments.push({ id: doc.id, ...doc.data() });
-    // });
+    snapshot.forEach((doc: any) => {
+      sentiments.push({ id: doc.id, ...doc.data() });
+    });
     res.status(200).json({
       success: true,
       data: sentiments,

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-// import { db } from "../firebase/firebase.config";
-import * as admin from "firebase-admin";
+import { db } from "../firebase/firebase.config";
+import admin from "firebase-admin";
 import { BaseSocialMediaPost, FirebasePost } from "../../../types/tw/Post";
 
 // Helper function to format Firebase posts to the desired structure
@@ -221,7 +221,7 @@ function formatFirebasePost(firebasePost: FirebasePost): BaseSocialMediaPost {
 // Controller for getting social media posts
 export async function getSocialNews(req: Request, res: Response) {
   try {
-    // const collectionRef = db.collection('socialPosts');
+    const collectionRef = db.collection('socialPosts');
     
     // Get query parameters for filtering and pagination
     const limit = parseInt(req.query.limit as string) || 50;
@@ -231,55 +231,55 @@ export async function getSocialNews(req: Request, res: Response) {
     const endDate = req.query.end_date as string;
     
     // Build query
-    // let query: admin.firestore.Query = collectionRef;
+    let query: admin.firestore.Query = collectionRef;
     
     // Note: Commented out filters due to Firestore indexing requirements
     // Uncomment and create appropriate indexes if needed
     
     console.log(`Fetching posts from Firebase: limit=${limit}, offset=${offset}, sourcetype=${sourcetype || 'all'}`);
     
-    // const snapshot = await query.get();
+    const snapshot = await query.get();
     
-    // if (snapshot.empty) {
-    //   return res.status(200).json({
-    //     success: true,
-    //     data: [],
-    //     pagination: {
-    //       total: 0,
-    //       limit,
-    //       offset,
-    //       has_more: false,
-    //     },
-    //   });
-    // }
+    if (snapshot.empty) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        pagination: {
+          total: 0,
+          limit,
+          offset,
+          has_more: false,
+        },
+      });
+    }
     
-    // // Format posts
-    // const formattedPosts: BaseSocialMediaPost[] = [];
-    // snapshot.forEach(doc => {
-    //   try {
-    //     const firebasePost = doc.data() as FirebasePost;
-    //     const formattedPost = formatFirebasePost(firebasePost);
-    //     formattedPosts.push(formattedPost);
-    //   } catch (error) {
-    //     console.error(`Error formatting post ${doc.id}:`, error);
-    //     // Continue with other posts
-    //   }
-    // });
+    // Format posts
+    const formattedPosts: BaseSocialMediaPost[] = [];
+    snapshot.forEach(doc => {
+      try {
+        const firebasePost = doc.data() as FirebasePost;
+        const formattedPost = formatFirebasePost(firebasePost);
+        formattedPosts.push(formattedPost);
+      } catch (error) {
+        console.error(`Error formatting post ${doc.id}:`, error);
+        // Continue with other posts
+      }
+    });
     
-    // // Get total count for pagination (this is approximate due to Firestore limitations)
-    // const hasMore = snapshot.size === limit;
+    // Get total count for pagination (this is approximate due to Firestore limitations)
+    const hasMore = snapshot.size === limit;
     
-    // console.log(`Successfully formatted ${formattedPosts.length} posts`);
+    console.log(`Successfully formatted ${formattedPosts.length} posts`);
     
     res.status(200).json({
       success: true,
-      // data: formattedPosts,
-      // pagination: {
-      //   total: offset + formattedPosts.length, // Approximate
-      //   limit,
-      //   offset,
-      //   has_more: hasMore,
-      // },
+      data: formattedPosts,
+      pagination: {
+        total: offset + formattedPosts.length, // Approximate
+        limit,
+        offset,
+        has_more: hasMore,
+      },
       filters: {
         sourcetype: sourcetype || null,
         start_date: startDate || null,

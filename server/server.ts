@@ -10,11 +10,6 @@ import { Server as WebSocketServer } from 'ws'; // WebSocket library
 // import subgraph from './routes/subgraph/service'; // Import getPairs function
 import routes from './routes';
 
-// // Add debug logging to verify the API key is loaded
-// console.log('THEGRAPH_API_KEY loaded:', process.env.THEGRAPH_API_KEY ? 'YES' : 'NO');
-// if (process.env.THEGRAPH_API_KEY) {
-//   console.log('API Key length:', process.env.THEGRAPH_API_KEY.length);
-// }
 
 const app = express();
 const port = process.env.PORT || 3001;

@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase-admin/firestore";
 import logger from "../../utils/logger";
-// import { db } from "./config/firebase.config";
+import { db } from "../firebase/firebase.config";
 import { BotConfig } from "../../../types/Bot";
 
 /**
@@ -16,21 +16,21 @@ const getMyBots = async (walletId: string): Promise<any[] | null> => {
     throw new Error(`Invalid walletId provided. ${breadcrumb}`);
   }
 
-  // const botsRef = db.collection("bots");
-  // const q = botsRef.where("creatorWalletId", "==", walletId).where("alive", "==", true);
-  // const querySnapshot = await q.get();
+  const botsRef = db.collection("bots");
+  const q = botsRef.where("creatorWalletId", "==", walletId).where("alive", "==", true);
+  const querySnapshot = await q.get();
 
-  // if (querySnapshot.empty) {
-  //   logger.info(`No alive bots found for walletId: ${walletId}.`);
-  //   return null;
-  // }
+  if (querySnapshot.empty) {
+    logger.info(`No alive bots found for walletId: ${walletId}.`);
+    return null;
+  }
 
-  // const bots = querySnapshot.docs.map((doc) => doc.data());
+  const bots = querySnapshot.docs.map((doc) => doc.data());
 
-  // logger.info(`Fetched ${bots.length} alive bot(s) for walletId: ${walletId}`);
+  logger.info(`Fetched ${bots.length} alive bot(s) for walletId: ${walletId}`);
 
   // Return the array of bot details
-  return [];
+  return bots;
 };
 
 /**
@@ -45,22 +45,22 @@ const get = async (botName: string): Promise<any | null> => {
     throw new Error(`Invalid botName provided. ${breadcrumb}`);
   }
 
-  // const botsRef = db.collection("bots");
-  // const q = botsRef.where("botName", "==", botName).limit(1);
-  // const querySnapshot = await q.get();
+  const botsRef = db.collection("bots");
+  const q = botsRef.where("botName", "==", botName).limit(1);
+  const querySnapshot = await q.get();
 
-  // if (querySnapshot.empty) {
-  //   logger.info(`No bot found with botName: ${botName}.`);
-  //   return null;
-  // }
+  if (querySnapshot.empty) {
+    logger.info(`No bot found with botName: ${botName}.`);
+    return null;
+  }
 
-  // const botDoc = querySnapshot.docs[0];
-  // const botData = botDoc.data();
+  const botDoc = querySnapshot.docs[0];
+  const botData = botDoc.data();
 
-  // logger.info(`Fetched bot data: ${JSON.stringify(botData)} for botName: ${botName}`);
+  logger.info(`Fetched bot data: ${JSON.stringify(botData)} for botName: ${botName}`);
 
   // Return the bot's data
-  return null;
+  return botData;
 };
 
 /**
@@ -73,31 +73,31 @@ const create = async (botConfig: BotConfig): Promise<BotConfig | null> => {
   const breadcrumb = `createBot(${botConfig.botName})`;
   const timeNow = Timestamp.now();
 
-  // const botsRef = db.collection("bots");
+  const botsRef = db.collection("bots");
 
   logger.info(JSON.stringify({ breadcrumb, botConfig: botConfig.botName }));
 
   // Check if a bot with the same botName already exists
-  // const q = botsRef.where("botName", "==", botConfig.botName);
-  // const querySnapshot = await q.get();
+  const q = botsRef.where("botName", "==", botConfig.botName);
+  const querySnapshot = await q.get();
 
-  // if (!querySnapshot.empty) {
+  if (!querySnapshot.empty) {
     // Bot exists, return existing bot data
     logger.info(`Bot with botName ${botConfig.botName} already exists.`);
     return null;
-  // }
+  }
 
   // Set the current timestamp and alive flag for bot creation
   const botPayload = {
-    // ...botConfig,
-    // createdAt: timeNow,
+    ...botConfig,
+    createdAt: timeNow,
     alive: true,
   };
 
   // Add a new bot document with the provided data
-  // const newBotRef = await botsRef.add(botPayload);
+  const newBotRef = await botsRef.add(botPayload);
 
-  // logger.info(`Created new bot with auto-generated ID: ${newBotRef.id}.`);
+  logger.info(`Created new bot with auto-generated ID: ${newBotRef.id}.`);
 
   // Return a success message
   return botConfig;
@@ -115,19 +115,19 @@ const kill = async (botName: string): Promise<string> => {
     throw new Error(`Invalid botName provided. ${breadcrumb}`);
   }
 
-  // const botsRef = db.collection("bots");
-  // const q = botsRef.where("botName", "==", botName).limit(1);
-  // const querySnapshot = await q.get();
+  const botsRef = db.collection("bots");
+  const q = botsRef.where("botName", "==", botName).limit(1);
+  const querySnapshot = await q.get();
 
-  // if (querySnapshot.empty) {
-  //   logger.info(`No bot found with botName: ${botName}.`);
-  //   return `Bot with botName ${botName} does not exist.`;
-  // }
+  if (querySnapshot.empty) {
+    logger.info(`No bot found with botName: ${botName}.`);
+    return `Bot with botName ${botName} does not exist.`;
+  }
 
-  // const botDoc = querySnapshot.docs[0];
+  const botDoc = querySnapshot.docs[0];
 
   // Update the `alive` flag to false
-  // await botDoc.ref.update({ alive: false });
+  await botDoc.ref.update({ alive: false });
 
   logger.info(`Bot with botName ${botName} has been killed.`);
 
@@ -147,19 +147,19 @@ const start = async (botName: string): Promise<string> => {
     throw new Error(`Invalid botName provided. ${breadcrumb}`);
   }
 
-  // const botsRef = db.collection("bots");
-  // const q = botsRef.where("botName", "==", botName).limit(1);
-  // const querySnapshot = await q.get();
+  const botsRef = db.collection("bots");
+  const q = botsRef.where("botName", "==", botName).limit(1);
+  const querySnapshot = await q.get();
 
-  // if (querySnapshot.empty) {
-  //   logger.info(`No bot found with botName: ${botName}.`);
-  //   return `Bot with botName ${botName} does not exist.`;
-  // }
+  if (querySnapshot.empty) {
+    logger.info(`No bot found with botName: ${botName}.`);
+    return `Bot with botName ${botName} does not exist.`;
+  }
 
-  // const botDoc = querySnapshot.docs[0];
+  const botDoc = querySnapshot.docs[0];
 
   // Update the `status` field to "Running"
-  // await botDoc.ref.update({ status: "Running" });
+  await botDoc.ref.update({ status: "Running" });
 
   logger.info(`Bot with botName ${botName} has been started.`);
 
@@ -179,19 +179,19 @@ const stop = async (botName: string): Promise<string> => {
     throw new Error(`Invalid botName provided. ${breadcrumb}`);
   }
 
-  // const botsRef = db.collection("bots");
-  // const q = botsRef.where("botName", "==", botName).limit(1);
-  // const querySnapshot = await q.get();
+  const botsRef = db.collection("bots");
+  const q = botsRef.where("botName", "==", botName).limit(1);
+  const querySnapshot = await q.get();
 
-  // if (querySnapshot.empty) {
-  //   logger.info(`No bot found with botName: ${botName}.`);
-  //   return `Bot with botName ${botName} does not exist.`;
-  // }
+  if (querySnapshot.empty) {
+    logger.info(`No bot found with botName: ${botName}.`);
+    return `Bot with botName ${botName} does not exist.`;
+  }
 
-  // const botDoc = querySnapshot.docs[0];
+  const botDoc = querySnapshot.docs[0];
 
   // Update the `status` field to "Stopped"
-  // await botDoc.ref.update({ status: "Stopped" });
+  await botDoc.ref.update({ status: "Stopped" });
 
   logger.info(`Bot with botName ${botName} has been stopped.`);
 
