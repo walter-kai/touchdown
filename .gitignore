@@ -1,0 +1,12 @@
+
+/node_modules
+/dist
+.env
+yarn.lock
+/build
+/client/node_modules
+/server/node_modules
+/client/build
+/client/dist
+.DS_Store
+client/package-lock.json
