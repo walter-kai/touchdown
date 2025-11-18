@@ -15,13 +15,13 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@/components/*": ["components/*"],
-      "@/hooks/*": ["hooks/*"],
+      "@/components/*": ["src/components/*"],
+      "@/hooks/*": ["src/hooks/*"],
       "@/types/*": ["../types/*"],
-      "@/pages/*": ["pages/*"],
-      "@/styles/*": ["styles/*"],
-      "@/utils/*": ["utils/*"],
-      "@/contexts/*": ["contexts/*"]
+      "@/pages/*": ["src/pages/*"],
+      "@/styles/*": ["src/styles/*"],
+      "@/utils/*": ["src/utils/*"],
+      "@/contexts/*": ["src/contexts/*"]
     }
   },
   "include": ["src", "../types/**/*"],

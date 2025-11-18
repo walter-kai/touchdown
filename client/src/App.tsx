@@ -3,7 +3,7 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 import OnlineFooterNavBar from './components/common/navs/OnlineFooterNavBar';
 
-import NFL from './pages/x/NFL';
+import NFL from './pages/nfl/NFL';
 
 import Dashboard from './pages/i/Dashboard';
 import Shop from './pages/i/Shop';
