@@ -1,5 +1,5 @@
 import React from "react";
-import type { Article } from '@/types/espn/games';
+import type { Article } from '@/types/espn/game';
 
 interface NewsCardProps {
   article: Article;

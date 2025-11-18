@@ -4,7 +4,7 @@ import type {
   Event,
   TeamOnBye,
   Article
-} from '@/types/espn/games';
+} from '@/types/espn/game';
 import GameCard from '@/components/nfl/GameCard';
 import NewsCard from '@/components/nfl/NewsCard';
 

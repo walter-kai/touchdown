@@ -1,11 +1,12 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { FaTv, FaMapMarkerAlt, FaCalendar, FaUsers, FaNewspaper, FaFootballBall, FaPlay } from "react-icons/fa";
 import type {
   Event,
   Competitor,
   Leader,
   Linescore
-} from '@/types/espn/games';
+} from '@/types/espn/game';
 
 // Helper function for status badge
 const getStatusBadge = (game: Event) => {
@@ -39,11 +40,17 @@ interface GameCardProps {
 }
 
 const GameCard: React.FC<GameCardProps> = React.memo(({ game }) => {
+  const navigate = useNavigate();
   const competition = game.competitions[0];
   const awayTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'away');
   const homeTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'home');
 
   if (!awayTeam || !homeTeam) return null;
+
+  // Handler to navigate with leaders data
+  const handleTeamClick = (teamId: string, leaders: any) => {
+    navigate(`/nfl/team/${teamId}`, { state: { leaders } });
+  };
 
   const awayRecord = awayTeam.records?.find((r: any) => r.type === 'total')?.summary || '';
   const homeRecord = homeTeam.records?.find((r: any) => r.type === 'total')?.summary || '';
@@ -82,11 +89,15 @@ const GameCard: React.FC<GameCardProps> = React.memo(({ game }) => {
             <img 
               src={awayTeam.team.logo} 
               alt={awayTeam.team.displayName}
-              className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain mb-2 sm:mb-3"
+              className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain mb-2 sm:mb-3 cursor-pointer hover:scale-110 transition-transform duration-300"
+              onClick={() => handleTeamClick(awayTeam.id, awayTeam.leaders)}
             />
-            <div className={`font-bold text-base sm:text-lg md:text-xl mb-1 ${awayTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
+            <button
+              onClick={() => handleTeamClick(awayTeam.id, awayTeam.leaders)}
+              className={`font-bold text-base sm:text-lg md:text-xl mb-1 hover:underline transition-colors ${awayTeam.winner ? 'text-[#00ffe7] hover:text-[#00ffe7]/80' : 'text-white hover:text-[#00ffe7]'}`}
+            >
               {awayTeam.team.abbreviation}
-            </div>
+            </button>
             <div className="text-xs sm:text-sm text-gray-400 mb-2">{awayRecord}</div>
             <div className={`text-4xl sm:text-5xl md:text-6xl font-bold ${awayTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
               {awayTeam.score}
@@ -108,11 +119,15 @@ const GameCard: React.FC<GameCardProps> = React.memo(({ game }) => {
             <img 
               src={homeTeam.team.logo} 
               alt={homeTeam.team.displayName}
-              className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain mb-2 sm:mb-3"
+              className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain mb-2 sm:mb-3 cursor-pointer hover:scale-110 transition-transform duration-300"
+              onClick={() => handleTeamClick(homeTeam.id, homeTeam.leaders)}
             />
-            <div className={`font-bold text-base sm:text-lg md:text-xl mb-1 ${homeTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
+            <button
+              onClick={() => handleTeamClick(homeTeam.id, homeTeam.leaders)}
+              className={`font-bold text-base sm:text-lg md:text-xl mb-1 hover:underline transition-colors ${homeTeam.winner ? 'text-[#00ffe7] hover:text-[#00ffe7]/80' : 'text-white hover:text-[#00ffe7]'}`}
+            >
               {homeTeam.team.abbreviation}
-            </div>
+            </button>
             <div className="text-xs sm:text-sm text-gray-400 mb-2">{homeRecord}</div>
             <div className={`text-4xl sm:text-5xl md:text-6xl font-bold ${homeTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
               {homeTeam.score}
@@ -193,7 +208,7 @@ const GameCard: React.FC<GameCardProps> = React.memo(({ game }) => {
               <div className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase">Headlines</div>
             </div>
             <div className="space-y-1">
-              {competition.headlines.slice(0, 2).map((headline, idx) => (
+              {competition.headlines.map((headline, idx) => (
                 <div key={idx} className="text-xs sm:text-sm text-[#e0e7ef]">
                   • {headline.description}
                 </div>
@@ -234,37 +249,47 @@ const GameCard: React.FC<GameCardProps> = React.memo(({ game }) => {
         )}
       </div>
 
-      {/* Line Scores (Quarter by Quarter) */}
-      {(awayTeam.linescores || homeTeam.linescores) && (
-        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-[#23263a]/50 rounded-lg overflow-x-auto">
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 sm:gap-2 text-center text-[10px] sm:text-xs min-w-max">
-            <div className="text-gray-400 font-bold">Team</div>
-            <div className="text-gray-400 font-bold hidden sm:block">Q1</div>
-            <div className="text-gray-400 font-bold hidden sm:block">Q2</div>
-            <div className="text-gray-400 font-bold hidden sm:block">Q3</div>
-            <div className="text-gray-400 font-bold hidden sm:block">Q4</div>
-            <div className="text-gray-400 font-bold">T</div>
-            
-            <div className="text-[#e0e7ef]">{awayTeam.team.abbreviation}</div>
-            {awayTeam.linescores?.map((ls: Linescore, i: number) => (
-              <div key={i} className="text-[#e0e7ef] hidden sm:block">{ls.displayValue}</div>
-            ))}
-            <div className="text-[#00ffe7] font-bold">{awayTeam.score}</div>
-            
-            <div className="text-[#e0e7ef]">{homeTeam.team.abbreviation}</div>
-            {homeTeam.linescores?.map((ls: Linescore, i: number) => (
-              <div key={i} className="text-[#e0e7ef] hidden sm:block">{ls.displayValue}</div>
-            ))}
-            <div className="text-[#00ffe7] font-bold">{homeTeam.score}</div>
-          </div>
+    {/* Line Scores (Quarter by Quarter) */}
+    {(awayTeam.linescores || homeTeam.linescores) && (
+      <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-[#23263a]/50 rounded-lg overflow-x-auto">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 sm:gap-2 text-center text-[10px] sm:text-xs min-w-max">
+        <div className="text-gray-400 font-bold">Team</div>
+        <div className="text-gray-400 font-bold hidden sm:block">Q1</div>
+        <div className="text-gray-400 font-bold hidden sm:block">Q2</div>
+        <div className="text-gray-400 font-bold hidden sm:block">Q3</div>
+        <div className="text-gray-400 font-bold hidden sm:block">Q4</div>
+        <div className="text-gray-400 font-bold">T</div>
+        
+        <div className="text-[#e0e7ef]">{awayTeam.team.abbreviation}</div>
+        {[...Array(4)].map((_, i) => {
+          const ls = awayTeam.linescores?.[i];
+          return (
+            <div key={i} className="text-[#e0e7ef] hidden sm:block">
+            {ls ? ls.displayValue : '-'}
+            </div>
+          );
+        })}
+        <div className="text-[#00ffe7] font-bold">{awayTeam.score}</div>
+        
+        <div className="text-[#e0e7ef]">{homeTeam.team.abbreviation}</div>
+        {[...Array(4)].map((_, i) => {
+          const ls = homeTeam.linescores?.[i];
+          return (
+            <div key={i} className="text-[#e0e7ef] hidden sm:block">
+            {ls ? ls.displayValue : '-'}
+            </div>
+          );
+        })}
+        <div className="text-[#00ffe7] font-bold">{homeTeam.score}</div>
         </div>
-      )}
+      </div>
+    )}
 
-      {/* Game Leaders */}
+    {/* Game Leaders */}
       {competition.leaders && competition.leaders.length > 0 && (
         <div className="space-y-2 mb-3 sm:mb-4">
           <div className="text-[10px] sm:text-xs font-bold text-[#faafe8] uppercase tracking-wider">Game Leaders</div>
-          {competition.leaders.slice(0, 3).map((leader: Leader, idx: number) => {
+          {competition.leaders.map((leader: Leader, idx: number) => {
             const topLeader = leader.leaders[0];
             return (
               <div key={idx} className="flex items-center gap-2 p-2 bg-[#23263a]/50 rounded-lg">
@@ -277,7 +302,7 @@ const GameCard: React.FC<GameCardProps> = React.memo(({ game }) => {
                   }}
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] sm:text-xs text-[#00ffe7] font-bold">{leader.abbreviation}</div>
+                  <div className="text-[10px] sm:text-xs text-[#00ffe7] font-bold">{leader.displayName}</div>
                   <div className="text-xs sm:text-sm text-white truncate">{topLeader.athlete.displayName}</div>
                   <div className="text-[10px] sm:text-xs text-gray-400">{topLeader.displayValue}</div>
                 </div>

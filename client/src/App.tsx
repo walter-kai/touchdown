@@ -4,6 +4,7 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import OnlineFooterNavBar from './components/common/navs/OnlineFooterNavBar';
 
 import NFL from './pages/nfl/NFL';
+import NFLTeamPage from './pages/nfl/Team';
 
 import Dashboard from './pages/i/Dashboard';
 import Shop from './pages/i/Shop';
@@ -178,6 +179,7 @@ const App: React.FC = () => {
                 <Routes location={location}>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/nfl" element={<NFL />} />
+                  <Route path="/nfl/team/:teamId" element={<NFLTeamPage />} />
                   
                   <Route path="/x/about" element={<AboutUs />} />
                   <Route path="/x/how-it-works" element={<HowItWorks />} />
