@@ -29,14 +29,19 @@ const NFLScoreboard: React.FC = () => {
   const [news, setNews] = useState<Article[]>([]);
   const [byeTeams, setByeTeams] = useState<TeamOnBye[]>([]);
   const [weekNumber, setWeekNumber] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState<number>(30);
 
-  const fetchNFLData = async () => {
+  const fetchNFLData = async (isInitial = false) => {
     try {
-      setLoading(true);
+      if (isInitial) {
+        setInitialLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
       setError(null);
       
       const response = await fetch('https://cdn.espn.com/core/nfl/scoreboard?xhr=1&limit=50');
@@ -57,7 +62,7 @@ const NFLScoreboard: React.FC = () => {
       if (data.news?.articles) {
         setNews(data.news.articles);
       }
-5
+
       if (data.content?.sbData?.week) {
         setByeTeams(data.content.sbData.week.teamsOnBye || []);
         setWeekNumber(data.content.sbData.week.number || null);
@@ -65,25 +70,27 @@ const NFLScoreboard: React.FC = () => {
       
       setLastUpdated(new Date());
       setCountdown(30); // Reset countdown to 30 seconds
-      setLoading(false);
+      setInitialLoading(false);
+      setIsRefreshing(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
-      setLoading(false);
+      setInitialLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   const handleManualRefresh = () => {
-    fetchNFLData();
+    fetchNFLData(false);
   };
 
   useEffect(() => {
-    fetchNFLData();
+    fetchNFLData(true);
   }, []);
 
   // Countdown timer effect
   useEffect(() => {
     if (countdown <= 0) {
-      fetchNFLData();
+      fetchNFLData(false);
       return;
     }
 
@@ -116,11 +123,11 @@ const NFLScoreboard: React.FC = () => {
 		)}
 		<button
 			onClick={handleManualRefresh}
-			disabled={loading}
+			disabled={isRefreshing}
 			className="flex items-center gap-2 px-4 py-2 bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
 		>
-			<FaSync className={loading ? 'animate-spin' : ''} />
-			{loading ? 'Refreshing...' : `Refresh (${countdown}s)`}
+			<FaSync className={isRefreshing ? 'animate-spin' : ''} />
+			{isRefreshing ? 'Refreshing...' : `Refresh (${countdown}s)`}
 		</button>
 		</div>
 	</div>
@@ -165,7 +172,7 @@ const NFLScoreboard: React.FC = () => {
 	)}
 
 	{/* Loading State */}
-	{loading && games.length === 0 && (
+	{initialLoading && games.length === 0 && (
 		<div className="text-center py-12 sm:py-16 md:py-20">
 		<FaClock className="text-4xl sm:text-5xl md:text-6xl text-[#00ffe7] mx-auto mb-3 sm:mb-4 animate-pulse" />
 		<p className="text-[#e0e7ef] text-base sm:text-lg md:text-xl">Loading NFL scores...</p>
@@ -181,7 +188,7 @@ const NFLScoreboard: React.FC = () => {
 	)}
 
 	{/* Games Grid */}
-	{!loading && games.length > 0 && (() => {
+	{!initialLoading && games.length > 0 && (() => {
 		const liveGames = games.filter(game => game.status.type.state === 'in');
 		const otherGames = games.filter(game => game.status.type.state !== 'in');
 		
@@ -229,7 +236,7 @@ const NFLScoreboard: React.FC = () => {
 	})()}
 
 	{/* No Games */}
-	{!loading && games.length === 0 && !error && (
+	{!initialLoading && games.length === 0 && !error && (
 		<div className="text-center py-12 sm:py-16 md:py-20">
 		<FaFootballBall className="text-4xl sm:text-5xl md:text-6xl text-[#faafe8] mx-auto mb-3 sm:mb-4" />
 		<p className="text-[#e0e7ef] text-base sm:text-lg md:text-xl">No games scheduled at this time</p>
