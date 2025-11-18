@@ -204,7 +204,7 @@ const NFLScoreboard: React.FC = () => {
 				</div>
 				<div className="grid grid-cols-1   gap-4 sm:gap-5 md:gap-6">
 				{liveGames.map(game => (
-					<GameCard key={game.id} game={game} />
+					<GameCard key={game.id} event={game} />
 				))}
 				</div>
 			</div>
@@ -219,7 +219,7 @@ const NFLScoreboard: React.FC = () => {
 				</h2>
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
 				{otherGames.map(game => (
-					<GameCard key={game.id} game={game} />
+					<GameCard key={game.id} event={game} />
 				))}
 				</div>
 			</div>

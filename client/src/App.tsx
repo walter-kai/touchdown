@@ -5,6 +5,7 @@ import OnlineFooterNavBar from './components/common/navs/OnlineFooterNavBar';
 
 import NFL from './pages/nfl/NFL';
 import NFLTeamPage from './pages/nfl/Team';
+import NFLPlayerPage from './pages/nfl/Player';
 
 import Dashboard from './pages/i/Dashboard';
 import Shop from './pages/i/Shop';
@@ -180,6 +181,7 @@ const App: React.FC = () => {
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/nfl" element={<NFL />} />
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage />} />
+                  <Route path="/nfl/player/:playerId" element={<NFLPlayerPage />} />
                   
                   <Route path="/x/about" element={<AboutUs />} />
                   <Route path="/x/how-it-works" element={<HowItWorks />} />

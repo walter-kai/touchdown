@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaTv, FaMapMarkerAlt, FaCalendar, FaUsers, FaNewspaper, FaFootballBall, FaPlay } from "react-icons/fa";
+import { FaTv, FaMapMarkerAlt, FaCalendar, FaUsers, FaNewspaper, FaFootballBall, FaPlay, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import HeadToHead from "./HeadToHead";
 import type {
   Event,
   Competitor,
@@ -36,16 +37,64 @@ const getStatusBadge = (game: Event) => {
 };
 
 interface GameCardProps {
-  game: Event;
+  event: Event;
 }
 
-const GameCard: React.FC<GameCardProps> = React.memo(({ game }) => {
+const GameCard: React.FC<GameCardProps> = ({ event }) => {
   const navigate = useNavigate();
+  const [showGameLeaders, setShowGameLeaders] = useState(false);
+  const [gameLeadersData, setGameLeadersData] = useState<{home: Leader[], away: Leader[]} | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const game = event;
   const competition = game.competitions[0];
   const awayTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'away');
   const homeTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'home');
 
   if (!awayTeam || !homeTeam) return null;
+
+  // Handler to fetch game leaders from team API
+  const fetchGameLeaders = async () => {
+    // If already fetched, just toggle visibility
+    if (gameLeadersData) {
+      setShowGameLeaders(!showGameLeaders);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const [homeRes, awayRes] = await Promise.all([
+        fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${homeTeam.id}`),
+        fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${awayTeam.id}`)
+      ]);
+
+      if (!homeRes.ok || !awayRes.ok) {
+        throw new Error('Failed to fetch team data');
+      }
+
+      const [homeData, awayData] = await Promise.all([homeRes.json(), awayRes.json()]);
+
+      // Extract game leaders from the nextEvent data
+      const homeGameLeaders = homeData.team?.nextEvent?.[0]?.competitions?.[0]?.competitors?.find(
+        (c: any) => c.id === homeTeam.id
+      )?.leaders || [];
+
+      const awayGameLeaders = awayData.team?.nextEvent?.[0]?.competitions?.[0]?.competitors?.find(
+        (c: any) => c.id === awayTeam.id
+      )?.leaders || [];
+
+      setGameLeadersData({ home: homeGameLeaders, away: awayGameLeaders });
+      setShowGameLeaders(true);
+    } catch (err) {
+      console.error('Failed to fetch game leaders:', err);
+      setError('Failed to load game leaders. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handler to navigate with leaders data
   const handleTeamClick = (teamId: string, leaders: any) => {
@@ -90,10 +139,10 @@ const GameCard: React.FC<GameCardProps> = React.memo(({ game }) => {
               src={awayTeam.team.logo} 
               alt={awayTeam.team.displayName}
               className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain mb-2 sm:mb-3 cursor-pointer hover:scale-110 transition-transform duration-300"
-              onClick={() => handleTeamClick(awayTeam.id, awayTeam.leaders)}
+              onClick={() => handleTeamClick(awayTeam.id, competition.leaders)}
             />
             <button
-              onClick={() => handleTeamClick(awayTeam.id, awayTeam.leaders)}
+              onClick={() => handleTeamClick(awayTeam.id, competition.leaders)}
               className={`font-bold text-base sm:text-lg md:text-xl mb-1 hover:underline transition-colors ${awayTeam.winner ? 'text-[#00ffe7] hover:text-[#00ffe7]/80' : 'text-white hover:text-[#00ffe7]'}`}
             >
               {awayTeam.team.abbreviation}
@@ -120,10 +169,10 @@ const GameCard: React.FC<GameCardProps> = React.memo(({ game }) => {
               src={homeTeam.team.logo} 
               alt={homeTeam.team.displayName}
               className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain mb-2 sm:mb-3 cursor-pointer hover:scale-110 transition-transform duration-300"
-              onClick={() => handleTeamClick(homeTeam.id, homeTeam.leaders)}
+              onClick={() => handleTeamClick(homeTeam.id, competition.leaders)}
             />
             <button
-              onClick={() => handleTeamClick(homeTeam.id, homeTeam.leaders)}
+              onClick={() => handleTeamClick(homeTeam.id, competition.leaders)}
               className={`font-bold text-base sm:text-lg md:text-xl mb-1 hover:underline transition-colors ${homeTeam.winner ? 'text-[#00ffe7] hover:text-[#00ffe7]/80' : 'text-white hover:text-[#00ffe7]'}`}
             >
               {homeTeam.team.abbreviation}
@@ -285,34 +334,82 @@ const GameCard: React.FC<GameCardProps> = React.memo(({ game }) => {
       </div>
     )}
 
-    {/* Game Leaders */}
+    {/* Season Leaders */}
       {competition.leaders && competition.leaders.length > 0 && (
         <div className="space-y-2 mb-3 sm:mb-4">
-          <div className="text-[10px] sm:text-xs font-bold text-[#faafe8] uppercase tracking-wider">Game Leaders</div>
+          <div className="text-[10px] sm:text-xs font-bold text-[#faafe8] uppercase tracking-wider">Season Leaders</div>
           {competition.leaders.map((leader: Leader, idx: number) => {
             const topLeader = leader.leaders[0];
             return (
-              <div key={idx} className="flex items-center gap-2 p-2 bg-[#23263a]/50 rounded-lg">
+              <div 
+                key={idx} 
+                className="flex items-center gap-2 p-2 bg-[#23263a]/50 rounded-lg cursor-pointer hover:bg-[#23263a]/80 transition-all"
+                onClick={() => navigate(`/nfl/player/${topLeader.athlete.id}`)}
+              >
                 <img 
                   src={topLeader.athlete.headshot} 
                   alt={topLeader.athlete.displayName}
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0 hover:scale-110 transition-transform"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
                   }}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-[10px] sm:text-xs text-[#00ffe7] font-bold">{leader.displayName}</div>
-                  <div className="text-xs sm:text-sm text-white truncate">{topLeader.athlete.displayName}</div>
+                  <div className="text-xs sm:text-sm text-white truncate hover:text-[#00ffe7] transition-colors">{topLeader.athlete.displayName}</div>
                   <div className="text-[10px] sm:text-xs text-gray-400">{topLeader.displayValue}</div>
                 </div>
               </div>
             );
           })}
+
+          {/* Show Game Leaders Button */}
+          <button
+            onClick={fetchGameLeaders}
+            disabled={loading}
+            className="w-full mt-3 py-2 px-4 bg-[#00ffe7]/10 hover:bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#00ffe7] border-t-transparent"></div>
+                Loading...
+              </>
+            ) : (
+              <>
+                {showGameLeaders ? <FaChevronUp /> : <FaChevronDown />}
+                {showGameLeaders ? 'Hide' : 'Show'} Game Leaders
+              </>
+            )}
+          </button>
+
+          {/* Error Message */}
+          {error && (
+            <div className="text-xs text-red-400 text-center mt-2">
+              {error}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Game Situation */}
+      {/* Game Leaders - Head to Head */}
+      {showGameLeaders && gameLeadersData && (
+        <div 
+          className="overflow-hidden transition-all duration-500 ease-in-out"
+          style={{
+            maxHeight: showGameLeaders ? '2000px' : '0',
+            opacity: showGameLeaders ? 1 : 0
+          }}
+        >
+          <HeadToHead
+            homeTeamLeaders={gameLeadersData.home}
+            awayTeamLeaders={gameLeadersData.away}
+            homeTeamName={homeTeam.team.displayName}
+            awayTeamName={awayTeam.team.displayName}
+          />
+        </div>
+      )}
+
+      {/* Situation */}
       {competition.situation && (
         <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg border border-[#00ffe7]/30">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2 sm:mb-3">
@@ -564,7 +661,7 @@ const GameCard: React.FC<GameCardProps> = React.memo(({ game }) => {
       <span className="absolute bottom-0 right-0 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 border-b-2 border-r-2 border-[#00ffe7] rounded-br-xl opacity-60" />
     </div>
   );
-});
+};
 
 GameCard.displayName = 'GameCard';
 

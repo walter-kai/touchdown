@@ -85,8 +85,9 @@ const NFLTeam: React.FC = () => {
   const homeTeam = nextCompetition?.competitors.find((c: Competitor) => c.homeAway === 'home');
   const awayTeam = nextCompetition?.competitors.find((c: Competitor) => c.homeAway === 'away');
   
-  // Use leaders from navigation state (passed from GameCard) or fall back to nextEvent competition data
-  const teamLeaders = passedLeaders || nextCompetition?.competitors.find((c: Competitor) => c.id === teamId)?.leaders || [];
+  // Use leaders from navigation state (passed from GameCard as competition.leaders - SEASON data)
+  // No fallback needed - if no passed leaders, don't show the section
+  const teamLeaders = passedLeaders || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a]">
@@ -355,7 +356,8 @@ const NFLTeam: React.FC = () => {
                         <img 
                           src={topLeader.athlete.headshot}
                           alt={topLeader.athlete.displayName}
-                          className="w-16 h-16 rounded-full object-cover border-2 border-[#faafe8]/30 flex-shrink-0"
+                          className="w-16 h-16 rounded-full object-cover border-2 border-[#faafe8]/30 flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                          onClick={() => navigate(`/nfl/player/${topLeader.athlete.id}`)}
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = 'none';
                             const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -364,13 +366,17 @@ const NFLTeam: React.FC = () => {
                         />
                       ) : null}
                       <div 
-                        className="w-16 h-16 rounded-full bg-[#23263a] border-2 border-[#faafe8]/30 flex items-center justify-center overflow-hidden flex-shrink-0"
+                        className="w-16 h-16 rounded-full bg-[#23263a] border-2 border-[#faafe8]/30 flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
                         style={{ display: topLeader.athlete.headshot ? 'none' : 'flex' }}
+                        onClick={() => navigate(`/nfl/player/${topLeader.athlete.id}`)}
                       >
                         <FaFootballBall className="text-[#faafe8] text-2xl" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-lg font-bold text-white truncate">
+                        <div 
+                          className="text-lg font-bold text-white truncate cursor-pointer hover:text-[#00ffe7] transition-colors"
+                          onClick={() => navigate(`/nfl/player/${topLeader.athlete.id}`)}
+                        >
                           {topLeader.athlete.displayName}
                         </div>
                         <div className="text-sm text-gray-400">

@@ -344,7 +344,7 @@ export interface Competitor {
   linescores?: Linescore[];
   order: number;
   statistics: any[]; // Omitted for brevity
-  leaders?: Leader[]; // For pre-game
+  leaders: Leader[]; // For pre-game
 }
 
 export interface Team {
