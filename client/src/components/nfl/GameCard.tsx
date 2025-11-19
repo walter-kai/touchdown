@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaTv, FaMapMarkerAlt, FaCalendar, FaUsers, FaNewspaper, FaFootballBall, FaPlay, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaTv, FaMapMarkerAlt, FaCalendar, FaUsers, FaNewspaper, FaFootballBall, FaPlay, FaChevronDown, FaChevronUp, FaChartLine, FaPercent, FaDollarSign } from "react-icons/fa";
 import HeadToHead from "./HeadToHead";
+import Prediction from "./Prediction";
+import Odds from "./Odds";
 import type {
   Event,
   Competitor,
@@ -46,6 +48,16 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
   const [gameLeadersData, setGameLeadersData] = useState<{home: Leader[], away: Leader[]} | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const [showPrediction, setShowPrediction] = useState(false);
+  const [predictionData, setPredictionData] = useState<any>(null);
+  const [predictionLoading, setPredictionLoading] = useState(false);
+  const [predictionError, setPredictionError] = useState<string | null>(null);
+  
+  const [showOdds, setShowOdds] = useState(false);
+  const [oddsData, setOddsData] = useState<any>(null);
+  const [oddsLoading, setOddsLoading] = useState(false);
+  const [oddsError, setOddsError] = useState<string | null>(null);
   
   const game = event;
   const competition = game.competitions[0];
@@ -96,6 +108,83 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
     }
   };
 
+  // Handler to fetch prediction data
+  const fetchPrediction = async () => {
+    // If already fetched, just toggle visibility
+    if (predictionData) {
+      setShowPrediction(!showPrediction);
+      return;
+    }
+
+    setPredictionLoading(true);
+    setPredictionError(null);
+
+    try {
+      const response = await fetch(
+        `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${game.id}/competitions/${competition.id}/predictor`
+      );
+
+      if (!response.ok) {
+        throw new Error('Prediction data not available');
+      }
+
+      const data = await response.json();
+      setPredictionData(data);
+      setShowPrediction(true);
+    } catch (err) {
+      console.error('Failed to fetch prediction:', err);
+      setPredictionError('Prediction data not available for this game.');
+    } finally {
+      setPredictionLoading(false);
+    }
+  };
+
+  // Handler to fetch odds/probabilities data
+  const fetchOdds = async () => {
+    // If already fetched, just toggle visibility
+    if (oddsData) {
+      setShowOdds(!showOdds);
+      return;
+    }
+
+    setOddsLoading(true);
+    setOddsError(null);
+
+    try {
+      const response = await fetch(
+        `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${game.id}/competitions/${competition.id}/probabilities?limit=200`
+      );
+
+      if (!response.ok) {
+        // Check if game hasn't started yet
+        const status = competition.status.type.state;
+        if (status === 'pre') {
+          throw new Error('Odds data will be available once the game starts');
+        } else if (response.status === 404) {
+          throw new Error('Odds data not found for this game');
+        } else if (response.status === 400) {
+          throw new Error('Odds data not available for this game');
+        }
+        throw new Error('Failed to load odds data');
+      }
+
+      const data = await response.json();
+      
+      // Check if we have actual data
+      if (!data.items || data.items.length === 0) {
+        throw new Error('No probability data available for this game yet');
+      }
+      
+      setOddsData(data);
+      setShowOdds(true);
+    } catch (err) {
+      console.error('Failed to fetch odds:', err);
+      setOddsError(err instanceof Error ? err.message : 'Live odds data not available for this game.');
+    } finally {
+      setOddsLoading(false);
+    }
+  };
+
   // Handler to navigate with leaders data
   const handleTeamClick = (teamId: string, leaders: any) => {
     navigate(`/nfl/team/${teamId}`, { state: { leaders } });
@@ -128,6 +217,61 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
           </div>
         )}
       </div>
+
+              {/* Basic Info*/}
+        <div className="p-2 grid grid-cols-3 gap-3 bg-gradient-to-r from-[#23263a]/50 via-[#181a23]/50 to-[#23263a]/50 rounded-xl border border-[#00ffe7]/20">
+          {/* Venue */}
+          {competition.venue && (
+            <div className="justify-center flex items-start gap-2 p-2 bg-[#181a23]/50 rounded-lg">
+              <FaMapMarkerAlt className="text-[#00ffe7] flex-shrink-0 mt-0.5" />
+              <div className="min-w-0">
+            <div className="text-[10px] sm:text-xs text-gray-400">Where</div>
+            <div className="text-xs sm:text-sm font-bold text-white truncate">{competition.venue.fullName}</div>
+            <div className="text-[10px] text-gray-400">{competition.venue.address.city}, {competition.venue.address.state}</div>
+              </div>
+            </div>
+          )}
+          <div className="justify-center flex items-start gap-2 p-2 bg-[#181a23]/50 rounded-lg">
+            <FaCalendar className="text-[#faafe8] flex-shrink-0 mt-0.5" />
+            <div>
+              <div className="text-[10px] sm:text-xs text-gray-400">When</div>
+              <div className="text-xs sm:text-sm font-bold text-white">
+            {new Date(game.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+              </div>
+              <div className="text-[10px] text-gray-400">
+            {new Date(game.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            </div>
+          </div>
+
+          {competition.attendance >= 0 && (
+            <div className="justify-center flex items-start gap-2 p-2 bg-[#181a23]/50 rounded-lg">
+              <FaUsers className="text-[#faafe8] flex-shrink-0 mt-0.5" />
+              <div>
+            <div className="text-[10px] sm:text-xs text-gray-400">Attendance</div>
+            <div className="text-xs sm:text-sm font-bold text-white">
+              {competition.attendance === 0 ? 'TBD' : competition.attendance.toLocaleString()}
+            </div>
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Weather */}
+        {game.weather && (
+        <div className="flex items-center justify-between gap-2 p-2 bg-[#181a23]/50 rounded-lg">
+            <div className="flex items-center gap-2">
+            <span className="text-xl sm:text-2xl">🌤️</span>
+            <div>
+                <div className="text-[10px] sm:text-xs text-gray-400">Weather</div>
+                <div className="text-xs sm:text-sm font-bold text-white">{game.weather.displayValue || game.weather.conditionId}</div>
+            </div>
+            </div>
+            <div className="text-right flex-shrink-0">
+            <div className="text-lg sm:text-xl font-bold text-[#00ffe7]">{game.weather.temperature}°F</div>
+            <div className="text-[10px] sm:text-xs text-gray-400">High: {game.weather.highTemperature}°F</div>
+            </div>
+        </div>
+        )}
 
       {/* Teams and Scores - Head to Head Matchup */}
       <div className="mb-3 sm:mb-4 p-4 sm:p-6 bg-gradient-to-r from-[#23263a]/50 via-[#181a23]/50 to-[#23263a]/50 rounded-xl border border-[#00ffe7]/20">
@@ -187,68 +331,7 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
       </div>
 
       {/* Game Information Panel */}
-      <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-[#23263a]/50 rounded-lg border border-[#faafe8]/20 space-y-3">
-        
-        {/* Weather & Venue Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Weather */}
-          {game.weather && (
-            <div className="flex items-center justify-between gap-2 p-2 bg-[#181a23]/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <span className="text-xl sm:text-2xl">🌤️</span>
-                <div>
-                  <div className="text-[10px] sm:text-xs text-gray-400">Weather</div>
-                  <div className="text-xs sm:text-sm font-bold text-white">{game.weather.displayValue || game.weather.conditionId}</div>
-                </div>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <div className="text-lg sm:text-xl font-bold text-[#00ffe7]">{game.weather.temperature}°F</div>
-                <div className="text-[10px] sm:text-xs text-gray-400">High: {game.weather.highTemperature}°F</div>
-              </div>
-            </div>
-          )}
-
-          {/* Venue */}
-          {competition.venue && (
-            <div className="flex items-center gap-2 p-2 bg-[#181a23]/50 rounded-lg">
-              <FaMapMarkerAlt className="text-[#00ffe7] flex-shrink-0" />
-              <div className="min-w-0">
-                <div className="text-[10px] sm:text-xs text-gray-400">Venue</div>
-                <div className="text-xs sm:text-sm font-bold text-white truncate">{competition.venue.fullName}</div>
-                <div className="text-[10px] text-gray-400">{competition.venue.address.city}, {competition.venue.address.state}</div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Game Date & Attendance */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-center gap-2 p-2 bg-[#181a23]/50 rounded-lg">
-            <FaCalendar className="text-[#faafe8] flex-shrink-0" />
-            <div>
-              <div className="text-[10px] sm:text-xs text-gray-400">Date</div>
-              <div className="text-xs sm:text-sm font-bold text-white">
-                {new Date(game.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
-              </div>
-              <div className="text-[10px] text-gray-400">
-                {new Date(game.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </div>
-            </div>
-          </div>
-
-          {competition.attendance >= 0 && (
-            <div className="flex items-center gap-2 p-2 bg-[#181a23]/50 rounded-lg">
-              <FaUsers className="text-[#faafe8] flex-shrink-0" />
-              <div>
-                <div className="text-[10px] sm:text-xs text-gray-400">Attendance</div>
-                <div className="text-xs sm:text-sm font-bold text-white">
-                  {competition.attendance === 0 ? 'TBD' : competition.attendance.toLocaleString()}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
+      <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-[#23263a]/50 rounded-lg border border-[#faafe8]/20 space-y-3 min-h-40">
         {/* Headlines */}
         {competition.headlines && competition.headlines.length > 0 && (
           <div className="p-2 bg-[#181a23]/50 rounded-lg">
@@ -256,10 +339,19 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
               <FaNewspaper className="text-[#faafe8] text-xs" />
               <div className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase">Headlines</div>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-3">
               {competition.headlines.map((headline, idx) => (
-                <div key={idx} className="text-xs sm:text-sm text-[#e0e7ef]">
-                  • {headline.description}
+                <div key={idx} className="space-y-1">
+                  {headline.shortLinkText && (
+                    <div className="text-xs sm:text-sm font-semibold text-[#00ffe7]">
+                      {headline.shortLinkText}
+                    </div>
+                  )}
+                  {headline.description && (
+                    <div className="text-xs sm:text-sm text-[#e0e7ef] leading-relaxed">
+                      {headline.description}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -337,7 +429,7 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
     {/* Season Leaders */}
       {competition.leaders && competition.leaders.length > 0 && (
         <div className="space-y-2 mb-3 sm:mb-4">
-          <div className="text-[10px] sm:text-xs font-bold text-[#faafe8] uppercase tracking-wider">Season Leaders</div>
+          <div className="text-[10px] sm:text-xs font-bold text-[#faafe8] uppercase tracking-wider">The Leaders</div>
           {competition.leaders.map((leader: Leader, idx: number) => {
             const topLeader = leader.leaders[0];
             return (
@@ -363,7 +455,7 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
             );
           })}
 
-          {/* Show Game Leaders Button */}
+          {/* Show Head to Head Button */}
           <button
             onClick={fetchGameLeaders}
             disabled={loading}
@@ -377,15 +469,63 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
             ) : (
               <>
                 {showGameLeaders ? <FaChevronUp /> : <FaChevronDown />}
-                {showGameLeaders ? 'Hide' : 'Show'} Game Leaders
+                {showGameLeaders ? 'Hide' : 'Show'} Head to Head
               </>
             )}
           </button>
 
-          {/* Error Message */}
+          {/* Show Prediction Button */}
+          <button
+            onClick={fetchPrediction}
+            disabled={predictionLoading}
+            className="w-full mt-2 py-2 px-4 bg-[#faafe8]/10 hover:bg-[#faafe8]/20 border border-[#faafe8]/30 rounded-lg text-[#faafe8] text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {predictionLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#faafe8] border-t-transparent"></div>
+                Loading...
+              </>
+            ) : (
+              <>
+                <FaPercent />
+                {showPrediction ? 'Hide' : 'Show'} Prediction
+              </>
+            )}
+          </button>
+
+          {/* Show Odds Button */}
+          <button
+            onClick={fetchOdds}
+            disabled={oddsLoading}
+            className="w-full mt-2 py-2 px-4 bg-[#00ffe7]/10 hover:bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {oddsLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#00ffe7] border-t-transparent"></div>
+                Loading...
+              </>
+            ) : (
+              <>
+                <FaChartLine />
+                {showOdds ? 'Hide' : 'Show'} Live Odds
+              </>
+            )}
+          </button>
+
+          {/* Error Messages */}
           {error && (
             <div className="text-xs text-red-400 text-center mt-2">
               {error}
+            </div>
+          )}
+          {predictionError && (
+            <div className="text-xs text-red-400 text-center mt-2">
+              {predictionError}
+            </div>
+          )}
+          {oddsError && (
+            <div className="text-xs text-red-400 text-center mt-2">
+              {oddsError}
             </div>
           )}
         </div>
@@ -405,6 +545,58 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
             awayTeamLeaders={gameLeadersData.away}
             homeTeamName={homeTeam.team.displayName}
             awayTeamName={awayTeam.team.displayName}
+          />
+        </div>
+      )}
+
+      {/* Prediction */}
+      {showPrediction && predictionData && (
+        <div 
+          className="overflow-hidden transition-all duration-500 ease-in-out mt-4"
+          style={{
+            maxHeight: showPrediction ? '2000px' : '0',
+            opacity: showPrediction ? 1 : 0
+          }}
+        >
+          <Prediction
+            data={predictionData}
+            homeTeamInfo={{
+              name: homeTeam.team.displayName,
+              logo: homeTeam.team.logo,
+              color: homeTeam.team.color
+            }}
+            awayTeamInfo={{
+              name: awayTeam.team.displayName,
+              logo: awayTeam.team.logo,
+              color: awayTeam.team.color
+            }}
+            onClose={() => setShowPrediction(false)}
+          />
+        </div>
+      )}
+
+      {/* Odds */}
+      {showOdds && oddsData && (
+        <div 
+          className="overflow-hidden transition-all duration-500 ease-in-out mt-4"
+          style={{
+            maxHeight: showOdds ? '2000px' : '0',
+            opacity: showOdds ? 1 : 0
+          }}
+        >
+          <Odds
+            data={oddsData}
+            homeTeamInfo={{
+              name: homeTeam.team.displayName,
+              logo: homeTeam.team.logo,
+              color: homeTeam.team.color
+            }}
+            awayTeamInfo={{
+              name: awayTeam.team.displayName,
+              logo: awayTeam.team.logo,
+              color: awayTeam.team.color
+            }}
+            onClose={() => setShowOdds(false)}
           />
         </div>
       )}

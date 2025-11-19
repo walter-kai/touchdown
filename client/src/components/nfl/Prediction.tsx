@@ -1,0 +1,183 @@
+import React from "react";
+import { FaPercent, FaTimes } from "react-icons/fa";
+
+interface Statistic {
+  name: string;
+  displayName: string;
+  shortDisplayName: string;
+  description: string;
+  abbreviation: string;
+  value: number;
+  displayValue: string;
+}
+
+interface TeamPrediction {
+  team: {
+    $ref: string;
+  };
+  statistics: Statistic[];
+}
+
+interface PredictionData {
+  name: string;
+  shortName: string;
+  homeTeam: TeamPrediction;
+  awayTeam: TeamPrediction;
+}
+
+interface PredictionProps {
+  data: PredictionData;
+  homeTeamInfo: { name: string; logo: string; color: string };
+  awayTeamInfo: { name: string; logo: string; color: string };
+  onClose: () => void;
+}
+
+const Prediction: React.FC<PredictionProps> = ({ data, homeTeamInfo, awayTeamInfo, onClose }) => {
+  // Extract key statistics
+  const getStatValue = (stats: Statistic[], statName: string): string => {
+    const stat = stats.find(s => s.name === statName);
+    return stat?.displayValue || "N/A";
+  };
+
+  const homeWinProb = getStatValue(data.homeTeam.statistics, "gameProjection");
+  const awayWinProb = getStatValue(data.awayTeam.statistics, "gameProjection");
+  const matchupQuality = getStatValue(data.homeTeam.statistics, "matchupQuality");
+  
+  const homeOffEff = getStatValue(data.homeTeam.statistics, "teamOffEff");
+  const awayOffEff = getStatValue(data.awayTeam.statistics, "teamOffEff");
+  const homeDefEff = getStatValue(data.homeTeam.statistics, "teamDefEff");
+  const awayDefEff = getStatValue(data.awayTeam.statistics, "teamDefEff");
+  const homeTotalEff = getStatValue(data.homeTeam.statistics, "teamTotEff");
+  const awayTotalEff = getStatValue(data.awayTeam.statistics, "teamTotEff");
+  const homePredPtDiff = getStatValue(data.homeTeam.statistics, "teamPredPtDiff");
+  const awayPredPtDiff = getStatValue(data.awayTeam.statistics, "teamPredPtDiff");
+
+  return (
+    <div className="bg-[#181a23]/95 rounded-xl border border-[#00ffe7]/30 p-4 sm:p-6 shadow-[0_0_16px_rgba(0,255,231,0.2)]">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <div className="flex items-center gap-2">
+          <FaPercent className="text-[#00ffe7] text-lg sm:text-xl" />
+          <h3 className="text-base sm:text-lg font-bold text-[#00ffe7]">Game Prediction</h3>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-[#00ffe7] transition-colors p-1"
+        >
+          <FaTimes className="text-lg" />
+        </button>
+      </div>
+
+      {/* Win Probability */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <img src={awayTeamInfo.logo} alt={awayTeamInfo.name} className="w-8 h-8 object-contain" />
+            <span className="text-sm font-semibold text-[#e0e7ef]">{awayTeamInfo.name}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-[#e0e7ef]">{homeTeamInfo.name}</span>
+            <img src={homeTeamInfo.logo} alt={homeTeamInfo.name} className="w-8 h-8 object-contain" />
+          </div>
+        </div>
+
+        {/* Win Probability Bar */}
+        <div className="relative h-12 bg-[#23263a] rounded-lg overflow-hidden mb-2">
+          <div
+            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#faafe8]/60 to-[#faafe8]/40 transition-all duration-500"
+            style={{ width: `${awayWinProb}%` }}
+          />
+          <div
+            className="absolute right-0 top-0 h-full bg-gradient-to-l from-[#00ffe7]/60 to-[#00ffe7]/40 transition-all duration-500"
+            style={{ width: `${homeWinProb}%` }}
+          />
+          <div className="absolute inset-0 flex items-center justify-between px-4">
+            <span className="text-lg font-bold text-white z-10">{awayWinProb}%</span>
+            <span className="text-xs text-gray-300 font-semibold">WIN PROBABILITY</span>
+            <span className="text-lg font-bold text-white z-10">{homeWinProb}%</span>
+          </div>
+        </div>
+
+        {/* Matchup Quality */}
+        <div className="text-center">
+          <span className="text-xs text-gray-400">Matchup Quality: </span>
+          <span className="text-sm font-bold text-[#faafe8]">{matchupQuality}/100</span>
+        </div>
+      </div>
+
+      {/* Predicted Point Differential */}
+      <div className="mb-6 p-3 bg-[#23263a]/50 rounded-lg">
+        <div className="text-xs text-gray-400 font-bold uppercase mb-2 text-center">Predicted Point Differential</div>
+        <div className="grid grid-cols-2 gap-4 text-center">
+          <div>
+            <div className="text-2xl font-bold text-[#faafe8]">{awayPredPtDiff}</div>
+            <div className="text-xs text-gray-400">{awayTeamInfo.name}</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-[#00ffe7]">{homePredPtDiff}</div>
+            <div className="text-xs text-gray-400">{homeTeamInfo.name}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Team Efficiency Stats */}
+      <div className="space-y-3">
+        <div className="text-xs text-gray-400 font-bold uppercase text-center mb-3">Team Efficiency Ratings</div>
+        
+        {/* Total Efficiency */}
+        <div className="p-3 bg-[#23263a]/50 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-400">Total Efficiency</span>
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div className="text-xl font-bold text-[#faafe8]">{awayTotalEff}</div>
+            </div>
+            <div>
+              <div className="text-xl font-bold text-[#00ffe7]">{homeTotalEff}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Offensive Efficiency */}
+        <div className="p-3 bg-[#23263a]/50 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-400">Offensive Efficiency</span>
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div className="text-lg font-bold text-[#faafe8]">{awayOffEff}</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-[#00ffe7]">{homeOffEff}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Defensive Efficiency */}
+        <div className="p-3 bg-[#23263a]/50 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-400">Defensive Efficiency</span>
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div className="text-lg font-bold text-[#faafe8]">{awayDefEff}</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-[#00ffe7]">{homeDefEff}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Note */}
+      <div className="mt-4 pt-4 border-t border-[#faafe8]/20">
+        <p className="text-xs text-gray-500 text-center">
+          Predictions powered by ESPN Analytics
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default Prediction;
