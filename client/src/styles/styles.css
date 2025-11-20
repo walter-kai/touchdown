@@ -32,7 +32,7 @@ h1 {
 }
 
 h2 {
-  @apply text-2xl text-center font-bold text-[#00ffe7] drop-shadow-[0_0_8px_#00ffe7]
+  @apply text-2xl text-center font-bold text-[#00ffe7]
 }
 
 h3 {

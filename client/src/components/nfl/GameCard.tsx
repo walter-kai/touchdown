@@ -68,121 +68,26 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
 
   // Handler to fetch game leaders from team API
   const fetchGameLeaders = async () => {
-    // If already fetched, just toggle visibility
+    // If already shown, just toggle visibility
     if (gameLeadersData) {
       setShowGameLeaders(!showGameLeaders);
       return;
     }
 
-    setLoading(true);
-    setError(null);
-
-    try {
-      const [homeRes, awayRes] = await Promise.all([
-        fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${homeTeam.id}`),
-        fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${awayTeam.id}`)
-      ]);
-
-      if (!homeRes.ok || !awayRes.ok) {
-        throw new Error('Failed to fetch team data');
-      }
-
-      const [homeData, awayData] = await Promise.all([homeRes.json(), awayRes.json()]);
-
-      // Extract game leaders from the nextEvent data
-      const homeGameLeaders = homeData.team?.nextEvent?.[0]?.competitions?.[0]?.competitors?.find(
-        (c: any) => c.id === homeTeam.id
-      )?.leaders || [];
-
-      const awayGameLeaders = awayData.team?.nextEvent?.[0]?.competitions?.[0]?.competitors?.find(
-        (c: any) => c.id === awayTeam.id
-      )?.leaders || [];
-
-      setGameLeadersData({ home: homeGameLeaders, away: awayGameLeaders });
-      setShowGameLeaders(true);
-    } catch (err) {
-      console.error('Failed to fetch game leaders:', err);
-      setError('Failed to load game leaders. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    // Just toggle visibility - component will fetch its own data
+    setShowGameLeaders(!showGameLeaders);
   };
 
   // Handler to fetch prediction data
   const fetchPrediction = async () => {
-    // If already fetched, just toggle visibility
-    if (predictionData) {
-      setShowPrediction(!showPrediction);
-      return;
-    }
-
-    setPredictionLoading(true);
-    setPredictionError(null);
-
-    try {
-      const response = await fetch(
-        `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${game.id}/competitions/${competition.id}/predictor`
-      );
-
-      if (!response.ok) {
-        throw new Error('Prediction data not available');
-      }
-
-      const data = await response.json();
-      setPredictionData(data);
-      setShowPrediction(true);
-    } catch (err) {
-      console.error('Failed to fetch prediction:', err);
-      setPredictionError('Prediction data not available for this game.');
-    } finally {
-      setPredictionLoading(false);
-    }
+    // Just toggle visibility - component will fetch its own data
+    setShowPrediction(!showPrediction);
   };
 
   // Handler to fetch odds/probabilities data
   const fetchOdds = async () => {
-    // If already fetched, just toggle visibility
-    if (oddsData) {
-      setShowOdds(!showOdds);
-      return;
-    }
-
-    setOddsLoading(true);
-    setOddsError(null);
-
-    try {
-      const response = await fetch(
-        `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${game.id}/competitions/${competition.id}/probabilities?limit=200`
-      );
-
-      if (!response.ok) {
-        // Check if game hasn't started yet
-        const status = competition.status.type.state;
-        if (status === 'pre') {
-          throw new Error('Odds data will be available once the game starts');
-        } else if (response.status === 404) {
-          throw new Error('Odds data not found for this game');
-        } else if (response.status === 400) {
-          throw new Error('Odds data not available for this game');
-        }
-        throw new Error('Failed to load odds data');
-      }
-
-      const data = await response.json();
-      
-      // Check if we have actual data
-      if (!data.items || data.items.length === 0) {
-        throw new Error('No probability data available for this game yet');
-      }
-      
-      setOddsData(data);
-      setShowOdds(true);
-    } catch (err) {
-      console.error('Failed to fetch odds:', err);
-      setOddsError(err instanceof Error ? err.message : 'Live odds data not available for this game.');
-    } finally {
-      setOddsLoading(false);
-    }
+    // Just toggle visibility - component will fetch its own data
+    setShowOdds(!showOdds);
   };
 
   // Handler to navigate with leaders data
@@ -543,8 +448,8 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
           }}
         >
           <HeadToHead
-            homeTeamLeaders={gameLeadersData.home}
-            awayTeamLeaders={gameLeadersData.away}
+            homeTeamId={homeTeam.id}
+            awayTeamId={awayTeam.id}
             homeTeamName={homeTeam.team.displayName}
             awayTeamName={awayTeam.team.displayName}
           />
@@ -552,7 +457,7 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
       )}
 
       {/* Prediction */}
-      {showPrediction && predictionData && (
+      {showPrediction && (
         <div 
           className="overflow-hidden transition-all duration-500 ease-in-out mt-4"
           style={{
@@ -561,7 +466,8 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
           }}
         >
           <Prediction
-            data={predictionData}
+            gameId={game.id}
+            competitionId={competition.id}
             homeTeamInfo={{
               name: homeTeam.team.displayName,
               logo: homeTeam.team.logo,
@@ -572,13 +478,12 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
               logo: awayTeam.team.logo,
               color: awayTeam.team.color
             }}
-            onClose={() => setShowPrediction(false)}
           />
         </div>
       )}
 
       {/* Odds */}
-      {showOdds && oddsData && (
+      {showOdds && (
         <div 
           className="overflow-hidden transition-all duration-500 ease-in-out mt-4"
           style={{
@@ -587,7 +492,9 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
           }}
         >
           <Odds
-            data={oddsData}
+            gameId={game.id}
+            competitionId={competition.id}
+            gameStatus={competition.status.type.state}
             homeTeamInfo={{
               name: homeTeam.team.displayName,
               logo: homeTeam.team.logo,
@@ -598,7 +505,6 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
               logo: awayTeam.team.logo,
               color: awayTeam.team.color
             }}
-            onClose={() => setShowOdds(false)}
           />
         </div>
       )}

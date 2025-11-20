@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 import OnlineFooterNavBar from './components/common/navs/FooterNavBar';
+import GameNavBar from './components/common/navs/GameNavBar';
 
 import NFL from './pages/nfl/NFL';
 import NFLTeamPage from './pages/nfl/Team';
@@ -32,8 +33,6 @@ import { connect } from 'http2';
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [backgroundLoaded, setBackgroundLoaded] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
   const [showFooterMenu, setShowFooterMenu] = useState(false);
   const [showOnlineFooterMenu, setShowOnlineFooterMenu] = useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
@@ -42,6 +41,12 @@ const App: React.FC = () => {
   const onlineToggleButtonRef = React.useRef<HTMLButtonElement>(null);
   const { showLoginModal, closeLoginModal, user } = useAuth();
   const nodeRef = useRef<HTMLDivElement>(null);
+  
+  // State for game page navigation
+  const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds'>('info');
+  
+  // Check if we're on a game page
+  const isGamePage = location.pathname.startsWith('/nfl/game/');
 
   // Redirect unauthenticated users from /i/ routes
   useEffect(() => {
@@ -56,82 +61,16 @@ const App: React.FC = () => {
       window.scrollTo(0, 0);
     }
   }, [location.pathname]);
-
-  // Preload garage background image
+  
+  // Reset game tab when navigating to a new game
   useEffect(() => {
-    const img = new Image();
-    img.onload = () => setBackgroundLoaded(true);
-    img.src = '/bg/i/garage.png';
-  }, []);
-
-  // Handle scroll for parallax effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Determine background image based on current route
-  const getBackgroundImage = () => {
-    if (location.pathname === '/i/garage' || location.pathname === '/bots') {
-      return backgroundLoaded ? "url('/bg/i/garage.png')" : "url('/bg/city.jpg')";
+    if (isGamePage) {
+      setGameTab('info');
     }
-    return "url('/bg/city.jpg')";
-  };
-
-  // Calculate parallax transform with bounds
-  const getParallaxTransform = (multiplier: number) => {
-    const documentHeight = document.documentElement.scrollHeight;
-    const windowHeight = window.innerHeight;
-    const maxScroll = documentHeight - windowHeight;
-    
-    // Prevent division by zero and ensure we have scrollable content
-    if (maxScroll <= 0) return 'translateY(0px)';
-    
-    // Calculate scroll progress (0 to 1)
-    const scrollProgress = Math.min(scrollY / maxScroll, 1);
-    
-    // Limit transform to a small percentage of viewport height
-    const maxTransform = windowHeight * 0.1; // Reduced from 0.3 to 0.1
-    const transform = scrollProgress * maxTransform * multiplier;
-    
-    return `translateY(${transform}px)`;
-  };
+  }, [location.pathname, isGamePage]);
 
   return (
-    <div className="min-h-screen overflow-x-hidden relative">
-      {/* Background Container with Parallax */}
-        
-          <div className="fixed inset-0 z-0 overflow-hidden">
-            <div 
-              className="absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out bg-black"
-              style={{
-                backgroundImage: getBackgroundImage(),
-                transform: getParallaxTransform(0.5),
-                willChange: 'transform',
-                height: '110%', // Slightly larger to accommodate transform
-                top: '-5%',
-              }}
-            />
-            <div 
-              className="absolute inset-0 bg-gradient-to-br from-neon-cyan via-neon-darker to-neon-purple opacity-100"
-              style={{
-                transform: getParallaxTransform(0.3),
-                willChange: 'transform',
-              }}
-            />
-            <div 
-              className="absolute inset-0 bg-black opacity-70"
-              style={{
-                transform: getParallaxTransform(0.3),
-                willChange: 'transform',
-              }}
-            />
-          </div>
-        {/* )} */}
+    <div className="min-h-screen overflow-x-hidden relative bg-black/90 bg-blend-overlay">
       
       {/* Content Container */}
       <div className="relative z-10 flex flex-col min-h-screen">
@@ -172,7 +111,7 @@ const App: React.FC = () => {
                 <Routes location={location}>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/nfl" element={<NFL />} />
-                  <Route path="/nfl/game/:gameId" element={<NFLGame />} />
+                  <Route path="/nfl/game/:gameId" element={<NFLGame activeTab={gameTab} onTabChange={setGameTab} />} />
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage />} />
                   <Route path="/nfl/player/:playerId" element={<NFLPlayerPage />} />
                   
@@ -207,6 +146,12 @@ const App: React.FC = () => {
             </CSSTransition>
           </TransitionGroup>
         </div>
+        
+        {/* Game Navigation Bar - Only show on game pages */}
+        {isGamePage && (
+          <GameNavBar activeTab={gameTab} onTabChange={setGameTab} />
+        )}
+        
         {/* Always render LoginModal globally, not conditionally */}
         <LoginModal isOpen={showLoginModal} onClose={closeLoginModal} />
         

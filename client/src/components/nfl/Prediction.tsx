@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FaPercent, FaTimes } from "react-icons/fa";
+import axios from "axios";
 
 interface Statistic {
   name: string;
@@ -26,13 +27,55 @@ interface PredictionData {
 }
 
 interface PredictionProps {
-  data: PredictionData;
+  gameId: string;
+  competitionId: string;
   homeTeamInfo: { name: string; logo: string; color: string };
   awayTeamInfo: { name: string; logo: string; color: string };
-  onClose: () => void;
 }
 
-const Prediction: React.FC<PredictionProps> = ({ data, homeTeamInfo, awayTeamInfo, onClose }) => {
+const Prediction: React.FC<PredictionProps> = ({ gameId, competitionId, homeTeamInfo, awayTeamInfo }) => {
+  const [data, setData] = useState<PredictionData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPrediction = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await axios.get(
+          `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${gameId}/competitions/${competitionId}/predictor`
+        );
+
+        setData(response.data);
+      } catch (err) {
+        console.error('Failed to fetch prediction:', err);
+        setError('Prediction data not available for this game');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPrediction();
+  }, [gameId, competitionId]);
+
+  if (loading) {
+    return (
+      <div className="bg-[#181a23]/95 rounded-xl border border-[#00ffe7]/30 p-6 text-center">
+        <p className="text-[#00ffe7]">Loading prediction data...</p>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="bg-[#181a23]/95 rounded-xl border border-[#00ffe7]/30 p-6 text-center">
+        <p className="text-gray-400">{error || 'No prediction data available'}</p>
+      </div>
+    );
+  }
+
   // Extract key statistics
   const getStatValue = (stats: Statistic[], statName: string): string => {
     const stat = stats.find(s => s.name === statName);
@@ -60,12 +103,6 @@ const Prediction: React.FC<PredictionProps> = ({ data, homeTeamInfo, awayTeamInf
           <FaPercent className="text-[#00ffe7] text-lg sm:text-xl" />
           <h3 className="text-base sm:text-lg font-bold text-[#00ffe7]">Game Prediction</h3>
         </div>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-[#00ffe7] transition-colors p-1"
-        >
-          <FaTimes className="text-lg" />
-        </button>
       </div>
 
       {/* Win Probability */}

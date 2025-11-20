@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaFootballBall, FaArrowLeft, FaCalendar, FaChartLine, FaTrophy, FaNewspaper } from 'react-icons/fa';
+import axios from 'axios';
 import type { AthleteOverview, AthleteBio } from '@/types/espn/player';
 
 const NFLPlayer: React.FC = () => {
@@ -23,19 +24,15 @@ const NFLPlayer: React.FC = () => {
 
         // Fetch overview and bio APIs in parallel
         const [overviewRes, bioRes] = await Promise.all([
-          fetch(`https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/${playerId}/overview`),
-          fetch(`https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/${playerId}`)
+          axios.get(`https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/${playerId}/overview`),
+          axios.get(`https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/${playerId}`)
         ]);
 
-        if (!overviewRes.ok) throw new Error('Failed to fetch player overview');
-
-        const overviewData = await overviewRes.json();
-        setOverview(overviewData);
-
+        setOverview(overviewRes.data);
+        
         // Process bio data
-        if (bioRes.ok) {
-          const bioData = await bioRes.json();
-          setBio(bioData);
+        if (bioRes.data) {
+          setBio(bioRes.data);
         }
 
         setLoading(false);

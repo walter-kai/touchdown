@@ -1,25 +1,76 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaFootballBall } from "react-icons/fa";
+import axios from "axios";
 import type { Leader } from "@/types/espn/game";
 
 interface HeadToHeadProps {
-  homeTeamLeaders: Leader[];
-  awayTeamLeaders: Leader[];
+  homeTeamId: string;
+  awayTeamId: string;
   homeTeamName: string;
   awayTeamName: string;
 }
 
 const HeadToHead: React.FC<HeadToHeadProps> = ({ 
-  homeTeamLeaders, 
-  awayTeamLeaders,
+  homeTeamId,
+  awayTeamId,
   homeTeamName,
-  awayTeamName
+  awayTeamName,
 }) => {
   const navigate = useNavigate();
-  
-  if (!homeTeamLeaders.length || !awayTeamLeaders.length) return null;
+  const [homeTeamLeaders, setHomeTeamLeaders] = useState<Leader[]>([]);
+  const [awayTeamLeaders, setAwayTeamLeaders] = useState<Leader[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const fetchLeaders = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const [homeResponse, awayResponse] = await Promise.all([
+          axios.get(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${homeTeamId}`),
+          axios.get(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${awayTeamId}`)
+        ]);
+
+        const homeLeaders = homeResponse.data.team?.nextEvent?.[0]?.competitions?.[0]?.competitors?.find(
+          (c: any) => c.id === homeTeamId
+        )?.leaders || [];
+
+        const awayLeaders = awayResponse.data.team?.nextEvent?.[0]?.competitions?.[0]?.competitors?.find(
+          (c: any) => c.id === awayTeamId
+        )?.leaders || [];
+
+        setHomeTeamLeaders(homeLeaders);
+        setAwayTeamLeaders(awayLeaders);
+      } catch (err) {
+        console.error('Failed to fetch team leaders:', err);
+        setError('Failed to load team leaders data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaders();
+  }, [homeTeamId, awayTeamId]);
+
+  if (loading) {
+    return (
+      <div className="bg-[#181a23]/95 rounded-xl border border-[#00ffe7]/30 p-6 text-center">
+        <p className="text-[#00ffe7]">Loading head-to-head data...</p>
+      </div>
+    );
+  }
+
+  if (error || !homeTeamLeaders.length || !awayTeamLeaders.length) {
+    return (
+      <div className="bg-[#181a23]/95 rounded-xl border border-[#00ffe7]/30 p-6 text-center">
+        <p className="text-gray-400">{error || 'No head-to-head data available'}</p>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-3">
       <div className="text-xs sm:text-sm font-bold text-[#00ffe7] uppercase tracking-wider">

@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { FaChartLine, FaTimes } from "react-icons/fa";
+import axios from "axios";
 
 interface ProbabilityItem {
   tiePercentage: number;
@@ -20,16 +21,55 @@ interface OddsData {
 }
 
 interface OddsProps {
-  data: OddsData;
+  gameId: string;
+  competitionId: string;
+  gameStatus: string;
   homeTeamInfo: { name: string; logo: string; color: string };
   awayTeamInfo: { name: string; logo: string; color: string };
-  onClose: () => void;
 }
 
-const Odds: React.FC<OddsProps> = ({ data, homeTeamInfo, awayTeamInfo, onClose }) => {
-  // Filter out pre-game data and sort by time
+const Odds: React.FC<OddsProps> = ({ gameId, competitionId, gameStatus, homeTeamInfo, awayTeamInfo }) => {
+  const [data, setData] = useState<OddsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // State for draggable cursor - shared across all charts (must be before conditional returns)
+  const [cursorPosition, setCursorPosition] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const fetchOdds = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await axios.get(
+          `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${gameId}/competitions/${competitionId}/probabilities?limit=200`
+        );
+
+        if (!response.data.items || response.data.items.length === 0) {
+          throw new Error('No probability data available for this game yet');
+        }
+
+        setData(response.data);
+      } catch (err) {
+        console.error('Failed to fetch odds:', err);
+        if (gameStatus === 'pre') {
+          setError('Odds data will be available once the game starts');
+        } else {
+          setError('Live odds data not available for this game');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOdds();
+  }, [gameId, competitionId, gameStatus]);
+
+  // Filter out pre-game data and sort by time (must be before conditional returns)
   const filteredData = useMemo(() => {
-    if (!data.items || data.items.length === 0) return [];
+    if (!data?.items || data.items.length === 0) return [];
     
     // Filter out pre-game data (sequence numbers less than 100)
     const filtered = data.items.filter(item => {
@@ -41,13 +81,13 @@ const Odds: React.FC<OddsProps> = ({ data, homeTeamInfo, awayTeamInfo, onClose }
     return filtered.sort((a, b) => 
       new Date(a.lastModified).getTime() - new Date(b.lastModified).getTime()
     );
-  }, [data.items]);
+  }, [data?.items]);
 
-  // Get the latest probability (most recent by time)
+  // Get the latest probability (most recent by time) (must be before conditional returns)
   const latestProb = useMemo(() => {
     if (filteredData.length === 0) {
       // Fallback to original data if no filtered data
-      if (!data.items || data.items.length === 0) return null;
+      if (!data?.items || data.items.length === 0) return null;
       // Sort original data by time and get the latest
       const sorted = [...data.items].sort((a, b) => 
         new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
@@ -55,11 +95,11 @@ const Odds: React.FC<OddsProps> = ({ data, homeTeamInfo, awayTeamInfo, onClose }
       return sorted[0];
     }
     return filteredData[filteredData.length - 1]; // Last item after sorting by time
-  }, [filteredData, data.items]);
+  }, [filteredData, data?.items]);
 
-  // Calculate win probability trend over time
+  // Calculate win probability trend over time (must be before conditional returns)
   const probTrend = useMemo(() => {
-    const dataToUse = filteredData.length > 0 ? filteredData : data.items;
+    const dataToUse = filteredData.length > 0 ? filteredData : data?.items;
     if (!dataToUse || dataToUse.length < 2) return null;
     
     // Data is already sorted by time, just sample evenly
@@ -73,11 +113,23 @@ const Odds: React.FC<OddsProps> = ({ data, homeTeamInfo, awayTeamInfo, onClose }
     }
     
     return samples;
-  }, [filteredData, data.items]);
+  }, [filteredData, data?.items]);
 
-  // State for draggable cursor - shared across all charts
-  const [cursorPosition, setCursorPosition] = useState<number | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  if (loading) {
+    return (
+      <div className="bg-[#181a23]/95 rounded-xl border border-[#faafe8]/30 p-6 text-center">
+        <p className="text-[#faafe8]">Loading odds data...</p>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="bg-[#181a23]/95 rounded-xl border border-[#faafe8]/30 p-6 text-center">
+        <p className="text-gray-400">{error || 'No odds data available'}</p>
+      </div>
+    );
+  }
 
   // Handle mouse events for draggable cursor - works with currentTarget
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -168,12 +220,6 @@ const Odds: React.FC<OddsProps> = ({ data, homeTeamInfo, awayTeamInfo, onClose }
           <FaChartLine className="text-[#faafe8] text-lg sm:text-xl" />
           <h3 className="text-base sm:text-lg font-bold text-[#faafe8]">Live Win Probability</h3>
         </div>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-[#faafe8] transition-colors p-1"
-        >
-          <FaTimes className="text-lg" />
-        </button>
       </div>
 
       {/* Current Win Probability */}

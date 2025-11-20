@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { FaFootballBall, FaArrowLeft, FaHome, FaRoad, FaTrophy, FaUsers, FaChartLine, FaCalendar, FaMapMarkerAlt, FaStar, FaCrosshairs, FaListOl, FaClipboardList } from "react-icons/fa";
+import axios from "axios";
 import type { TeamApiResponse, TeamRecord, NextEvent, Competitor, Leader } from "@/types/espn/team";
 
 interface ProjectionData {
@@ -102,44 +103,29 @@ const NFLTeam: React.FC = () => {
         setError(null);
         
         // Fetch team data
-        const teamResponse = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamId}`);
-        
-        if (!teamResponse.ok) {
-          throw new Error('Failed to fetch team data');
-        }
-        
-        const teamDataResult: TeamApiResponse = await teamResponse.json();
-        setTeamData(teamDataResult);
+        const teamResponse = await axios.get(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamId}`);
+        setTeamData(teamResponse.data);
 
         // Fetch projection data
         try {
-          const projectionResponse = await fetch(`https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2025/teams/${teamId}/projection`);
-          if (projectionResponse.ok) {
-            const projectionResult: ProjectionData = await projectionResponse.json();
-            setProjectionData(projectionResult);
-          }
+          const projectionResponse = await axios.get(`https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2025/teams/${teamId}/projection`);
+          setProjectionData(projectionResponse.data);
         } catch (projErr) {
           console.log('Projection data not available:', projErr);
         }
 
         // Fetch detailed records
         try {
-          const recordsResponse = await fetch(`https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2025/types/2/teams/${teamId}/record`);
-          if (recordsResponse.ok) {
-            const recordsResult: DetailedRecordData = await recordsResponse.json();
-            setDetailedRecords(recordsResult);
-          }
+          const recordsResponse = await axios.get(`https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2025/types/2/teams/${teamId}/record`);
+          setDetailedRecords(recordsResponse.data);
         } catch (recErr) {
           console.log('Detailed records not available:', recErr);
         }
 
         // Fetch schedule
         try {
-          const scheduleResponse = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamId}/schedule`);
-          if (scheduleResponse.ok) {
-            const scheduleResult: ScheduleData = await scheduleResponse.json();
-            setScheduleData(scheduleResult);
-          }
+          const scheduleResponse = await axios.get(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamId}/schedule`);
+          setScheduleData(scheduleResponse.data);
         } catch (schedErr) {
           console.log('Schedule not available:', schedErr);
         }

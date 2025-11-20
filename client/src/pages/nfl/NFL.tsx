@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaFootballBall, FaPlay, FaClock, FaNewspaper, FaCalendar, FaChevronLeft, FaChevronRight, FaTrophy, FaMapMarkerAlt } from "react-icons/fa";
+import axios from "axios";
 import type {
   Event,
   TeamOnBye,
@@ -86,13 +87,8 @@ const NFLScoreboard: React.FC = () => {
         url += `&dates=${dateRange}`;
       }
       
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch NFL data');
-      }
-      
-      const data: ESPNData = await response.json();
+      const response = await axios.get(url);
+      const data: ESPNData = response.data;
       
       // Get games from content.sbData.events or events
       const events = data.content?.sbData?.events || data.events || [];
