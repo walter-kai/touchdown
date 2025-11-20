@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaFootballBall, FaPlay, FaClock, FaNewspaper, FaSync, FaUsers, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaFootballBall, FaPlay, FaClock, FaNewspaper, FaCalendar, FaChevronLeft, FaChevronRight, FaTrophy, FaMapMarkerAlt } from "react-icons/fa";
 import type {
   Event,
   TeamOnBye,
-  Article
+  Article,
+  Competitor
 } from '@/types/espn/game';
-import GameCard from '@/components/nfl/GameCard';
 import NewsCard from '@/components/nfl/NewsCard';
 
 interface ESPNData {
@@ -171,110 +171,88 @@ const NFLScoreboard: React.FC = () => {
   }, [countdown, selectedWeek]);
 
   return (
-		<div className="max-w-7xl mx-auto px-2 sm:px-4 py-16 sm:py-20">
+	<div className="max-w-7xl mx-auto px-4 py-20">
 	
 	{/* Header */}
-	<div className="mb-6 sm:mb-8 text-center">
-		{/* Title Row */}
-		<div className="flex items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-5">
-			<FaFootballBall className="text-2xl sm:text-3xl md:text-4xl text-[#00ffe7] animate-pulse" />
-			<h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#00ffe7] drop-shadow-[0_0_12px_#00ffe7] tracking-wide sm:tracking-widest">
+	<div className="mb-8 text-center">
+		<div className="flex items-center justify-center gap-4 mb-5">
+			<FaFootballBall className="text-4xl text-[#00ffe7] animate-pulse" />
+			<h1 className="text-4xl md:text-5xl font-bold text-[#00ffe7]">
 				NFL SCOREBOARD
 			</h1>
-			<FaFootballBall className="text-2xl sm:text-3xl md:text-4xl text-[#00ffe7] animate-pulse" />
+			<FaFootballBall className="text-4xl text-[#00ffe7] animate-pulse" />
 		</div>
 		
-		{/* Week Navigation Row */}
-		<div className="flex items-center justify-center gap-3 sm:gap-4 mb-4">
+		{/* Week Navigation */}
+		<div className="flex items-center justify-center gap-4 mb-4">
 			<button
 				onClick={handlePreviousWeek}
 				disabled={!selectedWeek || selectedWeek <= 1}
-				className="p-2.5 sm:p-3 bg-[#00ffe7]/10 hover:bg-[#00ffe7]/20 border border-[#00ffe7]/40 rounded-lg text-[#00ffe7] transition-all hover:shadow-[0_0_8px_rgba(0,255,231,0.4)] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:shadow-none"
-				title="Previous Week"
+				className="p-3 bg-[#23263a] border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
 			>
-				<FaChevronLeft className="text-base sm:text-lg" />
+				<FaChevronLeft />
 			</button>
 			
-			<div className="min-w-[120px] sm:min-w-[140px] px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-[#00ffe7]/20 via-[#00ffe7]/30 to-[#00ffe7]/20 border border-[#00ffe7]/50 rounded-lg shadow-[0_0_12px_rgba(0,255,231,0.3)]">
-				<span className="text-lg sm:text-xl font-bold text-[#00ffe7] tracking-wider">
-					WEEK {selectedWeek || weekNumber || '...'}
-				</span>
+			<div className="text-2xl font-bold text-white">
+				Week {selectedWeek || weekNumber || '...'}
 			</div>
 			
 			<button
 				onClick={handleNextWeek}
 				disabled={!selectedWeek || selectedWeek >= 18}
-				className="p-2.5 sm:p-3 bg-[#00ffe7]/10 hover:bg-[#00ffe7]/20 border border-[#00ffe7]/40 rounded-lg text-[#00ffe7] transition-all hover:shadow-[0_0_8px_rgba(0,255,231,0.4)] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:shadow-none"
-				title="Next Week"
+				className="p-3 bg-[#23263a] border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
 			>
-				<FaChevronRight className="text-base sm:text-lg" />
+				<FaChevronRight />
 			</button>
 		</div>
-		
-		<div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+
 		{lastUpdated && (
-			<span className="text-sm text-[#e0e7ef]">
-			Last updated: {lastUpdated.toLocaleTimeString()}
-			</span>
+			<div className="text-sm text-gray-400">
+				Last updated: {lastUpdated.toLocaleTimeString()} • Auto-refresh in {countdown}s
+			</div>
 		)}
-		<button
-			onClick={handleManualRefresh}
-			disabled={isRefreshing}
-			className="flex items-center gap-2 px-4 py-2 bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
-		>
-			<FaSync className={isRefreshing ? 'animate-spin' : ''} />
-			{isRefreshing ? 'Refreshing...' : `Refresh (${countdown}s)`}
-		</button>
-		</div>
 	</div>
 
-	{/* News Ticker - Horizontal Scroll */}
+	{/* News Section */}
 	{news.length > 0 && (
-		<div className="mb-6 bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-4 shadow-[0_0_16px_rgba(250,175,232,0.1)]">
-		<div className="flex items-center gap-2 mb-3">
-			<FaNewspaper className="text-[#faafe8]" />
-			<h2 className="text-lg font-bold text-[#faafe8]">Latest News</h2>
-		</div>
-		<div className="overflow-x-auto custom-scrollbar">
-			<div className="flex gap-4 pb-2">
-			{news.map(article => (
-				<NewsCard key={article.id} article={article} />
-			))}
+		<div className="mb-8">
+			<h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
+				<FaNewspaper />
+				Latest News
+			</h2>
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{news.slice(0, 6).map((article, idx) => (
+					<NewsCard key={idx} article={article} />
+				))}
 			</div>
-		</div>
 		</div>
 	)}
 
 	{/* Teams on Bye */}
 	{byeTeams.length > 0 && (
-		<div className="mb-6 bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-3 sm:p-4 shadow-[0_0_16px_rgba(250,175,232,0.1)]">
-		<div className="flex items-center gap-2 mb-3">
-			<FaUsers className="text-base sm:text-lg text-[#faafe8]" />
-			<h2 className="text-base sm:text-lg font-bold text-[#faafe8]">Teams on Bye</h2>
-		</div>
-		<div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4">
-			{byeTeams.map(team => (
-			<button 
-				key={team.id} 
-				onClick={() => navigate(`/nfl/team/${team.id}`)}
-				className="flex items-center gap-1.5 sm:gap-2 bg-[#23263a]/50 px-2 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-lg border border-[#00ffe7]/20 hover:bg-[#00ffe7]/10 hover:border-[#00ffe7]/40 transition-all cursor-pointer"
-			>
-				<img 
-				src={team.logo} 
-				alt={team.displayName}
-				className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 object-contain"
-				/>
-				<span className="text-xs sm:text-sm text-[#e0e7ef] font-medium">{team.displayName}</span>
-			</button>
-			))}
-		</div>
+		<div className="mb-8 bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-4 shadow-[0_0_16px_rgba(250,175,232,0.1)]">
+			<h3 className="text-lg font-bold text-[#faafe8] mb-3">Teams on Bye</h3>
+			<div className="flex flex-wrap gap-3">
+				{byeTeams.map((team) => (
+					<button
+						key={team.id}
+						onClick={() => navigate(`/nfl/team/${team.id}`)}
+						className="flex items-center gap-2 bg-[#23263a]/50 hover:bg-[#23263a] border border-[#faafe8]/20 hover:border-[#faafe8]/50 rounded-lg px-3 py-2 transition-all"
+					>
+						{team.logo && (
+							<img src={team.logo} alt={team.displayName} className="w-6 h-6" />
+						)}
+						<span className="text-white text-sm font-semibold">{team.abbreviation}</span>
+					</button>
+				))}
+			</div>
 		</div>
 	)}
 
 	{/* Loading State */}
 	{initialLoading && games.length === 0 && (
-		<div className="text-center py-12 sm:py-16 md:py-20">
-		<FaClock className="text-4xl sm:text-5xl md:text-6xl text-[#00ffe7] mx-auto mb-3 sm:mb-4 animate-pulse" />
+		<div className="text-center py-20">
+		<FaClock className="text-6xl text-[#00ffe7] mx-auto mb-4 animate-pulse" />
 		<p className="text-[#e0e7ef] text-base sm:text-lg md:text-xl">Loading NFL scores...</p>
 		</div>
 	)}
@@ -290,48 +268,56 @@ const NFLScoreboard: React.FC = () => {
 	{/* Games Grid */}
 	{!initialLoading && games.length > 0 && (() => {
 		const liveGames = games.filter(game => game.status.type.state === 'in');
-		const otherGames = games.filter(game => game.status.type.state !== 'in');
+		const completedGames = games.filter(game => game.status.type.completed);
+		const upcomingGames = games.filter(game => game.status.type.state === 'pre');
 		
 		return (
-		<>
-			{/* Live Games Featured Section */}
+		<div className="space-y-8">
+			{/* Live Games */}
 			{liveGames.length > 0 && (
-			<div className="mb-8 sm:mb-10 md:mb-12">
-				<div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5 md:mb-6">
-				<div className="relative">
-					<FaPlay className="text-xl sm:text-2xl text-[#00ffe7] animate-pulse" />
-					<span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
-				</div>
-				<h2 className="text-xl sm:text-2xl font-bold text-[#00ffe7]">
-					Live Games
+			<div>
+				<h2 className="text-2xl font-bold text-[#00ffe7] mb-4 flex items-center gap-2">
+				<FaPlay className="animate-pulse" />
+				Live Now ({liveGames.length})
 				</h2>
-				<span className="px-2 sm:px-3 py-1 bg-red-500/20 border border-red-500/50 rounded-full text-xs sm:text-sm font-bold text-red-400 animate-pulse">
-					{liveGames.length} LIVE
-				</span>
-				</div>
-				<div className="grid grid-cols-1 gap-4 sm:gap-5 md:gap-6">
-				{liveGames.map(game => (
-					<GameCard key={game.id} event={game} />
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{liveGames.map((game) => (
+					<GameSummaryCard key={game.id} game={game} navigate={navigate} />
 				))}
 				</div>
 			</div>
 			)}
 			
-			{/* Other Games */}
-			{otherGames.length > 0 && (
-			<div className="mb-8 sm:mb-10 md:mb-12">
-				<h2 className="text-xl sm:text-2xl font-bold text-[#00ffe7] mb-4 sm:mb-5 md:mb-6 flex items-center gap-2">
-				<FaFootballBall className="text-base sm:text-lg" />
-				{liveGames.length > 0 ? 'Other Games' : 'Games'}
+			{/* Completed Games */}
+			{completedGames.length > 0 && (
+			<div>
+				<h2 className="text-2xl font-bold text-gray-400 mb-4 flex items-center gap-2">
+				<FaTrophy />
+				Final ({completedGames.length})
 				</h2>
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
-				{otherGames.map(game => (
-					<GameCard key={game.id} event={game} />
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{completedGames.map((game) => (
+					<GameSummaryCard key={game.id} game={game} navigate={navigate} />
 				))}
 				</div>
 			</div>
 			)}
-		</>
+			
+			{/* Upcoming Games */}
+			{upcomingGames.length > 0 && (
+			<div>
+				<h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
+				<FaCalendar />
+				Upcoming ({upcomingGames.length})
+				</h2>
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{upcomingGames.map((game) => (
+					<GameSummaryCard key={game.id} game={game} navigate={navigate} />
+				))}
+				</div>
+			</div>
+			)}
+		</div>
 		);
 	})()}
 
@@ -344,6 +330,126 @@ const NFLScoreboard: React.FC = () => {
 	)}
 
 	</div>
+  );
+};
+
+// Game Summary Card Component
+interface GameSummaryCardProps {
+  game: Event;
+  navigate: (path: string) => void;
+}
+
+const GameSummaryCard: React.FC<GameSummaryCardProps> = ({ game, navigate }) => {
+  const competition = game.competitions[0];
+  const awayTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'away');
+  const homeTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'home');
+  
+  if (!awayTeam || !homeTeam) return null;
+
+  const isLive = competition.status.type.state === 'in';
+  const isFinal = competition.status.type.completed;
+  const isPre = competition.status.type.state === 'pre';
+
+  return (
+    <button
+      onClick={() => navigate(`/nfl/game/${game.id}`)}
+      className="relative bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-4 hover:border-[#00ffe7]/50 hover:shadow-[0_0_30px_rgba(0,255,231,0.2)] transition-all duration-300 text-left w-full"
+    >
+      {/* Live Badge */}
+      {isLive && (
+        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-[#00ffe7]/20 border border-[#00ffe7]/50 rounded-full">
+          <FaPlay className="text-[10px] text-[#00ffe7] animate-pulse" />
+          <span className="text-xs font-bold text-[#00ffe7]">LIVE</span>
+        </div>
+      )}
+
+      {/* Game Time/Status */}
+      <div className="text-center mb-3">
+        {isPre && (
+          <div className="text-sm text-gray-400">
+            {new Date(game.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+            <br />
+            {new Date(game.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        )}
+        {isLive && (
+          <div className="text-sm text-[#00ffe7] font-bold">
+            Q{competition.status.period} - {competition.status.displayClock}
+          </div>
+        )}
+        {isFinal && (
+          <div className="text-sm text-gray-400 font-bold">FINAL</div>
+        )}
+      </div>
+
+      {/* Teams */}
+      <div className="space-y-3">
+        {/* Away Team */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 flex-1">
+            <img 
+              src={awayTeam.team.logo} 
+              alt={awayTeam.team.displayName}
+              className="w-10 h-10 object-contain"
+            />
+            <div>
+              <div className={`font-bold ${awayTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
+                {awayTeam.team.abbreviation}
+              </div>
+              <div className="text-xs text-gray-400">
+                {awayTeam.records?.find((r: any) => r.type === 'total')?.summary || ''}
+              </div>
+            </div>
+          </div>
+          <div className={`text-2xl font-bold ${awayTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
+            {awayTeam.score || '-'}
+          </div>
+        </div>
+
+        {/* Home Team */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 flex-1">
+            <img 
+              src={homeTeam.team.logo} 
+              alt={homeTeam.team.displayName}
+              className="w-10 h-10 object-contain"
+            />
+            <div>
+              <div className={`font-bold ${homeTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
+                {homeTeam.team.abbreviation}
+              </div>
+              <div className="text-xs text-gray-400">
+                {homeTeam.records?.find((r: any) => r.type === 'total')?.summary || ''}
+              </div>
+            </div>
+          </div>
+          <div className={`text-2xl font-bold ${homeTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
+            {homeTeam.score || '-'}
+          </div>
+        </div>
+      </div>
+
+      {/* Venue */}
+      {competition.venue && (
+        <div className="mt-3 pt-3 border-t border-[#faafe8]/20 flex items-center gap-2 text-xs text-gray-400">
+          <FaMapMarkerAlt className="text-[#faafe8]" />
+          <span className="truncate">{competition.venue.fullName}</span>
+        </div>
+      )}
+
+      {/* Broadcast */}
+      {competition.broadcast && (
+        <div className="mt-2 text-xs text-[#faafe8]">
+          📺 {competition.broadcast}
+        </div>
+      )}
+
+      {/* Corner Accents */}
+      <span className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#00ffe7] rounded-tl-xl opacity-60" />
+      <span className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#00ffe7] rounded-tr-xl opacity-60" />
+      <span className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#00ffe7] rounded-bl-xl opacity-60" />
+      <span className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#00ffe7] rounded-br-xl opacity-60" />
+    </button>
   );
 };
 

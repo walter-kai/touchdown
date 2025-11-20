@@ -493,24 +493,26 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
             )}
           </button>
 
-          {/* Show Odds Button */}
-          <button
-            onClick={fetchOdds}
-            disabled={oddsLoading}
-            className="w-full mt-2 py-2 px-4 bg-[#00ffe7]/10 hover:bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {oddsLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#00ffe7] border-t-transparent"></div>
-                Loading...
-              </>
-            ) : (
-              <>
-                <FaChartLine />
-                {showOdds ? 'Hide' : 'Show'} Live Odds
-              </>
-            )}
-          </button>
+          {/* Show Odds Button - Only for live or completed games */}
+          {(isLive || isFinal) && (
+            <button
+              onClick={fetchOdds}
+              disabled={oddsLoading}
+              className="w-full mt-2 py-2 px-4 bg-[#00ffe7]/10 hover:bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {oddsLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#00ffe7] border-t-transparent"></div>
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FaChartLine />
+                  {showOdds ? 'Hide' : 'Show'} Live Odds
+                </>
+              )}
+            </button>
+          )}
 
           {/* Error Messages */}
           {error && (
