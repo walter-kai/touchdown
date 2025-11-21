@@ -32,10 +32,14 @@ h1 {
 }
 
 h2 {
-  @apply text-2xl text-center font-bold text-[#00ffe7]
+  @apply text-3xl text-center font-bold text-[#00ffe7]
 }
 
 h3 {
+  @apply text-2xl text-center font-bold text-[#00ffe7] 
+}
+
+h4 {
   @apply text-xl text-center font-bold text-[#00ffe7] 
 }
 

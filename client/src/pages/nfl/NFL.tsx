@@ -5,29 +5,15 @@ import axios from "axios";
 import type {
   Event,
   TeamOnBye,
-  Article,
+  ScoreboardResponse,
   Competitor
-} from '@/types/espn/game';
+} from '@/types/espn/scoreboard';
+import type { Article } from '@/types/espn/game';
 import NewsCard from '@/components/nfl/NewsCard';
 
-interface ESPNData {
+interface ESPNData extends ScoreboardResponse {
   news?: {
     articles?: Article[];
-  };
-  content?: {
-    sbData?: {
-      week?: {
-        teamsOnBye?: TeamOnBye[];
-        number?: number;
-      };
-      leagues?: any[];
-      events?: Event[];
-    };
-  };
-  events?: Event[]; // Direct events array from site API
-  week?: {
-    teamsOnBye?: TeamOnBye[];
-    number?: number;
   };
 }
 
@@ -90,8 +76,8 @@ const NFLScoreboard: React.FC = () => {
       const response = await axios.get(url);
       const data: ESPNData = response.data;
       
-      // Get games from content.sbData.events or events
-      const events = data.content?.sbData?.events || data.events || [];
+      // Get games from events array
+      const events = data.events || [];
       if (events) {
         console.log('Fetched games:', events.length);
         if (events.length > 0) {
@@ -104,8 +90,8 @@ const NFLScoreboard: React.FC = () => {
         setNews(data.news.articles);
       }
 
-      // Get week info from content.sbData.week or week
-      const weekData = data.content?.sbData?.week || data.week;
+      // Get week info from week property
+      const weekData = data.week;
       if (weekData) {
         setByeTeams(weekData.teamsOnBye || []);
         const currentWeek = weekData.number || null;
@@ -434,9 +420,9 @@ const GameSummaryCard: React.FC<GameSummaryCardProps> = ({ game, navigate }) => 
       )}
 
       {/* Broadcast */}
-      {competition.broadcast && (
+      {competition.broadcasts && competition.broadcasts.length > 0 && (
         <div className="mt-2 text-xs text-[#faafe8]">
-          📺 {competition.broadcast}
+          📺 {competition.broadcasts[0].names.join(', ')}
         </div>
       )}
 

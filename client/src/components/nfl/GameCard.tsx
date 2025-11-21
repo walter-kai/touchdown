@@ -9,7 +9,7 @@ import type {
   Competitor,
   Leader,
   Linescore
-} from '@/types/espn/game';
+} from '@/types/espn/scoreboard';
 
 // Helper function for status badge
 const getStatusBadge = (game: Event) => {
@@ -115,10 +115,10 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
             <span className="text-gray-400 text-xs sm:text-sm font-bold">FINAL</span>
           )}
         </div>
-        {competition.broadcast && (
+        {competition.broadcasts && competition.broadcasts.length > 0 && (
           <div className="flex items-center gap-1 text-[10px] sm:text-xs text-[#faafe8]">
             <FaTv className="text-xs" />
-            {competition.broadcast}
+            {competition.broadcasts[0].names.join(', ')}
           </div>
         )}
       </div>
@@ -670,7 +670,7 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
                     <div className="inline-flex items-center gap-1 sm:gap-2 bg-[#00ffe7]/20 px-2 sm:px-3 py-1 rounded-full border border-[#00ffe7]/40">
                       <span className="text-[10px] sm:text-xs text-gray-400">Yards:</span>
                       <span className="text-base sm:text-lg font-bold text-[#00ffe7]">
-                        {competition.situation.lastPlay.statYardage > 0 ? '+' : ''}{competition.situation.lastPlay.statYardage}
+                        {(competition.situation.lastPlay.statYardage ?? 0) > 0 ? '+' : ''}{competition.situation.lastPlay.statYardage ?? 0}
                       </span>
                     </div>
                   </div>

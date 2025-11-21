@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaFootballBall } from "react-icons/fa";
 import axios from "axios";
-import type { Leader } from "@/types/espn/game";
+import type { Leader } from "@/types/espn/scoreboard";
 
 interface HeadToHeadProps {
   homeTeamId: string;

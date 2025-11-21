@@ -5,7 +5,9 @@ import axios from 'axios';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import Prediction from '@/components/nfl/Prediction';
 import Odds from '@/components/nfl/Odds';
-import type { Event } from '@/types/espn/game';
+
+import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
+import type { Summary } from '@/types/espn/summary';
 
 interface NFLGameProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds';
@@ -14,7 +16,8 @@ interface NFLGameProps {
 
 const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
   const { gameId } = useParams<{ gameId: string }>();
-  const [gameData, setGameData] = useState<any>(null);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,11 +29,44 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
         setLoading(true);
         setError(null);
 
-        const response = await axios.get(
-          `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
-        );
+        let game: Event | undefined;
 
-        setGameData(response.data);
+        // Check if gameId is "test" - use local JSON file
+        if (gameId === 'test') {
+          const response = await axios.get<ScoreboardResponse>('/scoreboard.json');
+          // Use the first event from the test data
+          game = response.data.events?.[0];
+        } else {
+          // Normal API call for real games
+          const response = await axios.get<ScoreboardResponse>(
+            `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`
+          );
+          // Find the specific game from the scoreboard events
+          game = response.data.events?.find(e => e.id === gameId);
+        }
+        
+        if (!game) {
+          setError('Game not found');
+          setLoading(false);
+          return;
+        }
+
+        setEvent(game);
+
+        // If game is not in session (pre or post), fetch summary data
+        const gameStatus = game.competitions[0].status.type.state;
+        if (gameStatus !== 'in') {
+          try {
+            const summaryResponse = await axios.get<Summary>(
+              `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
+            );
+            setSummary(summaryResponse.data);
+          } catch (summaryErr) {
+            console.error('Error fetching summary data:', summaryErr);
+            // Continue without summary data if it fails
+          }
+        }
+
         setLoading(false);
       } catch (err) {
         console.error('Error fetching game data:', err);
@@ -53,7 +89,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
     );
   }
 
-  if (error || !gameData) {
+  if (error || !event) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a] flex items-center justify-center pb-20">
         <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-8 text-center max-w-md">
@@ -64,13 +100,16 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
     );
   }
 
-  const { header, gameInfo, boxscore, leaders, injuries, broadcasts, pickcenter, lastFiveGames } = gameData;
-  const competition = header?.competitions?.[0];
-  const homeTeam = competition?.competitors?.find((c: any) => c.homeAway === 'home');
-  const awayTeam = competition?.competitors?.find((c: any) => c.homeAway === 'away');
+  const competition = event.competitions[0];
+  const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
+  const awayTeam = competition.competitors.find(c => c.homeAway === 'away');
+  const isGameInSession = competition.status.type.state === 'in';
+  
+  // Get venue image from summary if available
+  const venueImage = summary?.gameInfo?.venue?.images?.[0]?.href;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a] pb-24">
+    <div className="min-h-screen pb-24">
       <div className="max-w-7xl mx-auto px-4 py-8">
 
         {/* Box Score - Always visible at top */}
@@ -79,29 +118,35 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
             {/* Away Team */}
             <div className="flex flex-col items-center">
               <img 
-                src={awayTeam?.team?.logos?.[0]?.href} 
+                src={awayTeam?.team?.logo} 
                 alt={awayTeam?.team?.displayName}
                 className="w-20 h-20 md:w-24 md:h-24 mb-3"
               />
               <h2 className="text-[#e0e7ef] font-bold text-base md:text-xl text-center truncate max-w-full px-2">{awayTeam?.team?.displayName}</h2>
-              <p className="text-[#b0b7bf] text-sm">{awayTeam?.record?.[0]?.displayValue}</p>
+              <p className="text-[#b0b7bf] text-sm">{awayTeam?.records?.[0]?.summary}</p>
               <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-2">{awayTeam?.score || '0'}</p>
             </div>
 
             {/* VS / Status */}
             <div className="text-center">
-              <p className="text-[#faafe8] text-lg md:text-xl font-bold">{competition?.status?.type?.shortDetail}</p>
+              <p className="text-[#faafe8] text-lg md:text-xl font-bold">
+                {new Date(competition.date).toLocaleString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }).replace(',', '')}
+              </p>
+              <p className="text-[#b0b7bf] text-sm md:text-base">
+                {new Date(competition.date).toLocaleString(undefined, { hour: 'numeric', minute: 'numeric' })}
+              </p>
+              <p className="text-[#00ffe7] text-sm mt-2">{competition.status.type.shortDetail}</p>
             </div>
 
             {/* Home Team */}
             <div className="flex flex-col items-center">
               <img 
-                src={homeTeam?.team?.logos?.[0]?.href} 
+                src={homeTeam?.team?.logo} 
                 alt={homeTeam?.team?.displayName}
                 className="w-20 h-20 md:w-24 md:h-24 mb-3"
               />
               <h2 className="text-[#e0e7ef] font-bold text-base md:text-xl text-center truncate max-w-full px-2">{homeTeam?.team?.displayName}</h2>
-              <p className="text-[#b0b7bf] text-sm">{homeTeam?.record?.[0]?.displayValue}</p>
+              <p className="text-[#b0b7bf] text-sm">{homeTeam?.records?.[0]?.summary}</p>
               <p className="text-[#faafe8] text-3xl md:text-4xl font-bold mt-2">{homeTeam?.score || '0'}</p>
             </div>
           </div>
@@ -109,291 +154,462 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
 
         {/* Info Tab - Game Overview */}
         {activeTab === 'info' && (
-          <>
-            {/* Game Information Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              {/* Venue & Weather */}
-              {gameInfo && (
-                <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-lg p-4 relative overflow-hidden">
-                  {/* Venue Background Image */}
-                  {gameInfo.venue?.images?.[0]?.href && (
-                    <div 
-                      className="absolute inset-0 bg-cover bg-center opacity-20"
-                      style={{ backgroundImage: `url(${gameInfo.venue.images[0].href})` }}
-                    />
-                  )}
-                  
-                  {/* Content */}
-                  <div className="relative z-10">
-                    <h4 className="text-[#00ffe7] font-semibold mb-2 text-sm">
-                      {gameInfo.weather ? 'Venue & Weather' : 'Venue'}
-                    </h4>
-                    <p className="text-[#e0e7ef] font-bold text-sm">{gameInfo.venue?.fullName}</p>
-                    <p className="text-[#b0b7bf] text-xs">
-                      {gameInfo.venue?.address?.city}, {gameInfo.venue?.address?.state}
-                    </p>
-                    <p className="text-[#b0b7bf] text-xs">
-                      {gameInfo.venue?.grass ? 'Natural Grass' : 'Artificial Turf'}
-                    </p>
-                    {gameInfo.weather && (
-                      <div className="mt-2 pt-2 border-t border-[#00ffe7]/10">
-                        <p className="text-[#e0e7ef] font-bold">{gameInfo.weather.temperature}°F</p>
-                        <p className="text-[#b0b7bf] text-xs">
-                          High: {gameInfo.weather.highTemperature}°F | Precip: {gameInfo.weather.precipitation}%
-                        </p>
-                        {gameInfo.weather.gust && (
-                          <p className="text-[#b0b7bf] text-xs">Wind: {gameInfo.weather.gust} mph</p>
+          <div className="space-y-6">
+            {/* Game Status & Situation */}
+            <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6">
+              <div className="text-center mb-6">
+                <h2 >
+                  {competition.status.type.detail}
+                </h2>
+                {competition.status.type.state === 'in' && (
+                  <div className="flex items-center justify-center gap-4 text-[#e0e7ef]">
+                    <span className="text-xl font-bold">{competition.status.displayClock}</span>
+                    <span className="text-lg">Quarter {competition.status.period}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Live Game Situation */}
+              {competition.situation && competition.status.type.state === 'in' && (
+                <div className="space-y-6">
+                  {/* Current Drive Info */}
+                  <div className="bg-[#1a1d2e]/50 rounded-xl p-4 border border-[#00ffe7]/20">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="text-center flex-1">
+                        <p className="text-[#b0b7bf] text-sm mb-1">Possession</p>
+                        <div className="flex items-center justify-center gap-2">
+                          <img 
+                            src={competition.situation.possession === homeTeam?.id ? homeTeam?.team.logo : awayTeam?.team.logo}
+                            alt="Possession"
+                            className="w-8 h-8"
+                          />
+                          <p className="text-[#00ffe7] font-bold text-lg">
+                            {competition.situation.possession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {competition.situation.downDistanceText && (
+                        <div className="text-center flex-1">
+                          <p className="text-[#b0b7bf] text-sm mb-1">Down & Distance</p>
+                          <p className="text-[#faafe8] font-bold text-lg">{competition.situation.downDistanceText}</p>
+                        </div>
+                      )}
+                      
+                      {competition.situation.possessionText && (
+                        <div className="text-center flex-1">
+                          <p className="text-[#b0b7bf] text-sm mb-1">Field Position</p>
+                          <p className="text-[#e0e7ef] font-bold text-lg">{competition.situation.possessionText}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Timeouts */}
+                    <div className="flex justify-between items-center pt-4 border-t border-[#00ffe7]/10">
+                      <div className="text-center">
+                        <p className="text-[#b0b7bf] text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
+                        <div className="flex gap-1 justify-center">
+                          {[...Array(3)].map((_, i) => (
+                            <div 
+                              key={i} 
+                              className={`w-3 h-3 rounded-full ${
+                                i < ((competition.situation?.awayTimeouts ?? 3)) 
+                                  ? 'bg-[#00ffe7]' 
+                                  : 'bg-gray-600'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="text-center">
+                        <p className="text-[#b0b7bf] text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
+                        <div className="flex gap-1 justify-center">
+                          {[...Array(3)].map((_, i) => (
+                            <div 
+                              key={i} 
+                              className={`w-3 h-3 rounded-full ${
+                                i < ((competition.situation?.homeTimeouts ?? 3)) 
+                                  ? 'bg-[#faafe8]' 
+                                  : 'bg-gray-600'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Football Field Visualization */}
+                  {competition.situation.lastPlay && (
+                    <div className="bg-[#1a1d2e]/50 rounded-xl p-6 border border-[#00ffe7]/20">
+                      <h4 className="text-[#00ffe7] font-bold text-lg mb-4 text-center">Last Play</h4>
+                      
+                      {/* Play Description */}
+                      <div className="bg-[#23263a]/80 rounded-lg p-4 mb-6">
+                        <p className="text-[#e0e7ef] text-sm leading-relaxed">{competition.situation.lastPlay.text}</p>
+                        {competition.situation.lastPlay.statYardage !== undefined && (
+                          <div className="mt-2 flex items-center justify-center gap-2">
+                            <span className="text-[#b0b7bf] text-xs">Yards:</span>
+                            <span className={`font-bold text-lg ${
+                              competition.situation.lastPlay.statYardage > 0 ? 'text-green-400' : 
+                              competition.situation.lastPlay.statYardage < 0 ? 'text-red-400' : 
+                              'text-gray-400'
+                            }`}>
+                              {competition.situation.lastPlay.statYardage > 0 ? '+' : ''}{competition.situation.lastPlay.statYardage}
+                            </span>
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                </div>
-              )}
 
-              {/* Betting Odds */}
-              {pickcenter?.[0] && (
-                <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-lg p-4">
-                  <h4 className="text-[#00ffe7] font-semibold mb-2 text-sm">Betting</h4>
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#b0b7bf] text-xs">Spread:</span>
-                      <span className="text-[#e0e7ef] font-bold text-sm">{pickcenter[0].details}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#b0b7bf] text-xs">O/U:</span>
-                      <span className="text-[#e0e7ef] font-bold text-sm">{pickcenter[0].overUnder}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#b0b7bf] text-xs">ML ({awayTeam?.team?.abbreviation}):</span>
-                      <span className="text-[#e0e7ef] font-bold text-sm">
-                        {pickcenter[0].awayTeamOdds?.moneyLine > 0 ? '+' : ''}{pickcenter[0].awayTeamOdds?.moneyLine}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#b0b7bf] text-xs">ML ({homeTeam?.team?.abbreviation}):</span>
-                      <span className="text-[#e0e7ef] font-bold text-sm">
-                        {pickcenter[0].homeTeamOdds?.moneyLine > 0 ? '+' : ''}{pickcenter[0].homeTeamOdds?.moneyLine}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
+                      {/* Football Field */}
+                      <div className="relative w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg overflow-hidden" style={{ height: '200px' }}>
+                        {/* Yard lines */}
+                        {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((yard) => (
+                          <div
+                            key={yard}
+                            className="absolute top-0 bottom-0 border-l border-white/20"
+                            style={{ left: `${yard}%` }}
+                          >
+                            {yard % 10 === 0 && (
+                              <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 text-white/40 text-xs font-bold">
+                                {yard === 0 ? '0' : yard === 50 ? '50' : yard < 50 ? yard : 100 - yard}
+                              </div>
+                            )}
+                          </div>
+                        ))}
 
-              {/* Broadcast Info */}
-              {broadcasts && broadcasts.length > 0 && (
-                <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-lg p-4">
-                  <h4 className="text-[#00ffe7] font-semibold mb-2 text-sm">How to Watch</h4>
-                  <div className="space-y-2">
-                    {broadcasts.map((broadcast: any, idx: number) => (
-                      <div key={idx} className="flex justify-between items-center">
-                        <span className="text-[#e0e7ef] font-bold text-sm">{broadcast.media.shortName}</span>
-                        <span className="text-[#b0b7bf] text-xs">{broadcast.type.shortName}</span>
+                        {/* End zones */}
+                        <div className="absolute left-0 top-0 bottom-0 w-[5%] bg-blue-900/40 flex items-center justify-center">
+                          <span className="text-white/60 text-xs font-bold transform -rotate-90">{awayTeam?.team.abbreviation}</span>
+                        </div>
+                        <div className="absolute right-0 top-0 bottom-0 w-[5%] bg-red-900/40 flex items-center justify-center">
+                          <span className="text-white/60 text-xs font-bold transform -rotate-90">{homeTeam?.team.abbreviation}</span>
+                        </div>
+
+                        {/* 50 yard line highlight */}
+                        <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-yellow-400/30" />
+
+                        {/* Start position */}
+                        {competition.situation.lastPlay.start && (
+                          <div
+                            className="absolute top-4 transform -translate-x-1/2"
+                            style={{ left: `${competition.situation.lastPlay.start.yardLine}%` }}
+                          >
+                            <div className="w-3 h-3 rounded-full bg-yellow-400 border-2 border-white shadow-lg" />
+                          </div>
+                        )}
+
+                        {/* End position with player headshot */}
+                        {competition.situation.lastPlay.end && competition.situation.lastPlay.athletesInvolved && competition.situation.lastPlay.athletesInvolved.length > 0 && (
+                          <div
+                            className="absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                            style={{ left: `${competition.situation.lastPlay.end.yardLine}%` }}
+                          >
+                            <div className="relative group">
+                              <img
+                                src={competition.situation.lastPlay.athletesInvolved[0].headshot}
+                                alt={competition.situation.lastPlay.athletesInvolved[0].displayName}
+                                className="w-12 h-12 rounded-full border-4 border-[#00ffe7] shadow-2xl shadow-[#00ffe7]/50"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const parent = e.currentTarget.parentElement;
+                                  if (parent) {
+                                    const fallback = document.createElement('div');
+                                    fallback.className = 'w-12 h-12 rounded-full border-4 border-[#00ffe7] bg-[#23263a] flex items-center justify-center shadow-2xl shadow-[#00ffe7]/50';
+                                    fallback.innerHTML = '<span class="text-[#00ffe7] font-bold text-xs">⬇️</span>';
+                                    parent.appendChild(fallback);
+                                  }
+                                }}
+                              />
+                              {/* Player name tooltip */}
+                              <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-[#23263a] border border-[#00ffe7]/50 rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <p className="text-[#00ffe7] text-xs font-bold">{competition.situation.lastPlay.athletesInvolved[0].displayName}</p>
+                                <p className="text-[#b0b7bf] text-xs">{competition.situation.lastPlay.athletesInvolved[0].position}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Arrow showing play direction */}
+                        {competition.situation.lastPlay.start && competition.situation.lastPlay.end && (
+                          <svg
+                            className="absolute top-1/2 left-0 w-full h-full pointer-events-none"
+                            style={{ transform: 'translateY(-50%)' }}
+                          >
+                            <defs>
+                              <marker
+                                id="arrowhead"
+                                markerWidth="10"
+                                markerHeight="10"
+                                refX="9"
+                                refY="3"
+                                orient="auto"
+                              >
+                                <polygon points="0 0, 10 3, 0 6" fill="#00ffe7" />
+                              </marker>
+                            </defs>
+                            <line
+                              x1={`${competition.situation.lastPlay.start.yardLine}%`}
+                              y1="20%"
+                              x2={`${competition.situation.lastPlay.end.yardLine}%`}
+                              y2="20%"
+                              stroke="#00ffe7"
+                              strokeWidth="3"
+                              markerEnd="url(#arrowhead)"
+                              opacity="0.7"
+                            />
+                          </svg>
+                        )}
                       </div>
-                    ))}
-                  </div>
+
+                      {/* Win Probability (if available) */}
+                      {competition.situation.lastPlay.probability && (
+                        <div className="mt-6">
+                          <h5 className="text-[#b0b7bf] text-sm text-center mb-3">Win Probability</h5>
+                          <div className="relative h-8 bg-[#1a1d2e] rounded-full overflow-hidden">
+                            <div
+                              className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-[#00ffe7] to-[#00ffe7]/70 transition-all duration-500"
+                              style={{ width: `${competition.situation.lastPlay.probability.homeWinPercentage}%` }}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-between px-4 text-xs font-bold">
+                              <span className="text-white drop-shadow-lg">
+                                {awayTeam?.team.abbreviation} {competition.situation.lastPlay.probability.awayWinPercentage.toFixed(1)}%
+                              </span>
+                              <span className="text-white drop-shadow-lg">
+                                {homeTeam?.team.abbreviation} {competition.situation.lastPlay.probability.homeWinPercentage.toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Pre-game or Post-game Info */}
+              {competition.status.type.state !== 'in' && (
+                <div className="text-center">
+                  {/* Line Scores */}
+                  {(homeTeam?.linescores || awayTeam?.linescores) && (
+                    <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-2">
+                      <h4 className="text-[#00ffe7] font-bold text-lg mb-4">Scoring by Quarter</h4>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-[#00ffe7]/20">
+                              <th className="text-left text-[#b0b7bf] font-semibold py-2">Team</th>
+                              {[1, 2, 3, 4].map(q => (
+                                <th key={q} className="text-center text-[#b0b7bf] font-semibold py-2">Q{q}</th>
+                              ))}
+                              {(homeTeam?.linescores?.length ?? 0) > 4 && (
+                                <th className="text-center text-[#b0b7bf] font-semibold py-2">OT</th>
+                              )}
+                              <th className="text-center text-[#b0b7bf] font-semibold py-2">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-b border-[#00ffe7]/10">
+                              <td className="py-3">
+                                <div className="flex items-center gap-2">
+                                  <img src={awayTeam?.team.logo} alt={awayTeam?.team.abbreviation} className="w-6 h-6" />
+                                  <span className="text-[#e0e7ef] font-bold">{awayTeam?.team.abbreviation}</span>
+                                </div>
+                              </td>
+                              {awayTeam?.linescores?.map((score, idx) => (
+                                <td key={idx} className="text-center text-[#e0e7ef] py-3">{score.displayValue}</td>
+                              ))}
+                              <td className="text-center text-[#00ffe7] font-bold py-3">{awayTeam?.score}</td>
+                            </tr>
+                            <tr>
+                              <td className="py-3">
+                                <div className="flex items-center gap-2">
+                                  <img src={homeTeam?.team.logo} alt={homeTeam?.team.abbreviation} className="w-6 h-6" />
+                                  <span className="text-[#e0e7ef] font-bold">{homeTeam?.team.abbreviation}</span>
+                                </div>
+                              </td>
+                              {homeTeam?.linescores?.map((score, idx) => (
+                                <td key={idx} className="text-center text-[#e0e7ef] py-3">{score.displayValue}</td>
+                              ))}
+                              <td className="text-center text-[#faafe8] font-bold py-3">{homeTeam?.score}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Last 5 Games */}
-            {lastFiveGames && (
-              <div className="grid grid-cols-2 gap-3 md:gap-6">
-                {lastFiveGames.map((teamHistory: any) => (
-                  <div key={teamHistory.team.id} className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-3 md:p-6">
-                    <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
-                      <img src={teamHistory.team.logo} alt={teamHistory.team.displayName} className="w-8 h-8 md:w-12 md:h-12" />
-                      <h3 className="text-[#00ffe7] font-bold text-xs md:text-lg">Last 5 - {teamHistory.team.displayName}</h3>
+            {/* Venue & Broadcast Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Venue */}
+              {(competition.venue || summary?.gameInfo?.venue) && (
+                <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl overflow-hidden">
+                  {/* Venue image if available from summary */}
+                  {venueImage && (
+                    <div className="relative h-32 overflow-hidden">
+                      <img 
+                        src={venueImage}
+                        alt="Venue"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#23263a]" />
                     </div>
-                    <div className="space-y-2 md:space-y-3">
-                      {teamHistory.events.map((game: any) => (
-                        <div key={game.id} className="flex justify-between items-center bg-[#1a1d2e]/50 rounded-lg p-2 md:p-3">
-                          <div className="flex items-center gap-1.5 md:gap-3 min-w-0 flex-1">
-                            <img src={game.opponent.logo} alt={game.opponent.displayName} className="w-6 h-6 md:w-8 md:h-8 flex-shrink-0" />
-                            <div className="min-w-0">
-                              <p className="text-[#e0e7ef] font-bold text-xs md:text-sm truncate">
-                                {game.atVs} {game.opponent.abbreviation}
-                              </p>
-                              <p className="text-[#b0b7bf] text-xs hidden md:block">
-                                {new Date(game.gameDate).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <p className={`font-bold text-sm md:text-base ${game.gameResult === 'W' ? 'text-green-400' : 'text-red-400'}`}>
-                              {game.gameResult}
-                            </p>
-                            <p className="text-[#b0b7bf] text-xs md:text-sm">{game.score}</p>
-                          </div>
-                        </div>
-                      ))}
+                  )}
+                  <div className="p-6">
+                    <h4 className="text-[#00ffe7] font-bold text-lg mb-4 flex items-center gap-2">
+                      <FaFootballBall className="text-sm" />
+                      Venue
+                    </h4>
+                    <div className="space-y-2">
+                      <p className="text-[#e0e7ef] font-bold">
+                        {summary?.gameInfo?.venue?.fullName || competition.venue?.fullName}
+                      </p>
+                      <p className="text-[#b0b7bf] text-sm">
+                        {summary?.gameInfo?.venue?.address?.city || competition.venue?.address?.city}, {summary?.gameInfo?.venue?.address?.state || competition.venue?.address?.state}
+                      </p>
+                      <p className="text-[#b0b7bf] text-sm">
+                        {(summary?.gameInfo?.venue?.indoor ?? competition.venue?.indoor) ? '🏠 Indoor' : '☀️ Outdoor'}
+                      </p>
+                      {summary?.gameInfo?.venue?.capacity && (
+                        <p className="text-[#b0b7bf] text-sm">
+                          Capacity: {summary.gameInfo.venue.capacity.toLocaleString()}
+                        </p>
+                      )}
+                      {summary?.gameInfo?.attendance && (
+                        <p className="text-[#00ffe7] text-sm font-semibold">
+                          Attendance: {summary.gameInfo.attendance.toLocaleString()}
+                        </p>
+                      )}
                     </div>
                   </div>
-                ))}
+                </div>
+              )}
+
+              {/* Weather & Broadcast */}
+              <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6">
+                <h4 className="text-[#00ffe7] font-bold text-lg mb-4">Game Info</h4>
+                <div className="space-y-3">
+                  {event.weather && (
+                    <div>
+                      <p className="text-[#b0b7bf] text-xs mb-1">Weather</p>
+                      <p className="text-[#e0e7ef] font-bold">{event.weather.displayValue}</p>
+                      <p className="text-[#b0b7bf] text-sm">{event.weather.temperature}°F</p>
+                    </div>
+                  )}
+                  {competition.broadcasts && competition.broadcasts.length > 0 && (
+                    <div className="pt-3 border-t border-[#00ffe7]/10">
+                      <p className="text-[#b0b7bf] text-xs mb-1">Broadcast</p>
+                      <p className="text-[#e0e7ef] font-bold">{competition.broadcasts[0].names.join(', ')}</p>
+                    </div>
+                  )}
+                  {competition.odds && competition.odds.length > 0 && (
+                    <div className="pt-3 border-t border-[#00ffe7]/10">
+                      <p className="text-[#b0b7bf] text-xs mb-1">Spread</p>
+                      <p className="text-[#e0e7ef] font-bold">{competition.odds[0].details}</p>
+                      <p className="text-[#b0b7bf] text-sm">O/U: {competition.odds[0].overUnder}</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </>
+            </div>
+          </div>
         )}
 
         {/* Team Stats Tab */}
-        {activeTab === 'team' && boxscore?.teams && (
+        {activeTab === 'team' && (
           <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6">
             <h3 className="text-[#00ffe7] font-bold text-lg mb-4 flex items-center gap-2">
               <FaChartBar />
               Team Statistics
             </h3>
-            <div className="space-y-4">
-              {boxscore.teams[0].statistics.map((stat: any, idx: number) => {
-                const homeStat = boxscore.teams.find((t: any) => t.homeAway === 'home')?.statistics[idx];
-                const awayStat = boxscore.teams.find((t: any) => t.homeAway === 'away')?.statistics[idx];
-                
-                const awayValue = parseFloat(awayStat?.displayValue) || 0;
-                const homeValue = parseFloat(homeStat?.displayValue) || 0;
-                const total = awayValue + homeValue;
-                const awayPercent = total > 0 ? (awayValue / total) * 100 : 50;
-                
-                // Determine which team is winning this stat
-                const awayWinning = awayValue > homeValue;
-                const homeWinning = homeValue > awayValue;
-                
-                return (
-                  <div key={`${stat.name}-${idx}`} className="border-b border-[#00ffe7]/10 pb-3">
-                    <p className="text-[#b0b7bf] text-sm mb-2 text-center">{stat.label}</p>
-                    <div className="grid grid-cols-3 gap-4 items-center">
-                      <p className="text-[#e0e7ef] font-bold text-right">{awayStat?.displayValue}</p>
-                      <div className="relative h-2 bg-[#1a1d2e] rounded-full">
-                        {/* Line indicator at the percentage point */}
-                        <div 
-                          className="absolute top-0 bottom-0 w-1 rounded-full transition-all" 
-                          style={{ 
-                            left: `${awayPercent}%`,
-                            transform: 'translateX(-50%)',
-                            backgroundColor: awayWinning ? '#00ffe7' : homeWinning ? '#faafe8' : '#6b7280'
-                          }}
+            {summary?.boxscore?.teams && summary.boxscore.teams.length > 0 ? (
+              <div className="space-y-6">
+                {summary.boxscore.teams.map((teamData, idx) => {
+                  const isHome = teamData.homeAway === 'home';
+                  return (
+                    <div key={`team-${idx}`} className="border-b border-[#00ffe7]/10 pb-6 last:border-b-0">
+                      <div className="flex items-center gap-3 mb-4">
+                        <img 
+                          src={teamData.team.logo} 
+                          alt={teamData.team.displayName}
+                          className="w-12 h-12"
                         />
+                        <h4 className={`font-bold text-xl ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
+                          {teamData.team.displayName}
+                        </h4>
                       </div>
-                      <p className="text-[#e0e7ef] font-bold text-left">{homeStat?.displayValue}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Player Leaders & Injuries Tab */}
-        {activeTab === 'player' && (
-          <>
-            {/* Team Leaders */}
-            {leaders && leaders.length === 2 && (
-              <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-3 md:p-6 mb-6">
-                <h3 className="text-[#00ffe7] font-bold text-sm md:text-lg mb-2 text-center flex items-center justify-center gap-2">
-                  <FaTrophy />
-                  Team Leaders
-                </h3>
-                
-                {/* Leaders by Category */}
-                <div className="space-y-4 md:space-y-6">
-                  {leaders[0].leaders.map((category: any, categoryIdx: number) => {
-                    const awayLeaders = category.leaders;
-                    const homeLeaders = leaders[1].leaders[categoryIdx]?.leaders || [];
-                    const maxLength = Math.max(awayLeaders.length, homeLeaders.length);
-                    
-                    return (
-                      <div key={category.name} className="border-b border-[#00ffe7]/10 pb-3 md:pb-4">
-                        <p className="text-[#b0b7bf] text-xs md:text-sm mb-2 md:mb-3 text-center font-semibold">{category.displayName}</p>
-                        <div className="space-y-2">
-                          {Array.from({ length: maxLength }).map((_, idx) => {
-                            const awayLeader = awayLeaders[idx];
-                            const homeLeader = homeLeaders[idx];
-                            
-                            return (
-                              <div key={`${category.name}-${idx}`} className="grid grid-cols-2 gap-2 md:gap-4 items-center">
-                                {/* Away Team Leader - Right Aligned */}
-                                {awayLeader ? (
-                                  <div className="flex items-center justify-end gap-2 md:gap-3">
-                                    <div className="text-right min-w-0 flex-1">
-                                      <p className="text-[#e0e7ef] font-bold text-xs md:text-sm truncate">{awayLeader.athlete.displayName}</p>
-                                      <p className="text-[#b0b7bf] text-xs">{awayLeader.displayValue}</p>
-                                    </div>
-                                    <img 
-                                      src={awayLeader.athlete.headshot?.href} 
-                                      alt={awayLeader.athlete.displayName}
-                                      className="w-15 h-12 md:w-20 md:h-16 rounded-full flex-shrink-0"
-                                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                    />
-                                  </div>
-                                ) : (
-                                  <div></div>
-                                )}
-                                
-                                {/* Home Team Leader - Left Aligned */}
-                                {homeLeader ? (
-                                  <div className="flex items-center gap-2 md:gap-3">
-                                    <img 
-                                      src={homeLeader.athlete.headshot?.href} 
-                                      alt={homeLeader.athlete.displayName}
-                                      className="w-15 h-12 md:w-20 md:h-16 rounded-full flex-shrink-0"
-                                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                    />
-                                    <div className="text-left min-w-0 flex-1">
-                                      <p className="text-[#e0e7ef] font-bold text-xs md:text-sm truncate">{homeLeader.athlete.displayName}</p>
-                                      <p className="text-[#b0b7bf] text-xs">{homeLeader.displayValue}</p>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div></div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Injuries */}
-            {injuries && injuries.length > 0 && (
-              <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-3 md:p-6 mb-6">
-                <h3 className="text-[#00ffe7] font-bold text-sm md:text-lg mb-3 md:mb-4 flex items-center gap-2">
-                  <FaMedkit />
-                  Injury Report
-                </h3>
-                <div className="grid grid-cols-2 gap-3 md:gap-6">
-                  {injuries.map((teamInjuries: any) => (
-                    <div key={teamInjuries.team.id}>
-                      <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                        <img src={teamInjuries.team.logo} alt={teamInjuries.team.displayName} className="w-6 h-6 md:w-8 md:h-8" />
-                        <h4 className="text-[#e0e7ef] font-bold text-xs md:text-base">{teamInjuries.team.displayName}</h4>
-                      </div>
-                      <div className="space-y-2">
-                        {teamInjuries.injuries.map((injury: any) => (
-                          <div key={injury.athlete.id} className="bg-[#1a1d2e]/50 rounded-lg p-2 md:p-3">
-                            <div className="flex justify-between items-start gap-1">
-                              <div className="min-w-0 flex-1">
-                                <p className="text-[#e0e7ef] font-bold text-xs md:text-base truncate">{injury.athlete.displayName}</p>
-                                <p className="text-[#b0b7bf] text-xs md:text-sm">{injury.athlete.position?.abbreviation}</p>
-                              </div>
-                              <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs font-bold whitespace-nowrap ${
-                                injury.status === 'Out' ? 'bg-red-500/20 text-red-400' :
-                                injury.status === 'Questionable' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-blue-500/20 text-blue-400'
-                              }`}>
-                                {injury.status}
-                              </span>
-                            </div>
-                            <p className="text-[#b0b7bf] text-xs md:text-sm mt-1">{injury.details?.type}</p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {teamData.statistics.map((stat, statIdx) => (
+                          <div key={`stat-${statIdx}`} className="bg-[#1a1d2e]/50 rounded-lg p-3">
+                            <p className="text-[#b0b7bf] text-xs mb-1">{stat.label}</p>
+                            <p className={`font-bold text-lg ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
+                              {stat.displayValue}
+                            </p>
                           </div>
                         ))}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
+            ) : (
+              <p className="text-[#b0b7bf] text-center py-8">Team statistics will be available after the game.</p>
             )}
-          </>
+          </div>
+        )}
+
+        {/* Player Leaders Tab */}
+        {activeTab === 'player' && (
+          <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6">
+            <h3 className="text-[#00ffe7] font-bold text-lg mb-4 flex items-center gap-2">
+              <FaTrophy />
+              Team Leaders
+            </h3>
+            
+            {competition.leaders && competition.leaders.length > 0 ? (
+              <div className="space-y-6">
+                {competition.leaders.map((category, categoryIdx) => (
+                  <div key={`${category.name}-${categoryIdx}`} className="border-b border-[#00ffe7]/10 pb-4">
+                    <p className="text-[#b0b7bf] text-sm mb-3 text-center font-semibold">{category.displayName}</p>
+                    <div className="space-y-2">
+                      {category.leaders.map((leader, idx) => {
+                        const isHome = leader.team.id === homeTeam?.id;
+                        
+                        return (
+                          <div key={`${leader.athlete.id}-${idx}`} className={`flex items-center gap-3 ${isHome ? 'justify-start' : 'justify-end'}`}>
+                            {!isHome && (
+                              <div className="text-right min-w-0 flex-1">
+                                <p className="text-[#e0e7ef] font-bold text-sm truncate">{leader.athlete.displayName}</p>
+                                <p className="text-[#b0b7bf] text-xs">{leader.displayValue}</p>
+                              </div>
+                            )}
+                            <img 
+                              src={leader.athlete.headshot} 
+                              alt={leader.athlete.displayName}
+                              className="w-16 h-16 rounded-full flex-shrink-0"
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            />
+                            {isHome && (
+                              <div className="text-left min-w-0 flex-1">
+                                <p className="text-[#e0e7ef] font-bold text-sm truncate">{leader.athlete.displayName}</p>
+                                <p className="text-[#b0b7bf] text-xs">{leader.displayValue}</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[#b0b7bf] text-center py-8">No player leaders available at this time.</p>
+            )}
+          </div>
         )}
 
         {/* Head to Head Tab */}
@@ -401,44 +617,44 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
           <HeadToHead
             homeTeamId={homeTeam.id}
             awayTeamId={awayTeam.id}
-            homeTeamName={homeTeam.team?.displayName || ''}
-            awayTeamName={awayTeam.team?.displayName || ''}
+            homeTeamName={homeTeam.team.displayName}
+            awayTeamName={awayTeam.team.displayName}
           />
         )}
 
         {/* Predictions & Odds Tab */}
-        {activeTab === 'prediction' && competition && (
+        {activeTab === 'prediction' && (
           <Prediction
             gameId={gameId!}
             competitionId={competition.id}
             homeTeamInfo={{
-              name: homeTeam?.team?.displayName || '',
-              logo: homeTeam?.team?.logos?.[0]?.href || '',
-              color: homeTeam?.team?.color || '00ffe7'
+              name: homeTeam?.team.displayName || '',
+              logo: homeTeam?.team.logo || '',
+              color: homeTeam?.team.color || '00ffe7'
             }}
             awayTeamInfo={{
-              name: awayTeam?.team?.displayName || '',
-              logo: awayTeam?.team?.logos?.[0]?.href || '',
-              color: awayTeam?.team?.color || 'faafe8'
+              name: awayTeam?.team.displayName || '',
+              logo: awayTeam?.team.logo || '',
+              color: awayTeam?.team.color || 'faafe8'
             }}
           />
         )}
         
         {/* Odds Tab */}
-        {activeTab === 'odds' && competition && (
+        {activeTab === 'odds' && (
           <Odds
             gameId={gameId!}
             competitionId={competition.id}
             gameStatus={competition.status.type.state}
             homeTeamInfo={{
-              name: homeTeam?.team?.displayName || '',
-              logo: homeTeam?.team?.logos?.[0]?.href || '',
-              color: homeTeam?.team?.color || '00ffe7'
+              name: homeTeam?.team.displayName || '',
+              logo: homeTeam?.team.logo || '',
+              color: homeTeam?.team.color || '00ffe7'
             }}
             awayTeamInfo={{
-              name: awayTeam?.team?.displayName || '',
-              logo: awayTeam?.team?.logos?.[0]?.href || '',
-              color: awayTeam?.team?.color || 'faafe8'
+              name: awayTeam?.team.displayName || '',
+              logo: awayTeam?.team.logo || '',
+              color: awayTeam?.team.color || 'faafe8'
             }}
           />
         )}
