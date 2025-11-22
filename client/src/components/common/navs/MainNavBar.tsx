@@ -5,12 +5,14 @@ import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercen
 interface GameNavBarProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds';
   onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds') => void;
+  preset?: 'scoreboard' | 'summary'; // Determines which buttons to show
 }
 
-const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange }) => {
+const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, preset = 'scoreboard' }) => {
   const navigate = useNavigate();
 
-  const navItems = [
+  // All available navigation items
+  const allNavItems = [
     { id: 'back', label: 'Scoreboard', icon: <FaArrowLeft />, action: () => navigate('/nfl') },
     { id: 'info', label: 'Info', icon: <FaInfoCircle /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
@@ -19,6 +21,17 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange }) => {
     { id: 'prediction', label: 'Predictions', icon: <FaPercentage /> },
     { id: 'odds', label: 'Odds', icon: <FaChartLine /> },
   ];
+
+  // Preset configurations
+  const presetConfig = {
+    scoreboard: ['back', 'info', 'player', 'headtohead'],
+    summary: ['back', 'info', 'team', 'prediction', 'odds'],
+  };
+
+  // Filter nav items based on preset
+  const navItems = allNavItems.filter(item => 
+    presetConfig[preset].includes(item.id)
+  );
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#181a23] border-t border-[#00ffe7]/30 shadow-[0_-2px_24px_0_#00ffe7/20] backdrop-blur-md">

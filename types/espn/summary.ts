@@ -33,18 +33,29 @@ export interface BoxscoreTeam {
   homeAway: 'home' | 'away';
 }
 
+export interface TeamLogo {
+  href: string;
+  width: number;
+  height: number;
+  alt: string;
+  rel: string[];
+  lastUpdated?: string;
+}
+
 export interface Team {
   id: string;
   uid: string;
+  guid?: string;
   slug: string;
   location: string;
   name: string;
+  nickname?: string;
   abbreviation: string;
   displayName: string;
   shortDisplayName: string;
   color: string;
   alternateColor: string;
-  logo: string;
+  logos: TeamLogo[];
 }
 
 export interface Statistic {

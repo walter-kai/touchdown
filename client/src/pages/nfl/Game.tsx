@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { FaFootballBall, FaTrophy, FaChartBar, FaMedkit } from 'react-icons/fa';
 import axios from 'axios';
@@ -12,14 +12,82 @@ import type { Summary } from '@/types/espn/summary';
 interface NFLGameProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds';
   onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds') => void;
+  onPresetChange: (preset: 'scoreboard' | 'summary') => void;
 }
 
-const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
+const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChange }) => {
   const { gameId } = useParams<{ gameId: string }>();
   const [event, setEvent] = useState<Event | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [navPreset, setNavPreset] = useState<'scoreboard' | 'summary'>('scoreboard');
+  
+  // Refs for each section
+  const infoRef = useRef<HTMLDivElement>(null);
+  const teamRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
+  const headtoheadRef = useRef<HTMLDivElement>(null);
+  const predictionRef = useRef<HTMLDivElement>(null);
+  const oddsRef = useRef<HTMLDivElement>(null);
+  
+  // Map of section IDs to refs
+  const sectionRefs = {
+    info: infoRef,
+    team: teamRef,
+    player: playerRef,
+    headtohead: headtoheadRef,
+    prediction: predictionRef,
+    odds: oddsRef,
+  };
+  
+  // Scroll to section when tab changes
+  useEffect(() => {
+    const ref = sectionRefs[activeTab];
+    if (ref.current) {
+      const navbarHeight = 80; // Approximate navbar height
+      const elementPosition = ref.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  }, [activeTab]);
+  
+  // IntersectionObserver to highlight active section
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '-100px 0px -60% 0px', // Trigger when section is near top
+      threshold: 0,
+    };
+    
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const sectionId = entry.target.id as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds';
+          if (sectionId && sectionId !== activeTab) {
+            onTabChange(sectionId);
+          }
+        }
+      });
+    };
+    
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    
+    // Observe all sections that exist based on preset
+    Object.entries(sectionRefs).forEach(([key, ref]) => {
+      if (ref.current) {
+        observer.observe(ref.current);
+      }
+    });
+    
+    return () => {
+      observer.disconnect();
+    };
+  }, [navPreset, onTabChange, activeTab]);
 
   useEffect(() => {
     const fetchGameData = async () => {
@@ -30,43 +98,61 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
         setError(null);
 
         let game: Event | undefined;
+        let gameStatus: string | undefined;
+        let usedSummaryApi = false;
 
         // Check if gameId is "test" - use local JSON file
         if (gameId === 'test') {
           const response = await axios.get<ScoreboardResponse>('/scoreboard.json');
-          // Use the first event from the test data
           game = response.data.events?.[0];
+          gameStatus = game?.competitions[0].status.type.state;
         } else {
-          // Normal API call for real games
-          const response = await axios.get<ScoreboardResponse>(
+          // Try to find game in current week's scoreboard first
+          const scoreboardResponse = await axios.get<ScoreboardResponse>(
             `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`
           );
-          // Find the specific game from the scoreboard events
-          game = response.data.events?.find(e => e.id === gameId);
+          game = scoreboardResponse.data.events?.find(e => e.id === gameId);
+          gameStatus = game?.competitions[0].status.type.state;
         }
         
-        if (!game) {
-          setError('Game not found');
-          setLoading(false);
-          return;
-        }
-
-        setEvent(game);
-
-        // If game is not in session (pre or post), fetch summary data
-        const gameStatus = game.competitions[0].status.type.state;
-        if (gameStatus !== 'in') {
+        // Fetch summary API if:
+        // 1. Game not found in scoreboard (past/future games), OR
+        // 2. Game is not live (pre/post game)
+        if (!game || gameStatus !== 'in') {
           try {
             const summaryResponse = await axios.get<Summary>(
               `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
             );
             setSummary(summaryResponse.data);
+            usedSummaryApi = true;
+            
+            // If game wasn't found in scoreboard, extract it from summary
+            if (!game && summaryResponse.data.header) {
+              game = summaryResponse.data.header as unknown as Event;
+            }
           } catch (summaryErr) {
             console.error('Error fetching summary data:', summaryErr);
-            // Continue without summary data if it fails
+            if (!game) {
+              // If we have no game data at all, show error
+              setError('Game not found');
+              setLoading(false);
+              return;
+            }
+            // Otherwise continue without summary data
           }
         }
-
+        
+        if (!game) {
+          setError('Game data not available');
+          setLoading(false);
+          return;
+        }
+        
+        // Set nav preset based on which API provided the data
+        const preset = usedSummaryApi ? 'summary' : 'scoreboard';
+        setNavPreset(preset);
+        onPresetChange(preset);
+        setEvent(game);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching game data:', err);
@@ -108,6 +194,13 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
   // Get venue image from summary if available
   const venueImage = summary?.gameInfo?.venue?.images?.[0]?.href;
 
+  // Helper function to get logo URL - handles both scoreboard (logo string) and summary (logos array of TeamLogo)
+  const getTeamLogo = (team: any): string => {
+    if (team?.logo) return team.logo; // Scoreboard API: logo is a string
+    if (team?.logos?.[0]?.href) return team.logos[0].href; // Summary API: logos is TeamLogo[]
+    return '';
+  };
+
   return (
     <div className="min-h-screen pb-24">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -118,7 +211,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
             {/* Away Team */}
             <div className="flex flex-col items-center">
               <img 
-                src={awayTeam?.team?.logo} 
+                src={getTeamLogo(awayTeam?.team)} 
                 alt={awayTeam?.team?.displayName}
                 className="w-20 h-20 md:w-24 md:h-24 mb-3"
               />
@@ -141,33 +234,35 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
             {/* Home Team */}
             <div className="flex flex-col items-center">
               <img 
-                src={homeTeam?.team?.logo} 
+                src={getTeamLogo(homeTeam?.team)} 
                 alt={homeTeam?.team?.displayName}
                 className="w-20 h-20 md:w-24 md:h-24 mb-3"
               />
               <h2 className="text-[#e0e7ef] font-bold text-base md:text-xl text-center truncate max-w-full px-2">{homeTeam?.team?.displayName}</h2>
               <p className="text-[#b0b7bf] text-sm">{homeTeam?.records?.[0]?.summary}</p>
-              <p className="text-[#faafe8] text-3xl md:text-4xl font-bold mt-2">{homeTeam?.score || '0'}</p>
+              <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-2">{homeTeam?.score || '0'}</p>
             </div>
           </div>
         </div>
 
-        {/* Info Tab - Game Overview */}
-        {activeTab === 'info' && (
-          <div className="space-y-6">
-            {/* Game Status & Situation */}
-            <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6">
-              <div className="text-center mb-6">
-                <h2 >
-                  {competition.status.type.detail}
-                </h2>
-                {competition.status.type.state === 'in' && (
-                  <div className="flex items-center justify-center gap-4 text-[#e0e7ef]">
-                    <span className="text-xl font-bold">{competition.status.displayClock}</span>
-                    <span className="text-lg">Quarter {competition.status.period}</span>
-                  </div>
-                )}
-              </div>
+        {/* Info Section - Game Overview */}
+        <div id="info" ref={infoRef} className="space-y-6 scroll-mt-20">
+          {/* Game Status & Situation */}
+          <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-[#00ffe7] text-2xl font-bold mb-2">
+                Game Info
+              </h2>
+              <h3 className="text-[#e0e7ef] text-xl">
+                {competition.status.type.detail}
+              </h3>
+              {competition.status.type.state === 'in' && (
+                <div className="flex items-center justify-center gap-4 text-[#e0e7ef]">
+                  <span className="text-xl font-bold">{competition.status.displayClock}</span>
+                  <span className="text-lg">Quarter {competition.status.period}</span>
+                </div>
+              )}
+            </div>
 
               {/* Live Game Situation */}
               {competition.situation && competition.status.type.state === 'in' && (
@@ -247,9 +342,34 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
                       
                       {/* Play Description */}
                       <div className="bg-[#23263a]/80 rounded-lg p-4 mb-6">
-                        <p className="text-[#e0e7ef] text-sm leading-relaxed">{competition.situation.lastPlay.text}</p>
+                        {(() => {
+                          const playText = competition.situation.lastPlay.text;
+                          // Split by period OR by PENALTY keyword
+                          const parts = playText.split(/\.\s+(?=\w)|(?=PENALTY)/g).filter(part => part.trim());
+                          
+                          return (
+                            <div className="space-y-2">
+                              {parts.map((part, idx) => {
+                                const trimmedPart = part.trim();
+                                // const isPenalty = trimmedPart.startsWith('PENALTY');
+                                
+                                return (
+                                  <div key={idx} className="flex items-start gap-2">
+                                    <span className={`mt-1 text-[#00ffe7]`}>
+                                      {'•'}
+                                    </span>
+                                    <p className={`text-sm flex-1 text-[#e0e7ef]`}>
+                                      {trimmedPart}{trimmedPart.endsWith('.') ? '' : '.'}
+                                    </p>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                        
                         {competition.situation.lastPlay.statYardage !== undefined && (
-                          <div className="mt-2 flex items-center justify-center gap-2">
+                          <div className="mt-4 flex items-center justify-center gap-2 pt-2 border-t border-[#00ffe7]/10">
                             <span className="text-[#b0b7bf] text-xs">Yards:</span>
                             <span className={`font-bold text-lg ${
                               competition.situation.lastPlay.statYardage > 0 ? 'text-green-400' : 
@@ -310,7 +430,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
                               <img
                                 src={competition.situation.lastPlay.athletesInvolved[0].headshot}
                                 alt={competition.situation.lastPlay.athletesInvolved[0].displayName}
-                                className="w-12 h-12 rounded-full border-4 border-[#00ffe7] shadow-2xl shadow-[#00ffe7]/50"
+                                className="w-16 h-14 rounded-full border-4 border-[#00ffe7] shadow-2xl shadow-[#00ffe7]/50"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none';
                                   const parent = e.currentTarget.parentElement;
@@ -441,7 +561,6 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
                   )}
                 </div>
               )}
-            </div>
 
             {/* Venue & Broadcast Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -500,7 +619,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
                       <p className="text-[#b0b7bf] text-sm">{event.weather.temperature}°F</p>
                     </div>
                   )}
-                  {competition.broadcasts && competition.broadcasts.length > 0 && (
+                  {competition.broadcasts && competition.broadcasts.length > 0 && competition.broadcasts[0].names && (
                     <div className="pt-3 border-t border-[#00ffe7]/10">
                       <p className="text-[#b0b7bf] text-xs mb-1">Broadcast</p>
                       <p className="text-[#e0e7ef] font-bold">{competition.broadcasts[0].names.join(', ')}</p>
@@ -517,12 +636,12 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Team Stats Tab */}
-        {activeTab === 'team' && (
-          <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6">
-            <h3 className="text-[#00ffe7] font-bold text-lg mb-4 flex items-center gap-2">
+        {/* Team Stats Section */}
+        {navPreset === 'summary' && (
+          <div id="team" ref={teamRef} className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6 scroll-mt-20">
+            <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
               <FaChartBar />
               Team Statistics
             </h3>
@@ -534,7 +653,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
                     <div key={`team-${idx}`} className="border-b border-[#00ffe7]/10 pb-6 last:border-b-0">
                       <div className="flex items-center gap-3 mb-4">
                         <img 
-                          src={teamData.team.logo} 
+                          src={teamData.team.logos?.[0]?.href || ''} 
                           alt={teamData.team.displayName}
                           className="w-12 h-12"
                         />
@@ -562,10 +681,10 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
           </div>
         )}
 
-        {/* Player Leaders Tab */}
-        {activeTab === 'player' && (
-          <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6">
-            <h3 className="text-[#00ffe7] font-bold text-lg mb-4 flex items-center gap-2">
+        {/* Player Leaders Section */}
+        {navPreset === 'scoreboard' && (
+          <div id="player" ref={playerRef} className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6 scroll-mt-20">
+            <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
               <FaTrophy />
               Team Leaders
             </h3>
@@ -612,53 +731,58 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab }) => {
           </div>
         )}
 
-        {/* Head to Head Tab */}
-        {activeTab === 'headtohead' && homeTeam && awayTeam && (
-          <HeadToHead
-            homeTeamId={homeTeam.id}
-            awayTeamId={awayTeam.id}
-            homeTeamName={homeTeam.team.displayName}
-            awayTeamName={awayTeam.team.displayName}
-          />
+        {/* Head to Head Section */}
+        {navPreset === 'scoreboard' && homeTeam && awayTeam && (
+          <div id="headtohead" ref={headtoheadRef} className="scroll-mt-20">
+            <HeadToHead
+              homeTeamId={homeTeam.id}
+              awayTeamId={awayTeam.id}
+              homeTeamName={homeTeam.team.displayName}
+              awayTeamName={awayTeam.team.displayName}
+            />
+          </div>
         )}
 
-        {/* Predictions & Odds Tab */}
-        {activeTab === 'prediction' && (
-          <Prediction
-            gameId={gameId!}
-            competitionId={competition.id}
-            homeTeamInfo={{
-              name: homeTeam?.team.displayName || '',
-              logo: homeTeam?.team.logo || '',
-              color: homeTeam?.team.color || '00ffe7'
-            }}
-            awayTeamInfo={{
-              name: awayTeam?.team.displayName || '',
-              logo: awayTeam?.team.logo || '',
-              color: awayTeam?.team.color || 'faafe8'
-            }}
-          />
+        {/* Predictions Section */}
+        {navPreset === 'summary' && (
+          <div id="prediction" ref={predictionRef} className="scroll-mt-20">
+            <Prediction
+              gameId={gameId!}
+              competitionId={competition.id}
+              homeTeamInfo={{
+                name: homeTeam?.team.displayName || '',
+                logo: getTeamLogo(homeTeam),
+                color: homeTeam?.team.color || '00ffe7'
+              }}
+              awayTeamInfo={{
+                name: awayTeam?.team.displayName || '',
+                logo: getTeamLogo(awayTeam),
+                color: awayTeam?.team.color || 'faafe8'
+              }}
+            />
+          </div>
         )}
         
-        {/* Odds Tab */}
-        {activeTab === 'odds' && (
-          <Odds
-            gameId={gameId!}
-            competitionId={competition.id}
-            gameStatus={competition.status.type.state}
-            homeTeamInfo={{
-              name: homeTeam?.team.displayName || '',
-              logo: homeTeam?.team.logo || '',
-              color: homeTeam?.team.color || '00ffe7'
-            }}
-            awayTeamInfo={{
-              name: awayTeam?.team.displayName || '',
-              logo: awayTeam?.team.logo || '',
-              color: awayTeam?.team.color || 'faafe8'
-            }}
-          />
+        {/* Odds Section */}
+        {navPreset === 'summary' && (
+          <div id="odds" ref={oddsRef} className="scroll-mt-20">
+            <Odds
+              gameId={gameId!}
+              competitionId={competition.id}
+              gameStatus={competition.status.type.state}
+              homeTeamInfo={{
+                name: homeTeam?.team.displayName || '',
+                logo: getTeamLogo(homeTeam),
+                color: homeTeam?.team.color || '00ffe7'
+              }}
+              awayTeamInfo={{
+                name: awayTeam?.team.displayName || '',
+                logo: getTeamLogo(awayTeam),
+                color: awayTeam?.team.color || 'faafe8'
+              }}
+            />
+          </div>
         )}
-
       </div>
     </div>
   );

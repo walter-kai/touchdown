@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 import OnlineFooterNavBar from './components/common/navs/FooterNavBar';
-import GameNavBar from './components/common/navs/GameNavBar';
+import GameNavBar from './components/common/navs/MainNavBar';
 
 import NFL from './pages/nfl/NFL';
 import NFLTeamPage from './pages/nfl/Team';
@@ -26,8 +26,6 @@ import TickerBar from './components/common/TickerBar';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useAuth } from './providers/AuthContext';
 import LoginModal from './components/common/LoginModal';
-import OnlineNavBar from './components/common/navs/NavBar';
-import { connect } from 'http2';
 
 // Main App component
 const App: React.FC = () => {
@@ -44,6 +42,7 @@ const App: React.FC = () => {
   
   // State for game page navigation
   const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds'>('info');
+  const [navPreset, setNavPreset] = useState<'scoreboard' | 'summary'>('scoreboard');
   
   // Check if we're on a game page
   const isGamePage = location.pathname.startsWith('/nfl/game/');
@@ -81,7 +80,7 @@ const App: React.FC = () => {
         )}
         {location.pathname.startsWith("/i/") && user && (
           <>
-            <OnlineNavBar />
+     
             <OnlineFooterNavBar 
               navigate={navigate}
               toggleButtonRef={onlineToggleButtonRef as React.RefObject<HTMLButtonElement>}
@@ -111,7 +110,7 @@ const App: React.FC = () => {
                 <Routes location={location}>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/nfl" element={<NFL />} />
-                  <Route path="/nfl/game/:gameId" element={<NFLGame activeTab={gameTab} onTabChange={setGameTab} />} />
+                  <Route path="/nfl/game/:gameId" element={<NFLGame activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} />} />
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage />} />
                   <Route path="/nfl/player/:playerId" element={<NFLPlayerPage />} />
                   
@@ -149,7 +148,7 @@ const App: React.FC = () => {
         
         {/* Game Navigation Bar - Only show on game pages */}
         {isGamePage && (
-          <GameNavBar activeTab={gameTab} onTabChange={setGameTab} />
+          <GameNavBar activeTab={gameTab} onTabChange={setGameTab} preset={navPreset} />
         )}
         
         {/* Always render LoginModal globally, not conditionally */}
