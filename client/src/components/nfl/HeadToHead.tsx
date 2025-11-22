@@ -57,7 +57,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-[#181a23]/95 rounded-xl border border-[#00ffe7]/30 p-6 text-center">
+      <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 text-center">
         <p className="text-[#00ffe7]">Loading head-to-head data...</p>
       </div>
     );
@@ -65,37 +65,36 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
 
   if (error || !homeTeamLeaders.length || !awayTeamLeaders.length) {
     return (
-      <div className="bg-[#181a23]/95 rounded-xl border border-[#00ffe7]/30 p-6 text-center">
+      <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 text-center">
         <p className="text-gray-400">{error || 'No head-to-head data available'}</p>
       </div>
     );
   }
   
   return (
-    <div className="space-y-3">
-      <div className="text-xs sm:text-sm font-bold text-[#00ffe7] uppercase tracking-wider">
+    <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6">
+      <h3 className="text-[#00ffe7] font-bold text-2xl mb-6">
         Season Leaders - Head to Head
-      </div>
+      </h3>
       
-      {homeTeamLeaders.map((homeLeader: Leader, idx: number) => {
-        const homeTopLeader = homeLeader.leaders?.[0];
-        if (!homeTopLeader) return null;
-        
-        // Find matching category in away team leaders
-        const awayLeader = awayTeamLeaders.find((l: Leader) => l.name === homeLeader.name);
-        const awayTopLeader = awayLeader?.leaders?.[0];
-        
-        return (
-          <div 
-            key={idx} 
-            className="bg-[#181a23]/50 rounded-lg border border-[#00ffe7]/20 p-2 sm:p-3"
-          >
-            {/* Category Badge */}
-            <div className="mb-2 text-center">
-              <span className="inline-block px-2 sm:px-3 py-1 bg-[#00ffe7]/20 border border-[#00ffe7]/40 rounded-full text-[#00ffe7] text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+      <div className="space-y-6">
+        {homeTeamLeaders.map((homeLeader: Leader, idx: number) => {
+          const homeTopLeader = homeLeader.leaders?.[0];
+          if (!homeTopLeader) return null;
+          
+          // Find matching category in away team leaders
+          const awayLeader = awayTeamLeaders.find((l: Leader) => l.name === homeLeader.name);
+          const awayTopLeader = awayLeader?.leaders?.[0];
+          
+          return (
+            <div 
+              key={idx} 
+              className="border-b border-[#00ffe7]/10 pb-4 last:border-b-0"
+            >
+              {/* Category Name */}
+              <p className="text-[#b0b7bf] text-sm mb-3 text-center font-semibold">
                 {homeLeader.displayName}
-              </span>
-            </div>
+              </p>
             
             {/* Head to Head Comparison */}
             <div className="grid grid-cols-2 gap-2 sm:gap-3 items-center">
@@ -185,6 +184,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
           </div>
         );
       })}
+      </div>
     </div>
   );
 };
