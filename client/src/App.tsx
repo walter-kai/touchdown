@@ -41,21 +41,22 @@ const App: React.FC = () => {
   const nodeRef = useRef<HTMLDivElement>(null);
   
   // State for game page navigation
-  const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds'>('info');
+  const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news'>('info');
   const [navPreset, setNavPreset] = useState<'scoreboard' | 'summary'>('scoreboard');
   
   // Ref to communicate button clicks to NFLGame
   const tabClickCallbackRef = useRef<((tab: string) => void) | null>(null);
   
-  const handleTabClick = (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds') => {
+  const handleTabClick = (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news') => {
     if (tabClickCallbackRef.current) {
       tabClickCallbackRef.current(tab);
     }
     setGameTab(tab);
   };
   
-  // Check if we're on a game page
+  // Check if we're on a game page or team page
   const isGamePage = location.pathname.startsWith('/nfl/game/');
+  const isTeamPage = location.pathname.startsWith('/nfl/team/');
 
   // Redirect unauthenticated users from /i/ routes
   useEffect(() => {
@@ -120,8 +121,8 @@ const App: React.FC = () => {
                 <Routes location={location}>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/nfl" element={<NFL />} />
-                  <Route path="/nfl/game/:gameId" element={<NFLGame activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
-                  <Route path="/nfl/team/:teamId" element={<NFLTeamPage />} />
+                  <Route path="/nfl/game/:gameId" element={<NFLGame activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds'} onTabChange={(tab) => setGameTab(tab)} onPresetChange={setNavPreset} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
+                  <Route path="/nfl/team/:teamId" element={<NFLTeamPage activeTab={gameTab} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/player/:playerId" element={<NFLPlayerPage />} />
                   
                   <Route path="/x/about" element={<AboutUs />} />
@@ -156,9 +157,14 @@ const App: React.FC = () => {
           </TransitionGroup>
         </div>
         
-        {/* Game Navigation Bar - Only show on game pages */}
-        {isGamePage && (
-          <GameNavBar activeTab={gameTab} onTabChange={setGameTab} onTabClick={handleTabClick} preset={navPreset} />
+        {/* Game Navigation Bar - Show on game pages and team pages */}
+        {(isGamePage || isTeamPage) && (
+          <GameNavBar 
+            activeTab={gameTab} 
+            onTabChange={setGameTab} 
+            onTabClick={handleTabClick} 
+            preset={isTeamPage ? 'team' : navPreset} 
+          />
         )}
         
         {/* Always render LoginModal globally, not conditionally */}

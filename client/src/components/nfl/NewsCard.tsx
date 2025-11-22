@@ -1,8 +1,9 @@
 import React from "react";
 import type { Article } from '@/types/espn/game';
+import type { NewsArticle } from '@/types/espn/news';
 
 interface NewsCardProps {
-  article: Article;
+  article: Article | NewsArticle;
 }
 
 const NewsCard: React.FC<NewsCardProps> = React.memo(({ article }) => {
@@ -13,26 +14,29 @@ const NewsCard: React.FC<NewsCardProps> = React.memo(({ article }) => {
       href={article.links.web.href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex-shrink-0 w-64 sm:w-72 md:w-80 bg-[#181a23]/90 rounded-lg border border-[#faafe8]/30 overflow-hidden hover:border-[#faafe8]/50 transition-all duration-300 group"
+      className="bg-[#181a23]/90 rounded-lg border border-[#faafe8]/30 overflow-hidden hover:border-[#faafe8]/50 transition-all duration-300 group"
     >
-      <div className="flex gap-2 sm:gap-3 p-2 sm:p-3">
-        {image && (
-          <div className="relative overflow-hidden w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded">
-            <img 
-              src={image.url} 
-              alt={article.headline}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            />
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-xs sm:text-sm text-[#faafe8] mb-1 group-hover:text-[#00ffe7] transition-colors line-clamp-2">
-            {article.headline}
-          </h3>
-          <p className="text-[10px] sm:text-xs text-gray-400 line-clamp-2">
-            {article.description}
-          </p>
+      {image && (
+        <div className="relative overflow-hidden w-full h-48 flex-shrink-0">
+          <img 
+            src={image.url} 
+            alt={article.headline}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
         </div>
+      )}
+      <div className="p-4">
+        <h3 className="font-bold text-sm sm:text-base text-[#faafe8] mb-2 group-hover:text-[#00ffe7] transition-colors line-clamp-2">
+          {article.headline}
+        </h3>
+        <p className="text-xs sm:text-sm text-gray-400 line-clamp-3 mb-3">
+          {article.description}
+        </p>
+        {article.byline && (
+          <p className="text-xs text-gray-500 italic">
+            By {article.byline}
+          </p>
+        )}
       </div>
     </a>
   );

@@ -1,12 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper } from 'react-icons/fa';
 
 interface GameNavBarProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds') => void;
-  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds') => void; // Called when button is clicked
-  preset?: 'scoreboard' | 'summary'; // Determines which buttons to show
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news') => void;
+  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news') => void; // Called when button is clicked
+  preset?: 'scoreboard' | 'summary' | 'team'; // Determines which buttons to show
 }
 
 const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabClick, preset = 'scoreboard' }) => {
@@ -21,12 +21,15 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
     { id: 'headtohead', label: 'Head to Head', icon: <FaExchangeAlt /> },
     { id: 'prediction', label: 'Predictions', icon: <FaPercentage /> },
     { id: 'odds', label: 'Odds', icon: <FaChartLine /> },
+    { id: 'schedule', label: 'Schedule', icon: <FaCalendar /> },
+    { id: 'news', label: 'News', icon: <FaNewspaper /> },
   ];
 
   // Preset configurations
   const presetConfig = {
     scoreboard: ['back', 'info', 'player', 'headtohead'],
     summary: ['back', 'info', 'team', 'prediction', 'odds'],
+    team: ['back', 'info', 'schedule', 'news'], // Team page shows back, info, schedule, news
   };
 
   // Filter nav items based on preset

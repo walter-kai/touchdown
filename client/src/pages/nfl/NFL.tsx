@@ -8,19 +8,19 @@ import type {
   ScoreboardResponse,
   Competitor
 } from '@/types/espn/scoreboard';
-import type { Article } from '@/types/espn/game';
+import type { NewsArticle } from '@/types/espn/news';
 import NewsCard from '@/components/nfl/NewsCard';
 
 interface ESPNData extends ScoreboardResponse {
   news?: {
-    articles?: Article[];
+    articles?: NewsArticle[];
   };
 }
 
 const NFLScoreboard: React.FC = () => {
   const navigate = useNavigate();
   const [games, setGames] = useState<Event[]>([]);
-  const [news, setNews] = useState<Article[]>([]);
+  const [news, setNews] = useState<NewsArticle[]>([]);
   const [byeTeams, setByeTeams] = useState<TeamOnBye[]>([]);
   const [weekNumber, setWeekNumber] = useState<number | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null); // Week to display
@@ -73,8 +73,13 @@ const NFLScoreboard: React.FC = () => {
         url += `&dates=${dateRange}`;
       }
       
-      const response = await axios.get(url);
-      const data: ESPNData = response.data;
+      // Fetch scoreboard and news in parallel
+      const [scoreboardResponse, newsResponse] = await Promise.all([
+        axios.get(url),
+        axios.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit=6')
+      ]);
+      
+      const data: ESPNData = scoreboardResponse.data;
       
       // Get games from events array
       const events = data.events || [];
@@ -86,8 +91,9 @@ const NFLScoreboard: React.FC = () => {
         setGames(events);
       }
       
-      if (data.news?.articles) {
-        setNews(data.news.articles);
+      // Set news from dedicated news endpoint
+      if (newsResponse.data?.articles) {
+        setNews(newsResponse.data.articles);
       }
 
       // Get week info from week property

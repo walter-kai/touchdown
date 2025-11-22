@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { FaFootballBall, FaTrophy, FaChartBar, FaMedkit } from 'react-icons/fa';
 import axios from 'axios';
 import HeadToHead from '@/components/nfl/HeadToHead';
@@ -18,6 +18,7 @@ interface NFLGameProps {
 
 const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChange, onRegisterTabClick }) => {
   const { gameId } = useParams<{ gameId: string }>();
+  const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -262,16 +263,21 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
           <div className="grid grid-cols-3 gap-4 items-center">
             {/* Away Team */}
-            <div className="flex flex-col items-center">
+            <button 
+              onClick={() => awayTeam?.id && navigate(`/nfl/team/${awayTeam.id}`)}
+              className="flex flex-col items-center hover:bg-[#00ffe7]/10 rounded-lg p-3 transition-all group cursor-pointer"
+            >
               <img 
                 src={getTeamLogo(awayTeam?.team)} 
                 alt={awayTeam?.team?.displayName}
-                className="w-20 h-20 md:w-24 md:h-24 mb-3"
+                className="w-20 h-20 md:w-24 md:h-24 mb-3 group-hover:scale-110 transition-transform"
               />
-              <h2 className="text-[#e0e7ef] font-bold text-base md:text-xl text-center truncate max-w-full px-2">{awayTeam?.team?.displayName}</h2>
+              <h2 className="text-[#e0e7ef] font-bold text-base md:text-xl text-center truncate max-w-full px-2 group-hover:text-[#00ffe7] transition-colors">
+                {awayTeam?.team?.displayName}
+              </h2>
               <p className="text-[#b0b7bf] text-sm">{awayTeam?.records?.[0]?.summary}</p>
               <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-2">{awayTeam?.score || '0'}</p>
-            </div>
+            </button>
 
             {/* VS / Status */}
             <div className="text-center">
@@ -285,16 +291,21 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
             </div>
 
             {/* Home Team */}
-            <div className="flex flex-col items-center">
+            <button 
+              onClick={() => homeTeam?.id && navigate(`/nfl/team/${homeTeam.id}`)}
+              className="flex flex-col items-center hover:bg-[#00ffe7]/10 rounded-lg p-3 transition-all group cursor-pointer"
+            >
               <img 
                 src={getTeamLogo(homeTeam?.team)} 
                 alt={homeTeam?.team?.displayName}
-                className="w-20 h-20 md:w-24 md:h-24 mb-3"
+                className="w-20 h-20 md:w-24 md:h-24 mb-3 group-hover:scale-110 transition-transform"
               />
-              <h2 className="text-[#e0e7ef] font-bold text-base md:text-xl text-center truncate max-w-full px-2">{homeTeam?.team?.displayName}</h2>
+              <h2 className="text-[#e0e7ef] font-bold text-base md:text-xl text-center truncate max-w-full px-2 group-hover:text-[#00ffe7] transition-colors">
+                {homeTeam?.team?.displayName}
+              </h2>
               <p className="text-[#b0b7bf] text-sm">{homeTeam?.records?.[0]?.summary}</p>
               <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-2">{homeTeam?.score || '0'}</p>
-            </div>
+            </button>
           </div>
         </div>
 

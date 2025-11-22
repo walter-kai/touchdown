@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { FaFootballBall, FaArrowLeft, FaHome, FaRoad, FaTrophy, FaUsers, FaChartLine, FaCalendar, FaMapMarkerAlt, FaStar, FaCrosshairs, FaListOl, FaClipboardList } from "react-icons/fa";
+import { FaFootballBall, FaArrowLeft, FaHome, FaRoad, FaTrophy, FaUsers, FaChartLine, FaCalendar, FaMapMarkerAlt, FaStar, FaCrosshairs, FaListOl, FaClipboardList, FaNewspaper } from "react-icons/fa";
 import axios from "axios";
 import type { TeamApiResponse, TeamRecord, NextEvent, Competitor, Leader } from "@/types/espn/team";
+import type { NewsResponse, NewsArticle } from '@/types/espn/news';
+import NewsCard from '@/components/nfl/NewsCard';
 
 interface ProjectionData {
   chanceToWinThisWeek: number;
@@ -79,7 +81,13 @@ interface ScheduleData {
   events: ScheduleEvent[];
 }
 
-const NFLTeam: React.FC = () => {
+interface NFLTeamProps {
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news') => void;
+  onRegisterTabClick: (callback: (tab: string) => void) => void;
+}
+
+const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTabClick }) => {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -87,9 +95,16 @@ const NFLTeam: React.FC = () => {
   const [projectionData, setProjectionData] = useState<ProjectionData | null>(null);
   const [detailedRecords, setDetailedRecords] = useState<DetailedRecordData | null>(null);
   const [scheduleData, setScheduleData] = useState<ScheduleData | null>(null);
+  const [news, setNews] = useState<NewsArticle[]>([]);
+  const [loadingNews, setLoadingNews] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule'>('overview');
+
+  // Refs for scroll sections
+  const infoRef = useRef<HTMLDivElement>(null);
+  const scheduleRef = useRef<HTMLDivElement>(null);
+  const newsRef = useRef<HTMLDivElement>(null);
+  const isProgrammaticScrollRef = useRef(false);
 
   // Get leaders from navigation state
   const passedLeaders = (location.state as any)?.leaders as Leader[] | undefined;
@@ -139,6 +154,89 @@ const NFLTeam: React.FC = () => {
 
     fetchTeamData();
   }, [teamId]);
+
+  // Fetch news on component mount
+  useEffect(() => {
+    const fetchNews = async () => {
+      if (teamId) {
+        try {
+          setLoadingNews(true);
+          const response = await axios.get<NewsResponse>(
+            `https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?team=${teamId}`
+          );
+          setNews(response.data.articles || []);
+        } catch (err) {
+          console.error('Error fetching news:', err);
+        } finally {
+          setLoadingNews(false);
+        }
+      }
+    };
+
+    fetchNews();
+  }, [teamId]);
+
+  // Register tab click callback
+  useEffect(() => {
+    onRegisterTabClick((tab: string) => {
+      isProgrammaticScrollRef.current = true;
+    });
+  }, [onRegisterTabClick]);
+
+  // Handle scrolling to sections when activeTab changes
+  useEffect(() => {
+    const sectionRefs: Record<string, React.RefObject<HTMLDivElement>> = {
+      info: infoRef,
+      schedule: scheduleRef,
+      news: newsRef
+    };
+
+    const ref = sectionRefs[activeTab];
+    if (ref?.current && isProgrammaticScrollRef.current) {
+      const navbarHeight = 80;
+      const elementPosition = ref.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+
+      setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 1000);
+    }
+  }, [activeTab]);
+
+  // Track scroll position to update active tab
+  useEffect(() => {
+    const handleScroll = () => {
+      // Don't update activeTab if we're programmatically scrolling
+      if (isProgrammaticScrollRef.current) return;
+
+      const sections = [
+        { id: 'info' as const, ref: infoRef },
+        { id: 'schedule' as const, ref: scheduleRef },
+        { id: 'news' as const, ref: newsRef }
+      ];
+
+      const scrollPosition = window.scrollY + 150;
+
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = sections[i];
+        if (section.ref.current) {
+          const offsetTop = section.ref.current.offsetTop;
+          if (scrollPosition >= offsetTop) {
+            onTabChange(section.id);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [onTabChange]);
 
   if (loading) {
     return (
@@ -192,15 +290,6 @@ const NFLTeam: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a]">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        
-        {/* Back Button */}
-        <button
-          onClick={() => navigate('/nfl')}
-          className="flex items-center gap-2 px-4 py-2 mb-6 bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/10 transition-all"
-        >
-          <FaArrowLeft />
-          Back to Scoreboard
-        </button>
 
         {/* Team Header */}
         <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-8 mb-6">
@@ -259,35 +348,13 @@ const NFLTeam: React.FC = () => {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${
-              activeTab === 'overview'
-                ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7]/50 text-[#00ffe7] shadow-[0_0_15px_rgba(0,255,231,0.3)]'
-                : 'bg-[#23263a]/50 border-2 border-[#23263a] text-gray-400 hover:border-[#00ffe7]/30'
-            }`}
-          >
+        {/* Team Info Section */}
+        <div ref={infoRef} className="mb-8 scroll-mt-20">
+          <h2 className="text-2xl font-bold text-[#00ffe7] mb-4 flex items-center gap-2">
             <FaClipboardList />
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('schedule')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${
-              activeTab === 'schedule'
-                ? 'bg-[#faafe8]/20 border-2 border-[#faafe8]/50 text-[#faafe8] shadow-[0_0_15px_rgba(250,175,232,0.3)]'
-                : 'bg-[#23263a]/50 border-2 border-[#23263a] text-gray-400 hover:border-[#faafe8]/30'
-            }`}
-          >
-            <FaCalendar />
-            Schedule
-          </button>
-        </div>
-
-        {/* Overview Tab */}
-        {activeTab === 'overview' && (
-          <>
+            Team Info
+          </h2>
+          <div className="space-y-6">
             {/* Next Game & Quick Stats Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               {/* Next Game - Takes 2 columns */}
@@ -742,13 +809,11 @@ const NFLTeam: React.FC = () => {
             </div>
           </div>
         )}
-          </>
-        )}
+        </div>
+        </div>
 
-        {/* Schedule Tab */}
-        {activeTab === 'schedule' && (
-          <>
-        {/* Season Schedule */}
+        {/* Schedule Section */}
+        <div ref={scheduleRef} className="mb-8 scroll-mt-20">
         {scheduleData && scheduleData.events && scheduleData.events.length > 0 && (
           <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
             <h2 className="text-2xl font-bold text-[#00ffe7] mb-6 flex items-center gap-2">
@@ -779,56 +844,53 @@ const NFLTeam: React.FC = () => {
                     }`}
                     onClick={() => navigate(`/nfl/game/${event.id}`)}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-4">
                       {/* Week & Date Info */}
-                      <div className="flex items-center gap-4">
-                        <div className="text-center min-w-[80px]">
-                          <div className="text-xs text-gray-400 uppercase tracking-wider">{event.week.text}</div>
-                          <div className="text-sm font-bold text-[#00ffe7]">
-                            {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </div>
+                      <div className="text-center min-w-[80px] flex-shrink-0">
+                        <div className="text-xs text-gray-400 uppercase tracking-wider">{event.week.text}</div>
+                        <div className="text-sm font-bold text-[#00ffe7]">
+                          {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </div>
+                      </div>
 
+                      {/* Game Matchup - Centered */}
+                      <div className="flex items-center justify-center gap-6 flex-1">
                         {/* Away Team */}
-                        <div className="flex items-center gap-3 min-w-[200px]">
+                        <div className="flex flex-col items-center gap-2 min-w-[100px]">
                           <img
                             src={awayTeam?.team.logos[0]?.href}
                             alt={awayTeam?.team.displayName}
-                            className="w-10 h-10 object-contain"
+                            className="w-12 h-12 object-contain"
                           />
-                          <div className="flex-1">
-                            <div className="text-sm font-bold text-white">{awayTeam?.team.abbreviation}</div>
-                            {awayTeam?.score && (
-                              <div className={`text-2xl font-bold ${awayTeam.winner ? 'text-[#00ffe7]' : 'text-gray-400'}`}>
-                                {awayTeam.score.displayValue}
-                              </div>
-                            )}
-                          </div>
+                          <div className="text-xs font-bold text-white">{awayTeam?.team.abbreviation}</div>
+                          {awayTeam?.score && (
+                            <div className={`text-2xl font-bold ${awayTeam.winner ? 'text-[#00ffe7]' : 'text-gray-400'}`}>
+                              {awayTeam.score.displayValue}
+                            </div>
+                          )}
                         </div>
 
-                        {/* @ Symbol */}
-                        <div className="text-gray-500 font-bold text-xl mx-2">@</div>
+                        {/* Score Divider */}
+                        <div className="text-gray-500 font-bold text-2xl">-</div>
 
                         {/* Home Team */}
-                        <div className="flex items-center gap-3 min-w-[200px]">
+                        <div className="flex flex-col items-center gap-2 min-w-[100px]">
                           <img
                             src={homeTeam?.team.logos[0]?.href}
                             alt={homeTeam?.team.displayName}
-                            className="w-10 h-10 object-contain"
+                            className="w-12 h-12 object-contain"
                           />
-                          <div className="flex-1">
-                            <div className="text-sm font-bold text-white">{homeTeam?.team.abbreviation}</div>
-                            {homeTeam?.score && (
-                              <div className={`text-2xl font-bold ${homeTeam.winner ? 'text-[#00ffe7]' : 'text-gray-400'}`}>
-                                {homeTeam.score.displayValue}
-                              </div>
-                            )}
-                          </div>
+                          <div className="text-xs font-bold text-white">{homeTeam?.team.abbreviation}</div>
+                          {homeTeam?.score && (
+                            <div className={`text-2xl font-bold ${homeTeam.winner ? 'text-[#00ffe7]' : 'text-gray-400'}`}>
+                              {homeTeam.score.displayValue}
+                            </div>
+                          )}
                         </div>
                       </div>
 
                       {/* Status & Result Badge */}
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-shrink-0 min-w-[80px] justify-end">
                         {isCompleted ? (
                           <div className="flex items-center gap-2">
                             {didWin ? (
@@ -884,8 +946,33 @@ const NFLTeam: React.FC = () => {
             </div>
           </div>
         )}
-          </>
-        )}
+        </div>
+
+        {/* News Section */}
+        <div ref={newsRef} className="mb-8 scroll-mt-20">
+          <h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
+            <FaNewspaper />
+            Team News
+          </h2>
+
+          {loadingNews ? (
+              <div className="text-center py-20">
+                <FaFootballBall className="text-6xl text-[#faafe8] mx-auto mb-4 animate-pulse" />
+                <p className="text-[#e0e7ef] text-xl">Loading team news...</p>
+              </div>
+            ) : news.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {news.map((article) => (
+                  <NewsCard key={article.id} article={article} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-12 text-center">
+                <FaNewspaper className="text-6xl text-[#faafe8] mx-auto mb-4 opacity-50" />
+                <p className="text-[#e0e7ef] text-xl">No news available for this team</p>
+              </div>
+            )}
+        </div>
 
       </div>
     </div>
