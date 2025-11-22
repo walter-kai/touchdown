@@ -5,10 +5,11 @@ import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercen
 interface GameNavBarProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds';
   onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds') => void;
+  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds') => void; // Called when button is clicked
   preset?: 'scoreboard' | 'summary'; // Determines which buttons to show
 }
 
-const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, preset = 'scoreboard' }) => {
+const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabClick, preset = 'scoreboard' }) => {
   const navigate = useNavigate();
 
   // All available navigation items
@@ -48,6 +49,10 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, preset 
                   if (item.action) {
                     item.action();
                   } else {
+                    // Call onTabClick first (to set programmatic scroll flag), then onTabChange
+                    if (onTabClick) {
+                      onTabClick(item.id as any);
+                    }
                     onTabChange(item.id as any);
                   }
                 }}

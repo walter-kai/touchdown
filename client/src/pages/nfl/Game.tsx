@@ -13,15 +13,34 @@ interface NFLGameProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds';
   onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds') => void;
   onPresetChange: (preset: 'scoreboard' | 'summary') => void;
+  onRegisterTabClick?: (callback: (tab: string) => void) => void;
 }
 
-const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChange }) => {
+const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChange, onRegisterTabClick }) => {
   const { gameId } = useParams<{ gameId: string }>();
   const [event, setEvent] = useState<Event | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [navPreset, setNavPreset] = useState<'scoreboard' | 'summary'>('scoreboard');
+  
+  // Flag to prevent observer from triggering during programmatic scroll
+  const isScrollingProgrammatically = useRef(false);
+  
+  // Register the callback with parent on mount
+  useEffect(() => {
+    if (onRegisterTabClick) {
+      onRegisterTabClick((tab: string) => {
+        isScrollingProgrammatically.current = true;
+      });
+    }
+  }, [onRegisterTabClick]);
+  
+  // Handler for when user clicks a nav button
+  const handleTabClick = useCallback((tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds') => {
+    isScrollingProgrammatically.current = true;
+    onTabChange(tab);
+  }, [onTabChange]);
   
   // Refs for each section
   const infoRef = useRef<HTMLDivElement>(null);
@@ -41,8 +60,11 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
     odds: oddsRef,
   };
   
-  // Scroll to section when tab changes
+  // Scroll to section when tab changes (user clicks nav button)
   useEffect(() => {
+    // Only scroll if the flag is set (meaning user clicked a button)
+    if (!isScrollingProgrammatically.current) return;
+    
     const ref = sectionRefs[activeTab];
     if (ref.current) {
       const navbarHeight = 80; // Approximate navbar height
@@ -53,41 +75,72 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         top: offsetPosition,
         behavior: 'smooth'
       });
+      
+      // Reset flag after scroll completes
+      setTimeout(() => {
+        isScrollingProgrammatically.current = false;
+      }, 1000); // Smooth scroll usually takes ~500-800ms
     }
   }, [activeTab]);
   
-  // IntersectionObserver to highlight active section
+  // Scroll tracking to highlight active section
   useEffect(() => {
-    const observerOptions = {
-      root: null,
-      rootMargin: '-100px 0px -60% 0px', // Trigger when section is near top
-      threshold: 0,
-    };
+    let timeoutId: NodeJS.Timeout;
     
-    const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const sectionId = entry.target.id as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds';
-          if (sectionId && sectionId !== activeTab) {
-            onTabChange(sectionId);
+    const handleScroll = () => {
+      // Don't update activeTab if we're programmatically scrolling
+      if (isScrollingProgrammatically.current) return;
+      
+      // Debounce scroll events
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const sectionsToCheck = 
+          navPreset === 'scoreboard' 
+            ? ['info', 'player', 'headtohead']
+            : ['info', 'team', 'prediction', 'odds'];
+        
+        const navbarHeight = 80;
+        const scrollPosition = window.scrollY + navbarHeight + 100; // Add some offset
+        
+        // Check if we're near the bottom of the page - if so, activate last section
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        const scrolledToBottom = windowHeight + window.scrollY >= documentHeight - 200; // 200px threshold
+        
+        if (scrolledToBottom) {
+          const lastSection = sectionsToCheck[sectionsToCheck.length - 1];
+          onTabChange(lastSection as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds');
+          return;
+        }
+        
+        // Find which section we're currently in
+        for (let i = sectionsToCheck.length - 1; i >= 0; i--) {
+          const sectionId = sectionsToCheck[i];
+          const ref = sectionRefs[sectionId as keyof typeof sectionRefs];
+          
+          if (ref.current) {
+            const rect = ref.current.getBoundingClientRect();
+            const absoluteTop = rect.top + window.scrollY;
+            
+            if (scrollPosition >= absoluteTop) {
+              onTabChange(sectionId as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds');
+              break;
+            }
           }
         }
-      });
+      }, 100); // Debounce by 100ms
     };
     
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Observe all sections that exist based on preset
-    Object.entries(sectionRefs).forEach(([key, ref]) => {
-      if (ref.current) {
-        observer.observe(ref.current);
-      }
-    });
+    // Initial check
+    handleScroll();
     
     return () => {
-      observer.disconnect();
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
     };
-  }, [navPreset, onTabChange, activeTab]);
+  }, [navPreset, onTabChange]);
 
   useEffect(() => {
     const fetchGameData = async () => {
