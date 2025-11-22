@@ -892,13 +892,13 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                       {/* Status & Result Badge */}
                       <div className="flex items-center gap-3 flex-shrink-0 min-w-[80px] justify-end">
                         {isCompleted ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center">
                             {didWin ? (
-                              <span className="px-4 py-2 bg-[#00ffe7]/20 border border-[#00ffe7]/40 rounded-full text-[#00ffe7] text-sm font-bold uppercase tracking-wider">
+                              <span className="px-4 py-2 bg-[#00ffe7]/20 border border-[#00ffe7]/40 rounded-full text-[#00ffe7] text-sm font-bold uppercase tracking-wider flex items-center justify-center">
                                 W
                               </span>
                             ) : (
-                              <span className="px-4 py-2 bg-red-500/20 border border-red-500/40 rounded-full text-red-400 text-sm font-bold uppercase tracking-wider">
+                              <span className="px-4 py-2 bg-red-500/20 border border-red-500/40 rounded-full text-red-400 text-sm font-bold uppercase tracking-wider flex items-center justify-center">
                                 L
                               </span>
                             )}

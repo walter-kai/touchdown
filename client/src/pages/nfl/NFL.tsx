@@ -201,21 +201,6 @@ const NFLScoreboard: React.FC = () => {
 		)}
 	</div>
 
-	{/* News Section */}
-	{news.length > 0 && (
-		<div className="mb-8">
-			<h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
-				<FaNewspaper />
-				Latest News
-			</h2>
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-				{news.slice(0, 6).map((article, idx) => (
-					<NewsCard key={idx} article={article} />
-				))}
-			</div>
-		</div>
-	)}
-
 	{/* Teams on Bye */}
 	{byeTeams.length > 0 && (
 		<div className="mb-8 bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-4 shadow-[0_0_16px_rgba(250,175,232,0.1)]">
@@ -268,7 +253,7 @@ const NFLScoreboard: React.FC = () => {
 				<FaPlay className="animate-pulse" />
 				Live Now ({liveGames.length})
 				</h2>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				<div className={`grid gap-4 ${liveGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
 				{liveGames.map((game) => (
 					<GameSummaryCard key={game.id} game={game} navigate={navigate} />
 				))}
@@ -283,7 +268,7 @@ const NFLScoreboard: React.FC = () => {
 				<FaTrophy />
 				Final ({completedGames.length})
 				</h2>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				<div className={`grid gap-4 ${completedGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
 				{completedGames.map((game) => (
 					<GameSummaryCard key={game.id} game={game} navigate={navigate} />
 				))}
@@ -298,7 +283,7 @@ const NFLScoreboard: React.FC = () => {
 				<FaCalendar />
 				Upcoming ({upcomingGames.length})
 				</h2>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				<div className={`grid gap-4 ${upcomingGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
 				{upcomingGames.map((game) => (
 					<GameSummaryCard key={game.id} game={game} navigate={navigate} />
 				))}
@@ -314,6 +299,21 @@ const NFLScoreboard: React.FC = () => {
 		<div className="text-center py-12 sm:py-16 md:py-20">
 		<FaFootballBall className="text-4xl sm:text-5xl md:text-6xl text-[#faafe8] mx-auto mb-3 sm:mb-4" />
 		<p className="text-[#e0e7ef] text-base sm:text-lg md:text-xl">No games scheduled at this time</p>
+		</div>
+	)}
+
+	{/* News Section - Moved to Bottom */}
+	{news.length > 0 && (
+		<div className="mt-12">
+			<h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
+				<FaNewspaper />
+				Latest News
+			</h2>
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{news.slice(0, 6).map((article, idx) => (
+					<NewsCard key={idx} article={article} />
+				))}
+			</div>
 		</div>
 	)}
 
