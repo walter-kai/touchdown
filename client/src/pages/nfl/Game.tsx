@@ -259,7 +259,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
       <div className="max-w-7xl mx-auto px-4 py-8">
 
         {/* Box Score - Always visible at top */}
-        <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6 mb-6">
+        <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
           <div className="grid grid-cols-3 gap-4 items-center">
             {/* Away Team */}
             <div className="flex flex-col items-center">
@@ -301,7 +301,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         {/* Info Section - Game Overview */}
         <div id="info" ref={infoRef} className="space-y-6 scroll-mt-20">
           {/* Game Status & Situation */}
-          <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6">
+          <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6">
             <div className="text-center mb-6">
               <h2 className="text-[#00ffe7] text-2xl font-bold mb-2">
                 Game Info
@@ -566,7 +566,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                 <div className="text-center">
                   {/* Line Scores */}
                   {(homeTeam?.linescores || awayTeam?.linescores) && (
-                    <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-2">
+                    <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-2">
                       <h4 className="text-[#00ffe7] font-bold text-lg mb-4">Scoring by Quarter</h4>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
@@ -586,7 +586,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                             <tr className="border-b border-[#00ffe7]/10">
                               <td className="py-3">
                                 <div className="flex items-center gap-2">
-                                  <img src={awayTeam?.team.logo} alt={awayTeam?.team.abbreviation} className="w-6 h-6" />
+                                  <img src={getTeamLogo(awayTeam?.team)} alt={awayTeam?.team.abbreviation} className="w-6 h-6" />
                                   <span className="text-[#e0e7ef] font-bold">{awayTeam?.team.abbreviation}</span>
                                 </div>
                               </td>
@@ -598,7 +598,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                             <tr>
                               <td className="py-3">
                                 <div className="flex items-center gap-2">
-                                  <img src={homeTeam?.team.logo} alt={homeTeam?.team.abbreviation} className="w-6 h-6" />
+                                  <img src={getTeamLogo(homeTeam?.team)} alt={homeTeam?.team.abbreviation} className="w-6 h-6" />
                                   <span className="text-[#e0e7ef] font-bold">{homeTeam?.team.abbreviation}</span>
                                 </div>
                               </td>
@@ -615,74 +615,103 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                 </div>
               )}
 
-            {/* Venue & Broadcast Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Venue */}
-              {(competition.venue || summary?.gameInfo?.venue) && (
-                <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl overflow-hidden">
-                  {/* Venue image if available from summary */}
-                  {venueImage && (
-                    <div className="relative h-32 overflow-hidden">
-                      <img 
-                        src={venueImage}
-                        alt="Venue"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#23263a]" />
-                    </div>
-                  )}
-                  <div className="p-6">
-                    <h4 className="text-[#00ffe7] font-bold text-lg mb-4 flex items-center gap-2">
-                      <FaFootballBall className="text-sm" />
-                      Venue
+            {/* Venue & Game Information - Combined */}
+            <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] overflow-hidden">
+              {/* Venue image if available from summary */}
+              {venueImage && (
+                <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src={venueImage}
+                    alt="Venue"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#181a23]" />
+                  <div className="absolute bottom-4 left-6">
+                    <h4 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
+                      <FaFootballBall />
+                      {summary?.gameInfo?.venue?.fullName || competition.venue?.fullName}
                     </h4>
-                    <div className="space-y-2">
-                      <p className="text-[#e0e7ef] font-bold">
-                        {summary?.gameInfo?.venue?.fullName || competition.venue?.fullName}
-                      </p>
-                      <p className="text-[#b0b7bf] text-sm">
-                        {summary?.gameInfo?.venue?.address?.city || competition.venue?.address?.city}, {summary?.gameInfo?.venue?.address?.state || competition.venue?.address?.state}
-                      </p>
-                      <p className="text-[#b0b7bf] text-sm">
-                        {(summary?.gameInfo?.venue?.indoor ?? competition.venue?.indoor) ? '🏠 Indoor' : '☀️ Outdoor'}
-                      </p>
-                      {summary?.gameInfo?.venue?.capacity && (
-                        <p className="text-[#b0b7bf] text-sm">
-                          Capacity: {summary.gameInfo.venue.capacity.toLocaleString()}
-                        </p>
-                      )}
-                      {summary?.gameInfo?.attendance && (
-                        <p className="text-[#00ffe7] text-sm font-semibold">
-                          Attendance: {summary.gameInfo.attendance.toLocaleString()}
-                        </p>
-                      )}
-                    </div>
+                    <p className="text-[#e0e7ef] text-sm">
+                      {summary?.gameInfo?.venue?.address?.city || competition.venue?.address?.city}, {summary?.gameInfo?.venue?.address?.state || competition.venue?.address?.state}
+                    </p>
                   </div>
                 </div>
               )}
+              
+              <div className="p-6">
+                {!venueImage && (competition.venue || summary?.gameInfo?.venue) && (
+                  <div className="mb-6">
+                    <h4 className="text-[#00ffe7] font-bold text-xl mb-3 flex items-center gap-2">
+                      <FaFootballBall />
+                      Venue
+                    </h4>
+                    <p className="text-[#e0e7ef] font-bold text-lg mb-1">
+                      {summary?.gameInfo?.venue?.fullName || competition.venue?.fullName}
+                    </p>
+                    <p className="text-[#b0b7bf]">
+                      {summary?.gameInfo?.venue?.address?.city || competition.venue?.address?.city}, {summary?.gameInfo?.venue?.address?.state || competition.venue?.address?.state}
+                    </p>
+                  </div>
+                )}
 
-              {/* Weather & Broadcast */}
-              <div className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6">
-                <h4 className="text-[#00ffe7] font-bold text-lg mb-4">Game Info</h4>
-                <div className="space-y-3">
-                  {event.weather && (
-                    <div>
-                      <p className="text-[#b0b7bf] text-xs mb-1">Weather</p>
-                      <p className="text-[#e0e7ef] font-bold">{event.weather.displayValue}</p>
-                      <p className="text-[#b0b7bf] text-sm">{event.weather.temperature}°F</p>
+                {/* Game Info Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* Venue Type */}
+                  {(competition.venue || summary?.gameInfo?.venue) && (
+                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
+                      <p className="text-[#b0b7bf] text-xs mb-1">Venue Type</p>
+                      <p className="text-[#e0e7ef] font-bold">
+                        {(summary?.gameInfo?.venue?.indoor ?? competition.venue?.indoor) ? '🏠 Indoor' : '☀️ Outdoor'}
+                      </p>
                     </div>
                   )}
+
+                  {/* Capacity */}
+                  {summary?.gameInfo?.venue?.capacity && (
+                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
+                      <p className="text-[#b0b7bf] text-xs mb-1">Capacity</p>
+                      <p className="text-[#e0e7ef] font-bold">{summary.gameInfo.venue.capacity.toLocaleString()}</p>
+                    </div>
+                  )}
+
+                  {/* Attendance */}
+                  {summary?.gameInfo?.attendance && (
+                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
+                      <p className="text-[#b0b7bf] text-xs mb-1">Attendance</p>
+                      <p className="text-[#00ffe7] font-bold">{summary.gameInfo.attendance.toLocaleString()}</p>
+                    </div>
+                  )}
+
+                  {/* Weather */}
+                  {event.weather && (
+                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
+                      <p className="text-[#b0b7bf] text-xs mb-1">Weather</p>
+                      <p className="text-[#e0e7ef] font-bold">{event.weather.displayValue}</p>
+                      <p className="text-[#b0b7bf] text-xs">{event.weather.temperature}°F</p>
+                    </div>
+                  )}
+
+                  {/* Broadcast */}
                   {competition.broadcasts && competition.broadcasts.length > 0 && competition.broadcasts[0].names && (
-                    <div className="pt-3 border-t border-[#00ffe7]/10">
+                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
                       <p className="text-[#b0b7bf] text-xs mb-1">Broadcast</p>
                       <p className="text-[#e0e7ef] font-bold">{competition.broadcasts[0].names.join(', ')}</p>
                     </div>
                   )}
+
+                  {/* Spread */}
                   {competition.odds && competition.odds.length > 0 && (
-                    <div className="pt-3 border-t border-[#00ffe7]/10">
+                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
                       <p className="text-[#b0b7bf] text-xs mb-1">Spread</p>
                       <p className="text-[#e0e7ef] font-bold">{competition.odds[0].details}</p>
-                      <p className="text-[#b0b7bf] text-sm">O/U: {competition.odds[0].overUnder}</p>
+                    </div>
+                  )}
+
+                  {/* Over/Under */}
+                  {competition.odds && competition.odds.length > 0 && competition.odds[0].overUnder && (
+                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
+                      <p className="text-[#b0b7bf] text-xs mb-1">Over/Under</p>
+                      <p className="text-[#e0e7ef] font-bold">{competition.odds[0].overUnder}</p>
                     </div>
                   )}
                 </div>
@@ -693,36 +722,65 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
         {/* Team Stats Section */}
         {navPreset === 'summary' && (
-          <div id="team" ref={teamRef} className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6 scroll-mt-20">
+          <div id="team" ref={teamRef} className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 scroll-mt-20">
             <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
               <FaChartBar />
               Team Statistics
             </h3>
-            {summary?.boxscore?.teams && summary.boxscore.teams.length > 0 ? (
-              <div className="space-y-6">
-                {summary.boxscore.teams.map((teamData, idx) => {
-                  const isHome = teamData.homeAway === 'home';
+            {summary?.boxscore?.teams && summary.boxscore.teams.length === 2 ? (
+              <div className="space-y-4">
+                {/* Team Headers */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="flex items-center justify-center gap-3">
+                    <img 
+                      src={getTeamLogo(summary.boxscore.teams.find(t => t.homeAway === 'away')?.team)} 
+                      alt={summary.boxscore.teams.find(t => t.homeAway === 'away')?.team.displayName}
+                      className="w-12 h-12"
+                    />
+                    <h4 className="font-bold text-xl text-[#00ffe7]">
+                      {summary.boxscore.teams.find(t => t.homeAway === 'away')?.team.displayName}
+                    </h4>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <p className="text-[#b0b7bf] text-sm font-semibold">Stat</p>
+                  </div>
+                  <div className="flex items-center justify-center gap-3">
+                    <h4 className="font-bold text-xl text-[#faafe8]">
+                      {summary.boxscore.teams.find(t => t.homeAway === 'home')?.team.displayName}
+                    </h4>
+                    <img 
+                      src={getTeamLogo(summary.boxscore.teams.find(t => t.homeAway === 'home')?.team)} 
+                      alt={summary.boxscore.teams.find(t => t.homeAway === 'home')?.team.displayName}
+                      className="w-12 h-12"
+                    />
+                  </div>
+                </div>
+
+                {/* Stats Comparison */}
+                {summary.boxscore.teams[0].statistics.map((_, statIdx) => {
+                  const awayTeamData = summary.boxscore.teams.find(t => t.homeAway === 'away');
+                  const homeTeamData = summary.boxscore.teams.find(t => t.homeAway === 'home');
+                  const awayStat = awayTeamData?.statistics[statIdx];
+                  const homeStat = homeTeamData?.statistics[statIdx];
+                  
+                  if (!awayStat || !homeStat) return null;
+                  
                   return (
-                    <div key={`team-${idx}`} className="border-b border-[#00ffe7]/10 pb-6 last:border-b-0">
-                      <div className="flex items-center gap-3 mb-4">
-                        <img 
-                          src={teamData.team.logos?.[0]?.href || ''} 
-                          alt={teamData.team.displayName}
-                          className="w-12 h-12"
-                        />
-                        <h4 className={`font-bold text-xl ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
-                          {teamData.team.displayName}
-                        </h4>
+                    <div key={`stat-${statIdx}`} className="grid grid-cols-3 gap-4 items-center bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
+                      <div className="text-center">
+                        <p className="font-bold text-lg text-[#00ffe7]">
+                          {awayStat.displayValue}
+                        </p>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {teamData.statistics.map((stat, statIdx) => (
-                          <div key={`stat-${statIdx}`} className="bg-[#1a1d2e]/50 rounded-lg p-3">
-                            <p className="text-[#b0b7bf] text-xs mb-1">{stat.label}</p>
-                            <p className={`font-bold text-lg ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
-                              {stat.displayValue}
-                            </p>
-                          </div>
-                        ))}
+                      <div className="text-center">
+                        <p className="text-[#b0b7bf] text-sm font-semibold">
+                          {awayStat.label}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="font-bold text-lg text-[#faafe8]">
+                          {homeStat.displayValue}
+                        </p>
                       </div>
                     </div>
                   );
@@ -736,7 +794,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
         {/* Player Leaders Section */}
         {navPreset === 'scoreboard' && (
-          <div id="player" ref={playerRef} className="bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-xl p-6 scroll-mt-20">
+          <div id="player" ref={playerRef} className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 scroll-mt-20">
             <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
               <FaTrophy />
               Team Leaders
