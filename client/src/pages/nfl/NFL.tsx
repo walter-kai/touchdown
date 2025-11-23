@@ -352,26 +352,16 @@ const GameSummaryCard: React.FC<GameSummaryCardProps> = ({ game, navigate }) => 
       )}
 
       {/* Game Time/Status */}
-      <div className="text-center mb-3">
-        {isPre && (
-          <div className="text-sm text-gray-400">
-            {new Date(game.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-            <br />
-            {new Date(game.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </div>
-        )}
-        {isLive && (
+      {isLive && (
+        <div className="text-center mb-3">
           <div className="text-sm text-[#00ffe7] font-bold">
             Q{competition.status.period} - {competition.status.displayClock}
           </div>
-        )}
-        {isFinal && (
-          <div className="text-sm text-gray-400 font-bold">FINAL</div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Teams */}
-      <div className="space-y-3">
+      <div className={`space-y-3 ${!isLive ? 'mt-3' : ''}`}>
         {/* Away Team */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1">
@@ -390,7 +380,7 @@ const GameSummaryCard: React.FC<GameSummaryCardProps> = ({ game, navigate }) => 
             </div>
           </div>
           <div className={`text-2xl font-bold ${awayTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
-            {awayTeam.score || '-'}
+            {awayTeam.score || '0'}
           </div>
         </div>
 
@@ -412,25 +402,34 @@ const GameSummaryCard: React.FC<GameSummaryCardProps> = ({ game, navigate }) => 
             </div>
           </div>
           <div className={`text-2xl font-bold ${homeTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
-            {homeTeam.score || '-'}
+            {homeTeam.score || '0'}
           </div>
         </div>
       </div>
 
-      {/* Venue */}
-      {competition.venue && (
-        <div className="mt-3 pt-3 border-t border-[#faafe8]/20 flex items-center gap-2 text-xs text-gray-400">
-          <FaMapMarkerAlt className="text-[#faafe8]" />
-          <span className="truncate">{competition.venue.fullName}</span>
+      {/* Date/Time and Venue/Broadcast Info */}
+      <div className="mt-3 pt-3 border-t border-[#faafe8]/20 flex items-start justify-between gap-4 text-xs">
+        {/* Left: Date & Time */}
+        <div className="text-gray-400 flex-shrink-0">
+          <div className="whitespace-nowrap">{new Date(game.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+          <div className="whitespace-nowrap">{new Date(game.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
         </div>
-      )}
 
-      {/* Broadcast */}
-      {competition.broadcasts && competition.broadcasts.length > 0 && (
-        <div className="mt-2 text-xs text-[#faafe8]">
-          📺 {competition.broadcasts[0].names.join(', ')}
+        {/* Right: Venue & Broadcast */}
+        <div className="text-right text-gray-400 flex-1 min-w-0">
+          {competition.venue && (
+            <div className="flex items-center justify-end gap-1 mb-1">
+              <FaMapMarkerAlt className="text-[#faafe8] flex-shrink-0" />
+              <span className="truncate">{competition.venue.fullName}</span>
+            </div>
+          )}
+          {competition.broadcasts && competition.broadcasts.length > 0 && (
+            <div className="text-[#faafe8] truncate">
+              📺 {competition.broadcasts[0].names.join(', ')}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Corner Accents */}
       <span className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#00ffe7] rounded-tl-xl opacity-60" />

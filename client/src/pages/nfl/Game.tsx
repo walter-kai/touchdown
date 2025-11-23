@@ -270,24 +270,21 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
               <img 
                 src={getTeamLogo(awayTeam?.team)} 
                 alt={awayTeam?.team?.displayName}
-                className="w-20 h-20 md:w-24 md:h-24 mb-3 group-hover:scale-110 transition-transform"
+                className="w-16 h-16 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
               />
-              <h2 className="text-[#e0e7ef] font-bold text-base md:text-xl text-center truncate max-w-full px-2 group-hover:text-[#00ffe7] transition-colors">
+              <h2 className="text-[#e0e7ef] font-bold text-sm md:text-base text-center max-w-full px-2 group-hover:text-[#00ffe7] transition-colors leading-tight">
                 {awayTeam?.team?.displayName}
               </h2>
-              <p className="text-[#b0b7bf] text-sm">{awayTeam?.records?.[0]?.summary}</p>
-              <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-2">{awayTeam?.score || '0'}</p>
+              <p className="text-[#b0b7bf] text-xs">{awayTeam?.records?.[0]?.summary}</p>
+              <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-1">{awayTeam?.score || '0'}</p>
             </button>
 
             {/* VS / Status */}
             <div className="text-center">
-              <p className="text-[#faafe8] text-lg md:text-xl font-bold">
-                {new Date(competition.date).toLocaleString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }).replace(',', '')}
+              <p className="text-[#faafe8] text-base md:text-lg font-bold">
+                {new Date(competition.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {new Date(competition.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
               </p>
-              <p className="text-[#b0b7bf] text-sm md:text-base">
-                {new Date(competition.date).toLocaleString(undefined, { hour: 'numeric', minute: 'numeric' })}
-              </p>
-              <p className="text-[#00ffe7] text-sm mt-2">{competition.status.type.shortDetail}</p>
+              <p className="text-[#00ffe7] text-sm mt-1">{competition.status.type.shortDetail}</p>
             </div>
 
             {/* Home Team */}
@@ -298,13 +295,13 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
               <img 
                 src={getTeamLogo(homeTeam?.team)} 
                 alt={homeTeam?.team?.displayName}
-                className="w-20 h-20 md:w-24 md:h-24 mb-3 group-hover:scale-110 transition-transform"
+                className="w-16 h-16 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
               />
-              <h2 className="text-[#e0e7ef] font-bold text-base md:text-xl text-center truncate max-w-full px-2 group-hover:text-[#00ffe7] transition-colors">
+              <h2 className="text-[#e0e7ef] font-bold text-sm md:text-base text-center max-w-full px-2 group-hover:text-[#00ffe7] transition-colors leading-tight">
                 {homeTeam?.team?.displayName}
               </h2>
-              <p className="text-[#b0b7bf] text-sm">{homeTeam?.records?.[0]?.summary}</p>
-              <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-2">{homeTeam?.score || '0'}</p>
+              <p className="text-[#b0b7bf] text-xs">{homeTeam?.records?.[0]?.summary}</p>
+              <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-1">{homeTeam?.score || '0'}</p>
             </button>
           </div>
         </div>
@@ -666,65 +663,66 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                 )}
 
                 {/* Game Info Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {/* Venue Type */}
-                  {(competition.venue || summary?.gameInfo?.venue) && (
-                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
-                      <p className="text-[#b0b7bf] text-xs mb-1">Venue Type</p>
-                      <p className="text-[#e0e7ef] font-bold">
-                        {(summary?.gameInfo?.venue?.indoor ?? competition.venue?.indoor) ? '🏠 Indoor' : '☀️ Outdoor'}
-                      </p>
-                    </div>
-                  )}
+                <div className="bg-[#23263a]/50 rounded-lg p-4 border border-[#00ffe7]/10">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-2 text-sm">
+                    {/* Venue Type */}
+                    {(competition.venue || summary?.gameInfo?.venue) && (
+                      <>
+                        <span className="text-[#b0b7bf]">Venue:</span>
+                        <span className="text-[#e0e7ef] font-semibold">
+                          {(summary?.gameInfo?.venue?.indoor ?? competition.venue?.indoor) ? '🏠 Indoor' : '☀️ Outdoor'}
+                        </span>
+                      </>
+                    )}
 
-                  {/* Capacity */}
-                  {summary?.gameInfo?.venue?.capacity && (
-                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
-                      <p className="text-[#b0b7bf] text-xs mb-1">Capacity</p>
-                      <p className="text-[#e0e7ef] font-bold">{summary.gameInfo.venue.capacity.toLocaleString()}</p>
-                    </div>
-                  )}
+                    {/* Capacity */}
+                    {summary?.gameInfo?.venue?.capacity && (
+                      <>
+                        <span className="text-[#b0b7bf]">Capacity:</span>
+                        <span className="text-[#e0e7ef] font-semibold">{summary.gameInfo.venue.capacity.toLocaleString()}</span>
+                      </>
+                    )}
 
-                  {/* Attendance */}
-                  {summary?.gameInfo?.attendance && (
-                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
-                      <p className="text-[#b0b7bf] text-xs mb-1">Attendance</p>
-                      <p className="text-[#00ffe7] font-bold">{summary.gameInfo.attendance.toLocaleString()}</p>
-                    </div>
-                  )}
+                    {/* Attendance */}
+                    {summary?.gameInfo?.attendance && (
+                      <>
+                        <span className="text-[#b0b7bf]">Attendance:</span>
+                        <span className="text-[#00ffe7] font-semibold">{summary.gameInfo.attendance.toLocaleString()}</span>
+                      </>
+                    )}
 
-                  {/* Weather */}
-                  {event.weather && (
-                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
-                      <p className="text-[#b0b7bf] text-xs mb-1">Weather</p>
-                      <p className="text-[#e0e7ef] font-bold">{event.weather.displayValue}</p>
-                      <p className="text-[#b0b7bf] text-xs">{event.weather.temperature}°F</p>
-                    </div>
-                  )}
+                    {/* Weather */}
+                    {event.weather && (
+                      <>
+                        <span className="text-[#b0b7bf]">Weather:</span>
+                        <span className="text-[#e0e7ef] font-semibold">{event.weather.displayValue} ({event.weather.temperature}°F)</span>
+                      </>
+                    )}
 
-                  {/* Broadcast */}
-                  {competition.broadcasts && competition.broadcasts.length > 0 && competition.broadcasts[0].names && (
-                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
-                      <p className="text-[#b0b7bf] text-xs mb-1">Broadcast</p>
-                      <p className="text-[#e0e7ef] font-bold">{competition.broadcasts[0].names.join(', ')}</p>
-                    </div>
-                  )}
+                    {/* Broadcast */}
+                    {competition.broadcasts && competition.broadcasts.length > 0 && competition.broadcasts[0].names && (
+                      <>
+                        <span className="text-[#b0b7bf]">Broadcast:</span>
+                        <span className="text-[#e0e7ef] font-semibold">{competition.broadcasts[0].names.join(', ')}</span>
+                      </>
+                    )}
 
-                  {/* Spread */}
-                  {competition.odds && competition.odds.length > 0 && (
-                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
-                      <p className="text-[#b0b7bf] text-xs mb-1">Spread</p>
-                      <p className="text-[#e0e7ef] font-bold">{competition.odds[0].details}</p>
-                    </div>
-                  )}
+                    {/* Spread */}
+                    {competition.odds && competition.odds.length > 0 && (
+                      <>
+                        <span className="text-[#b0b7bf]">Spread:</span>
+                        <span className="text-[#e0e7ef] font-semibold">{competition.odds[0].details}</span>
+                      </>
+                    )}
 
-                  {/* Over/Under */}
-                  {competition.odds && competition.odds.length > 0 && competition.odds[0].overUnder && (
-                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
-                      <p className="text-[#b0b7bf] text-xs mb-1">Over/Under</p>
-                      <p className="text-[#e0e7ef] font-bold">{competition.odds[0].overUnder}</p>
-                    </div>
-                  )}
+                    {/* Over/Under */}
+                    {competition.odds && competition.odds.length > 0 && competition.odds[0].overUnder && (
+                      <>
+                        <span className="text-[#b0b7bf]">Over/Under:</span>
+                        <span className="text-[#e0e7ef] font-semibold">{competition.odds[0].overUnder}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -742,23 +740,17 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
               <div className="space-y-4">
                 {/* Team Headers */}
                 <div className="grid grid-cols-3 gap-4 mb-6">
-                  <div className="flex items-center justify-center gap-3">
+                  <div className="flex items-center justify-center">
                     <img 
                       src={getTeamLogo(summary.boxscore.teams.find(t => t.homeAway === 'away')?.team)} 
                       alt={summary.boxscore.teams.find(t => t.homeAway === 'away')?.team.displayName}
                       className="w-12 h-12"
                     />
-                    <h4 className="font-bold text-xl text-[#00ffe7]">
-                      {summary.boxscore.teams.find(t => t.homeAway === 'away')?.team.displayName}
-                    </h4>
                   </div>
                   <div className="flex items-center justify-center">
                     <p className="text-[#b0b7bf] text-sm font-semibold">Stat</p>
                   </div>
-                  <div className="flex items-center justify-center gap-3">
-                    <h4 className="font-bold text-xl text-[#faafe8]">
-                      {summary.boxscore.teams.find(t => t.homeAway === 'home')?.team.displayName}
-                    </h4>
+                  <div className="flex items-center justify-center">
                     <img 
                       src={getTeamLogo(summary.boxscore.teams.find(t => t.homeAway === 'home')?.team)} 
                       alt={summary.boxscore.teams.find(t => t.homeAway === 'home')?.team.displayName}
