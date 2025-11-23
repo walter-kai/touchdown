@@ -261,7 +261,17 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
         {/* Box Score - Always visible at top */}
         <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
-          <div className="grid grid-cols-3 gap-4 items-center">
+          {/* Date at top */}
+          <div className="text-center mb-4">
+            <p className="text-[#e0e7ef] text-base md:text-lg font-bold">
+              {new Date(competition.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </p>
+            <p className="text-[#b0b7bf] text-sm">
+              {new Date(competition.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 items-center">
             {/* Away Team */}
             <button 
               onClick={() => awayTeam?.id && navigate(`/nfl/team/${awayTeam.id}`)}
@@ -272,20 +282,12 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                 alt={awayTeam?.team?.displayName}
                 className="w-16 h-16 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
               />
-              <h2 className="text-[#e0e7ef] font-bold text-sm md:text-base text-center max-w-full px-2 group-hover:text-[#00ffe7] transition-colors leading-tight">
+              <h2 className="text-[#e0e7ef] font-bold text-sm md:text-base text-center px-2 group-hover:text-[#00ffe7] transition-colors">
                 {awayTeam?.team?.displayName}
               </h2>
               <p className="text-[#b0b7bf] text-xs">{awayTeam?.records?.[0]?.summary}</p>
               <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-1">{awayTeam?.score || '0'}</p>
             </button>
-
-            {/* VS / Status */}
-            <div className="text-center">
-              <p className="text-[#faafe8] text-base md:text-lg font-bold">
-                {new Date(competition.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {new Date(competition.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-              </p>
-              <p className="text-[#00ffe7] text-sm mt-1">{competition.status.type.shortDetail}</p>
-            </div>
 
             {/* Home Team */}
             <button 
@@ -297,7 +299,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                 alt={homeTeam?.team?.displayName}
                 className="w-16 h-16 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
               />
-              <h2 className="text-[#e0e7ef] font-bold text-sm md:text-base text-center max-w-full px-2 group-hover:text-[#00ffe7] transition-colors leading-tight">
+              <h2 className="text-[#e0e7ef] font-bold text-sm md:text-base text-center px-2 group-hover:text-[#00ffe7] transition-colors">
                 {homeTeam?.team?.displayName}
               </h2>
               <p className="text-[#b0b7bf] text-xs">{homeTeam?.records?.[0]?.summary}</p>
