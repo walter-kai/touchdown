@@ -241,34 +241,36 @@ const NFLPlayer: React.FC = () => {
             </h2>
             
             {/* Stats by Category */}
-            {overview.statistics.categories.map((category, idx) => (
+            {overview.statistics.categories && overview.statistics.categories.map((category, idx) => (
               <div key={idx} className="mb-6">
                 <h3 className="text-lg font-bold text-[#faafe8] mb-3">{category.displayName}</h3>
                 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-[#00ffe7]/20">
-                        <th className="text-left py-2 px-3 text-gray-400">Split</th>
-                        {overview.statistics.labels.map((label, i) => (
-                          <th key={i} className="text-center py-2 px-3 text-gray-400">{label}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {overview.statistics.splits.map((split, splitIdx) => (
-                        <tr key={splitIdx} className="border-b border-[#00ffe7]/10 hover:bg-[#00ffe7]/5">
-                          <td className="py-3 px-3 text-[#e0e7ef] font-medium">{split.displayName}</td>
-                          {split.stats.map((stat, statIdx) => (
-                            <td key={statIdx} className="text-center py-3 px-3 text-white font-bold">
-                              {stat}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                {/* Stats by Split */}
+                {overview.statistics.splits && overview.statistics.splits.map((split, splitIdx) => (
+                  <div key={splitIdx} className="mb-4">
+                    <h4 className="text-sm font-semibold text-[#00ffe7] mb-2 px-2">{split.displayName}</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-[#00ffe7]/20">
+                            {overview.statistics.labels && overview.statistics.labels.map((label, i) => (
+                              <th key={i} className="text-center py-1 px-1 text-gray-400 text-[10px] sm:text-xs">{label}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="hover:bg-[#00ffe7]/5">
+                            {split.stats && split.stats.map((stat, statIdx) => (
+                              <td key={statIdx} className="text-center py-2 px-1 text-white font-bold text-[10px] sm:text-xs">
+                                {stat}
+                              </td>
+                            ))}
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
@@ -285,43 +287,49 @@ const NFLPlayer: React.FC = () => {
             {overview.gameLog && overview.gameLog.statistics && (
               <div>
                 <h3 className="text-lg font-bold text-[#faafe8] mb-4">Recent Games</h3>
-                {overview.gameLog.statistics.map((statType, idx) => (
+                {overview.gameLog.statistics?.map((statType, idx) => (
                   <div key={idx} className="mb-6">
                     <h4 className="text-md font-semibold text-gray-300 mb-3">{statType.displayName}</h4>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-[#00ffe7]/20">
-                            <th className="text-left py-2 px-3 text-gray-400">Game</th>
-                            {statType.labels.map((label, i) => (
-                              <th key={i} className="text-center py-2 px-3 text-gray-400">{label}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {statType.events.map((event, eventIdx) => {
-                            const gameInfo = overview.gameLog.events[event.eventId];
-                            return (
-                              <tr key={eventIdx} className="border-b border-[#00ffe7]/10 hover:bg-[#00ffe7]/5">
-                                <td className="py-3 px-3">
-                                  <div className="text-[#e0e7ef] font-medium">
-                                    {gameInfo?.atVs} {gameInfo?.opponent.abbreviation}
-                                  </div>
-                                  <div className="text-xs text-gray-400">
-                                    {gameInfo?.score} ({gameInfo?.gameResult})
-                                  </div>
-                                </td>
-                                {event.stats.map((stat, statIdx) => (
-                                  <td key={statIdx} className="text-center py-3 px-3 text-white">
-                                    {stat}
-                                  </td>
-                                ))}
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                    
+                    {/* Each game as a separate section */}
+                    {statType.events?.map((event, eventIdx) => {
+                      const gameInfo = overview.gameLog.events[event.eventId];
+                      return (
+                        <div key={eventIdx} className="mb-4">
+                          {/* Game matchup as header */}
+                          <div className="mb-2 px-2">
+                            <div className="text-[#00ffe7] font-semibold text-sm">
+                              {gameInfo?.atVs} {gameInfo?.opponent.abbreviation}
+                            </div>
+                            <div className="text-[10px] text-gray-400">
+                              {gameInfo?.score} ({gameInfo?.gameResult})
+                            </div>
+                          </div>
+                          
+                          {/* Stats table without game column */}
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="border-b border-[#00ffe7]/20">
+                                  {statType.labels?.map((label, i) => (
+                                    <th key={i} className="text-center py-1 px-1 text-gray-400 text-[10px] sm:text-xs">{label}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr className="hover:bg-[#00ffe7]/5">
+                                  {event.stats?.map((stat, statIdx) => (
+                                    <td key={statIdx} className="text-center py-2 px-1 text-white font-bold text-[10px] sm:text-xs">
+                                      {stat}
+                                    </td>
+                                  ))}
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ))}
               </div>
