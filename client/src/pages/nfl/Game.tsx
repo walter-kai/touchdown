@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaFootballBall, FaTrophy, FaChartBar, FaMedkit } from 'react-icons/fa';
+import { FaFootballBall, FaTrophy, FaChartBar, FaMedkit, FaClock, FaSync } from 'react-icons/fa';
 import axios from 'axios';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import Prediction from '@/components/nfl/Prediction';
@@ -24,6 +24,16 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [navPreset, setNavPreset] = useState<'scoreboard' | 'summary'>('scoreboard');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [countdown, setCountdown] = useState<number>(30);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [playLog, setPlayLog] = useState<Array<{ 
+    text: string; 
+    quarter: number; 
+    clock: string; 
+    yardage?: number;
+    timestamp: Date; // For detecting duplicates
+  }>>([]);
   
   // Flag to prevent observer from triggering during programmatic scroll
   const isScrollingProgrammatically = useRef(false);
@@ -148,7 +158,11 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
       if (!gameId) return;
 
       try {
-        setLoading(true);
+        if (!event) {
+          setLoading(true);
+        } else {
+          setIsRefreshing(true);
+        }
         setError(null);
 
         let game: Event | undefined;
@@ -190,6 +204,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
               // If we have no game data at all, show error
               setError('Game not found');
               setLoading(false);
+              setIsRefreshing(false);
               return;
             }
             // Otherwise continue without summary data
@@ -199,7 +214,25 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         if (!game) {
           setError('Game data not available');
           setLoading(false);
+          setIsRefreshing(false);
           return;
+        }
+        
+        // Check if last play has changed and update timestamp
+        if (game.competitions[0].situation?.lastPlay) {
+          const currentPlayText = game.competitions[0].situation.lastPlay.text;
+          const previousPlayText = event?.competitions[0].situation?.lastPlay?.text;
+          
+          if (currentPlayText !== previousPlayText) {
+            const newPlay = {
+              text: currentPlayText,
+              quarter: game.competitions[0].status.period,
+              clock: game.competitions[0].status.displayClock,
+              timestamp: new Date(),
+              yardage: game.competitions[0].situation.lastPlay.statYardage
+            };
+            setPlayLog(prev => [newPlay, ...prev]);
+          }
         }
         
         // Set nav preset based on which API provided the data
@@ -207,16 +240,117 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         setNavPreset(preset);
         onPresetChange(preset);
         setEvent(game);
+        setLastUpdated(new Date());
+        setCountdown(30); // Reset countdown
         setLoading(false);
+        setIsRefreshing(false);
       } catch (err) {
         console.error('Error fetching game data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load game data');
         setLoading(false);
+        setIsRefreshing(false);
       }
     };
 
     fetchGameData();
   }, [gameId]);
+
+  // Countdown timer effect for auto-refresh (only for live games)
+  useEffect(() => {
+    if (!event) return; // Don't start countdown until initial load
+    
+    // Only auto-refresh if using scoreboard API (live games)
+    if (navPreset === 'summary') return; // Don't refresh final games
+    
+    if (countdown <= 0) {
+      // Trigger a new fetch by updating a dependency
+      const fetchGameData = async () => {
+        if (!gameId) return;
+
+        try {
+          setIsRefreshing(true);
+          setError(null);
+
+          let game: Event | undefined;
+          let gameStatus: string | undefined;
+          let usedSummaryApi = false;
+
+          if (gameId === 'test') {
+            const response = await axios.get<ScoreboardResponse>('/scoreboard.json');
+            game = response.data.events?.[0];
+            gameStatus = game?.competitions[0].status.type.state;
+          } else {
+            const scoreboardResponse = await axios.get<ScoreboardResponse>(
+              `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`
+            );
+            game = scoreboardResponse.data.events?.find(e => e.id === gameId);
+            gameStatus = game?.competitions[0].status.type.state;
+          }
+          
+          if (!game || gameStatus !== 'in') {
+            try {
+              const summaryResponse = await axios.get<Summary>(
+                `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
+              );
+              setSummary(summaryResponse.data);
+              usedSummaryApi = true;
+              
+              if (!game && summaryResponse.data.header) {
+                game = summaryResponse.data.header as unknown as Event;
+              }
+            } catch (summaryErr) {
+              console.error('Error fetching summary data:', summaryErr);
+            }
+          }
+          
+          if (game) {
+            // Check if last play has changed and update timestamp
+            if (game.competitions[0].situation?.lastPlay) {
+              const currentPlayText = game.competitions[0].situation.lastPlay.text;
+              const previousPlayText = event?.competitions[0].situation?.lastPlay?.text;
+              
+              if (currentPlayText !== previousPlayText) {
+                const newPlay = {
+                  text: currentPlayText,
+                  quarter: game.competitions[0].status.period,
+                  clock: game.competitions[0].status.displayClock,
+                  timestamp: new Date(),
+                  yardage: game.competitions[0].situation.lastPlay.statYardage
+                };
+                setPlayLog(prev => [newPlay, ...prev]);
+              }
+            }
+            
+            const preset = usedSummaryApi ? 'summary' : 'scoreboard';
+            setNavPreset(preset);
+            onPresetChange(preset);
+            setEvent(game);
+            setLastUpdated(new Date());
+          }
+          
+          setCountdown(30);
+          setIsRefreshing(false);
+        } catch (err) {
+          console.error('Error refreshing game data:', err);
+          setIsRefreshing(false);
+          setCountdown(30);
+        }
+      };
+
+      fetchGameData();
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [countdown, gameId, event, navPreset]);
+
+  const handleManualRefresh = () => {
+    setCountdown(0); // Trigger immediate refresh
+  };
 
   if (loading) {
     return (
@@ -258,6 +392,35 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
   return (
     <div className="min-h-screen pb-24">
       <div className="max-w-7xl mx-auto px-4 py-8">
+
+        {/* Auto-refresh indicator - only show for live games */}
+        {lastUpdated && navPreset === 'scoreboard' && (
+          <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-4 mb-6">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <FaClock className="text-[#00ffe7]" />
+                <span className="text-[#b0b7bf]">
+                  Last updated: {lastUpdated.toLocaleTimeString()}
+                </span>
+                {isRefreshing && (
+                  <span className="text-[#faafe8] animate-pulse">Refreshing...</span>
+                )}
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-[#b0b7bf]">
+                  Next update in: <span className="text-[#00ffe7] font-bold">{countdown}s</span>
+                </span>
+                <button
+                  onClick={handleManualRefresh}
+                  disabled={isRefreshing}
+                  className="bg-[#00ffe7]/20 hover:bg-[#00ffe7]/30 text-[#00ffe7] px-4 py-2 rounded-lg transition-all disabled:opacity-50"
+                >
+                  Refresh Now
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Box Score - Always visible at top */}
         <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
@@ -330,110 +493,165 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                   {/* Football Field Visualization */}
                   {competition.situation.lastPlay && (
                     <div className="bg-[#1a1d2e]/50 rounded-xl p-6 border border-[#00ffe7]/20">
-                      {/* Current Drive Info */}
-                      <div className="mb-6">
-                        <div className="flex justify-between items-center mb-4">
-                          <div className="text-center flex-1">
-                            <div className="flex items-center justify-center gap-2">
-                              <img 
-                                src={competition.situation.possession === homeTeam?.id ? homeTeam?.team.logo : awayTeam?.team.logo}
-                                alt="Possession"
-                                className="w-8 h-8"
-                              />
-                              <p className="text-[#00ffe7] font-bold text-lg">
-                                {competition.situation.possession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          {competition.situation.possessionText && (
-                            <div className="text-center flex-1">
-                              <p className="text-[#e0e7ef] font-bold text-lg">{competition.situation.possessionText}</p>
-                            </div>
-                          )}
+                  {/* Current Drive Info */}
+                  <div className="mb-6">
+                    {/* Down & Distance + Possession - Side by Side */}
+                    <div className="flex items-center justify-between gap-4 mb-4">
+                      {/* Down & Distance */}
+                      {competition.situation.downDistanceText && (
+                        <div className="flex-1 text-center">
+                          <p className="text-[#b0b7bf] text-xs mb-2">Down & Distance</p>
+                          <p className="text-[#faafe8] font-bold text-xl">{competition.situation.downDistanceText}</p>
                         </div>
-
-                        {/* Timeouts */}
-                        <div className="flex justify-between items-center pt-4 border-t border-[#00ffe7]/10">
-                          <div className="text-center">
-                            <p className="text-[#b0b7bf] text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
-                            <div className="flex gap-1 justify-center">
-                              {[...Array(3)].map((_, i) => (
-                                <div 
-                                  key={i} 
-                                  className={`w-3 h-3 rounded-full ${
-                                    i < ((competition.situation?.awayTimeouts ?? 3)) 
-                                      ? 'bg-[#00ffe7]' 
-                                      : 'bg-gray-600'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          
-                          <div className="text-center">
-                            <p className="text-[#b0b7bf] text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
-                            <div className="flex gap-1 justify-center">
-                              {[...Array(3)].map((_, i) => (
-                                <div 
-                                  key={i} 
-                                  className={`w-3 h-3 rounded-full ${
-                                    i < ((competition.situation?.homeTimeouts ?? 3)) 
-                                      ? 'bg-[#faafe8]' 
-                                      : 'bg-gray-600'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
+                      )}
+                      
+                      {/* Possession */}
+                      <div className="flex-1 text-center">
+                        <p className="text-[#b0b7bf] text-xs mb-2">Possession</p>
+                        <div className="flex items-center justify-center gap-2">
+                          <img
+                            src={competition.situation.possession === homeTeam?.id ? homeTeam?.team.logo : awayTeam?.team.logo}
+                            alt="Possession"
+                            className="w-10 h-10"
+                          />
+                          <p className="text-[#00ffe7] font-bold text-xl">
+                            {competition.situation.possession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
+                          </p>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="border-t border-[#00ffe7]/10 pt-6">
-                        <h4 className="text-[#00ffe7] font-bold text-lg mb-4 text-center">Last Play</h4>
+                    {/* Timeouts */}
+                    <div className="flex justify-between items-center pt-4 mt-4 border-t border-[#00ffe7]/10">
+                      <div className="text-center">
+                        <p className="text-[#b0b7bf] text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
+                        <div className="flex gap-1 justify-center">
+                          {[...Array(3)].map((_, i) => (
+                            <div 
+                              key={i} 
+                              className={`w-3 h-3 rounded-full ${
+                                i < ((competition.situation?.awayTimeouts ?? 3)) 
+                                  ? 'bg-[#00ffe7]' 
+                                  : 'bg-gray-600'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
                       
-                      {/* Play Description */}
-                      <div className="bg-[#23263a]/80 rounded-lg p-4 mb-6">
-                        {(() => {
-                          const playText = competition.situation.lastPlay.text;
-                          // Split by period OR by PENALTY keyword
-                          const parts = playText.split(/\.\s+(?=\w)|(?=PENALTY)/g).filter(part => part.trim());
-                          
-                          return (
-                            <div className="space-y-2">
-                              {parts.map((part, idx) => {
-                                const trimmedPart = part.trim();
-                                // const isPenalty = trimmedPart.startsWith('PENALTY');
+                      <div className="text-center">
+                        <p className="text-[#b0b7bf] text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
+                        <div className="flex gap-1 justify-center">
+                          {[...Array(3)].map((_, i) => (
+                            <div 
+                              key={i} 
+                              className={`w-3 h-3 rounded-full ${
+                                i < ((competition.situation?.homeTimeouts ?? 3)) 
+                                  ? 'bg-[#faafe8]' 
+                                  : 'bg-gray-600'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>                      <div className="border-t border-[#00ffe7]/10 pt-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-[#00ffe7] font-bold text-lg">Play-by-Play Log</h4>
+                          {playLog.length > 0 && (
+                            <span className="text-[#b0b7bf] text-xs">
+                              {playLog.length} {playLog.length === 1 ? 'play' : 'plays'} recorded
+                            </span>
+                          )}
+                        </div>
+                      
+                      {/* Play Log - Full History */}
+                      <div className="bg-[#23263a]/80 rounded-lg p-4 mb-6 transition-all duration-500 ease-in-out">
+                        {playLog.length > 0 ? (
+                          <div className="relative">
+                            {/* Vertical Timeline Line */}
+                            <div className="absolute left-12 top-0 bottom-0 w-0.5 bg-[#00ffe7]/20"></div>
+                            
+                            <div className="space-y-6">
+                              {playLog.map((play, idx) => {
+                                const playText = play.text;
+                                const parts = playText.split(/\.\s+(?=\w)|(?=PENALTY)/g).filter(part => part.trim());
+                                const isLatest = idx === 0;
+                                const isLast = idx === playLog.length - 1;
                                 
                                 return (
-                                  <div key={idx} className="flex items-start gap-2">
-                                    <span className={`mt-1 text-[#00ffe7]`}>
-                                      {'•'}
-                                    </span>
-                                    <p className={`text-sm flex-1 text-[#e0e7ef]`}>
-                                      {trimmedPart}{trimmedPart.endsWith('.') ? '' : '.'}
-                                    </p>
+                                  <div 
+                                    key={idx} 
+                                    className={`relative flex items-start gap-4 ${isLatest ? 'animate-[slide-in-play_0.5s_ease-out]' : ''}`}
+                                  >
+                                    {/* Timeline Dot */}
+                                    <div className="relative flex flex-col items-center flex-shrink-0" style={{ width: '48px' }}>
+                                      <div className={`w-4 h-4 rounded-full border-2 ${
+                                        isLatest 
+                                          ? 'bg-[#00ffe7] border-[#00ffe7] animate-[pulse-dot_2s_ease-in-out_infinite]' 
+                                          : 'bg-[#23263a] border-[#00ffe7]/40'
+                                      } z-10`}></div>
+                                      {/* Game Clock */}
+                                      <div className="text-center mt-1">
+                                        <p className={`text-[10px] font-bold ${isLatest ? 'text-[#00ffe7]' : 'text-[#b0b7bf]'}`}>
+                                          Q{play.quarter}
+                                        </p>
+                                        <p className={`text-[9px] font-mono ${isLatest ? 'text-[#00ffe7]' : 'text-[#b0b7bf]'}`}>
+                                          {play.clock}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Play Content */}
+                                    <div className={`flex-1 pb-4 ${isLatest ? 'bg-[#00ffe7]/5 -ml-2 pl-2 pr-2 rounded-lg' : ''}`}>
+                                      <div className="space-y-1">
+                                        {parts.map((part, partIdx) => {
+                                          const trimmedPart = part.trim();
+                                          return (
+                                            <p key={partIdx} className={`text-sm ${isLatest ? 'text-[#e0e7ef] font-medium' : 'text-[#b0b7bf]'}`}>
+                                              {trimmedPart}{trimmedPart.endsWith('.') ? '' : '.'}
+                                            </p>
+                                          );
+                                        })}
+                                      </div>
+                                      {play.yardage !== undefined && (
+                                        <div className="flex items-center gap-2 mt-2">
+                                          <span className="text-[#b0b7bf] text-xs">Yards:</span>
+                                          <span className={`font-bold text-sm ${
+                                            play.yardage > 0 ? 'text-green-400' : 
+                                            play.yardage < 0 ? 'text-red-400' : 
+                                            'text-gray-400'
+                                          }`}>
+                                            {play.yardage > 0 ? '+' : ''}{play.yardage}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 );
                               })}
+                              
+                              {/* End of Game Marker */}
+                              <div className="relative flex items-start gap-4">
+                                <div className="relative flex flex-col items-center flex-shrink-0" style={{ width: '48px' }}>
+                                  <div className="w-4 h-4 rounded-full bg-[#faafe8] border-2 border-[#faafe8] shadow-[0_0_8px_rgba(250,175,232,0.6)] z-10"></div>
+                                  <p className="text-[10px] font-bold text-[#faafe8] mt-1">END</p>
+                                </div>
+                                <div className="flex-1 pb-2">
+                                  <p className="text-sm text-[#b0b7bf] italic">
+                                    {competition.status.type.state === 'in' ? 'Game In Progress' : 'Game Complete'}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
-                          );
-                        })()}
-                        
-                        {competition.situation.lastPlay.statYardage !== undefined && (
-                          <div className="mt-4 flex items-center justify-center gap-2 pt-2 border-t border-[#00ffe7]/10">
-                            <span className="text-[#b0b7bf] text-xs">Yards:</span>
-                            <span className={`font-bold text-lg ${
-                              competition.situation.lastPlay.statYardage > 0 ? 'text-green-400' : 
-                              competition.situation.lastPlay.statYardage < 0 ? 'text-red-400' : 
-                              'text-gray-400'
-                            }`}>
-                              {competition.situation.lastPlay.statYardage > 0 ? '+' : ''}{competition.situation.lastPlay.statYardage}
-                            </span>
                           </div>
+                        ) : (
+                          <p className="text-[#b0b7bf] text-center text-sm py-4">No plays recorded yet. Plays will appear here as the game progresses.</p>
                         )}
                       </div>
 
+                      {/* Current Play Field Visualization */}
+                      <h5 className="text-[#b0b7bf] font-semibold text-center mb-4 mt-6">Current Play Visualization</h5>
                       {/* Football Field */}
                       <div className="relative w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg overflow-hidden" style={{ height: '200px' }}>
                         {/* Yard lines */}
@@ -536,13 +754,6 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                           </svg>
                         )}
                       </div>
-
-                      {/* Down & Distance */}
-                      {competition.situation.downDistanceText && (
-                        <div className="mt-6 text-center">
-                          <p className="text-[#faafe8] font-bold text-lg">{competition.situation.downDistanceText}</p>
-                        </div>
-                      )}
 
                       {/* Win Probability (if available) */}
                       {competition.situation.lastPlay.probability && (
@@ -900,11 +1111,11 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
             </h3>
             
             {competition.leaders && competition.leaders.length > 0 ? (
-              <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
                 {competition.leaders.map((category, categoryIdx) => (
-                  <div key={`${category.name}-${categoryIdx}`} className="bg-[#23263a]/50 rounded-lg p-4 border border-[#00ffe7]/10">
-                    <p className="text-[#b0b7bf] text-sm mb-3 font-semibold">{category.displayName}</p>
-                    <div className="flex items-center justify-between gap-4">
+                  <div key={`${category.name}-${categoryIdx}`} className="bg-[#23263a]/50 rounded-lg p-6 border border-[#00ffe7]/10 hover:border-[#00ffe7]/30 transition-all">
+                    <p className="text-[#b0b7bf] font-semibold text-center mb-6">{category.displayName}</p>
+                    <div className="flex items-center justify-between gap-6">
                       {category.leaders.map((leader, idx) => {
                         const isHome = leader.team.id === homeTeam?.id;
                         
@@ -912,17 +1123,17 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                           <button
                             key={`${leader.athlete.id}-${idx}`}
                             onClick={() => navigate(`/nfl/player/${leader.athlete.id}`)}
-                            className={`flex items-center gap-3 flex-1 hover:bg-[#00ffe7]/10 rounded-lg p-2 transition-all group ${isHome ? '' : 'flex-row-reverse'}`}
+                            className="flex flex-col items-center gap-3 flex-1 group"
                           >
                             <img 
                               src={leader.athlete.headshot} 
                               alt={leader.athlete.displayName}
-                              className="w-12 h-12 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform"
+                              className="w-16 h-16 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform"
                               onError={(e) => { e.currentTarget.style.display = 'none'; }}
                             />
-                            <div className={`min-w-0 flex-1 ${isHome ? 'text-left' : 'text-right'}`}>
-                              <p className="text-[#e0e7ef] font-bold text-sm truncate group-hover:text-[#00ffe7] transition-colors">{leader.athlete.displayName}</p>
-                              <p className="text-[#b0b7bf] text-xs">{leader.displayValue}</p>
+                            <div className="text-center">
+                              <p className="text-[#e0e7ef] font-bold truncate group-hover:text-[#00ffe7] transition-colors">{leader.athlete.displayName}</p>
+                              <p className="text-[#b0b7bf] text-sm mt-1">{leader.displayValue}</p>
                             </div>
                           </button>
                         );

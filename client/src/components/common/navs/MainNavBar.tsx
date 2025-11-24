@@ -6,7 +6,7 @@ interface GameNavBarProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news';
   onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news') => void;
   onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news') => void; // Called when button is clicked
-  preset?: 'scoreboard' | 'summary' | 'team'; // Determines which buttons to show
+  preset?: 'scoreboard' | 'summary' | 'team' | 'player'; // Determines which buttons to show
 }
 
 const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabClick, preset = 'scoreboard' }) => {
@@ -15,13 +15,13 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
   // All available navigation items
   const allNavItems = [
     { id: 'back', label: 'Scoreboard', icon: <FaArrowLeft />, action: () => navigate('/nfl') },
-    { id: 'info', label: 'Info', icon: <FaInfoCircle /> },
+    { id: 'info', label: preset === 'player' ? 'Overview' : 'Info', icon: <FaInfoCircle /> },
     { id: 'player', label: 'Players', icon: <FaTrophy /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
     { id: 'headtohead', label: 'Head to Head', icon: <FaExchangeAlt /> },
     { id: 'prediction', label: 'Predictions', icon: <FaPercentage /> },
     { id: 'odds', label: 'Odds', icon: <FaChartLine /> },
-    { id: 'schedule', label: 'Schedule', icon: <FaCalendar /> },
+    { id: 'schedule', label: preset === 'player' ? 'Game Log' : 'Schedule', icon: <FaCalendar /> },
     { id: 'news', label: 'News', icon: <FaNewspaper /> },
   ];
 
@@ -30,6 +30,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
     scoreboard: ['back', 'info', 'player', 'headtohead'],
     summary: ['back', 'info', 'player', 'team', 'prediction', 'odds'],
     team: ['back', 'info', 'schedule', 'news'], // Team page shows back, info, schedule, news
+    player: ['back', 'info', 'schedule', 'news'], // Player page shows back, overview, game log, news
   };
 
   // Filter nav items based on preset

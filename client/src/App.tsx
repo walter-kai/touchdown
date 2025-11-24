@@ -54,9 +54,10 @@ const App: React.FC = () => {
     setGameTab(tab);
   };
   
-  // Check if we're on a game page or team page
+  // Check if we're on a game page or team page or player page
   const isGamePage = location.pathname.startsWith('/nfl/game/');
   const isTeamPage = location.pathname.startsWith('/nfl/team/');
+  const isPlayerPage = location.pathname.startsWith('/nfl/player/');
 
   // Redirect unauthenticated users from /i/ routes
   useEffect(() => {
@@ -123,7 +124,7 @@ const App: React.FC = () => {
                   <Route path="/nfl" element={<NFL />} />
                   <Route path="/nfl/game/:gameId" element={<NFLGame activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds'} onTabChange={(tab) => setGameTab(tab)} onPresetChange={setNavPreset} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage activeTab={gameTab} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
-                  <Route path="/nfl/player/:playerId" element={<NFLPlayerPage />} />
+                  <Route path="/nfl/player/:playerId" element={<NFLPlayerPage activeTab={gameTab as 'info' | 'schedule' | 'news'} onTabChange={(tab) => setGameTab(tab as any)} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   
                   <Route path="/x/about" element={<AboutUs />} />
                   <Route path="/x/how-it-works" element={<HowItWorks />} />
@@ -157,13 +158,13 @@ const App: React.FC = () => {
           </TransitionGroup>
         </div>
         
-        {/* Game Navigation Bar - Show on game pages and team pages */}
-        {(isGamePage || isTeamPage) && (
+        {/* Game Navigation Bar - Show on game pages, team pages, and player pages */}
+        {(isGamePage || isTeamPage || isPlayerPage) && (
           <GameNavBar 
             activeTab={gameTab} 
             onTabChange={setGameTab} 
             onTabClick={handleTabClick} 
-            preset={isTeamPage ? 'team' : navPreset} 
+            preset={isTeamPage ? 'team' : isPlayerPage ? 'player' : navPreset} 
           />
         )}
         

@@ -1,10 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaFootballBall, FaArrowLeft, FaCalendar, FaChartLine, FaTrophy, FaNewspaper } from 'react-icons/fa';
+import { FaFootballBall, FaArrowLeft, FaCalendar, FaChartLine, FaTrophy, FaNewspaper, FaInfoCircle } from 'react-icons/fa';
 import axios from 'axios';
 import type { AthleteOverview, AthleteBio } from '@/types/espn/player';
 
-const NFLPlayer: React.FC = () => {
+interface NFLPlayerProps {
+  activeTab?: 'info' | 'schedule' | 'news';
+  onTabChange?: (tab: 'info' | 'schedule' | 'news') => void;
+  onRegisterTabClick?: (callback: (tab: string) => void) => void;
+}
+
+const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, onRegisterTabClick }) => {
   const { playerId } = useParams<{ playerId: string }>();
   const navigate = useNavigate();
   
@@ -12,7 +18,101 @@ const NFLPlayer: React.FC = () => {
   const [bio, setBio] = useState<AthleteBio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'stats' | 'gamelog' | 'news'>('overview');
+  
+  // Flag to prevent observer from triggering during programmatic scroll
+  const isScrollingProgrammatically = useRef(false);
+  
+  // Refs for each section
+  const infoRef = useRef<HTMLDivElement>(null);
+  const scheduleRef = useRef<HTMLDivElement>(null);
+  const newsRef = useRef<HTMLDivElement>(null);
+  
+  // Map of section IDs to refs
+  const sectionRefs = {
+    info: infoRef,
+    schedule: scheduleRef,
+    news: newsRef,
+  };
+  
+  // Register the callback with parent on mount
+  useEffect(() => {
+    if (onRegisterTabClick) {
+      onRegisterTabClick((tab: string) => {
+        isScrollingProgrammatically.current = true;
+      });
+    }
+  }, [onRegisterTabClick]);
+  
+  // Scroll to section when tab changes (user clicks nav button)
+  useEffect(() => {
+    if (!isScrollingProgrammatically.current || !onTabChange) return;
+    
+    const ref = sectionRefs[activeTab];
+    if (ref.current) {
+      const navbarHeight = 80;
+      const elementPosition = ref.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+      
+      setTimeout(() => {
+        isScrollingProgrammatically.current = false;
+      }, 1000);
+    }
+  }, [activeTab]);
+  
+  // Scroll tracking to highlight active section
+  useEffect(() => {
+    if (!onTabChange) return;
+    
+    let timeoutId: NodeJS.Timeout;
+    
+    const handleScroll = () => {
+      if (isScrollingProgrammatically.current) return;
+      
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const sectionsToCheck = ['info', 'schedule', 'news'];
+        const navbarHeight = 80;
+        const scrollPosition = window.scrollY + navbarHeight + 100;
+        
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        const scrolledToBottom = windowHeight + window.scrollY >= documentHeight - 200;
+        
+        if (scrolledToBottom) {
+          onTabChange('news');
+          return;
+        }
+        
+        for (let i = sectionsToCheck.length - 1; i >= 0; i--) {
+          const sectionId = sectionsToCheck[i];
+          const ref = sectionRefs[sectionId as keyof typeof sectionRefs];
+          
+          if (ref.current) {
+            const rect = ref.current.getBoundingClientRect();
+            const absoluteTop = rect.top + window.scrollY;
+            
+            if (scrollPosition >= absoluteTop) {
+              onTabChange(sectionId as 'info' | 'schedule' | 'news');
+              break;
+            }
+          }
+        }
+      }, 100);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
+    };
+  }, [onTabChange]);
 
   useEffect(() => {
     const fetchPlayerData = async () => {
@@ -77,17 +177,8 @@ const NFLPlayer: React.FC = () => {
   const athlete = bio?.athlete;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a]">
+    <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a] pb-24">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 px-4 py-2 mb-6 bg-[#23263a]/90 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/10 transition-all"
-        >
-          <FaArrowLeft />
-          Back
-        </button>
 
         {/* Player Header */}
         <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-8 mb-6">
@@ -199,69 +290,37 @@ const NFLPlayer: React.FC = () => {
           </div>
         )}
 
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-              activeTab === 'overview'
-                ? 'bg-[#00ffe7] text-[#1a1d2e]'
-                : 'bg-[#23263a] text-[#00ffe7] border border-[#00ffe7]/30 hover:bg-[#00ffe7]/10'
-            }`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('gamelog')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-              activeTab === 'gamelog'
-                ? 'bg-[#00ffe7] text-[#1a1d2e]'
-                : 'bg-[#23263a] text-[#00ffe7] border border-[#00ffe7]/30 hover:bg-[#00ffe7]/10'
-            }`}
-          >
-            Game Log
-          </button>
-          <button
-            onClick={() => setActiveTab('news')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-              activeTab === 'news'
-                ? 'bg-[#00ffe7] text-[#1a1d2e]'
-                : 'bg-[#23263a] text-[#00ffe7] border border-[#00ffe7]/30 hover:bg-[#00ffe7]/10'
-            }`}
-          >
-            News
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === 'overview' && overview.statistics && (
-          <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 p-6">
-            <h2 className="text-2xl font-bold text-[#00ffe7] mb-6">
-              {overview.statistics.displayName}
-            </h2>
-            
-            {/* Stats by Category */}
-            {overview.statistics.categories && overview.statistics.categories.map((category, idx) => (
-              <div key={idx} className="mb-6">
-                <h3 className="text-lg font-bold text-[#faafe8] mb-3">{category.displayName}</h3>
-                
-                {/* Stats by Split */}
-                {overview.statistics.splits && overview.statistics.splits.map((split, splitIdx) => (
+        {/* Overview/Stats Section */}
+        <div id="info" ref={infoRef} className="space-y-6 scroll-mt-20">
+          {overview.statistics && (
+            <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 p-2">
+              <h2 className="text-2xl font-bold text-[#00ffe7] mb-6 flex items-center gap-2">
+                <FaInfoCircle />
+                Overview
+              </h2>
+              
+              {/* Stats by Category */}
+              {overview.statistics.categories && overview.statistics.categories.map((category, idx) => (
+                <div key={idx} className="mb-6">
+                  <h3 className="text-xl font-bold text-[#faafe8] mb-3">{category.displayName}</h3>
+                  
+                  {/* Stats by Split */}
+                  {overview.statistics.splits && overview.statistics.splits.map((split, splitIdx) => (
                   <div key={splitIdx} className="mb-4">
-                    <h4 className="text-sm font-semibold text-[#00ffe7] mb-2 px-2">{split.displayName}</h4>
+                    <h4 className="text-base font-semibold text-[#00ffe7] mb-2 px-2">{split.displayName}</h4>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-xs">
+                      <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-[#00ffe7]/20">
                             {overview.statistics.labels && overview.statistics.labels.map((label, i) => (
-                              <th key={i} className="text-center py-1 px-1 text-gray-400 text-[10px] sm:text-xs">{label}</th>
+                              <th key={i} className="text-center py-2 px-0 text-gray-400 text-sm">{label}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           <tr className="hover:bg-[#00ffe7]/5">
                             {split.stats && split.stats.map((stat, statIdx) => (
-                              <td key={statIdx} className="text-center py-2 px-1 text-white font-bold text-[10px] sm:text-xs">
+                              <td key={statIdx} className="text-center py-3 px-1 text-white font-bold text-base">
                                 {stat}
                               </td>
                             ))}
@@ -273,10 +332,12 @@ const NFLPlayer: React.FC = () => {
                 ))}
               </div>
             ))}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
 
-        {activeTab === 'gamelog' && (
+        {/* Game Log Section */}
+        <div id="schedule" ref={scheduleRef} className="space-y-6 scroll-mt-20">
           <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 p-6">
             <h2 className="text-2xl font-bold text-[#00ffe7] mb-6 flex items-center gap-2">
               <FaChartLine />
@@ -286,40 +347,44 @@ const NFLPlayer: React.FC = () => {
             {/* Game Log from Overview API */}
             {overview.gameLog && overview.gameLog.statistics && (
               <div>
-                <h3 className="text-lg font-bold text-[#faafe8] mb-4">Recent Games</h3>
+                <h3 className="text-xl font-bold text-[#faafe8] mb-4">Recent Games</h3>
                 {overview.gameLog.statistics?.map((statType, idx) => (
                   <div key={idx} className="mb-6">
-                    <h4 className="text-md font-semibold text-gray-300 mb-3">{statType.displayName}</h4>
+                    <h4 className="text-lg font-semibold text-gray-300 mb-3">{statType.displayName}</h4>
                     
                     {/* Each game as a separate section */}
                     {statType.events?.map((event, eventIdx) => {
                       const gameInfo = overview.gameLog.events[event.eventId];
                       return (
-                        <div key={eventIdx} className="mb-4">
+                        <button 
+                          key={eventIdx} 
+                          onClick={() => navigate(`/nfl/game/${event.eventId}`)}
+                          className="w-full mb-4 hover:bg-[#00ffe7]/10 rounded-lg p-3 transition-all cursor-pointer"
+                        >
                           {/* Game matchup as header */}
-                          <div className="mb-2 px-2">
-                            <div className="text-[#00ffe7] font-semibold text-sm">
+                          <div className="mb-3 px-2">
+                            <div className="text-[#00ffe7] font-semibold text-base">
                               {gameInfo?.atVs} {gameInfo?.opponent.abbreviation}
                             </div>
-                            <div className="text-[10px] text-gray-400">
+                            <div className="text-sm text-gray-400">
                               {gameInfo?.score} ({gameInfo?.gameResult})
                             </div>
                           </div>
                           
                           {/* Stats table without game column */}
                           <div className="overflow-x-auto">
-                            <table className="w-full text-xs">
+                            <table className="w-full text-sm">
                               <thead>
                                 <tr className="border-b border-[#00ffe7]/20">
                                   {statType.labels?.map((label, i) => (
-                                    <th key={i} className="text-center py-1 px-1 text-gray-400 text-[10px] sm:text-xs">{label}</th>
+                                    <th key={i} className="text-center py-2 px-2 text-gray-400 text-sm">{label}</th>
                                   ))}
                                 </tr>
                               </thead>
                               <tbody>
                                 <tr className="hover:bg-[#00ffe7]/5">
                                   {event.stats?.map((stat, statIdx) => (
-                                    <td key={statIdx} className="text-center py-2 px-1 text-white font-bold text-[10px] sm:text-xs">
+                                    <td key={statIdx} className="text-center py-3 px-2 text-white font-bold text-base">
                                       {stat}
                                     </td>
                                   ))}
@@ -327,7 +392,7 @@ const NFLPlayer: React.FC = () => {
                               </tbody>
                             </table>
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -335,52 +400,65 @@ const NFLPlayer: React.FC = () => {
               </div>
             )}
           </div>
-        )}
+        </div>
 
-        {activeTab === 'news' && overview.news && overview.news.length > 0 && (
-          <div className="space-y-6">
-            {overview.news.map((article, idx) => (
-              <div key={idx} className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 p-6 hover:border-[#00ffe7]/50 transition-all">
-                <div className="flex flex-col md:flex-row gap-6">
-                  {article.images && article.images.length > 0 && (
-                    <img
-                      src={article.images[0].url}
-                      alt={article.headline}
-                      className="w-full md:w-64 h-48 object-cover rounded-lg"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-400 mb-2">
-                      {new Date(article.published).toLocaleDateString()} • {article.byline || 'ESPN'}
+        {/* News Section */}
+        <div id="news" ref={newsRef} className="space-y-6 scroll-mt-20">
+          {overview.news && overview.news.length > 0 && (
+            <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 p-6">
+              <h2 className="text-2xl font-bold text-[#00ffe7] mb-6 flex items-center gap-2">
+                <FaNewspaper />
+                News
+              </h2>
+              <div className="space-y-4">
+                {overview.news.map((article, idx) => (
+                  <div key={idx} className="bg-[#23263a]/50 rounded-xl border border-[#00ffe7]/20 p-6 hover:border-[#00ffe7]/40 transition-all">
+                    <div className="flex flex-col md:flex-row gap-6">
+                    {article.images && article.images.length > 0 && (
+                      <img
+                        src={article.images[0].url}
+                        alt={article.headline}
+                        className="w-full md:w-64 h-48 object-cover rounded-lg"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-2">
+                        {new Date(article.published).toLocaleDateString()} • {article.byline || 'ESPN'}
+                      </div>
+                      <h3 className="text-xl font-bold text-[#00ffe7] mb-3">
+                        {article.headline}
+                      </h3>
+                      <p className="text-gray-300 mb-4">{article.description}</p>
+                      <a
+                        href={article.links.web.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block px-4 py-2 bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/30 transition-colors text-sm"
+                      >
+                        Read Full Article →
+                      </a>
                     </div>
-                    <h3 className="text-xl font-bold text-[#00ffe7] mb-3">
-                      {article.headline}
-                    </h3>
-                    <p className="text-gray-300 mb-4">{article.description}</p>
-                    <a
-                      href={article.links.web.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block px-4 py-2 bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/30 transition-colors text-sm"
-                    >
-                      Read Full Article →
-                    </a>
                   </div>
                 </div>
+              ))}
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
 
         {/* Next Game */}
         {overview.nextGame && overview.nextGame.league.events && overview.nextGame.league.events.length > 0 && (
-          <div className="bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-6 mt-6">
+          <div className="bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-6">
             <h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
               <FaCalendar />
               {overview.nextGame.displayName}
             </h2>
             {overview.nextGame.league.events.map((game, idx) => (
-              <div key={idx} className="bg-[#23263a]/50 p-6 rounded-lg">
+              <button 
+                key={idx} 
+                onClick={() => navigate(`/nfl/game/${game.id}`)}
+                className="w-full bg-[#23263a]/50 p-6 rounded-lg hover:bg-[#00ffe7]/10 transition-all cursor-pointer"
+              >
                 <div className="text-center mb-4">
                   <div className="text-[#00ffe7] font-bold">{game.weekText}</div>
                   <div className="text-gray-300">
@@ -434,7 +512,7 @@ const NFLPlayer: React.FC = () => {
                     </div>
                   </div>
                 )}
-              </div>
+              </button>
             ))}
           </div>
         )}
