@@ -845,101 +845,72 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                     onClick={() => navigate(`/nfl/game/${event.id}`)}
                   >
                     <div className="flex items-center justify-between gap-4">
-                      {/* Week & Date Info */}
-                      <div className="text-center min-w-[80px] flex-shrink-0">
+                      {/* Week & Date Info - Left */}
+                      <div className="flex-shrink-0 min-w-[70px]">
                         <div className="text-xs text-gray-400 uppercase tracking-wider">{event.week.text}</div>
                         <div className="text-sm font-bold text-[#00ffe7]">
                           {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </div>
                       </div>
 
-                      {/* Game Matchup - Centered */}
-                      <div className="flex items-center justify-center gap-6 flex-1">
+                      {/* Teams - Stacked Vertically */}
+                      <div className="flex flex-col gap-2 flex-1">
                         {/* Away Team */}
-                        <div className="flex flex-col items-center gap-2 min-w-[100px]">
+                        <div className="flex items-center gap-2">
                           <img
                             src={awayTeam?.team.logos[0]?.href}
                             alt={awayTeam?.team.displayName}
-                            className="w-12 h-12 object-contain"
+                            className="w-8 h-8 object-contain"
                           />
-                          <div className="text-xs font-bold text-white">{awayTeam?.team.abbreviation}</div>
-                          {awayTeam?.score && (
-                            <div className={`text-2xl font-bold ${awayTeam.winner ? 'text-[#00ffe7]' : 'text-gray-400'}`}>
-                              {awayTeam.score.displayValue}
-                            </div>
-                          )}
+                          <div className="text-sm font-bold text-white">{awayTeam?.team.abbreviation}</div>
                         </div>
 
-                        {/* Score Divider */}
-                        <div className="text-gray-500 font-bold text-2xl">-</div>
-
                         {/* Home Team */}
-                        <div className="flex flex-col items-center gap-2 min-w-[100px]">
+                        <div className="flex items-center gap-2">
                           <img
                             src={homeTeam?.team.logos[0]?.href}
                             alt={homeTeam?.team.displayName}
-                            className="w-12 h-12 object-contain"
+                            className="w-8 h-8 object-contain"
                           />
-                          <div className="text-xs font-bold text-white">{homeTeam?.team.abbreviation}</div>
-                          {homeTeam?.score && (
-                            <div className={`text-2xl font-bold ${homeTeam.winner ? 'text-[#00ffe7]' : 'text-gray-400'}`}>
-                              {homeTeam.score.displayValue}
-                            </div>
-                          )}
+                          <div className="text-sm font-bold text-white">{homeTeam?.team.abbreviation}</div>
                         </div>
                       </div>
 
-                      {/* Status & Result Badge */}
-                      <div className="flex items-center gap-3 flex-shrink-0 min-w-[80px] justify-end">
-                        {isCompleted ? (
-                          <div className="flex items-center justify-center">
-                            {didWin ? (
-                              <span className="px-4 py-2 bg-[#00ffe7]/20 border border-[#00ffe7]/40 rounded-full text-[#00ffe7] text-sm font-bold uppercase tracking-wider flex items-center justify-center">
-                                W
-                              </span>
-                            ) : (
-                              <span className="px-4 py-2 bg-red-500/20 border border-red-500/40 rounded-full text-red-400 text-sm font-bold uppercase tracking-wider flex items-center justify-center">
-                                L
-                              </span>
-                            )}
+                      {/* Scores - Right Aligned */}
+                      {isCompleted && (
+                        <div className="flex flex-col gap-2 flex-shrink-0 min-w-[50px] items-end">
+                          <div className={`text-xl font-bold ${awayTeam?.winner ? 'text-[#00ffe7]' : 'text-gray-400'}`}>
+                            {awayTeam?.score?.displayValue || '0'}
                           </div>
-                        ) : (
-                          <div className="text-center">
-                            <div className="px-4 py-2 bg-[#faafe8]/20 border border-[#faafe8]/40 rounded-full">
-                              <span className="text-xs text-gray-400 uppercase tracking-wider">{isHome ? 'HOME' : 'AWAY'}</span>
-                            </div>
-                            <div className="text-xs text-gray-400 mt-1">
-                              {new Date(event.date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                            </div>
+                          <div className={`text-xl font-bold ${homeTeam?.winner ? 'text-[#00ffe7]' : 'text-gray-400'}`}>
+                            {homeTeam?.score?.displayValue || '0'}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Venue Info (for future games) */}
-                    {!isCompleted && competition.venue && (
-                      <div className="mt-2 pt-2 border-t border-[#faafe8]/20">
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                    {/* Status Footer */}
+                    <div className="mt-3 pt-3 border-t border-[#00ffe7]/10 flex items-center justify-between">
+                      <div className="text-xs text-gray-400">
+                        {isCompleted ? (
+                          didWin ? (
+                            <span className="text-[#00ffe7] font-semibold">Final - Win</span>
+                          ) : (
+                            <span className="text-red-400 font-semibold">Final - Loss</span>
+                          )
+                        ) : (
+                          <span>{isHome ? 'HOME' : 'AWAY'} • {new Date(event.date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
+                        )}
+                      </div>
+                      {competition.venue && (
+                        <div className="flex items-center gap-1 text-xs text-gray-400">
                           <FaMapMarkerAlt className="text-[#faafe8]" />
-                          <span>{competition.venue.fullName}</span>
+                          <span className="truncate max-w-[200px]">{competition.venue.fullName}</span>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
-                    {/* Status Detail */}
-                    {isCompleted && (
-                      <div className="mt-2 pt-2 border-t border-gray-600/20">
-                        <div className="text-xs text-gray-400 flex items-center justify-between">
-                          <span>{competition.status.type.shortDetail}</span>
-                          {competition.venue && (
-                            <div className="flex items-center gap-1">
-                              <FaMapMarkerAlt className="text-gray-500" />
-                              <span>{competition.venue.fullName}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
+
                   </div>
                 );
               })}

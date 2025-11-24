@@ -205,7 +205,7 @@ const NFLScoreboard: React.FC = () => {
 	{byeTeams.length > 0 && (
 		<div className="mb-8 bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-4 shadow-[0_0_16px_rgba(250,175,232,0.1)]">
 			<h3 className="text-lg font-bold text-[#faafe8] mb-3">Teams on Bye</h3>
-			<div className="flex flex-wrap gap-3">
+			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 				{byeTeams.map((team) => (
 					<button
 						key={team.id}
@@ -253,7 +253,7 @@ const NFLScoreboard: React.FC = () => {
 				<FaPlay className="animate-pulse" />
 				Live Now ({liveGames.length})
 				</h2>
-				<div className={`grid gap-4 ${liveGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
+				<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
 				{liveGames.map((game) => (
 					<GameSummaryCard key={game.id} game={game} navigate={navigate} />
 				))}
