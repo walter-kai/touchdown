@@ -673,4 +673,3 @@ export interface StandingStat {
   summary: string;
   displayValue: string;
 }
-

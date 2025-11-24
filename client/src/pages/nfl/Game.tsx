@@ -98,7 +98,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         const sectionsToCheck = 
           navPreset === 'scoreboard' 
             ? ['info', 'player', 'headtohead']
-            : ['info', 'team', 'prediction', 'odds'];
+            : ['info', 'team', 'player', 'prediction', 'odds'];
         
         const navbarHeight = 80;
         const scrollPosition = window.scrollY + navbarHeight + 100; // Add some offset
@@ -317,91 +317,80 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                 Game Info
               </h2>
               <h3 className="text-[#e0e7ef] text-xl">
-                {competition.status.type.detail}
+                {competition.status.type.state === 'in' 
+                  ? `Q${competition.status.period} - ${competition.status.displayClock}`
+                  : competition.status.type.detail
+                }
               </h3>
-              {competition.status.type.state === 'in' && (
-                <div className="flex items-center justify-center gap-4 text-[#e0e7ef]">
-                  <span className="text-xl font-bold">{competition.status.displayClock}</span>
-                  <span className="text-lg">Quarter {competition.status.period}</span>
-                </div>
-              )}
             </div>
 
               {/* Live Game Situation */}
               {competition.situation && competition.status.type.state === 'in' && (
                 <div className="space-y-6">
-                  {/* Current Drive Info */}
-                  <div className="bg-[#1a1d2e]/50 rounded-xl p-4 border border-[#00ffe7]/20">
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="text-center flex-1">
-                        <p className="text-[#b0b7bf] text-sm mb-1">Possession</p>
-                        <div className="flex items-center justify-center gap-2">
-                          <img 
-                            src={competition.situation.possession === homeTeam?.id ? homeTeam?.team.logo : awayTeam?.team.logo}
-                            alt="Possession"
-                            className="w-8 h-8"
-                          />
-                          <p className="text-[#00ffe7] font-bold text-lg">
-                            {competition.situation.possession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {competition.situation.downDistanceText && (
-                        <div className="text-center flex-1">
-                          <p className="text-[#b0b7bf] text-sm mb-1">Down & Distance</p>
-                          <p className="text-[#faafe8] font-bold text-lg">{competition.situation.downDistanceText}</p>
-                        </div>
-                      )}
-                      
-                      {competition.situation.possessionText && (
-                        <div className="text-center flex-1">
-                          <p className="text-[#b0b7bf] text-sm mb-1">Field Position</p>
-                          <p className="text-[#e0e7ef] font-bold text-lg">{competition.situation.possessionText}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Timeouts */}
-                    <div className="flex justify-between items-center pt-4 border-t border-[#00ffe7]/10">
-                      <div className="text-center">
-                        <p className="text-[#b0b7bf] text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
-                        <div className="flex gap-1 justify-center">
-                          {[...Array(3)].map((_, i) => (
-                            <div 
-                              key={i} 
-                              className={`w-3 h-3 rounded-full ${
-                                i < ((competition.situation?.awayTimeouts ?? 3)) 
-                                  ? 'bg-[#00ffe7]' 
-                                  : 'bg-gray-600'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div className="text-center">
-                        <p className="text-[#b0b7bf] text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
-                        <div className="flex gap-1 justify-center">
-                          {[...Array(3)].map((_, i) => (
-                            <div 
-                              key={i} 
-                              className={`w-3 h-3 rounded-full ${
-                                i < ((competition.situation?.homeTimeouts ?? 3)) 
-                                  ? 'bg-[#faafe8]' 
-                                  : 'bg-gray-600'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Football Field Visualization */}
                   {competition.situation.lastPlay && (
                     <div className="bg-[#1a1d2e]/50 rounded-xl p-6 border border-[#00ffe7]/20">
-                      <h4 className="text-[#00ffe7] font-bold text-lg mb-4 text-center">Last Play</h4>
+                      {/* Current Drive Info */}
+                      <div className="mb-6">
+                        <div className="flex justify-between items-center mb-4">
+                          <div className="text-center flex-1">
+                            <div className="flex items-center justify-center gap-2">
+                              <img 
+                                src={competition.situation.possession === homeTeam?.id ? homeTeam?.team.logo : awayTeam?.team.logo}
+                                alt="Possession"
+                                className="w-8 h-8"
+                              />
+                              <p className="text-[#00ffe7] font-bold text-lg">
+                                {competition.situation.possession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {competition.situation.possessionText && (
+                            <div className="text-center flex-1">
+                              <p className="text-[#e0e7ef] font-bold text-lg">{competition.situation.possessionText}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Timeouts */}
+                        <div className="flex justify-between items-center pt-4 border-t border-[#00ffe7]/10">
+                          <div className="text-center">
+                            <p className="text-[#b0b7bf] text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
+                            <div className="flex gap-1 justify-center">
+                              {[...Array(3)].map((_, i) => (
+                                <div 
+                                  key={i} 
+                                  className={`w-3 h-3 rounded-full ${
+                                    i < ((competition.situation?.awayTimeouts ?? 3)) 
+                                      ? 'bg-[#00ffe7]' 
+                                      : 'bg-gray-600'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div className="text-center">
+                            <p className="text-[#b0b7bf] text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
+                            <div className="flex gap-1 justify-center">
+                              {[...Array(3)].map((_, i) => (
+                                <div 
+                                  key={i} 
+                                  className={`w-3 h-3 rounded-full ${
+                                    i < ((competition.situation?.homeTimeouts ?? 3)) 
+                                      ? 'bg-[#faafe8]' 
+                                      : 'bg-gray-600'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-[#00ffe7]/10 pt-6">
+                        <h4 className="text-[#00ffe7] font-bold text-lg mb-4 text-center">Last Play</h4>
                       
                       {/* Play Description */}
                       <div className="bg-[#23263a]/80 rounded-lg p-4 mb-6">
@@ -490,21 +479,23 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                             style={{ left: `${competition.situation.lastPlay.end.yardLine}%` }}
                           >
                             <div className="relative group">
-                              <img
-                                src={competition.situation.lastPlay.athletesInvolved[0].headshot}
-                                alt={competition.situation.lastPlay.athletesInvolved[0].displayName}
-                                className="w-16 h-14 rounded-full border-4 border-[#00ffe7] shadow-2xl shadow-[#00ffe7]/50"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                  const parent = e.currentTarget.parentElement;
-                                  if (parent) {
-                                    const fallback = document.createElement('div');
-                                    fallback.className = 'w-12 h-12 rounded-full border-4 border-[#00ffe7] bg-[#23263a] flex items-center justify-center shadow-2xl shadow-[#00ffe7]/50';
-                                    fallback.innerHTML = '<span class="text-[#00ffe7] font-bold text-xs">⬇️</span>';
-                                    parent.appendChild(fallback);
-                                  }
-                                }}
-                              />
+                              <div className="w-16 h-16 rounded-full bg-[#00ffe7]/30 flex items-center justify-center border-4 border-[#00ffe7] shadow-2xl shadow-[#00ffe7]/50">
+                                <img
+                                  src={competition.situation.lastPlay.athletesInvolved[0].headshot}
+                                  alt={competition.situation.lastPlay.athletesInvolved[0].displayName}
+                                  className="w-14 h-14 rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const parent = e.currentTarget.parentElement;
+                                    if (parent) {
+                                      const fallback = document.createElement('div');
+                                      fallback.className = 'flex items-center justify-center';
+                                      fallback.innerHTML = '<span class="text-[#00ffe7] font-bold text-xs">⬇️</span>';
+                                      parent.appendChild(fallback);
+                                    }
+                                  }}
+                                />
+                              </div>
                               {/* Player name tooltip */}
                               <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-[#23263a] border border-[#00ffe7]/50 rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                 <p className="text-[#00ffe7] text-xs font-bold">{competition.situation.lastPlay.athletesInvolved[0].displayName}</p>
@@ -546,6 +537,13 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                         )}
                       </div>
 
+                      {/* Down & Distance */}
+                      {competition.situation.downDistanceText && (
+                        <div className="mt-6 text-center">
+                          <p className="text-[#faafe8] font-bold text-lg">{competition.situation.downDistanceText}</p>
+                        </div>
+                      )}
+
                       {/* Win Probability (if available) */}
                       {competition.situation.lastPlay.probability && (
                         <div className="mt-6">
@@ -566,6 +564,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                           </div>
                         </div>
                       )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -629,44 +628,44 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
             <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] overflow-hidden">
               {/* Venue image if available from summary */}
               {venueImage && (
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-24 overflow-hidden">
                   <img 
                     src={venueImage}
                     alt="Venue"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#181a23]" />
-                  <div className="absolute bottom-4 left-6">
-                    <h4 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
-                      <FaFootballBall />
+                  <div className="absolute bottom-2 left-4">
+                    <h4 className="text-[#00ffe7] font-bold text-sm flex items-center gap-1">
+                      <FaFootballBall className="text-xs" />
                       {summary?.gameInfo?.venue?.fullName || competition.venue?.fullName}
                     </h4>
-                    <p className="text-[#e0e7ef] text-sm">
+                    <p className="text-[#e0e7ef] text-xs">
                       {summary?.gameInfo?.venue?.address?.city || competition.venue?.address?.city}, {summary?.gameInfo?.venue?.address?.state || competition.venue?.address?.state}
                     </p>
                   </div>
                 </div>
               )}
               
-              <div className="p-6">
+              <div className="p-4">
                 {!venueImage && (competition.venue || summary?.gameInfo?.venue) && (
-                  <div className="mb-6">
-                    <h4 className="text-[#00ffe7] font-bold text-xl mb-3 flex items-center gap-2">
-                      <FaFootballBall />
+                  <div className="mb-3">
+                    <h4 className="text-[#00ffe7] font-bold text-sm mb-2 flex items-center gap-1">
+                      <FaFootballBall className="text-xs" />
                       Venue
                     </h4>
-                    <p className="text-[#e0e7ef] font-bold text-lg mb-1">
+                    <p className="text-[#e0e7ef] font-bold text-sm mb-1">
                       {summary?.gameInfo?.venue?.fullName || competition.venue?.fullName}
                     </p>
-                    <p className="text-[#b0b7bf]">
+                    <p className="text-[#b0b7bf] text-xs">
                       {summary?.gameInfo?.venue?.address?.city || competition.venue?.address?.city}, {summary?.gameInfo?.venue?.address?.state || competition.venue?.address?.state}
                     </p>
                   </div>
                 )}
 
                 {/* Game Info Grid */}
-                <div className="bg-[#23263a]/50 rounded-lg p-4 border border-[#00ffe7]/10">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-2 text-sm">
+                <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1 text-xs">
                     {/* Venue Type */}
                     {(competition.venue || summary?.gameInfo?.venue) && (
                       <>
@@ -730,6 +729,101 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
             </div>
           </div>
         </div>
+
+        {/* Player Statistics Section - Summary API */}
+        {navPreset === 'summary' && summary?.boxscore?.players && (
+          <div id="player" ref={playerRef} className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 scroll-mt-20">
+            <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+              <FaTrophy />
+              Player Statistics
+            </h3>
+            
+            {summary.boxscore.players.length > 0 ? (
+              <div className="space-y-8">
+                {summary.boxscore.players.map((teamData, teamIdx) => (
+                  <div key={`team-${teamIdx}`} className="space-y-4">
+                    {/* Team Header */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <img 
+                        src={getTeamLogo(teamData.team)} 
+                        alt={teamData.team.displayName}
+                        className="w-10 h-10"
+                      />
+                      <h4 className="text-[#00ffe7] font-bold text-xl">{teamData.team.displayName}</h4>
+                    </div>
+
+                    {/* Statistics Categories */}
+                    {teamData.statistics.map((category, catIdx) => (
+                      <div key={`${teamData.team.id}-${category.name}-${catIdx}`} className="bg-[#23263a]/50 rounded-lg p-2 sm:p-4 border border-[#00ffe7]/10">
+                        <h5 className="text-[#b0b7bf] font-semibold text-xs sm:text-sm mb-2">{category.text}</h5>
+                        
+                        {/* Table for player stats */}
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="border-b border-[#00ffe7]/20">
+                                <th className="text-left text-[#b0b7bf] font-semibold py-1 px-1">Player</th>
+                                {category.labels.map((label, labelIdx) => (
+                                  <th key={`label-${labelIdx}`} className="text-center text-[#b0b7bf] font-semibold py-1 px-1 text-[10px] sm:text-xs">
+                                    {label}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {category.athletes.map((athleteData, athleteIdx) => (
+                                <tr 
+                                  key={`${athleteData.athlete.id}-${athleteIdx}`}
+                                  className="border-b border-[#00ffe7]/10 hover:bg-[#00ffe7]/5 transition-colors cursor-pointer"
+                                  onClick={() => navigate(`/nfl/player/${athleteData.athlete.id}`)}
+                                >
+                                  <td className="py-2 px-1">
+                                    <div className="flex items-center gap-1">
+                                      <img 
+                                        src={athleteData.athlete.headshot?.href || ''} 
+                                        alt={athleteData.athlete.displayName}
+                                        className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex-shrink-0"
+                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                      />
+                                      <div className="min-w-0">
+                                        <p className="text-[#e0e7ef] font-bold text-sm sm:text-xs truncate">
+                                          {athleteData.athlete.displayName}
+                                        </p>
+                                        <p className="text-[#b0b7bf] text-[9px] sm:text-xs">#{athleteData.athlete.jersey}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  {athleteData.stats.map((stat, statIdx) => (
+                                    <td key={`stat-${statIdx}`} className="text-center text-[#e0e7ef] py-2 px-1 text-sm sm:text-xs">
+                                      {stat}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                              {/* Totals row if available */}
+                              {category.totals && category.totals.length > 0 && (
+                                <tr className="border-t-2 border-[#00ffe7]/30 bg-[#1a1d2e]/50">
+                                  <td className="py-2 px-1 text-[#00ffe7] font-bold text-[10px] sm:text-xs">TOTAL</td>
+                                  {category.totals.map((total, totalIdx) => (
+                                    <td key={`total-${totalIdx}`} className="text-center text-[#00ffe7] font-bold py-2 px-1 text-[10px] sm:text-xs">
+                                      {total}
+                                    </td>
+                                  ))}
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[#b0b7bf] text-center py-8">Player statistics will be available after the game.</p>
+            )}
+          </div>
+        )}
 
         {/* Team Stats Section */}
         {navPreset === 'summary' && (
@@ -806,35 +900,31 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
             </h3>
             
             {competition.leaders && competition.leaders.length > 0 ? (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {competition.leaders.map((category, categoryIdx) => (
-                  <div key={`${category.name}-${categoryIdx}`} className="border-b border-[#00ffe7]/10 pb-4">
-                    <p className="text-[#b0b7bf] text-sm mb-3 text-center font-semibold">{category.displayName}</p>
-                    <div className="space-y-2">
+                  <div key={`${category.name}-${categoryIdx}`} className="bg-[#23263a]/50 rounded-lg p-4 border border-[#00ffe7]/10">
+                    <p className="text-[#b0b7bf] text-sm mb-3 font-semibold">{category.displayName}</p>
+                    <div className="flex items-center justify-between gap-4">
                       {category.leaders.map((leader, idx) => {
                         const isHome = leader.team.id === homeTeam?.id;
                         
                         return (
-                          <div key={`${leader.athlete.id}-${idx}`} className={`flex items-center gap-3 ${isHome ? 'justify-start' : 'justify-end'}`}>
-                            {!isHome && (
-                              <div className="text-right min-w-0 flex-1">
-                                <p className="text-[#e0e7ef] font-bold text-sm truncate">{leader.athlete.displayName}</p>
-                                <p className="text-[#b0b7bf] text-xs">{leader.displayValue}</p>
-                              </div>
-                            )}
+                          <button
+                            key={`${leader.athlete.id}-${idx}`}
+                            onClick={() => navigate(`/nfl/player/${leader.athlete.id}`)}
+                            className={`flex items-center gap-3 flex-1 hover:bg-[#00ffe7]/10 rounded-lg p-2 transition-all group ${isHome ? '' : 'flex-row-reverse'}`}
+                          >
                             <img 
                               src={leader.athlete.headshot} 
                               alt={leader.athlete.displayName}
-                              className="w-16 h-16 rounded-full flex-shrink-0"
+                              className="w-12 h-12 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform"
                               onError={(e) => { e.currentTarget.style.display = 'none'; }}
                             />
-                            {isHome && (
-                              <div className="text-left min-w-0 flex-1">
-                                <p className="text-[#e0e7ef] font-bold text-sm truncate">{leader.athlete.displayName}</p>
-                                <p className="text-[#b0b7bf] text-xs">{leader.displayValue}</p>
-                              </div>
-                            )}
-                          </div>
+                            <div className={`min-w-0 flex-1 ${isHome ? 'text-left' : 'text-right'}`}>
+                              <p className="text-[#e0e7ef] font-bold text-sm truncate group-hover:text-[#00ffe7] transition-colors">{leader.athlete.displayName}</p>
+                              <p className="text-[#b0b7bf] text-xs">{leader.displayValue}</p>
+                            </div>
+                          </button>
                         );
                       })}
                     </div>

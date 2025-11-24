@@ -16,8 +16,8 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
   const allNavItems = [
     { id: 'back', label: 'Scoreboard', icon: <FaArrowLeft />, action: () => navigate('/nfl') },
     { id: 'info', label: 'Info', icon: <FaInfoCircle /> },
-    { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
     { id: 'player', label: 'Players', icon: <FaTrophy /> },
+    { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
     { id: 'headtohead', label: 'Head to Head', icon: <FaExchangeAlt /> },
     { id: 'prediction', label: 'Predictions', icon: <FaPercentage /> },
     { id: 'odds', label: 'Odds', icon: <FaChartLine /> },
@@ -28,7 +28,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
   // Preset configurations
   const presetConfig = {
     scoreboard: ['back', 'info', 'player', 'headtohead'],
-    summary: ['back', 'info', 'team', 'prediction', 'odds'],
+    summary: ['back', 'info', 'player', 'team', 'prediction', 'odds'],
     team: ['back', 'info', 'schedule', 'news'], // Team page shows back, info, schedule, news
   };
 
