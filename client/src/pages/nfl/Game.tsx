@@ -832,7 +832,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                                                   <div className="flex flex-wrap gap-1.5 mt-2">
                                                     {play.athletesInvolved.slice(0, 3).map((athlete) => (
                                                       <div key={athlete.id} className="flex items-center gap-1 bg-[#1a1d2e]/30 rounded-full px-1.5 py-0.5">
-                                                        <img src={athlete.headshot} alt="" className="w-4 h-4 rounded-full" onError={(e) => e.currentTarget.style.display = 'none'} />
+                                                        <img src={athlete.headshot} alt="" className="w-5 h-4 rounded-full" onError={(e) => e.currentTarget.style.display = 'none'} />
                                                         <span className="text-gray-300 text-xs">{athlete.shortName}</span>
                                                       </div>
                                                     ))}
@@ -1198,7 +1198,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
           <div id="player" ref={playerRef} className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 scroll-mt-20">
             <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
               <FaTrophy />
-              Team Leaders
+              Leaders
             </h3>
             
             {competition.leaders && competition.leaders.length > 0 ? (
