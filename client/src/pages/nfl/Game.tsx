@@ -1128,7 +1128,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                             <img 
                               src={leader.athlete.headshot} 
                               alt={leader.athlete.displayName}
-                              className="w-16 h-16 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform"
+                              className="w-20 h-16 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform"
                               onError={(e) => { e.currentTarget.style.display = 'none'; }}
                             />
                             <div className="text-center">
