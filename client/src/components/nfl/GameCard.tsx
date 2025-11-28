@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaTv, FaMapMarkerAlt, FaCalendar, FaUsers, FaNewspaper, FaFootballBall, FaPlay, FaChevronDown, FaChevronUp, FaChartLine, FaPercent, FaDollarSign } from "react-icons/fa";
 import HeadToHead from "./HeadToHead";
 import Prediction from "./Prediction";
-import Odds from "./Odds";
+import Odds from "./ProbabilityChart";
 import type {
   Event,
   Competitor,
@@ -331,7 +331,7 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
       </div>
     )}
 
-    {/* Season Leaders */}
+    {/* Game Leaders */}
       {competition.leaders && competition.leaders.length > 0 && (
         <div className="space-y-2 mb-3 sm:mb-4">
           <div className="text-[10px] sm:text-xs font-bold text-[#faafe8] uppercase tracking-wider">The Leaders</div>

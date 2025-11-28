@@ -102,8 +102,8 @@ const OnlineFooterNavBar: React.FC<OnlineFooterNavBarProps> = ({
         {/* Main App Navigation Buttons */}
         <div className='gap-4 flex flex-wrap'>
           {navBtn('DASHBOARD', '/i/dashboard', <FaTachometerAlt />)}
-          {navBtn('SHOP', '/i/shop', <FaShoppingCart />)}
-          {navBtn('GARAGE', '/i/garage', <FaTools />)}
+          {/* {navBtn('SHOP', '/i/shop', <FaShoppingCart />)} */}
+          {/* {navBtn('GARAGE', '/i/garage', <FaTools />)} */}
           {navBtn('BUILD BOT', '/i/garage/build', <FaPlus />)}
           {navBtn('SETTINGS', '/settings', <FaCog />)}
         </div>

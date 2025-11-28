@@ -74,7 +74,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
   return (
     <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6">
       <h3 className="text-[#00ffe7] font-bold text-2xl mb-6">
-        Season Leaders - Head to Head
+        Head to Head
       </h3>
       
       <div className="space-y-6">
@@ -97,11 +97,22 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
               </p>
             
             {/* Head to Head Comparison */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 items-center">
+            <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
               
               {/* Away Team Player (Left) */}
               {awayTopLeader ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 justify-end">
+                  <div className="flex-1 min-w-0 text-right">
+                    <div 
+                      className="text-xs sm:text-sm font-bold text-white truncate cursor-pointer hover:text-[#faafe8] transition-colors"
+                      onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
+                    >
+                      {awayTopLeader.athlete.displayName}
+                    </div>
+                    <div className="text-[10px] sm:text-xs text-gray-400">
+                      {awayLeader?.abbreviation}
+                    </div>
+                  </div>
                   {awayTopLeader.athlete.headshot ? (
                     <img 
                       src={awayTopLeader.athlete.headshot}
@@ -122,43 +133,26 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                   >
                     <FaFootballBall className="text-[#faafe8] text-base sm:text-lg" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div 
-                      className="text-xs sm:text-sm font-bold text-white truncate cursor-pointer hover:text-[#faafe8] transition-colors"
-                      onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
-                    >
-                      {awayTopLeader.athlete.displayName}
-                    </div>
-                    <div className="text-[10px] sm:text-xs text-gray-400">
-                      {awayLeader?.abbreviation}
-                    </div>
-                    <div className="text-sm sm:text-base font-bold text-[#faafe8]">
-                      {awayTopLeader.displayValue}
-                    </div>
-                  </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center text-gray-500 text-[10px] sm:text-xs">
+                <div className="flex items-center justify-end text-gray-500 text-[10px] sm:text-xs">
                   No data
                 </div>
               )}
               
-              {/* Home Team Player (Right) */}
-              <div className="flex items-center gap-2 justify-end">
-                <div className="flex-1 min-w-0 text-right">
-                  <div 
-                    className="text-xs sm:text-sm font-bold text-white truncate cursor-pointer hover:text-[#00ffe7] transition-colors"
-                    onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
-                  >
-                    {homeTopLeader.athlete.displayName}
-                  </div>
-                  <div className="text-[10px] sm:text-xs text-gray-400">
-                    {homeLeader.abbreviation}
-                  </div>
-                  <div className="text-sm sm:text-base font-bold text-[#00ffe7]">
-                    {homeTopLeader.displayValue}
-                  </div>
+              {/* Center Scores */}
+              <div className="flex items-center justify-center gap-2 sm:gap-3 w-[140px] sm:w-[190px]">
+                <div className="text-lg sm:text-2xl font-bold text-[#faafe8] w-[50px] sm:w-[70px] text-right">
+                  {awayTopLeader?.displayValue || '—'}
                 </div>
+                <div className="text-xs sm:text-sm text-gray-400 w-[20px] text-center">vs</div>
+                <div className="text-lg sm:text-2xl font-bold text-[#00ffe7] w-[50px] sm:w-[70px] text-left">
+                  {homeTopLeader.displayValue}
+                </div>
+              </div>
+              
+              {/* Home Team Player (Right) */}
+              <div className="flex items-center gap-2">
                 {homeTopLeader.athlete.headshot ? (
                   <img 
                     src={homeTopLeader.athlete.headshot}
@@ -178,6 +172,17 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                   onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
                 >
                   <FaFootballBall className="text-[#00ffe7] text-base sm:text-lg" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div 
+                    className="text-xs sm:text-sm font-bold text-white truncate cursor-pointer hover:text-[#00ffe7] transition-colors"
+                    onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
+                  >
+                    {homeTopLeader.athlete.displayName}
+                  </div>
+                  <div className="text-[10px] sm:text-xs text-gray-400">
+                    {homeLeader.abbreviation}
+                  </div>
                 </div>
               </div>
             </div>

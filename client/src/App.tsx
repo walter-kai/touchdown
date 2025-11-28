@@ -9,19 +9,14 @@ import NFLTeamPage from './pages/nfl/Team';
 import NFLPlayerPage from './pages/nfl/Player';
 import NFLGame from './pages/nfl/Game';
 
-import Dashboard from './pages/i/Dashboard';
-import Shop from './pages/i/Shop';
-import Garage from './pages/i/Garage';
-import BuildBot from './pages/i/Build';
-import Blog from './pages/x/Blog';
-import AboutUs from './pages/x/AboutUs';
+
 import PrivacyPolicy from './pages/x/legal/PrivacyPolicy';
 import TermsOfService from './pages/x/legal/TermsOfService';
 import NotFound from './pages/NotFound';
 import Settings from './pages/i/Settings';
-import DailyPoolActivity from './components/dashboard/DailyPoolActivity';
+
 import LandingPage from './pages/x/Landing';
-import HowItWorks from './pages/x/HowItWorks';
+
 import TickerBar from './components/common/TickerBar';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useAuth } from './providers/AuthContext';
@@ -126,24 +121,7 @@ const App: React.FC = () => {
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage activeTab={gameTab} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/player/:playerId" element={<NFLPlayerPage activeTab={gameTab as 'info' | 'schedule' | 'news'} onTabChange={(tab) => setGameTab(tab as any)} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   
-                  <Route path="/x/about" element={<AboutUs />} />
-                  <Route path="/x/how-it-works" element={<HowItWorks />} />
-                  <Route path="/x/blog" element={<Blog />} />
-                  <Route path="/x/pools" element={<DailyPoolActivity />} />
-                  
-                  {/* Bot-related routes under /bots/ */}
-                  <Route path="/i/dashboard" element={<Dashboard />} />
-                  <Route path="/i/garage" element={<Garage />} />
-                  <Route path="/i/garage/build" element={<BuildBot />} />
-                  
-                  {/* Backward compatibility routes */}
-                  <Route path="/dash" element={<Dashboard />} />
-                  <Route path="/build" element={<BuildBot />} />
-                  <Route path="/bots" element={<Garage />} />
-                  
-                  {/* Other routes */}
-                  <Route path="/i/shop" element={<Shop />} />
-                  <Route path="/i/shop/:botId" element={<Shop />} />
+
                   <Route path="/settings" element={<Settings />} />
                   
                   {/* Legal routes under /legal/ */}

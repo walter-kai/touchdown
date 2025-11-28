@@ -4,7 +4,7 @@ import { FaFootballBall, FaTrophy, FaChartBar, FaMedkit, FaClock, FaSync } from 
 import axios from 'axios';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import Prediction from '@/components/nfl/Prediction';
-import Odds from '@/components/nfl/Odds';
+import Odds from '@/components/nfl/ProbabilityChart';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
@@ -32,7 +32,18 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
     quarter: number; 
     clock: string; 
     yardage?: number;
-    timestamp: Date; // For detecting duplicates
+    timestamp: Date;
+    possession?: string;
+    athletesInvolved?: Array<{
+      id: string;
+      fullName: string;
+      displayName: string;
+      shortName: string;
+      headshot: string;
+      jersey: string;
+      position: string;
+      team: { id: string };
+    }>;
   }>>([]);
   
   // Flag to prevent observer from triggering during programmatic scroll
@@ -229,7 +240,9 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
               quarter: game.competitions[0].status.period,
               clock: game.competitions[0].status.displayClock,
               timestamp: new Date(),
-              yardage: game.competitions[0].situation.lastPlay.statYardage
+              yardage: game.competitions[0].situation.lastPlay.statYardage,
+              possession: game.competitions[0].situation.possession,
+              athletesInvolved: game.competitions[0].situation.lastPlay.athletesInvolved
             };
             setPlayLog(prev => [newPlay, ...prev]);
           }
@@ -315,7 +328,9 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                   quarter: game.competitions[0].status.period,
                   clock: game.competitions[0].status.displayClock,
                   timestamp: new Date(),
-                  yardage: game.competitions[0].situation.lastPlay.statYardage
+                  yardage: game.competitions[0].situation.lastPlay.statYardage,
+                  possession: game.competitions[0].situation.possession,
+                  athletesInvolved: game.competitions[0].situation.lastPlay.athletesInvolved
                 };
                 setPlayLog(prev => [newPlay, ...prev]);
               }
@@ -555,7 +570,178 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                         </div>
                       </div>
                     </div>
-                  </div>                      <div className="border-t border-[#00ffe7]/10 pt-6">
+                  </div>
+
+                      {/* Field Visualization */}
+                      <div className="border-t border-[#00ffe7]/10 pt-6 mb-6">
+                        {/* Football Field */}
+                        <div className="relative w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg overflow-hidden" style={{ height: '200px' }}>
+                          {/* End zones - 10% each */}
+                          <div className="absolute left-0 top-0 bottom-0 w-[10%] bg-blue-900/40 flex items-center justify-center">
+                            <img src={awayTeam?.team.logo} alt="" className="w-12 h-12 opacity-60" />
+                          </div>
+                          <div className="absolute right-0 top-0 bottom-0 w-[10%] bg-red-900/40 flex items-center justify-center">
+                            <img src={homeTeam?.team.logo} alt="" className="w-12 h-12 opacity-60" />
+                          </div>
+
+                          {/* Playing field - 80% between end zones */}
+                          {/* Yard lines at 0, 10, 20, 30, 40, 50, 40, 30, 20, 10, 0 */}
+                          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((fieldPercent) => {
+                            // Map field percentage to actual position (10% offset for end zone)
+                            const actualPosition = 10 + (fieldPercent * 0.8);
+                            const yardNumber = fieldPercent <= 50 ? fieldPercent : 100 - fieldPercent;
+                            
+                            return (
+                              <div
+                                key={fieldPercent}
+                                className="absolute top-0 bottom-0 border-l border-white/20"
+                                style={{ left: `${actualPosition}%` }}
+                              >
+                                {fieldPercent % 10 === 0 && (
+                                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 text-white/40 text-xs font-bold">
+                                    {yardNumber}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+
+                          {/* 50 yard line highlight */}
+                          <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-yellow-400/30" />
+
+                          {/* Start position (aligned vertically with end/arrow) */}
+                          {competition.situation.lastPlay.start && (
+                            <div
+                              className="absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                              style={{ left: `${10 + (competition.situation.lastPlay.start.yardLine * 0.8)}%` }}
+                            >
+                              <div className="w-3 h-3 rounded-full bg-yellow-400 border-2 border-white shadow-lg" />
+                            </div>
+                          )}
+
+                          {/* End position with player headshot */}
+                          {competition.situation.lastPlay.end && competition.situation.lastPlay.athletesInvolved && competition.situation.lastPlay.athletesInvolved.length > 0 && (
+                            <div
+                              className="absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10"
+                              style={{ left: `${10 + (competition.situation.lastPlay.end.yardLine * 0.8)}%` }}
+                            >
+                              <div className="relative group">
+                                <div className="w-16 h-16 rounded-full bg-yellow-400/30 flex items-center justify-center border-4 border-yellow-400 shadow-2xl shadow-yellow-400/50">
+                                  <img
+                                  src={competition.situation.lastPlay.athletesInvolved[0].headshot}
+                                  alt={competition.situation.lastPlay.athletesInvolved[0].displayName}
+                                  className="w-14 h-14 rounded-full object-cover z-1"
+                                  onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      const parent = e.currentTarget.parentElement;
+                                      if (parent) {
+                                        const fallback = document.createElement('div');
+                                        fallback.className = 'flex items-center justify-center';
+                                        fallback.innerHTML = '<span class="text-[#00ffe7] font-bold text-xs">⬇️</span>';
+                                        parent.appendChild(fallback);
+                                      }
+                                    }}
+                                  />
+                                </div>
+                                {/* Player name tooltip */}
+                                <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-[#23263a] border border-[#00ffe7]/50 rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                  <p className="text-[#00ffe7] text-xs font-bold">{competition.situation.lastPlay.athletesInvolved[0].displayName}</p>
+                                  <p className="text-[#b0b7bf] text-xs">{competition.situation.lastPlay.athletesInvolved[0].position}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Arrow showing play direction */}
+                          {competition.situation.lastPlay.start && competition.situation.lastPlay.end && (
+                            <svg
+                              className="absolute top-1/2 left-0 w-full h-full pointer-events-none z-0"
+                              style={{ transform: 'translateY(-50%)' }}
+                            >
+                              <defs>
+                                <marker
+                                  id="arrowhead"
+                                  markerWidth="8"
+                                  markerHeight="6"
+                                  refX="8"
+                                  refY="2"
+                                  orient="auto"
+                                >
+                                  <polygon points="0 0, 8 2, 0 4" fill="#00ffe7" />
+                                </marker>
+                              </defs>
+                              <line
+                                x1={`${10 + (competition.situation.lastPlay.start.yardLine * 0.8)}%`}
+                                y1="50%"
+                                x2={`${10 + (competition.situation.lastPlay.end.yardLine * 0.8)}%`}
+                                y2="50%"
+                                stroke="#00ffe7"
+                                strokeWidth="3"
+                                markerEnd="url(#arrowhead)"
+                                opacity="0.7"
+                              />
+                            </svg>
+                          )}
+                        </div>
+
+                        {/* Live Win Probability */}
+                        <div className="mt-6">
+                          <Odds
+                            gameId={gameId!}
+                            competitionId={competition.id}
+                            gameStatus={competition.status.type.state}
+                            homeTeamInfo={{
+                              name: homeTeam?.team.displayName || '',
+                              logo: getTeamLogo(homeTeam),
+                              color: homeTeam?.team.color || 'faafe8'
+                            }}
+                            awayTeamInfo={{
+                              name: awayTeam?.team.displayName || '',
+                              logo: getTeamLogo(awayTeam),
+                              color: awayTeam?.team.color || '00ffe7'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Current Possession Section */}
+                      {playLog.length > 0 && playLog[0]?.possession && (
+                        <div className="border-t border-[#00ffe7]/10 pt-6 mb-6">
+                          <div className="bg-[#00ffe7]/10 rounded-lg p-4 border border-[#00ffe7]/30">
+                            <div className="flex items-center gap-2 mb-3">
+                              <img src={(playLog[0].possession === homeTeam?.id ? homeTeam : awayTeam)?.team.logo} alt="" className="w-6 h-6" />
+                              <span className="text-[#00ffe7] font-bold text-sm">
+                                Current Possession: {(playLog[0].possession === homeTeam?.id ? homeTeam : awayTeam)?.team.abbreviation}
+                              </span>
+                            </div>
+                            {playLog.slice(0, playLog.findIndex((p, i) => i > 0 && p.possession !== playLog[0].possession) || playLog.length)
+                              .flatMap(p => p.athletesInvolved || [])
+                              .filter((athlete, index, self) => self.findIndex(a => a.id === athlete.id) === index).length > 0 && (
+                              <div>
+                                <p className="text-[#b0b7bf] text-xs mb-2">Players Involved:</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {playLog.slice(0, playLog.findIndex((p, i) => i > 0 && p.possession !== playLog[0].possession) || playLog.length)
+                                    .flatMap(p => p.athletesInvolved || [])
+                                    .filter((athlete, index, self) => self.findIndex(a => a.id === athlete.id) === index)
+                                    .slice(0, 6)
+                                    .map((athlete) => (
+                                      <div key={athlete.id} className="flex items-center gap-1.5 bg-[#1a1d2e]/50 rounded-full px-2 py-1 border border-[#00ffe7]/30">
+                                        <img src={athlete.headshot} alt="" className="w-5 h-5 rounded-full" 
+                                          onError={(e) => e.currentTarget.style.display = 'none'} />
+                                        <span className="text-white text-xs">#{athlete.jersey}</span>
+                                        <span className="text-gray-300 text-xs font-semibold">{athlete.shortName}</span>
+                                        <span className="text-[#b0b7bf] text-xs">{athlete.position}</span>
+                                      </div>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Play-by-Play Log Section */}
+                      <div className="border-t border-[#00ffe7]/10 pt-6">
                         <div className="flex items-center justify-between mb-4">
                           <h4 className="text-[#00ffe7] font-bold text-lg">Play-by-Play Log</h4>
                           {playLog.length > 0 && (
@@ -573,63 +759,94 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                             <div className="absolute left-12 top-0 bottom-0 w-0.5 bg-[#00ffe7]/20"></div>
                             
                             <div className="space-y-6">
-                              {playLog.map((play, idx) => {
-                                const playText = play.text;
-                                const parts = playText.split(/\.\s+(?=\w)|(?=PENALTY)/g).filter(part => part.trim());
-                                const isLatest = idx === 0;
-                                const isLast = idx === playLog.length - 1;
-                                
-                                return (
-                                  <div 
-                                    key={idx} 
-                                    className={`relative flex items-start gap-4 ${isLatest ? 'animate-[slide-in-play_0.5s_ease-out]' : ''}`}
-                                  >
-                                    {/* Timeline Dot */}
-                                    <div className="relative flex flex-col items-center flex-shrink-0" style={{ width: '48px' }}>
-                                      <div className={`w-4 h-4 rounded-full border-2 ${
-                                        isLatest 
-                                          ? 'bg-[#00ffe7] border-[#00ffe7] animate-[pulse-dot_2s_ease-in-out_infinite]' 
-                                          : 'bg-[#23263a] border-[#00ffe7]/40'
-                                      } z-10`}></div>
-                                      {/* Game Clock */}
-                                      <div className="text-center mt-1">
-                                        <p className={`text-[10px] font-bold ${isLatest ? 'text-[#00ffe7]' : 'text-[#b0b7bf]'}`}>
-                                          Q{play.quarter}
-                                        </p>
-                                        <p className={`text-[9px] font-mono ${isLatest ? 'text-[#00ffe7]' : 'text-[#b0b7bf]'}`}>
-                                          {play.clock}
-                                        </p>
+                              {(() => {
+                                // Group consecutive plays by possession
+                                const possessions: Array<{ possession?: string; plays: typeof playLog }> = [];
+                                for (let i = 0; i < playLog.length; i++) {
+                                  const p = playLog[i];
+                                  const last = possessions[possessions.length - 1];
+                                  if (!last || last.possession !== p.possession) {
+                                    possessions.push({ possession: p.possession, plays: [p] as any });
+                                  } else {
+                                    last.plays.push(p as any);
+                                  }
+                                }
+
+                                return possessions.map((group, groupIdx) => {
+                                  const team = group.possession === homeTeam?.id ? homeTeam : awayTeam;
+                                  const isHome = team?.id === homeTeam?.id;
+                                  const bgClass = isHome ? 'from-[#faafe8]/10 border-l-4 border-[#faafe8]' : 'from-[#00ffe7]/10 border-l-4 border-[#00ffe7]';
+
+                                  return (
+                                    <div key={`pos-${groupIdx}`} className={`bg-gradient-to-r ${bgClass} rounded-lg p-4 mb-4`}> 
+                                      <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-2">
+                                          <img src={team?.team.logo} alt="" className="w-8 h-8" />
+                                          <span className={`font-bold text-sm ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
+                                            {team?.team.abbreviation} Possession
+                                          </span>
+                                        </div>
+                                        <div className="text-xs text-gray-400">{group.plays.length} {group.plays.length === 1 ? 'play' : 'plays'}</div>
                                       </div>
-                                    </div>
-                                    
-                                    {/* Play Content */}
-                                    <div className={`flex-1 pb-4 ${isLatest ? 'bg-[#00ffe7]/5 -ml-2 pl-2 pr-2 rounded-lg' : ''}`}>
-                                      <div className="space-y-1">
-                                        {parts.map((part, partIdx) => {
-                                          const trimmedPart = part.trim();
+
+                                      <div className="space-y-4">
+                                        {group.plays.map((play, idx) => {
+                                          const playText = play.text;
+                                          const parts = playText.split(/\.\n+\s+(?=\w)|(?=PENALTY)/g).filter(part => part.trim());
+                                          const isLatest = groupIdx === 0 && idx === 0;
+
                                           return (
-                                            <p key={partIdx} className={`text-sm ${isLatest ? 'text-[#e0e7ef] font-medium' : 'text-[#b0b7bf]'}`}>
-                                              {trimmedPart}{trimmedPart.endsWith('.') ? '' : '.'}
-                                            </p>
+                                            <div key={`${groupIdx}-${idx}`} className={`relative flex items-start gap-4 ${isLatest ? 'animate-[slide-in-play_0.5s_ease-out]' : ''}`}>
+                                              <div className="relative flex flex-col items-center flex-shrink-0" style={{ width: '48px' }}>
+                                                <div className={`w-4 h-4 rounded-full border-2 ${
+                                                  isLatest ? 'bg-[#00ffe7] border-[#00ffe7] animate-[pulse-dot_2s_ease-in-out_infinite]' : 'bg-[#23263a] border-[#00ffe7]/40'
+                                                } z-10`}></div>
+                                                <div className="text-center mt-1">
+                                                  <p className={`text-[10px] font-bold ${isLatest ? 'text-[#00ffe7]' : 'text-[#b0b7bf]'}`}>Q{play.quarter}</p>
+                                                  <p className={`text-[9px] font-mono ${isLatest ? 'text-[#00ffe7]' : 'text-[#b0b7bf]'}`}>{play.clock}</p>
+                                                </div>
+                                              </div>
+
+                                              <div className={`flex-1 pb-4 ${isLatest ? 'bg-[#00ffe7]/5 -ml-2 pl-2 pr-2 rounded-lg' : ''}`}>
+                                                <div className="space-y-1">
+                                                  {parts.map((part, partIdx) => {
+                                                    const trimmedPart = part.trim();
+                                                    return (
+                                                      <p key={partIdx} className={`text-sm ${isLatest ? 'text-[#e0e7ef] font-medium' : 'text-[#b0b7bf]'}`}>
+                                                        {trimmedPart}{trimmedPart.endsWith('.') ? '' : '.'}
+                                                      </p>
+                                                    );
+                                                  })}
+                                                </div>
+
+                                                {play.yardage !== undefined && (
+                                                  <div className="flex items-center gap-2 mt-2">
+                                                    <span className="text-[#b0b7bf] text-xs">Yards:</span>
+                                                    <span className={`font-bold text-sm ${
+                                                      play.yardage > 0 ? 'text-green-400' : play.yardage < 0 ? 'text-red-400' : 'text-gray-400'
+                                                    }`}>{play.yardage > 0 ? '+' : ''}{play.yardage}</span>
+                                                  </div>
+                                                )}
+
+                                                {play.athletesInvolved && play.athletesInvolved.length > 0 && (
+                                                  <div className="flex flex-wrap gap-1.5 mt-2">
+                                                    {play.athletesInvolved.slice(0, 3).map((athlete) => (
+                                                      <div key={athlete.id} className="flex items-center gap-1 bg-[#1a1d2e]/30 rounded-full px-1.5 py-0.5">
+                                                        <img src={athlete.headshot} alt="" className="w-4 h-4 rounded-full" onError={(e) => e.currentTarget.style.display = 'none'} />
+                                                        <span className="text-gray-300 text-xs">{athlete.shortName}</span>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
                                           );
                                         })}
                                       </div>
-                                      {play.yardage !== undefined && (
-                                        <div className="flex items-center gap-2 mt-2">
-                                          <span className="text-[#b0b7bf] text-xs">Yards:</span>
-                                          <span className={`font-bold text-sm ${
-                                            play.yardage > 0 ? 'text-green-400' : 
-                                            play.yardage < 0 ? 'text-red-400' : 
-                                            'text-gray-400'
-                                          }`}>
-                                            {play.yardage > 0 ? '+' : ''}{play.yardage}
-                                          </span>
-                                        </div>
-                                      )}
                                     </div>
-                                  </div>
-                                );
-                              })}
+                                  );
+                                });
+                              })()}
                               
                               {/* End of Game Marker */}
                               <div className="relative flex items-start gap-4">
@@ -649,132 +866,6 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                           <p className="text-[#b0b7bf] text-center text-sm py-4">No plays recorded yet. Plays will appear here as the game progresses.</p>
                         )}
                       </div>
-
-                      {/* Current Play Field Visualization */}
-                      <h5 className="text-[#b0b7bf] font-semibold text-center mb-4 mt-6">Current Play Visualization</h5>
-                      {/* Football Field */}
-                      <div className="relative w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg overflow-hidden" style={{ height: '200px' }}>
-                        {/* Yard lines */}
-                        {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((yard) => (
-                          <div
-                            key={yard}
-                            className="absolute top-0 bottom-0 border-l border-white/20"
-                            style={{ left: `${yard}%` }}
-                          >
-                            {yard % 10 === 0 && (
-                              <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 text-white/40 text-xs font-bold">
-                                {yard === 0 ? '0' : yard === 50 ? '50' : yard < 50 ? yard : 100 - yard}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-
-                        {/* End zones */}
-                        <div className="absolute left-0 top-0 bottom-0 w-[5%] bg-blue-900/40 flex items-center justify-center">
-                          <span className="text-white/60 text-xs font-bold transform -rotate-90">{awayTeam?.team.abbreviation}</span>
-                        </div>
-                        <div className="absolute right-0 top-0 bottom-0 w-[5%] bg-red-900/40 flex items-center justify-center">
-                          <span className="text-white/60 text-xs font-bold transform -rotate-90">{homeTeam?.team.abbreviation}</span>
-                        </div>
-
-                        {/* 50 yard line highlight */}
-                        <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-yellow-400/30" />
-
-                        {/* Start position */}
-                        {competition.situation.lastPlay.start && (
-                          <div
-                            className="absolute top-4 transform -translate-x-1/2"
-                            style={{ left: `${competition.situation.lastPlay.start.yardLine}%` }}
-                          >
-                            <div className="w-3 h-3 rounded-full bg-yellow-400 border-2 border-white shadow-lg" />
-                          </div>
-                        )}
-
-                        {/* End position with player headshot */}
-                        {competition.situation.lastPlay.end && competition.situation.lastPlay.athletesInvolved && competition.situation.lastPlay.athletesInvolved.length > 0 && (
-                          <div
-                            className="absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                            style={{ left: `${competition.situation.lastPlay.end.yardLine}%` }}
-                          >
-                            <div className="relative group">
-                              <div className="w-16 h-16 rounded-full bg-[#00ffe7]/30 flex items-center justify-center border-4 border-[#00ffe7] shadow-2xl shadow-[#00ffe7]/50">
-                                <img
-                                  src={competition.situation.lastPlay.athletesInvolved[0].headshot}
-                                  alt={competition.situation.lastPlay.athletesInvolved[0].displayName}
-                                  className="w-14 h-14 rounded-full object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                    const parent = e.currentTarget.parentElement;
-                                    if (parent) {
-                                      const fallback = document.createElement('div');
-                                      fallback.className = 'flex items-center justify-center';
-                                      fallback.innerHTML = '<span class="text-[#00ffe7] font-bold text-xs">⬇️</span>';
-                                      parent.appendChild(fallback);
-                                    }
-                                  }}
-                                />
-                              </div>
-                              {/* Player name tooltip */}
-                              <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-[#23263a] border border-[#00ffe7]/50 rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                <p className="text-[#00ffe7] text-xs font-bold">{competition.situation.lastPlay.athletesInvolved[0].displayName}</p>
-                                <p className="text-[#b0b7bf] text-xs">{competition.situation.lastPlay.athletesInvolved[0].position}</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Arrow showing play direction */}
-                        {competition.situation.lastPlay.start && competition.situation.lastPlay.end && (
-                          <svg
-                            className="absolute top-1/2 left-0 w-full h-full pointer-events-none"
-                            style={{ transform: 'translateY(-50%)' }}
-                          >
-                            <defs>
-                              <marker
-                                id="arrowhead"
-                                markerWidth="10"
-                                markerHeight="10"
-                                refX="9"
-                                refY="3"
-                                orient="auto"
-                              >
-                                <polygon points="0 0, 10 3, 0 6" fill="#00ffe7" />
-                              </marker>
-                            </defs>
-                            <line
-                              x1={`${competition.situation.lastPlay.start.yardLine}%`}
-                              y1="20%"
-                              x2={`${competition.situation.lastPlay.end.yardLine}%`}
-                              y2="20%"
-                              stroke="#00ffe7"
-                              strokeWidth="3"
-                              markerEnd="url(#arrowhead)"
-                              opacity="0.7"
-                            />
-                          </svg>
-                        )}
-                      </div>
-
-                      {/* Win Probability (if available) */}
-                      {competition.situation.lastPlay.probability && (
-                        <div className="mt-6">
-                          <h5 className="text-[#b0b7bf] text-sm text-center mb-3">Win Probability</h5>
-                          <div className="relative h-8 bg-[#1a1d2e] rounded-full overflow-hidden">
-                            <div
-                              className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-[#00ffe7] to-[#00ffe7]/70 transition-all duration-500"
-                              style={{ width: `${competition.situation.lastPlay.probability.homeWinPercentage}%` }}
-                            />
-                            <div className="absolute inset-0 flex items-center justify-between px-4 text-xs font-bold">
-                              <span className="text-white drop-shadow-lg">
-                                {awayTeam?.team.abbreviation} {competition.situation.lastPlay.probability.awayWinPercentage.toFixed(1)}%
-                              </span>
-                              <span className="text-white drop-shadow-lg">
-                                {homeTeam?.team.abbreviation} {competition.situation.lastPlay.probability.homeWinPercentage.toFixed(1)}%
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                       </div>
                     </div>
                   )}

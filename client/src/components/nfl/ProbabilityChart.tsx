@@ -15,12 +15,12 @@ interface ProbabilityItem {
   totalPushProb: number;
 }
 
-interface OddsData {
+interface ProbabilityData {
   count: number;
   items: ProbabilityItem[];
 }
 
-interface OddsProps {
+interface ProbabilityProps {
   gameId: string;
   competitionId: string;
   gameStatus: string;
@@ -28,8 +28,8 @@ interface OddsProps {
   awayTeamInfo: { name: string; logo: string; color: string };
 }
 
-const Odds: React.FC<OddsProps> = ({ gameId, competitionId, gameStatus, homeTeamInfo, awayTeamInfo }) => {
-  const [data, setData] = useState<OddsData | null>(null);
+const Probability: React.FC<ProbabilityProps> = ({ gameId, competitionId, gameStatus, homeTeamInfo, awayTeamInfo }) => {
+  const [data, setData] = useState<ProbabilityData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -38,7 +38,7 @@ const Odds: React.FC<OddsProps> = ({ gameId, competitionId, gameStatus, homeTeam
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    const fetchOdds = async () => {
+    const fetchProbabilities = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -53,14 +53,14 @@ const Odds: React.FC<OddsProps> = ({ gameId, competitionId, gameStatus, homeTeam
 
         setData(response.data);
       } catch (err) {
-        console.error('Failed to fetch odds:', err);
-        setError('Odds data will be available once the game starts');
+        console.error('Failed to fetch Probability:', err);
+        setError('Probability data will be available once the game starts');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOdds();
+    fetchProbabilities();
   }, [gameId, competitionId, gameStatus]);
 
   // Filter out pre-game data and sort by time (must be before conditional returns)
@@ -114,7 +114,7 @@ const Odds: React.FC<OddsProps> = ({ gameId, competitionId, gameStatus, homeTeam
   if (loading) {
     return (
       <div className="bg-[#181a23]/95 rounded-xl border border-[#faafe8]/30 p-6 text-center">
-        <p className="text-[#faafe8]">Loading odds data...</p>
+        <p className="text-[#faafe8]">Loading Probability data...</p>
       </div>
     );
   }
@@ -122,7 +122,7 @@ const Odds: React.FC<OddsProps> = ({ gameId, competitionId, gameStatus, homeTeam
   if (error || !data) {
     return (
       <div className="bg-[#181a23]/95 rounded-xl border border-[#faafe8]/30 p-6 text-center">
-        <p className="text-gray-400">{error || 'No odds data available'}</p>
+        <p className="text-gray-400">{error || 'No Probability data available'}</p>
       </div>
     );
   }
@@ -197,7 +197,7 @@ const Odds: React.FC<OddsProps> = ({ gameId, competitionId, gameStatus, homeTeam
   if (!latestProb) {
     return (
       <div className="bg-[#181a23]/95 rounded-xl border border-[#00ffe7]/30 p-4 text-center">
-        <p className="text-gray-400">No odds data available</p>
+        <p className="text-gray-400">No Probability data available</p>
       </div>
     );
   }
@@ -222,12 +222,12 @@ const Odds: React.FC<OddsProps> = ({ gameId, competitionId, gameStatus, homeTeam
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <img src={awayTeamInfo.logo} alt={awayTeamInfo.name} className="w-8 h-8 object-contain" />
+            {/* <img src={awayTeamInfo.logo} alt={awayTeamInfo.name} className="w-8 h-8 object-contain" /> */}
             <span className="text-sm font-semibold text-[#e0e7ef]">{awayTeamInfo.name}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-[#e0e7ef]">{homeTeamInfo.name}</span>
-            <img src={homeTeamInfo.logo} alt={homeTeamInfo.name} className="w-8 h-8 object-contain" />
+            {/* <img src={homeTeamInfo.logo} alt={homeTeamInfo.name} className="w-8 h-8 object-contain" /> */}
           </div>
         </div>
 
@@ -370,4 +370,4 @@ const Odds: React.FC<OddsProps> = ({ gameId, competitionId, gameStatus, homeTeam
   );
 };
 
-export default Odds;
+export default Probability;
