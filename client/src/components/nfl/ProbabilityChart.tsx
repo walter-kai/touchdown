@@ -209,14 +209,8 @@ const Probability: React.FC<ProbabilityProps> = ({ gameId, competitionId, gameSt
   const tiePct = (displayData.tiePercentage * 100).toFixed(1);
 
   return (
-    <div className="bg-[#181a23]/95 rounded-xl border border-[#faafe8]/30 p-4 sm:p-6 shadow-[0_0_16px_rgba(250,175,232,0.2)]">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <div className="flex items-center gap-2">
-          <FaChartLine className="text-[#faafe8] text-lg sm:text-xl" />
-          <h3 className="text-base sm:text-lg font-bold text-[#faafe8]">Live Win Probability</h3>
-        </div>
-      </div>
+    <div className="pt-4">
+
 
       {/* Current Win Probability */}
       <div className="mb-6">

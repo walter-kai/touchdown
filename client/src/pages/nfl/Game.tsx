@@ -4,7 +4,7 @@ import { FaFootballBall, FaTrophy, FaChartBar, FaMedkit, FaClock, FaSync } from 
 import axios from 'axios';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import Prediction from '@/components/nfl/Prediction';
-import Odds from '@/components/nfl/ProbabilityChart';
+import ProbChart from '@/components/nfl/ProbabilityChart';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
@@ -45,6 +45,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
       team: { id: string };
     }>;
   }>>([]);
+  const [isProbabilityExpanded, setIsProbabilityExpanded] = useState(false);
   
   // Flag to prevent observer from triggering during programmatic scroll
   const isScrollingProgrammatically = useRef(false);
@@ -192,33 +193,33 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
           );
           game = scoreboardResponse.data.events?.find(e => e.id === gameId);
           gameStatus = game?.competitions[0].status.type.state;
-        }
-        
-        // Fetch summary API if:
-        // 1. Game not found in scoreboard (past/future games), OR
-        // 2. Game is not live (pre/post game)
-        if (!game || gameStatus !== 'in') {
-          try {
-            const summaryResponse = await axios.get<Summary>(
-              `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
-            );
-            setSummary(summaryResponse.data);
-            usedSummaryApi = true;
-            
-            // If game wasn't found in scoreboard, extract it from summary
-            if (!game && summaryResponse.data.header) {
-              game = summaryResponse.data.header as unknown as Event;
+          
+          // Fetch summary API if:
+          // 1. Game not found in scoreboard (past/future games), OR
+          // 2. Game is not live (pre/post game)
+          if (!game || gameStatus !== 'in') {
+            try {
+              const summaryResponse = await axios.get<Summary>(
+                `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
+              );
+              setSummary(summaryResponse.data);
+              usedSummaryApi = true;
+              
+              // If game wasn't found in scoreboard, extract it from summary
+              if (!game && summaryResponse.data.header) {
+                game = summaryResponse.data.header as unknown as Event;
+              }
+            } catch (summaryErr) {
+              console.error('Error fetching summary data:', summaryErr);
+              if (!game) {
+                // If we have no game data at all, show error
+                setError('Game not found');
+                setLoading(false);
+                setIsRefreshing(false);
+                return;
+              }
+              // Otherwise continue without summary data
             }
-          } catch (summaryErr) {
-            console.error('Error fetching summary data:', summaryErr);
-            if (!game) {
-              // If we have no game data at all, show error
-              setError('Game not found');
-              setLoading(false);
-              setIsRefreshing(false);
-              return;
-            }
-            // Otherwise continue without summary data
           }
         }
         
@@ -489,7 +490,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         {/* Info Section - Game Overview */}
         <div id="info" ref={infoRef} className="space-y-6 scroll-mt-20">
           {/* Game Status & Situation */}
-          <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6">
+          <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)]  py-6">
             <div className="text-center mb-6">
               <h2 className="text-[#00ffe7] text-2xl font-bold mb-2">
                 Game Info
@@ -507,7 +508,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                 <div className="space-y-6">
                   {/* Football Field Visualization */}
                   {competition.situation.lastPlay && (
-                    <div className="bg-[#1a1d2e]/50 rounded-xl p-6 border border-[#00ffe7]/20">
+                    <div className="">
                   {/* Current Drive Info */}
                   <div className="mb-6">
                     {/* Down & Distance + Possession - Side by Side */}
@@ -686,21 +687,39 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
                         {/* Live Win Probability */}
                         <div className="mt-6">
-                          <Odds
-                            gameId={gameId!}
-                            competitionId={competition.id}
-                            gameStatus={competition.status.type.state}
-                            homeTeamInfo={{
-                              name: homeTeam?.team.displayName || '',
-                              logo: getTeamLogo(homeTeam),
-                              color: homeTeam?.team.color || 'faafe8'
-                            }}
-                            awayTeamInfo={{
-                              name: awayTeam?.team.displayName || '',
-                              logo: getTeamLogo(awayTeam),
-                              color: awayTeam?.team.color || '00ffe7'
-                            }}
-                          />
+                          <div className="">
+                            <button
+                              onClick={() => setIsProbabilityExpanded(!isProbabilityExpanded)}
+                              className="w-full px-6 py-4 flex items-center justify-between hover:bg-[#00ffe7]/5 transition-colors"
+                            >
+                              <h3 className="text-[#00ffe7] font-bold text-xl flex items-center gap-2">
+                                <FaChartBar />
+                                Live Win Probability
+                              </h3>
+                              <span className={`text-[#00ffe7] transition-transform ${isProbabilityExpanded ? 'rotate-180' : ''}`}>
+                                ▼
+                              </span>
+                            </button>
+                            {isProbabilityExpanded && (
+                              <div className="pb-6">
+                                <ProbChart
+                                  gameId={gameId!}
+                                  competitionId={competition.id}
+                                  gameStatus={competition.status.type.state}
+                                  homeTeamInfo={{
+                                    name: homeTeam?.team.displayName || '',
+                                    logo: getTeamLogo(homeTeam),
+                                    color: homeTeam?.team.color || 'faafe8'
+                                  }}
+                                  awayTeamInfo={{
+                                    name: awayTeam?.team.displayName || '',
+                                    logo: getTeamLogo(awayTeam),
+                                    color: awayTeam?.team.color || '00ffe7'
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -723,7 +742,6 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                                   {playLog.slice(0, playLog.findIndex((p, i) => i > 0 && p.possession !== playLog[0].possession) || playLog.length)
                                     .flatMap(p => p.athletesInvolved || [])
                                     .filter((athlete, index, self) => self.findIndex(a => a.id === athlete.id) === index)
-                                    .slice(0, 6)
                                     .map((athlete) => (
                                       <div key={athlete.id} className="flex items-center gap-1.5 bg-[#1a1d2e]/50 rounded-full px-2 py-1 border border-[#00ffe7]/30">
                                         <img src={athlete.headshot} alt="" className="w-5 h-5 rounded-full" 
@@ -752,7 +770,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                         </div>
                       
                       {/* Play Log - Full History */}
-                      <div className="bg-[#23263a]/80 rounded-lg p-4 mb-6 transition-all duration-500 ease-in-out">
+                      <div className="">
                         {playLog.length > 0 ? (
                           <div className="relative">
                             {/* Vertical Timeline Line */}
@@ -832,7 +850,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                                                   <div className="flex flex-wrap gap-1.5 mt-2">
                                                     {play.athletesInvolved.slice(0, 3).map((athlete) => (
                                                       <div key={athlete.id} className="flex items-center gap-1 bg-[#1a1d2e]/30 rounded-full px-1.5 py-0.5">
-                                                        <img src={athlete.headshot} alt="" className="w-5 h-4 rounded-full" onError={(e) => e.currentTarget.style.display = 'none'} />
+                                                        <img src={athlete.headshot} alt="" className="w-8 h-6 rounded-full" onError={(e) => e.currentTarget.style.display = 'none'} />
                                                         <span className="text-gray-300 text-xs">{athlete.shortName}</span>
                                                       </div>
                                                     ))}
@@ -867,7 +885,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                         )}
                       </div>
                       </div>
-                    </div>
+                  </div>
                   )}
                 </div>
               )}
@@ -1195,18 +1213,19 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
         {/* Player Leaders Section */}
         {navPreset === 'scoreboard' && (
-          <div id="player" ref={playerRef} className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 scroll-mt-20">
-            <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
-              <FaTrophy />
-              Leaders
-            </h3>
-            
-            {competition.leaders && competition.leaders.length > 0 ? (
-              <div className="grid grid-cols-3 gap-4">
+          <div id="player" ref={playerRef} className="scroll-mt-20">
+            <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6">
+              <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                <FaTrophy />
+                Leaders
+              </h3>
+              
+              {competition.leaders && competition.leaders.length > 0 ? (
+                <div className="grid grid-cols-3 gap-4">
                 {competition.leaders.map((category, categoryIdx) => (
                   <div key={`${category.name}-${categoryIdx}`} className="bg-[#23263a]/50 rounded-lg p-6 border border-[#00ffe7]/10 hover:border-[#00ffe7]/30 transition-all">
                     <p className="text-[#b0b7bf] font-semibold text-center mb-6">{category.displayName}</p>
-                    <div className="flex items-center justify-between gap-6">
+                    <div className="flex items-start justify-between gap-6">
                       {category.leaders.map((leader, idx) => {
                         const isHome = leader.team.id === homeTeam?.id;
                         
@@ -1216,13 +1235,15 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                             onClick={() => navigate(`/nfl/player/${leader.athlete.id}`)}
                             className="flex flex-col items-center gap-3 flex-1 group"
                           >
-                            <img 
-                              src={leader.athlete.headshot} 
-                              alt={leader.athlete.displayName}
-                              className="w-20 h-16 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform"
-                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                            />
-                            <div className="text-center">
+                            <div className="h-16 flex items-center justify-center">
+                              <img 
+                                src={leader.athlete.headshot} 
+                                alt={leader.athlete.displayName}
+                                className="w-20 h-16 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform object-cover"
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                              />
+                            </div>
+                            <div className="text-center min-h-[3rem] flex flex-col justify-start">
                               <p className="text-[#e0e7ef] font-bold truncate group-hover:text-[#00ffe7] transition-colors">{leader.athlete.displayName}</p>
                               <p className="text-[#b0b7bf] text-sm mt-1">{leader.displayValue}</p>
                             </div>
@@ -1232,10 +1253,11 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                     </div>
                   </div>
                 ))}
-              </div>
-            ) : (
-              <p className="text-[#b0b7bf] text-center py-8">No player leaders available at this time.</p>
-            )}
+                </div>
+              ) : (
+                <p className="text-[#b0b7bf] text-center py-8">No player leaders available at this time.</p>
+              )}
+            </div>
           </div>
         )}
 
@@ -1274,7 +1296,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         {/* Odds Section */}
         {navPreset === 'summary' && (
           <div id="odds" ref={oddsRef} className="scroll-mt-20">
-            <Odds
+            <ProbChart
               gameId={gameId!}
               competitionId={competition.id}
               gameStatus={competition.status.type.state}
