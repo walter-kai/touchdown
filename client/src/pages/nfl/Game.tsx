@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaFootballBall, FaTrophy, FaChartBar, FaMedkit, FaClock, FaSync } from 'react-icons/fa';
+import { FaFootballBall, FaTrophy, FaChartBar, FaMedkit, FaClock, FaSync, FaPauseCircle } from 'react-icons/fa';
 import axios from 'axios';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import Prediction from '@/components/nfl/Prediction';
@@ -783,8 +783,12 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                                 for (let i = 0; i < playLog.length; i++) {
                                   const p = playLog[i];
                                   const last = possessions[possessions.length - 1];
-                                  if (!last || last.possession !== p.possession) {
-                                    possessions.push({ possession: p.possession, plays: [p] as any });
+                                  
+                                  // If play has no possession, use the last known possession
+                                  const currentPossession = p.possession || last?.possession;
+                                  
+                                  if (!last || last.possession !== currentPossession) {
+                                    possessions.push({ possession: currentPossession, plays: [p] as any });
                                   } else {
                                     last.plays.push(p as any);
                                   }
@@ -829,9 +833,11 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                                                 <div className="space-y-1">
                                                   {parts.map((part, partIdx) => {
                                                     const trimmedPart = part.trim();
+                                                    const isTimeout = trimmedPart.toLowerCase().includes('timeout');
                                                     return (
-                                                      <p key={partIdx} className={`text-sm ${isLatest ? 'text-[#e0e7ef] font-medium' : 'text-[#b0b7bf]'}`}>
-                                                        {trimmedPart}{trimmedPart.endsWith('.') ? '' : '.'}
+                                                      <p key={partIdx} className={`text-sm ${isLatest ? 'text-[#e0e7ef] font-medium' : 'text-[#b0b7bf]'} flex items-center gap-2`}>
+                                                        {isTimeout && <FaPauseCircle className="text-yellow-400 flex-shrink-0" />}
+                                                        <span>{trimmedPart}{trimmedPart.endsWith('.') ? '' : '.'}</span>
                                                       </p>
                                                     );
                                                   })}
