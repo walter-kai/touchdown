@@ -1,5 +1,4 @@
 import express from "express";
-import botRoute from "./bot/bot.route";
 
 import telegramRoute from "./telegram/telegram.route";
 
@@ -17,10 +16,6 @@ const defaultRoutes: ReadonlyArray<RouteObj> = [
   {
     path: "/auth",
     route: authRoute,
-  },
-  {
-    path: "/bot",
-    route: botRoute,
   },
   {
     path: "/telegram",
