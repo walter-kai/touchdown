@@ -1,9 +1,8 @@
 import express from "express";
 import botRoute from "./bot/bot.route";
-import userRoute from "./user/user.route";
+
 import telegramRoute from "./telegram/telegram.route";
-import socialNewsRoute from "./socialNews/socialNews.route";
-import sentimentRoute from "./sentiment/sentiment.route";
+
 import linkRoute from "./link/link.route";
 import authRoute from "./auth/auth.route";
 
@@ -24,20 +23,8 @@ const defaultRoutes: ReadonlyArray<RouteObj> = [
     route: botRoute,
   },
   {
-    path: "/user",
-    route: userRoute,
-  },
-  {
     path: "/telegram",
     route: telegramRoute,
-  },
-  {
-    path: "/social-news",
-    route: socialNewsRoute,
-  },
-  {
-    path: "/sentiment",
-    route: sentimentRoute,
   },
   {
     path: "/link",

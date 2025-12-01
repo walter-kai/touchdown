@@ -82,8 +82,8 @@ interface ScheduleData {
 }
 
 interface NFLTeamProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news' | 'plays';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news' | 'plays') => void;
   onRegisterTabClick: (callback: (tab: string) => void) => void;
 }
 

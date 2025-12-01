@@ -1,11 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper } from 'react-icons/fa';
+import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall } from 'react-icons/fa';
 
 interface GameNavBarProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news') => void;
-  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news') => void; // Called when button is clicked
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news' | 'plays';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news' | 'plays') => void;
+  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news' | 'plays') => void; // Called when button is clicked
   preset?: 'scoreboard' | 'summary' | 'team' | 'player'; // Determines which buttons to show
 }
 
@@ -19,6 +19,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
     { id: 'player', label: 'Players', icon: <FaTrophy /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
     { id: 'headtohead', label: 'Head to Head', icon: <FaExchangeAlt /> },
+    { id: 'plays', label: 'Plays', icon: <FaFootballBall /> },
     { id: 'prediction', label: 'Predictions', icon: <FaPercentage /> },
     { id: 'odds', label: 'Odds', icon: <FaChartLine /> },
     { id: 'schedule', label: preset === 'player' ? 'Game Log' : 'Schedule', icon: <FaCalendar /> },
@@ -28,7 +29,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
   // Preset configurations
   const presetConfig = {
     scoreboard: ['back', 'info', 'player', 'headtohead'],
-    summary: ['back', 'info', 'player', 'team', 'prediction', 'odds'],
+    summary: ['back', 'info', 'player', 'team', 'plays', 'prediction', 'odds'],
     team: ['back', 'info', 'schedule', 'news'], // Team page shows back, info, schedule, news
     player: ['back', 'info', 'schedule', 'news'], // Player page shows back, overview, game log, news
   };

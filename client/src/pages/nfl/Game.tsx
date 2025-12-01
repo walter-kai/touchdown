@@ -10,8 +10,8 @@ import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
 
 interface NFLGameProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'plays';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'plays') => void;
   onPresetChange: (preset: 'scoreboard' | 'summary') => void;
   onRegisterTabClick?: (callback: (tab: string) => void) => void;
 }
@@ -60,7 +60,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
   }, [onRegisterTabClick]);
   
   // Handler for when user clicks a nav button
-  const handleTabClick = useCallback((tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds') => {
+  const handleTabClick = useCallback((tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'plays') => {
     isScrollingProgrammatically.current = true;
     onTabChange(tab);
   }, [onTabChange]);
@@ -72,6 +72,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
   const headtoheadRef = useRef<HTMLDivElement>(null);
   const predictionRef = useRef<HTMLDivElement>(null);
   const oddsRef = useRef<HTMLDivElement>(null);
+  const playsRef = useRef<HTMLDivElement>(null);
   
   // Map of section IDs to refs
   const sectionRefs = {
@@ -81,6 +82,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
     headtohead: headtoheadRef,
     prediction: predictionRef,
     odds: oddsRef,
+    plays: playsRef,
   };
   
   // Scroll to section when tab changes (user clicks nav button)
@@ -120,7 +122,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         const sectionsToCheck = 
           navPreset === 'scoreboard' 
             ? ['info', 'player', 'headtohead']
-            : ['info', 'team', 'player', 'prediction', 'odds'];
+            : ['info', 'team', 'player', 'plays', 'prediction', 'odds'];
         
         const navbarHeight = 80;
         const scrollPosition = window.scrollY + navbarHeight + 100; // Add some offset
@@ -132,7 +134,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         
         if (scrolledToBottom) {
           const lastSection = sectionsToCheck[sectionsToCheck.length - 1];
-          onTabChange(lastSection as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds');
+          onTabChange(lastSection as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'plays');
           return;
         }
         
@@ -146,7 +148,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
             const absoluteTop = rect.top + window.scrollY;
             
             if (scrollPosition >= absoluteTop) {
-              onTabChange(sectionId as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds');
+              onTabChange(sectionId as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'plays');
               break;
             }
           }
@@ -1296,6 +1298,137 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                 color: awayTeam?.team.color || 'faafe8'
               }}
             />
+          </div>
+        )}
+
+        {/* Plays Section - Drive by Drive */}
+        {navPreset === 'summary' && summary?.drives && (
+          <div id="plays" ref={playsRef} className="scroll-mt-20">
+            <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6">
+              <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                <FaFootballBall />
+                Play by Play - All Drives
+              </h3>
+
+              {summary.drives.previous && summary.drives.previous.length > 0 ? (
+                <div className="space-y-4">
+                  {summary.drives.previous.map((drive, driveIdx) => {
+                    const driveTeam = drive.team;
+                    const isHomeTeam = driveTeam.id === homeTeam?.id;
+                    const teamColor = isHomeTeam ? homeTeam?.team.color : awayTeam?.team.color;
+                    
+                    return (
+                      <div 
+                        key={`drive-${drive.id}-${driveIdx}`}
+                        className="bg-[#23263a]/50 rounded-lg border border-[#00ffe7]/10 overflow-hidden"
+                      >
+                        {/* Drive Header */}
+                        <div 
+                          className="p-4 flex items-center justify-between"
+                          style={{ 
+                            backgroundColor: `#${teamColor}15`,
+                            borderBottom: `2px solid #${teamColor}40`
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <img 
+                              src={getTeamLogo(driveTeam)}
+                              alt={driveTeam.displayName}
+                              className="w-10 h-10"
+                            />
+                            <div>
+                              <p className="text-[#e0e7ef] font-bold text-lg">
+                                {driveTeam.displayName}
+                              </p>
+                              <p className="text-[#b0b7bf] text-sm">
+                                {drive.description}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[#00ffe7] font-bold text-lg">
+                              {drive.displayResult}
+                            </p>
+                            <p className="text-[#b0b7bf] text-sm">
+                              {drive.offensivePlays} plays, {drive.yards} yards, {drive.timeElapsed.displayValue}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Drive Plays */}
+                        {drive.plays && drive.plays.length > 0 && (
+                          <div className="p-4 space-y-2">
+                            {drive.plays.map((play, playIdx) => (
+                              <div 
+                                key={`play-${play.id}-${playIdx}`}
+                                className={`p-3 rounded-lg border ${
+                                  play.scoringPlay 
+                                    ? 'bg-green-500/10 border-green-500/30' 
+                                    : 'bg-[#181a23]/50 border-[#00ffe7]/5'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-4 mb-2">
+                                  <div className="flex-1">
+                                    <p className={`font-semibold ${
+                                      play.scoringPlay ? 'text-green-400' : 'text-[#e0e7ef]'
+                                    }`}>
+                                      {play.text}
+                                    </p>
+                                  </div>
+                                  <div className="text-right flex-shrink-0">
+                                    <p className="text-[#00ffe7] text-sm font-bold">
+                                      Q{play.period.number} - {play.clock.displayValue}
+                                    </p>
+                                    <p className="text-[#b0b7bf] text-xs">
+                                      {play.awayScore} - {play.homeScore}
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                {play.scoringPlay && play.scoringType && (
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <span className="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-1 rounded">
+                                      {play.scoringType.displayName}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {play.athletesInvolved && play.athletesInvolved.length > 0 && (
+                                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                    {play.athletesInvolved.map((athlete, athleteIdx) => (
+                                      <div 
+                                        key={`athlete-${athlete.id}-${athleteIdx}`}
+                                        className="flex items-center gap-1 bg-[#00ffe7]/10 rounded px-2 py-1"
+                                      >
+                                        {athlete.headshot && (
+                                          <img 
+                                            src={athlete.headshot}
+                                            alt={athlete.displayName}
+                                            className="w-5 h-5 rounded-full"
+                                          />
+                                        )}
+                                        <span className="text-[#00ffe7] text-xs font-semibold">
+                                          #{athlete.jersey} {athlete.shortName}
+                                        </span>
+                                        <span className="text-[#b0b7bf] text-xs">
+                                          {athlete.position}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-[#b0b7bf] text-center py-8">No drive data available.</p>
+              )}
+            </div>
           </div>
         )}
         

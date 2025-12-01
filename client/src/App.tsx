@@ -36,13 +36,13 @@ const App: React.FC = () => {
   const nodeRef = useRef<HTMLDivElement>(null);
   
   // State for game page navigation
-  const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news'>('info');
+  const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news' | 'plays'>('info');
   const [navPreset, setNavPreset] = useState<'scoreboard' | 'summary'>('scoreboard');
   
   // Ref to communicate button clicks to NFLGame
   const tabClickCallbackRef = useRef<((tab: string) => void) | null>(null);
   
-  const handleTabClick = (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news') => {
+  const handleTabClick = (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'schedule' | 'news' | 'plays') => {
     if (tabClickCallbackRef.current) {
       tabClickCallbackRef.current(tab);
     }
@@ -117,7 +117,7 @@ const App: React.FC = () => {
                 <Routes location={location}>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/nfl" element={<NFL />} />
-                  <Route path="/nfl/game/:gameId" element={<NFLGame activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds'} onTabChange={(tab) => setGameTab(tab)} onPresetChange={setNavPreset} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
+                  <Route path="/nfl/game/:gameId" element={<NFLGame activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'plays'} onTabChange={(tab) => setGameTab(tab)} onPresetChange={setNavPreset} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage activeTab={gameTab} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/player/:playerId" element={<NFLPlayerPage activeTab={gameTab as 'info' | 'schedule' | 'news'} onTabChange={(tab) => setGameTab(tab as any)} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   
