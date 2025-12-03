@@ -11,8 +11,8 @@ import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
 
 interface NFLGameProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'plays';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'plays') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays') => void;
   onPresetChange: (preset: 'scoreboard' | 'summary') => void;
   onRegisterTabClick?: (callback: (tab: string) => void) => void;
 }
@@ -62,7 +62,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
   }, [onRegisterTabClick]);
   
   // Handler for when user clicks a nav button
-  const handleTabClick = useCallback((tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'plays') => {
+  const handleTabClick = useCallback((tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays') => {
     isScrollingProgrammatically.current = true;
     onTabChange(tab);
   }, [onTabChange]);
@@ -73,7 +73,6 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
   const playerRef = useRef<HTMLDivElement>(null);
   const headtoheadRef = useRef<HTMLDivElement>(null);
   const predictionRef = useRef<HTMLDivElement>(null);
-  const oddsRef = useRef<HTMLDivElement>(null);
   const playsRef = useRef<HTMLDivElement>(null);
   
   // Map of section IDs to refs
@@ -83,7 +82,6 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
     player: playerRef,
     headtohead: headtoheadRef,
     prediction: predictionRef,
-    odds: oddsRef,
     plays: playsRef,
   };
   
@@ -124,7 +122,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         const sectionsToCheck = 
           navPreset === 'scoreboard' 
             ? ['info', 'player', 'headtohead']
-            : ['info', 'team', 'player', 'plays', 'prediction', 'odds'];
+            : ['info', 'player', 'headtohead', 'team', 'plays', 'prediction'];
         
         const navbarHeight = 80;
         const scrollPosition = window.scrollY + navbarHeight + 100; // Add some offset
@@ -136,7 +134,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         
         if (scrolledToBottom) {
           const lastSection = sectionsToCheck[sectionsToCheck.length - 1];
-          onTabChange(lastSection as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'plays');
+          onTabChange(lastSection as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays');
           return;
         }
         
@@ -150,7 +148,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
             const absoluteTop = rect.top + window.scrollY;
             
             if (scrollPosition >= absoluteTop) {
-              onTabChange(sectionId as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'odds' | 'plays');
+              onTabChange(sectionId as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays');
               break;
             }
           }
@@ -1099,10 +1097,10 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
             event={event}
             gameId={gameId!}
             playerRef={playerRef}
+            headtoheadRef={headtoheadRef}
             teamRef={teamRef}
             playsRef={playsRef}
             predictionRef={predictionRef}
-            oddsRef={oddsRef}
             getTeamLogo={getTeamLogo}
           />
         )}

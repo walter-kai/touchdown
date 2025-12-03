@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle } from 'react-icons/fa';
 import Prediction from '@/components/nfl/Prediction';
-import ProbChart from '@/components/nfl/ProbabilityChart';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
 
@@ -11,10 +10,10 @@ interface SummaryViewProps {
   event: Event;
   gameId: string;
   playerRef: React.RefObject<HTMLDivElement>;
+  headtoheadRef: React.RefObject<HTMLDivElement>;
   teamRef: React.RefObject<HTMLDivElement>;
   playsRef: React.RefObject<HTMLDivElement>;
   predictionRef: React.RefObject<HTMLDivElement>;
-  oddsRef: React.RefObject<HTMLDivElement>;
   getTeamLogo: (team: any) => string;
 }
 
@@ -23,10 +22,10 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   event,
   gameId,
   playerRef, 
+  headtoheadRef,
   teamRef,
   playsRef,
   predictionRef,
-  oddsRef,
   getTeamLogo 
 }) => {
   const navigate = useNavigate();
@@ -129,6 +128,86 @@ const SummaryView: React.FC<SummaryViewProps> = ({
           ) : (
             <p className="text-[#b0b7bf] text-center py-8">Player statistics will be available after the game.</p>
           )}
+        </div>
+      )}
+
+      {/* Head-to-Head Section */}
+      {summary?.leaders && summary.leaders.length > 0 && (
+        <div id="headtohead" ref={headtoheadRef} className="scroll-mt-20 py-4">
+          <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+            <FaChartBar />
+            Head-to-Head Leaders
+          </h3>
+          
+          <div className="space-y-4">
+            {summary.leaders.map((category, idx) => {
+              const homeLeader = category.leaders.find(l => l.team?.id === homeTeam?.id);
+              const awayLeader = category.leaders.find(l => l.team?.id === awayTeam?.id);
+              
+              if (!homeLeader || !awayLeader) return null;
+              
+              return (
+                <div key={`leader-${idx}`} className="bg-[#23263a]/50 rounded-lg p-4 border border-[#00ffe7]/10">
+                  <h4 className="text-[#b0b7bf] font-semibold text-sm mb-4 text-center">{category.displayName}</h4>
+                  
+                  <div className="grid grid-cols-3 gap-4 items-center">
+                    {/* Away Leader */}
+                    <div 
+                      className="flex flex-col items-center cursor-pointer hover:bg-[#00ffe7]/5 p-2 rounded transition-colors"
+                      onClick={() => navigate(`/nfl/player/${awayLeader.athlete.id}`)}
+                    >
+                      <img 
+                        src={awayLeader.athlete.headshot?.href || `https://robohash.org/${awayLeader.athlete.id}?set=set5`}
+                        alt={awayLeader.athlete.displayName}
+                        className="w-16 h-16 rounded-full mb-2 border-2 border-[#00ffe7]/30"
+                        onError={(e) => {
+                          e.currentTarget.src = `https://robohash.org/${awayLeader.athlete.id}?set=set5`;
+                        }}
+                      />
+                      <p className="text-[#e0e7ef] font-semibold text-sm text-center">{awayLeader.athlete.displayName}</p>
+                      <p className="text-[#b0b7bf] text-xs">#{awayLeader.athlete.jersey}</p>
+                      {awayLeader.displayValue && (
+                        <div className="mt-2 text-center">
+                          {awayLeader.displayValue.split(',').map((stat, i) => (
+                            <p key={i} className="text-[#00ffe7] font-bold text-lg">{stat.trim()}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* VS */}
+                    <div className="flex items-center justify-center">
+                      <span className="text-[#b0b7bf] text-sm font-bold">VS</span>
+                    </div>
+                    
+                    {/* Home Leader */}
+                    <div 
+                      className="flex flex-col items-center cursor-pointer hover:bg-[#faafe8]/5 p-2 rounded transition-colors"
+                      onClick={() => navigate(`/nfl/player/${homeLeader.athlete.id}`)}
+                    >
+                      <img 
+                        src={homeLeader.athlete.headshot?.href || `https://robohash.org/${homeLeader.athlete.id}?set=set5`}
+                        alt={homeLeader.athlete.displayName}
+                        className="w-16 h-16 rounded-full mb-2 border-2 border-[#faafe8]/30"
+                        onError={(e) => {
+                          e.currentTarget.src = `https://robohash.org/${homeLeader.athlete.id}?set=set5`;
+                        }}
+                      />
+                      <p className="text-[#e0e7ef] font-semibold text-sm text-center">{homeLeader.athlete.displayName}</p>
+                      <p className="text-[#b0b7bf] text-xs">#{homeLeader.athlete.jersey}</p>
+                      {homeLeader.displayValue && (
+                        <div className="mt-2 text-center">
+                          {homeLeader.displayValue.split(',').map((stat, i) => (
+                            <p key={i} className="text-[#faafe8] font-bold text-lg">{stat.trim()}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -330,25 +409,6 @@ const SummaryView: React.FC<SummaryViewProps> = ({
         <Prediction
           gameId={gameId}
           competitionId={competition.id}
-          homeTeamInfo={{
-            name: homeTeam?.team.displayName || '',
-            logo: getTeamLogo(homeTeam),
-            color: homeTeam?.team.color || '00ffe7'
-          }}
-          awayTeamInfo={{
-            name: awayTeam?.team.displayName || '',
-            logo: getTeamLogo(awayTeam),
-            color: awayTeam?.team.color || 'faafe8'
-          }}
-        />
-      </div>
-      
-      {/* Odds Section */}
-      <div id="odds" ref={oddsRef} className="scroll-mt-20">
-        <ProbChart
-          gameId={gameId}
-          competitionId={competition.id}
-          gameStatus={competition.status.type.state}
           homeTeamInfo={{
             name: homeTeam?.team.displayName || '',
             logo: getTeamLogo(homeTeam),
