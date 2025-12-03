@@ -215,7 +215,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       </button>
 
       {/* Content */}
-      <div className="pb-6 px-6">
+      <div className="px-6">
         {/* Selected Players Display - Always show when locked, otherwise only when expanded */}
         {isLocked && (
           <div className="bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-6 border border-[#00ffe7]/30 mb-6">

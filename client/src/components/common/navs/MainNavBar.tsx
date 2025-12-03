@@ -29,15 +29,15 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
   // Preset configurations
   const presetConfig = {
     scoreboard: ['back', 'info', 'player', 'headtohead'],
-    summary: ['back', 'info', 'player', 'team', 'plays', 'prediction'],
+    summary: ['back', 'info', 'headtohead', 'team', 'plays', 'prediction'],
     team: ['back', 'info', 'schedule', 'news'], // Team page shows back, info, schedule, news
     player: ['back', 'info', 'schedule', 'news'], // Player page shows back, overview, game log, news
   };
 
-  // Filter nav items based on preset
-  const navItems = allNavItems.filter(item => 
-    presetConfig[preset].includes(item.id)
-  );
+  // Filter nav items based on preset and maintain the order from presetConfig
+  const navItems = presetConfig[preset]
+    .map(id => allNavItems.find(item => item.id === id))
+    .filter((item): item is NonNullable<typeof item> => item !== undefined);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#181a23] border-t border-[#00ffe7]/30 shadow-[0_-2px_24px_0_#00ffe7/20] backdrop-blur-md">

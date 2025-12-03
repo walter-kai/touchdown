@@ -204,6 +204,8 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
               const summaryResponse = await axios.get<Summary>(
                 `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
               );
+              console.log('Summary data fetched:', summaryResponse.data);
+              console.log('Drives in summary:', summaryResponse.data.drives);
               setSummary(summaryResponse.data);
               usedSummaryApi = true;
               
@@ -751,9 +753,9 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
                       {/* Current Possession Section */}
                       {playLog.length > 0 && playLog[0]?.possession && (
-                        <div className="border-t border-[#00ffe7]/10 pt-6 mb-6">
-                          <div className="bg-[#00ffe7]/10 rounded-lg p-4 border border-[#00ffe7]/30">
-                            <div className="flex items-center gap-2 mb-3">
+                        <div className="pt-6 mb-6">
+                          <div className="bg-[#00ffe7]/10 rounded-lg p-4">
+                            <div className="flex items-center gap-2">
                               <img src={(playLog[0].possession === homeTeam?.id ? homeTeam : awayTeam)?.team.logo} alt="" className="w-6 h-6" />
                               <span className="text-[#00ffe7] font-bold text-sm">
                                 Current Possession: {(playLog[0].possession === homeTeam?.id ? homeTeam : awayTeam)?.team.abbreviation}
@@ -785,7 +787,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                       )}
 
                       {/* Play-by-Play Log Section */}
-                      <div className="border-t border-[#00ffe7]/10 pt-6">
+                      <div className="pt-6">
                         <div className="flex items-center justify-between mb-4">
                           <h4 className="text-[#00ffe7] font-bold text-lg">Play-by-Play Log</h4>
                           {playLog.length > 0 && (
@@ -824,7 +826,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                                   const bgClass = isHome ? 'from-[#faafe8]/10 border-l-4 border-[#faafe8]' : 'from-[#00ffe7]/10 border-l-4 border-[#00ffe7]';
 
                                   return (
-                                    <div key={`pos-${groupIdx}`} className={`bg-gradient-to-r ${bgClass} rounded-lg p-4 mb-4`}> 
+                                    <div key={`pos-${groupIdx}`} className={`bg-gradient-to-r ${bgClass} rounded-lg py-4 mb-4`}> 
                                       <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-2">
                                           <img src={team?.team.logo} alt="" className="w-8 h-8" />

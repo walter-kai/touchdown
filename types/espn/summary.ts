@@ -267,18 +267,27 @@ export interface ScoringType {
 }
 
 export interface Leader {
+  team: Team;
+  leaders: LeaderCategory[];
+}
+
+export interface LeaderCategory {
   name: string;
   displayName: string;
-  shortDisplayName: string;
-  abbreviation: string;
   leaders: TeamLeader[];
 }
 
 export interface TeamLeader {
   displayValue: string;
-  value: number;
   athlete: Athlete;
-  team: Team;
+  team?: {
+    $ref: string;
+  };
+  mainStat?: {
+    value: string;
+    label: string;
+  };
+  summary?: string;
 }
 
 export interface Injury {

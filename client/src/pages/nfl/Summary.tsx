@@ -33,6 +33,10 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
   const awayTeam = competition.competitors.find(c => c.homeAway === 'away');
 
+  console.log('Summary component received:', summary);
+  console.log('Summary drives:', summary?.drives);
+  console.log('Summary drives.previous:', summary?.drives?.previous);
+
   return (
     <>
       {/* Player Statistics Section */}
@@ -140,70 +144,88 @@ const SummaryView: React.FC<SummaryViewProps> = ({
           </h3>
           
           <div className="space-y-4">
-            {summary.leaders.map((category, idx) => {
-              const homeLeader = category.leaders.find(l => l.team?.id === homeTeam?.id);
-              const awayLeader = category.leaders.find(l => l.team?.id === awayTeam?.id);
+            {summary.leaders.map((teamLeaderGroup, teamIdx) => {
+              const isHomeTeam = teamLeaderGroup.team.id === homeTeam?.id;
+              const isAwayTeam = teamLeaderGroup.team.id === awayTeam?.id;
               
-              if (!homeLeader || !awayLeader) return null;
+              if (!isHomeTeam && !isAwayTeam) return null;
               
               return (
-                <div key={`leader-${idx}`} className="bg-[#23263a]/50 rounded-lg p-4 border border-[#00ffe7]/10">
-                  <h4 className="text-[#b0b7bf] font-semibold text-sm mb-4 text-center">{category.displayName}</h4>
-                  
-                  <div className="grid grid-cols-3 gap-4 items-center">
-                    {/* Away Leader */}
-                    <div 
-                      className="flex flex-col items-center cursor-pointer hover:bg-[#00ffe7]/5 p-2 rounded transition-colors"
-                      onClick={() => navigate(`/nfl/player/${awayLeader.athlete.id}`)}
-                    >
-                      <img 
-                        src={awayLeader.athlete.headshot?.href || `https://robohash.org/${awayLeader.athlete.id}?set=set5`}
-                        alt={awayLeader.athlete.displayName}
-                        className="w-16 h-16 rounded-full mb-2 border-2 border-[#00ffe7]/30"
-                        onError={(e) => {
-                          e.currentTarget.src = `https://robohash.org/${awayLeader.athlete.id}?set=set5`;
-                        }}
-                      />
-                      <p className="text-[#e0e7ef] font-semibold text-sm text-center">{awayLeader.athlete.displayName}</p>
-                      <p className="text-[#b0b7bf] text-xs">#{awayLeader.athlete.jersey}</p>
-                      {awayLeader.displayValue && (
-                        <div className="mt-2 text-center">
-                          {awayLeader.displayValue.split(',').map((stat, i) => (
-                            <p key={i} className="text-[#00ffe7] font-bold text-lg">{stat.trim()}</p>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                <div key={`team-leaders-${teamIdx}`}>
+                  {teamLeaderGroup.leaders.map((category, catIdx) => {
+                    // Find the corresponding category from the other team
+                    const otherTeamGroup = summary.leaders.find(g => g.team.id !== teamLeaderGroup.team.id);
+                    const otherCategory = otherTeamGroup?.leaders.find(c => c.name === category.name);
                     
-                    {/* VS */}
-                    <div className="flex items-center justify-center">
-                      <span className="text-[#b0b7bf] text-sm font-bold">VS</span>
-                    </div>
+                    if (!otherCategory || !category.leaders || !otherCategory.leaders || !category.leaders[0] || !otherCategory.leaders[0]) return null;
                     
-                    {/* Home Leader */}
-                    <div 
-                      className="flex flex-col items-center cursor-pointer hover:bg-[#faafe8]/5 p-2 rounded transition-colors"
-                      onClick={() => navigate(`/nfl/player/${homeLeader.athlete.id}`)}
-                    >
-                      <img 
-                        src={homeLeader.athlete.headshot?.href || `https://robohash.org/${homeLeader.athlete.id}?set=set5`}
-                        alt={homeLeader.athlete.displayName}
-                        className="w-16 h-16 rounded-full mb-2 border-2 border-[#faafe8]/30"
-                        onError={(e) => {
-                          e.currentTarget.src = `https://robohash.org/${homeLeader.athlete.id}?set=set5`;
-                        }}
-                      />
-                      <p className="text-[#e0e7ef] font-semibold text-sm text-center">{homeLeader.athlete.displayName}</p>
-                      <p className="text-[#b0b7bf] text-xs">#{homeLeader.athlete.jersey}</p>
-                      {homeLeader.displayValue && (
-                        <div className="mt-2 text-center">
-                          {homeLeader.displayValue.split(',').map((stat, i) => (
-                            <p key={i} className="text-[#faafe8] font-bold text-lg">{stat.trim()}</p>
-                          ))}
+                    const homeLeader = isHomeTeam ? category.leaders[0] : otherCategory.leaders[0];
+                    const awayLeader = isAwayTeam ? category.leaders[0] : otherCategory.leaders[0];
+                    
+                    // Only render once (when processing the first team)
+                    if (teamIdx !== 0) return null;
+                    
+                    return (
+                      <div key={`category-${catIdx}`} className="bg-[#23263a]/50 rounded-lg p-4 border border-[#00ffe7]/10">
+                        <h4 className="text-[#b0b7bf] font-semibold text-sm mb-4 text-center">{category.displayName}</h4>
+                        
+                        <div className="grid grid-cols-3 gap-4 items-center">
+                          {/* Away Leader */}
+                          <div 
+                            className="flex flex-col items-center cursor-pointer hover:bg-[#00ffe7]/5 p-2 rounded transition-colors"
+                            onClick={() => navigate(`/nfl/player/${awayLeader.athlete.id}`)}
+                          >
+                            <img 
+                              src={awayLeader.athlete.headshot?.href || `https://robohash.org/${awayLeader.athlete.id}?set=set5`}
+                              alt={awayLeader.athlete.displayName}
+                              className="w-16 h-16 rounded-full mb-2 border-2 border-[#00ffe7]/30"
+                              onError={(e) => {
+                                e.currentTarget.src = `https://robohash.org/${awayLeader.athlete.id}?set=set5`;
+                              }}
+                            />
+                            <p className="text-[#e0e7ef] font-semibold text-sm text-center">{awayLeader.athlete.displayName}</p>
+                            <p className="text-[#b0b7bf] text-xs">#{awayLeader.athlete.jersey}</p>
+                            {awayLeader.displayValue && (
+                              <div className="mt-2 text-center">
+                                {awayLeader.displayValue.split(',').map((stat, i) => (
+                                  <p key={i} className="text-[#00ffe7] font-bold text-sm">{stat.trim()}</p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* VS */}
+                          <div className="flex items-center justify-center">
+                            <span className="text-[#b0b7bf] text-sm font-bold">VS</span>
+                          </div>
+                          
+                          {/* Home Leader */}
+                          <div 
+                            className="flex flex-col items-center cursor-pointer hover:bg-[#faafe8]/5 p-2 rounded transition-colors"
+                            onClick={() => navigate(`/nfl/player/${homeLeader.athlete.id}`)}
+                          >
+                            <img 
+                              src={homeLeader.athlete.headshot?.href || `https://robohash.org/${homeLeader.athlete.id}?set=set5`}
+                              alt={homeLeader.athlete.displayName}
+                              className="w-16 h-16 rounded-full mb-2 border-2 border-[#faafe8]/30"
+                              onError={(e) => {
+                                e.currentTarget.src = `https://robohash.org/${homeLeader.athlete.id}?set=set5`;
+                              }}
+                            />
+                            <p className="text-[#e0e7ef] font-semibold text-sm text-center">{homeLeader.athlete.displayName}</p>
+                            <p className="text-[#b0b7bf] text-xs">#{homeLeader.athlete.jersey}</p>
+                            {homeLeader.displayValue && (
+                              <div className="mt-2 text-center">
+                                {homeLeader.displayValue.split(',').map((stat, i) => (
+                                  <p key={i} className="text-[#faafe8] font-bold text-sm">{stat.trim()}</p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
@@ -276,23 +298,22 @@ const SummaryView: React.FC<SummaryViewProps> = ({
       </div>
 
       {/* Plays Section - Drive by Drive */}
-      {summary?.drives && (
-        <div id="plays" ref={playsRef} className="scroll-mt-20 py-4">
-          <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
-            <FaFootballBall />
-            Play by Play - All Drives
-          </h3>
+      <div id="plays" ref={playsRef} className="scroll-mt-20 py-4">
+        <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+          <FaFootballBall />
+          Play by Play - All Drives
+        </h3>
 
-            {summary.drives.previous && summary.drives.previous.length > 0 ? (
-              <div className="">
-                <div className="space-y-6">
-                  {summary.drives.previous.map((drive, driveIdx) => {
+        {summary?.drives?.previous && summary.drives.previous.length > 0 ? (
+          <div className="">
+            <div className="space-y-6">
+              {summary.drives.previous.map((drive, driveIdx) => {
                     const driveTeam = drive.team;
                     const isHomeTeam = driveTeam.id === homeTeam?.id;
                     const bgClass = isHomeTeam ? 'from-[#faafe8]/10 border-l-4 border-[#faafe8]' : 'from-[#00ffe7]/10 border-l-4 border-[#00ffe7]';
                     
                     return (
-                      <div key={`drive-${drive.id}-${driveIdx}`} className={`bg-gradient-to-r ${bgClass} rounded-lg p-4 mb-4`}>
+                      <div key={`drive-${drive.id}-${driveIdx}`} className={`bg-gradient-to-r ${bgClass} rounded-lg py-4 mb-4`}>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <img src={getTeamLogo(driveTeam)} alt="" className="w-8 h-8" />
@@ -394,15 +415,21 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                     </div>
                     <div className="flex-1 pb-2">
                       <p className="text-sm text-[#b0b7bf] italic">Game Complete</p>
-                    </div>
                   </div>
                 </div>
               </div>
-            ) : (
-              <p className="text-[#b0b7bf] text-center py-8">No drive data available.</p>
-            )}
-        </div>
-      )}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-[#b0b7bf] mb-2">No drive data available.</p>
+              <p className="text-xs text-gray-500">
+                {!summary?.drives ? 'Drives object missing' : 
+                 !summary.drives.previous ? 'Previous drives missing' : 
+                 'Previous drives array is empty'}
+              </p>
+            </div>
+          )}
+      </div>
 
       {/* Predictions Section */}
       <div id="prediction" ref={predictionRef} className="scroll-mt-20">
