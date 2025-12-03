@@ -5,6 +5,7 @@ import axios from 'axios';
 import ScoreboardView from './Scoreboard';
 import SummaryView from './Summary';
 import ProbChart from '@/components/nfl/ProbabilityChart';
+import PlayerPick from '@/components/nfl/PlayerPick';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
@@ -46,6 +47,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
     }>;
   }>>([]);
   const [isProbabilityExpanded, setIsProbabilityExpanded] = useState(false);
+  const [isPlayerPickExpanded, setIsPlayerPickExpanded] = useState(false);
   
   // Flag to prevent observer from triggering during programmatic scroll
   const isScrollingProgrammatically = useRef(false);
@@ -723,6 +725,30 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                             )}
                           </div>
                         </div>
+
+                        {/* Player Pick */}
+                        <div className="mt-6">
+                          <div className="">
+                            {/* Always render PlayerPick component to check lock state */}
+                            <PlayerPick
+                              homeTeamId={homeTeam?.id || ''}
+                              awayTeamId={awayTeam?.id || ''}
+                              homeTeamInfo={{
+                                name: homeTeam?.team.displayName || '',
+                                logo: getTeamLogo(homeTeam),
+                                color: homeTeam?.team.color || 'faafe8'
+                              }}
+                              awayTeamInfo={{
+                                name: awayTeam?.team.displayName || '',
+                                logo: getTeamLogo(awayTeam),
+                                color: awayTeam?.team.color || '00ffe7'
+                              }}
+                              isExpanded={isPlayerPickExpanded}
+                              onToggle={() => setIsPlayerPickExpanded(!isPlayerPickExpanded)}
+                              playLog={playLog}
+                            />
+                          </div>
+                        </div>
                       </div>
 
                       {/* Current Possession Section */}
@@ -775,8 +801,6 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                       <div className="">
                         {playLog.length > 0 ? (
                           <div className="relative">
-                            {/* Vertical Timeline Line */}
-                            <div className="absolute left-12 top-0 bottom-0 w-0.5 bg-[#00ffe7]/20"></div>
                             
                             <div className="space-y-6">
                               {(() => {
