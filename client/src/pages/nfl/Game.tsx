@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaFootballBall, FaClock, FaChartBar, FaPauseCircle } from 'react-icons/fa';
+import { FaFootballBall, FaClock, FaChartBar, FaPauseCircle, FaTrophy } from 'react-icons/fa';
 import axios from 'axios';
 import ScoreboardView from './Scoreboard';
 import SummaryView from './Summary';
 import ProbChart from '@/components/nfl/ProbabilityChart';
 import PlayerPick from '@/components/nfl/PlayerPick';
+import HeadToHead from '@/components/nfl/HeadToHead';
+import Prediction from '@/components/nfl/Prediction';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
@@ -49,123 +51,31 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
   const [isProbabilityExpanded, setIsProbabilityExpanded] = useState(false);
   const [isPlayerPickExpanded, setIsPlayerPickExpanded] = useState(false);
   
-  // Flag to prevent observer from triggering during programmatic scroll
-  const isScrollingProgrammatically = useRef(false);
+  // Carousel container ref
+  const carouselRef = useRef<HTMLDivElement>(null);
   
-  // Register the callback with parent on mount
-  useEffect(() => {
-    if (onRegisterTabClick) {
-      onRegisterTabClick((tab: string) => {
-        isScrollingProgrammatically.current = true;
-      });
-    }
-  }, [onRegisterTabClick]);
-  
-  // Handler for when user clicks a nav button
-  const handleTabClick = useCallback((tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays') => {
-    isScrollingProgrammatically.current = true;
-    onTabChange(tab);
-  }, [onTabChange]);
-  
-  // Refs for each section
-  const infoRef = useRef<HTMLDivElement>(null);
-  const teamRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<HTMLDivElement>(null);
-  const headtoheadRef = useRef<HTMLDivElement>(null);
-  const predictionRef = useRef<HTMLDivElement>(null);
-  const playsRef = useRef<HTMLDivElement>(null);
-  
-  // Map of section IDs to refs
-  const sectionRefs = {
-    info: infoRef,
-    team: teamRef,
-    player: playerRef,
-    headtohead: headtoheadRef,
-    prediction: predictionRef,
-    plays: playsRef,
+  // Get tab index for carousel position
+  const getTabIndex = (tab: string) => {
+    const scoreboard = ['info', 'player', 'headtohead', 'plays'];
+    const summary = ['info', 'player', 'headtohead', 'team', 'plays', 'prediction'];
+    const tabs = navPreset === 'scoreboard' ? scoreboard : summary;
+    return tabs.indexOf(tab);
   };
   
-  // Scroll to section when tab changes (user clicks nav button)
+  // Update carousel position when tab changes
   useEffect(() => {
-    // Only scroll if the flag is set (meaning user clicked a button)
-    if (!isScrollingProgrammatically.current) return;
-    
-    const ref = sectionRefs[activeTab];
-    if (ref.current) {
-      const navbarHeight = 80; // Approximate navbar height
-      const elementPosition = ref.current.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
-      
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-      
-      // Reset flag after scroll completes
-      setTimeout(() => {
-        isScrollingProgrammatically.current = false;
-      }, 1000); // Smooth scroll usually takes ~500-800ms
+    if (carouselRef.current) {
+      const index = getTabIndex(activeTab);
+      if (index !== -1) {
+        // Calculate the percentage to move based on the number of slides
+        // For scoreboard (4 slides): each slide is 100/4 = 25% of viewport
+        // For summary (6 slides): each slide is 100/6 = 16.666% of viewport
+        const totalSlides = navPreset === 'scoreboard' ? 4 : 6;
+        const slidePercentage = 100 / totalSlides;
+        carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
+      }
     }
-  }, [activeTab]);
-  
-  // Scroll tracking to highlight active section
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    
-    const handleScroll = () => {
-      // Don't update activeTab if we're programmatically scrolling
-      if (isScrollingProgrammatically.current) return;
-      
-      // Debounce scroll events
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        const sectionsToCheck = 
-          navPreset === 'scoreboard' 
-            ? ['info', 'player', 'headtohead']
-            : ['info', 'player', 'headtohead', 'team', 'plays', 'prediction'];
-        
-        const navbarHeight = 80;
-        const scrollPosition = window.scrollY + navbarHeight + 100; // Add some offset
-        
-        // Check if we're near the bottom of the page - if so, activate last section
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-        const scrolledToBottom = windowHeight + window.scrollY >= documentHeight - 200; // 200px threshold
-        
-        if (scrolledToBottom) {
-          const lastSection = sectionsToCheck[sectionsToCheck.length - 1];
-          onTabChange(lastSection as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays');
-          return;
-        }
-        
-        // Find which section we're currently in
-        for (let i = sectionsToCheck.length - 1; i >= 0; i--) {
-          const sectionId = sectionsToCheck[i];
-          const ref = sectionRefs[sectionId as keyof typeof sectionRefs];
-          
-          if (ref.current) {
-            const rect = ref.current.getBoundingClientRect();
-            const absoluteTop = rect.top + window.scrollY;
-            
-            if (scrollPosition >= absoluteTop) {
-              onTabChange(sectionId as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays');
-              break;
-            }
-          }
-        }
-      }, 100); // Debounce by 100ms
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // Initial check
-    handleScroll();
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      clearTimeout(timeoutId);
-    };
-  }, [navPreset, onTabChange]);
+  }, [activeTab, navPreset]);
 
   useEffect(() => {
     const fetchGameData = async () => {
@@ -491,8 +401,15 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
           </div>
         </div>
 
-        {/* Info Section - Game Overview */}
-        <div id="info" ref={infoRef} className="space-y-6 scroll-mt-20 py-6">
+        {/* Carousel Container */}
+        <div className="overflow-hidden relative min-h-[calc(100vh-400px)]">
+          <div 
+            ref={carouselRef}
+            className="flex transition-transform duration-500 ease-in-out h-full"
+            style={{ width: `${navPreset === 'scoreboard' ? 400 : 600}%` }}
+          >
+            {/* Info Section - Game Overview */}
+            <div className="w-full flex-shrink-0 space-y-6 py-6 overflow-y-auto max-h-[calc(100vh-400px)]" style={{ width: `${navPreset === 'scoreboard' ? 25 : 16.666}%` }}>
           {/* Game Status & Situation */}
           <div>
             <div className="text-center mb-6">
@@ -1079,33 +996,528 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                 </div>
               </div>
             </div>
+
+            {/* Player Statistics for Summary - shown in Info section */}
+            {navPreset === 'summary' && summary?.boxscore?.players && (
+              <div className="mt-8">
+                <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                  <FaTrophy />
+                  Player Statistics
+                </h3>
+                {summary.boxscore.players.length > 0 ? (
+                  <div className="space-y-8">
+                    {summary.boxscore.players.map((teamData, teamIdx) => (
+                      <div key={`team-${teamIdx}`} className="space-y-4">
+                        <div className="flex items-center gap-3 mb-4">
+                          <img 
+                            src={getTeamLogo(teamData.team)} 
+                            alt={teamData.team.displayName}
+                            className="w-10 h-10"
+                          />
+                          <h4 className="text-[#00ffe7] font-bold text-xl">{teamData.team.displayName}</h4>
+                        </div>
+                        {teamData.statistics.map((category, catIdx) => (
+                          <div key={`${teamData.team.id}-${category.name}-${catIdx}`} className="bg-[#23263a]/50 rounded-lg p-2 sm:p-4 border border-[#00ffe7]/10">
+                            <h5 className="text-[#b0b7bf] font-semibold text-xs sm:text-sm mb-2">{category.text}</h5>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs sm:text-sm">
+                                <thead>
+                                  <tr className="border-b border-[#00ffe7]/10">
+                                    <th className="text-left py-2 px-1 sm:px-2 text-[#b0b7bf] font-semibold">Player</th>
+                                    {category.labels.map((label, labelIdx) => (
+                                      <th key={`label-${labelIdx}`} className="text-center py-2 px-1 sm:px-2 text-[#b0b7bf] font-semibold whitespace-nowrap">
+                                        {label}
+                                      </th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {category.athletes.map((athleteData, athleteIdx) => (
+                                    <tr 
+                                      key={`${athleteData.athlete.id}-${athleteIdx}`}
+                                      className="border-b border-[#00ffe7]/5 hover:bg-[#00ffe7]/5 transition-colors cursor-pointer"
+                                      onClick={() => navigate(`/nfl/player/${athleteData.athlete.id}`)}
+                                    >
+                                      <td className="py-2 px-1 sm:px-2">
+                                        <div className="flex items-center gap-1 sm:gap-2">
+                                          <img 
+                                            src={athleteData.athlete.headshot?.href} 
+                                            alt={athleteData.athlete.displayName}
+                                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
+                                          />
+                                          <div className="min-w-0">
+                                            <p className="text-[#e0e7ef] font-semibold text-xs sm:text-sm truncate">{athleteData.athlete.displayName}</p>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      {athleteData.stats.map((stat, statIdx) => (
+                                        <td key={`stat-${statIdx}`} className="text-center py-2 px-1 sm:px-2 text-[#e0e7ef] text-xs sm:text-sm">
+                                          {stat}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                  {category.totals && category.totals.length > 0 && (
+                                    <tr className="border-t-2 border-[#00ffe7]/20 font-bold bg-[#00ffe7]/5">
+                                      <td className="py-2 px-1 sm:px-2 text-[#00ffe7] text-xs sm:text-sm">Total</td>
+                                      {category.totals.map((total, totalIdx) => (
+                                        <td key={`total-${totalIdx}`} className="text-center py-2 px-1 sm:px-2 text-[#00ffe7] text-xs sm:text-sm">
+                                          {total}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[#b0b7bf] text-center py-8">Player statistics will be available after the game.</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Scoreboard View - Live Games */}
-        {navPreset === 'scoreboard' && (
-          <ScoreboardView 
-            event={event}
-            playerRef={playerRef}
-            headtoheadRef={headtoheadRef}
-            getTeamLogo={getTeamLogo}
-          />
-        )}
+            {/* Player Section */}
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-[calc(100vh-400px)]" style={{ width: `${navPreset === 'scoreboard' ? 25 : 16.666}%` }}>
+              {navPreset === 'scoreboard' && event && (
+                <div className="space-y-4">
+                  <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                    <FaTrophy />
+                    Leaders
+                  </h3>
+                  {competition.leaders && competition.leaders.length > 0 ? (
+                    <div className="space-y-6">
+                      {competition.leaders.map((category, categoryIdx) => (
+                        <div key={`${category.name}-${categoryIdx}`} className="border-b border-[#00ffe7]/10 pb-6 last:border-b-0">
+                          <h4 className="text-[#b0b7bf] text-sm font-semibold mb-4">
+                            {category.displayName}
+                          </h4>
+                          <div className="space-y-3">
+                            {category.leaders.map((leader, leaderIdx) => (
+                              <button 
+                                key={`${leader.athlete.id}-${leaderIdx}`}
+                                onClick={() => navigate(`/nfl/player/${leader.athlete.id}`)}
+                                className="w-full text-left hover:bg-[#00ffe7]/5 rounded-lg p-2 transition-all group cursor-pointer"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <img 
+                                    src={leader.athlete.headshot} 
+                                    alt={leader.athlete.displayName}
+                                    className="w-10 h-10 rounded-full group-hover:scale-110 transition-transform"
+                                  />
+                                  <div className="flex-1">
+                                    <p className="text-[#e0e7ef] font-bold text-sm group-hover:text-[#00ffe7] transition-colors">
+                                      {leader.athlete.displayName}
+                                    </p>
+                                    <p className="text-[#b0b7bf] text-xs">
+                                      {leader.athlete.position?.abbreviation || ''}
+                                    </p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-[#00ffe7] font-bold text-lg">
+                                      {leader.displayValue}
+                                    </p>
+                                  </div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[#b0b7bf] text-center py-8">No player leaders available at this time.</p>
+                  )}
+                </div>
+              )}
+              {navPreset === 'summary' && summary?.leaders && summary.leaders.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                    <FaTrophy />
+                    Player Leaders
+                  </h3>
+                  <div className="space-y-6">
+                    {summary.leaders.map((teamLeaderGroup, teamIdx) => {
+                      const isHomeTeam = teamLeaderGroup.team.id === homeTeam?.id;
+                      const isAwayTeam = teamLeaderGroup.team.id === awayTeam?.id;
+                      
+                      if (!isHomeTeam && !isAwayTeam) return null;
+                      
+                      return (
+                        <div key={`team-leaders-simple-${teamIdx}`}>
+                          <div className="flex items-center gap-2 mb-4">
+                            <img src={getTeamLogo(teamLeaderGroup.team)} alt={teamLeaderGroup.team.displayName} className="w-8 h-8" />
+                            <h4 className="text-[#00ffe7] font-bold text-lg">{teamLeaderGroup.team.displayName}</h4>
+                          </div>
+                          {teamLeaderGroup.leaders.map((category, catIdx) => {
+                            if (!category.leaders || !category.leaders[0]) return null;
+                            const leader = category.leaders[0];
+                            
+                            return (
+                              <div key={`leader-${catIdx}`} className="border-b border-[#00ffe7]/10 pb-4 mb-4 last:border-b-0">
+                                <h5 className="text-[#b0b7bf] text-sm font-semibold mb-3">{category.displayName}</h5>
+                                <button 
+                                  onClick={() => navigate(`/nfl/player/${leader.athlete.id}`)}
+                                  className="w-full text-left hover:bg-[#00ffe7]/5 rounded-lg p-2 transition-all group cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <img 
+                                      src={leader.athlete.headshot?.href || `https://robohash.org/${leader.athlete.id}?set=set5`}
+                                      alt={leader.athlete.displayName}
+                                      className="w-10 h-10 rounded-full group-hover:scale-110 transition-transform"
+                                      onError={(e) => { e.currentTarget.src = `https://robohash.org/${leader.athlete.id}?set=set5`; }}
+                                    />
+                                    <div className="flex-1">
+                                      <p className="text-[#e0e7ef] font-bold text-sm group-hover:text-[#00ffe7] transition-colors">
+                                        {leader.athlete.displayName}
+                                      </p>
+                                      <p className="text-[#b0b7bf] text-xs">#{leader.athlete.jersey}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      {leader.displayValue && leader.displayValue.split(',').map((stat, i) => (
+                                        <p key={i} className="text-[#00ffe7] font-bold text-sm">{stat.trim()}</p>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
 
-        {/* Summary View - Completed Games */}
-        {navPreset === 'summary' && summary && (
-          <SummaryView 
-            summary={summary}
-            event={event}
-            gameId={gameId!}
-            playerRef={playerRef}
-            headtoheadRef={headtoheadRef}
-            teamRef={teamRef}
-            playsRef={playsRef}
-            predictionRef={predictionRef}
-            getTeamLogo={getTeamLogo}
-          />
-        )}
+            {/* Head-to-Head Section */}
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-[calc(100vh-400px)]" style={{ width: `${navPreset === 'scoreboard' ? 25 : 16.666}%` }}>
+              {homeTeam && awayTeam && navPreset === 'scoreboard' && (
+                <div>
+                  <HeadToHead
+                    homeTeamId={homeTeam.id}
+                    awayTeamId={awayTeam.id}
+                    homeTeamName={homeTeam.team.displayName}
+                    awayTeamName={awayTeam.team.displayName}
+                  />
+                </div>
+              )}
+              {summary?.leaders && summary.leaders.length > 0 && navPreset === 'summary' && (
+                <div>
+                  <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                    <FaChartBar />
+                    Head-to-Head Leaders
+                  </h3>
+                  <div className="space-y-4">
+                    {summary.leaders.map((teamLeaderGroup, teamIdx) => {
+                      const isHomeTeam = teamLeaderGroup.team.id === homeTeam?.id;
+                      const isAwayTeam = teamLeaderGroup.team.id === awayTeam?.id;
+                      
+                      if (!isHomeTeam && !isAwayTeam) return null;
+                      
+                      return (
+                        <div key={`team-leaders-${teamIdx}`}>
+                          {teamLeaderGroup.leaders.map((category, catIdx) => {
+                            const otherTeamGroup = summary.leaders.find(g => g.team.id !== teamLeaderGroup.team.id);
+                            const otherCategory = otherTeamGroup?.leaders.find(c => c.name === category.name);
+                            
+                            if (!otherCategory || !category.leaders || !otherCategory.leaders || !category.leaders[0] || !otherCategory.leaders[0]) return null;
+                            
+                            const homeLeader = isHomeTeam ? category.leaders[0] : otherCategory.leaders[0];
+                            const awayLeader = isAwayTeam ? category.leaders[0] : otherCategory.leaders[0];
+                            
+                            if (teamIdx !== 0) return null;
+                            
+                            return (
+                              <div key={`category-${catIdx}`} className="bg-[#23263a]/50 rounded-lg p-4 border border-[#00ffe7]/10">
+                                <h4 className="text-[#b0b7bf] font-semibold text-sm mb-4 text-center">{category.displayName}</h4>
+                                <div className="grid grid-cols-3 gap-4 items-center">
+                                  <div 
+                                    className="flex flex-col items-center cursor-pointer hover:bg-[#00ffe7]/5 p-2 rounded transition-colors"
+                                    onClick={() => navigate(`/nfl/player/${awayLeader.athlete.id}`)}
+                                  >
+                                    <img 
+                                      src={awayLeader.athlete.headshot?.href || `https://robohash.org/${awayLeader.athlete.id}?set=set5`}
+                                      alt={awayLeader.athlete.displayName}
+                                      className="w-16 h-16 rounded-full mb-2 border-2 border-[#00ffe7]/30"
+                                      onError={(e) => { e.currentTarget.src = `https://robohash.org/${awayLeader.athlete.id}?set=set5`; }}
+                                    />
+                                    <p className="text-[#e0e7ef] font-semibold text-sm text-center">{awayLeader.athlete.displayName}</p>
+                                    <p className="text-[#b0b7bf] text-xs">#{awayLeader.athlete.jersey}</p>
+                                    {awayLeader.displayValue && (
+                                      <div className="mt-2 text-center">
+                                        {awayLeader.displayValue.split(',').map((stat, i) => (
+                                          <p key={i} className="text-[#00ffe7] font-bold text-sm">{stat.trim()}</p>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center justify-center">
+                                    <span className="text-[#b0b7bf] text-sm font-bold">VS</span>
+                                  </div>
+                                  <div 
+                                    className="flex flex-col items-center cursor-pointer hover:bg-[#faafe8]/5 p-2 rounded transition-colors"
+                                    onClick={() => navigate(`/nfl/player/${homeLeader.athlete.id}`)}
+                                  >
+                                    <img 
+                                      src={homeLeader.athlete.headshot?.href || `https://robohash.org/${homeLeader.athlete.id}?set=set5`}
+                                      alt={homeLeader.athlete.displayName}
+                                      className="w-16 h-16 rounded-full mb-2 border-2 border-[#faafe8]/30"
+                                      onError={(e) => { e.currentTarget.src = `https://robohash.org/${homeLeader.athlete.id}?set=set5`; }}
+                                    />
+                                    <p className="text-[#e0e7ef] font-semibold text-sm text-center">{homeLeader.athlete.displayName}</p>
+                                    <p className="text-[#b0b7bf] text-xs">#{homeLeader.athlete.jersey}</p>
+                                    {homeLeader.displayValue && (
+                                      <div className="mt-2 text-center">
+                                        {homeLeader.displayValue.split(',').map((stat, i) => (
+                                          <p key={i} className="text-[#faafe8] font-bold text-sm">{stat.trim()}</p>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Plays Section - Scoreboard */}
+            {navPreset === 'scoreboard' && (
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-[calc(100vh-400px)]" style={{ width: '25%' }}>
+                <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                  <FaFootballBall />
+                  Recent Plays
+                </h3>
+                {playLog && playLog.length > 0 ? (
+                  <div className="space-y-3">
+                    {playLog.map((play, idx) => (
+                      <div key={idx} className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[#00ffe7] text-xs font-bold">Q{play.quarter}</span>
+                            <span className="text-[#b0b7bf] text-xs">{play.clock}</span>
+                          </div>
+                          {play.yardage !== undefined && (
+                            <span className={`text-xs font-bold ${
+                              play.yardage > 0 ? 'text-green-400' : play.yardage < 0 ? 'text-red-400' : 'text-gray-400'
+                            }`}>
+                              {play.yardage > 0 ? '+' : ''}{play.yardage} yds
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[#e0e7ef] text-sm">{play.text}</p>
+                        {play.athletesInvolved && play.athletesInvolved.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {play.athletesInvolved.slice(0, 3).map((athlete) => (
+                              <div key={athlete.id} className="flex items-center gap-1 bg-[#1a1d2e]/30 rounded-full px-1.5 py-0.5">
+                                {athlete.headshot && (
+                                  <img src={athlete.headshot} alt="" className="w-4 h-4 rounded-full" 
+                                    onError={(e) => e.currentTarget.style.display = 'none'} />
+                                )}
+                                <span className="text-gray-300 text-xs">{athlete.shortName}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[#b0b7bf] text-center py-8">No plays recorded yet.</p>
+                )}
+              </div>
+            )}
+
+            {/* Team Stats Section - Summary only */}
+            {navPreset === 'summary' && (
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-[calc(100vh-400px)]" style={{ width: '16.666%' }}>
+                {summary?.boxscore?.teams && summary.boxscore.teams.length === 2 && (
+                  <div>
+                    <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                      <FaChartBar />
+                      Team Statistics
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-3 gap-4 mb-6">
+                        <div className="flex items-center justify-center">
+                          <img 
+                            src={getTeamLogo(summary.boxscore.teams.find(t => t.homeAway === 'away')?.team)} 
+                            alt={summary.boxscore.teams.find(t => t.homeAway === 'away')?.team.displayName}
+                            className="w-12 h-12"
+                          />
+                        </div>
+                        <div className="flex items-center justify-center">
+                          <p className="text-[#b0b7bf] text-sm font-semibold">Stat</p>
+                        </div>
+                        <div className="flex items-center justify-center">
+                          <img 
+                            src={getTeamLogo(summary.boxscore.teams.find(t => t.homeAway === 'home')?.team)} 
+                            alt={summary.boxscore.teams.find(t => t.homeAway === 'home')?.team.displayName}
+                            className="w-12 h-12"
+                          />
+                        </div>
+                      </div>
+                      {summary.boxscore.teams[0].statistics.map((_, statIdx) => {
+                        const awayTeamData = summary.boxscore.teams.find(t => t.homeAway === 'away');
+                        const homeTeamData = summary.boxscore.teams.find(t => t.homeAway === 'home');
+                        const awayStat = awayTeamData?.statistics[statIdx];
+                        const homeStat = homeTeamData?.statistics[statIdx];
+                        
+                        if (!awayStat || !homeStat) return null;
+                        
+                        return (
+                          <div key={`stat-${statIdx}`} className="grid grid-cols-3 gap-4 items-center bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
+                            <div className="text-center">
+                              <p className="text-[#00ffe7] font-bold text-lg">{awayStat.displayValue}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[#b0b7bf] text-sm font-semibold">{awayStat.label}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[#00ffe7] font-bold text-lg">{homeStat.displayValue}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Plays Section - Summary only */}
+            {navPreset === 'summary' && summary && (
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-[calc(100vh-400px)]" style={{ width: '16.666%' }}>
+                <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                  <FaFootballBall />
+                  Play by Play - All Drives
+                </h3>
+                {summary?.drives?.previous && summary.drives.previous.length > 0 ? (
+                  <div className="space-y-6">
+                    {summary.drives.previous.map((drive, driveIdx) => {
+                      const driveTeam = drive.team;
+                      const isHomeTeam = driveTeam.id === homeTeam?.id;
+                      const bgClass = isHomeTeam ? 'from-[#faafe8]/10 border-l-4 border-[#faafe8]' : 'from-[#00ffe7]/10 border-l-4 border-[#00ffe7]';
+                      
+                      return (
+                        <div key={`drive-${drive.id}-${driveIdx}`} className={`bg-gradient-to-r ${bgClass} rounded-lg py-4 mb-4`}>
+                          <div className="flex items-center justify-between mb-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <img src={getTeamLogo(driveTeam)} alt="" className="w-8 h-8" />
+                              <span className={`font-bold text-sm ${isHomeTeam ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
+                                {driveTeam.displayName} - {drive.description}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <p className={`font-bold text-sm ${isHomeTeam ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
+                                {drive.displayResult}
+                              </p>
+                              <p className="text-[#b0b7bf] text-xs">
+                                {drive.offensivePlays} plays, {drive.yards} yards, {drive.timeElapsed.displayValue}
+                              </p>
+                            </div>
+                          </div>
+                          {drive.plays && drive.plays.length > 0 && (
+                            <div className="space-y-4 px-4">
+                              {drive.plays.map((play, playIdx) => {
+                                const playText = play.text;
+                                const parts = playText.split(/\\.\\n+\\s+(?=\\w)|(?=PENALTY)/g).filter(part => part.trim());
+                                
+                                return (
+                                  <div key={`play-${play.id}-${playIdx}`} className="relative flex items-start gap-4">
+                                    <div className="relative flex flex-col items-center flex-shrink-0" style={{ width: '48px' }}>
+                                      <div className={`w-4 h-4 rounded-full border-2 ${
+                                        play.scoringPlay 
+                                          ? 'bg-green-400 border-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]' 
+                                          : 'bg-[#23263a] border-[#00ffe7]/40'
+                                      } z-10`}></div>
+                                      <div className="text-center mt-1">
+                                        <p className="text-[10px] font-bold text-[#00ffe7]">Q{play.period.number}</p>
+                                        <p className="text-[9px] font-mono text-[#00ffe7]">{play.clock.displayValue}</p>
+                                      </div>
+                                    </div>
+                                    <div className={`flex-1 pb-4 ${play.scoringPlay ? 'bg-green-500/5 -ml-2 pl-2 pr-2 rounded-lg' : ''}`}>
+                                      <div className="space-y-1">
+                                        {parts.map((part, partIdx) => {
+                                          const trimmedPart = part.trim();
+                                          const isTimeout = trimmedPart.toLowerCase().includes('timeout');
+                                          return (
+                                            <p key={partIdx} className={`text-sm ${
+                                              play.scoringPlay ? 'text-green-400 font-medium' : 'text-[#b0b7bf]'
+                                            } flex items-center gap-2`}>
+                                              {isTimeout && <FaPauseCircle className="text-yellow-400 flex-shrink-0" />}
+                                              <span>{trimmedPart}{trimmedPart.endsWith('.') ? '' : '.'}</span>
+                                            </p>
+                                          );
+                                        })}
+                                      </div>
+                                      {play.scoringPlay && play.scoringType && (
+                                        <div className="flex items-center gap-2 mt-2">
+                                          <span className="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-1 rounded">
+                                            {play.scoringType.displayName}
+                                          </span>
+                                        </div>
+                                      )}
+                                      {play.statYardage !== undefined && (
+                                        <div className="flex items-center gap-2 mt-2">
+                                          <span className="text-[#b0b7bf] text-xs">Yards:</span>
+                                          <span className={`font-bold text-sm ${
+                                            play.statYardage > 0 ? 'text-green-400' : play.statYardage < 0 ? 'text-red-400' : 'text-gray-400'
+                                          }`}>{play.statYardage > 0 ? '+' : ''}{play.statYardage}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-[#b0b7bf] mb-2">No drive data available.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Prediction Section - Summary only */}
+            {navPreset === 'summary' && (
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-[calc(100vh-400px)]" style={{ width: '16.666%' }}>
+                <Prediction
+                  gameId={gameId!}
+                  competitionId={competition.id}
+                  homeTeamInfo={{
+                    name: homeTeam?.team.displayName || '',
+                    logo: getTeamLogo(homeTeam),
+                    color: homeTeam?.team.color || '00ffe7'
+                  }}
+                  awayTeamInfo={{
+                    name: awayTeam?.team.displayName || '',
+                    logo: getTeamLogo(awayTeam),
+                    color: awayTeam?.team.color || 'faafe8'
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
