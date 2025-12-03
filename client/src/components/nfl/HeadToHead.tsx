@@ -57,7 +57,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 text-center">
+      <div className="text-center py-6">
         <p className="text-[#00ffe7]">Loading head-to-head data...</p>
       </div>
     );
@@ -65,14 +65,14 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
 
   if (error || !homeTeamLeaders.length || !awayTeamLeaders.length) {
     return (
-      <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 text-center">
+      <div className="text-center py-6">
         <p className="text-gray-400">{error || 'No head-to-head data available'}</p>
       </div>
     );
   }
   
   return (
-    <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6">
+    <div>
       <h3 className="text-[#00ffe7] font-bold text-2xl mb-6">
         Head to Head
       </h3>
@@ -97,28 +97,87 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
               </p>
             
             {/* Head to Head Comparison */}
-            <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
+            <div className="flex items-start justify-between gap-6">
               
-              {/* Away Team Player (Left) */}
-              {awayTopLeader ? (
-                <div className="flex items-center gap-2 justify-end">
-                  <div className="flex-1 min-w-0 text-right">
+              {/* Away Team Player + Stats (Left) */}
+              <div className="flex flex-col items-center gap-3 flex-1">
+                <div className="flex items-center gap-2 w-full justify-center">
+                  {awayTopLeader ? (
+                    <>
+                      {awayTopLeader.athlete.headshot ? (
+                        <img 
+                          src={awayTopLeader.athlete.headshot}
+                          alt={awayTopLeader.athlete.displayName}
+                          className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
+                          onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
+                        style={{ display: awayTopLeader.athlete.headshot ? 'none' : 'flex' }}
+                        onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
+                      >
+                        <FaFootballBall className="text-[#faafe8]" />
+                      </div>
+                      <div className="text-left">
+                        <div 
+                          className="text-sm font-bold text-white cursor-pointer hover:text-[#faafe8] transition-colors"
+                          onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
+                        >
+                          {awayTopLeader.athlete.displayName}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {awayLeader?.abbreviation}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-gray-500 text-xs">No data</div>
+                  )}
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  {awayTopLeader?.displayValue ? (
+                    awayTopLeader.displayValue.split(',').map((stat, idx) => (
+                      <div key={idx} className="text-sm font-bold text-[#faafe8]">
+                        {stat.trim()}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm font-bold text-[#faafe8]">—</div>
+                  )}
+                </div>
+              </div>
+              
+              {/* VS Divider */}
+              <div className="flex items-center justify-center pt-8">
+                <div className="text-sm text-gray-400">vs</div>
+              </div>
+              
+              {/* Home Team Player + Stats (Right) */}
+              <div className="flex flex-col items-center gap-3 flex-1">
+                <div className="flex items-center gap-2 w-full justify-center">
+                  <div className="text-right">
                     <div 
-                      className="text-xs sm:text-sm font-bold text-white truncate cursor-pointer hover:text-[#faafe8] transition-colors"
-                      onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
+                      className="text-sm font-bold text-white cursor-pointer hover:text-[#00ffe7] transition-colors"
+                      onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
                     >
-                      {awayTopLeader.athlete.displayName}
+                      {homeTopLeader.athlete.displayName}
                     </div>
-                    <div className="text-[10px] sm:text-xs text-gray-400">
-                      {awayLeader?.abbreviation}
+                    <div className="text-xs text-gray-400">
+                      {homeLeader.abbreviation}
                     </div>
                   </div>
-                  {awayTopLeader.athlete.headshot ? (
+                  {homeTopLeader.athlete.headshot ? (
                     <img 
-                      src={awayTopLeader.athlete.headshot}
-                      alt={awayTopLeader.athlete.displayName}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
-                      onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
+                      src={homeTopLeader.athlete.headshot}
+                      alt={homeTopLeader.athlete.displayName}
+                      className="w-10 h-10 rounded-full object-cover border-2 border-[#00ffe7]/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
+                      onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                         const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -127,62 +186,19 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                     />
                   ) : null}
                   <div 
-                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
-                    style={{ display: awayTopLeader.athlete.headshot ? 'none' : 'flex' }}
-                    onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
-                  >
-                    <FaFootballBall className="text-[#faafe8] text-base sm:text-lg" />
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-end text-gray-500 text-[10px] sm:text-xs">
-                  No data
-                </div>
-              )}
-              
-              {/* Center Scores */}
-              <div className="flex items-center justify-center gap-2 sm:gap-3 w-[140px] sm:w-[190px]">
-                <div className="text-lg sm:text-2xl font-bold text-[#faafe8] w-[50px] sm:w-[70px] text-right">
-                  {awayTopLeader?.displayValue || '—'}
-                </div>
-                <div className="text-xs sm:text-sm text-gray-400 w-[20px] text-center">vs</div>
-                <div className="text-lg sm:text-2xl font-bold text-[#00ffe7] w-[50px] sm:w-[70px] text-left">
-                  {homeTopLeader.displayValue}
-                </div>
-              </div>
-              
-              {/* Home Team Player (Right) */}
-              <div className="flex items-center gap-2">
-                {homeTopLeader.athlete.headshot ? (
-                  <img 
-                    src={homeTopLeader.athlete.headshot}
-                    alt={homeTopLeader.athlete.displayName}
-                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
-                    onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
-                      if (fallback) fallback.style.display = 'flex';
-                    }}
-                  />
-                ) : null}
-                <div 
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
-                  style={{ display: homeTopLeader.athlete.headshot ? 'none' : 'flex' }}
-                  onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
-                >
-                  <FaFootballBall className="text-[#00ffe7] text-base sm:text-lg" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div 
-                    className="text-xs sm:text-sm font-bold text-white truncate cursor-pointer hover:text-[#00ffe7] transition-colors"
+                    className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
+                    style={{ display: homeTopLeader.athlete.headshot ? 'none' : 'flex' }}
                     onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
                   >
-                    {homeTopLeader.athlete.displayName}
+                    <FaFootballBall className="text-[#00ffe7]" />
                   </div>
-                  <div className="text-[10px] sm:text-xs text-gray-400">
-                    {homeLeader.abbreviation}
-                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  {homeTopLeader.displayValue.split(',').map((stat, idx) => (
+                    <div key={idx} className="text-sm font-bold text-[#00ffe7]">
+                      {stat.trim()}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

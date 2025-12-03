@@ -409,11 +409,11 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
   return (
     <div className="min-h-screen pb-24">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto py-8 px-4">
 
         {/* Auto-refresh indicator - only show for live games */}
         {lastUpdated && navPreset === 'scoreboard' && (
-          <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-4 mb-6">
+          <div className="p-4 mb-6">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <FaClock className="text-[#00ffe7]" />
@@ -441,7 +441,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         )}
 
         {/* Box Score - Always visible at top */}
-        <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
+        <div className="p-6 mb-6">
           {/* Date at top */}
           <div className="text-center mb-4">
             <p className="text-[#e0e7ef] text-base md:text-lg font-bold">
@@ -490,9 +490,9 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         </div>
 
         {/* Info Section - Game Overview */}
-        <div id="info" ref={infoRef} className="space-y-6 scroll-mt-20">
+        <div id="info" ref={infoRef} className="space-y-6 scroll-mt-20 py-6">
           {/* Game Status & Situation */}
-          <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)]  py-6">
+          <div>
             <div className="text-center mb-6">
               <h2 className="text-[#00ffe7] text-2xl font-bold mb-2">
                 Game Info
@@ -903,7 +903,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                 <div className="text-center">
                   {/* Line Scores */}
                   {(homeTeam?.linescores || awayTeam?.linescores) && (
-                    <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-2">
+                    <div className="p-2">
                       <h4 className="text-[#00ffe7] font-bold text-lg mb-4">Scoring by Quarter</h4>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
@@ -953,7 +953,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
               )}
 
             {/* Venue & Game Information - Combined */}
-            <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] overflow-hidden">
+            <div className="overflow-hidden">
               {/* Venue image if available from summary */}
               {venueImage && (
                 <div className="relative h-24 overflow-hidden">

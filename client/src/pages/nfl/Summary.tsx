@@ -38,7 +38,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     <>
       {/* Player Statistics Section */}
       {summary?.boxscore?.players && (
-        <div id="player" ref={playerRef} className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 scroll-mt-20">
+        <div id="player" ref={playerRef} className="scroll-mt-20 py-4">
           <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
             <FaTrophy />
             Player Statistics
@@ -133,7 +133,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
       )}
 
       {/* Team Stats Section */}
-      <div id="team" ref={teamRef} className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 scroll-mt-20">
+      <div id="team" ref={teamRef} className="scroll-mt-20 py-4">
         <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
           <FaChartBar />
           Team Statistics
@@ -198,12 +198,11 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
       {/* Plays Section - Drive by Drive */}
       {summary?.drives && (
-        <div id="plays" ref={playsRef} className="scroll-mt-20">
-          <div className="bg-[#181a23]/90 border border-[#00ffe7]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6">
-            <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
-              <FaFootballBall />
-              Play by Play - All Drives
-            </h3>
+        <div id="plays" ref={playsRef} className="scroll-mt-20 py-4">
+          <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+            <FaFootballBall />
+            Play by Play - All Drives
+          </h3>
 
             {summary.drives.previous && summary.drives.previous.length > 0 ? (
               <div className="">
@@ -323,7 +322,6 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             ) : (
               <p className="text-[#b0b7bf] text-center py-8">No drive data available.</p>
             )}
-          </div>
         </div>
       )}
 
