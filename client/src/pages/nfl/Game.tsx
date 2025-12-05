@@ -74,6 +74,9 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         const totalSlides = navPreset === 'scoreboard' ? 4 : 6;
         const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
+        
+        // Scroll to top when changing tabs
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
   }, [activeTab, navPreset]);
@@ -350,8 +353,8 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
   };
 
   return (
-    <div className="min-h-screen pb-24">
-      <div className="min-h-screen max-w-7xl mx-auto py-8 px-4">
+    <div className="pb-24">
+      <div className="max-w-7xl mx-auto py-8 px-4">
 
         {/* Auto-refresh indicator - only show for live games */}
         {/* {lastUpdated && navPreset === 'scoreboard' && (
@@ -383,10 +386,10 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         )} */}
 
         {/* Carousel Container */}
-        <div className="overflow-hidden relative min-h-screen">
+        <div className="overflow-hidden relative">
           <div 
             ref={carouselRef}
-            className="flex transition-transform duration-500 ease-in-out min-h-screen"
+            className="flex transition-transform duration-500 ease-in-out"
             style={{ width: `${navPreset === 'scoreboard' ? 400 : 600}%` }}
           >
             {/* Info Section - Game Overview */}
@@ -921,7 +924,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         </div>
 
             {/* Player Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto" style={{ width: `${navPreset === 'scoreboard' ? 25 : 16.666}%` }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: `${navPreset === 'scoreboard' ? 25 : 16.666}%` }}>
               {navPreset === 'scoreboard' && event && (
                 <div className="space-y-4">
                   <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
@@ -1058,7 +1061,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
             </div>
 
             {/* Head-to-Head Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto" style={{ width: `${navPreset === 'scoreboard' ? 25 : 16.666}%` }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: `${navPreset === 'scoreboard' ? 25 : 16.666}%` }}>
               {homeTeam && awayTeam && navPreset === 'scoreboard' && (
                 <div>
                   <HeadToHead
@@ -1156,7 +1159,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
             {/* Plays Section - Scoreboard */}
             {navPreset === 'scoreboard' && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto" style={{ width: '25%' }}>
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '25%' }}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
                     <FaFootballBall />
@@ -1289,7 +1292,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
             {/* Team Stats Section - Summary only */}
             {navPreset === 'summary' && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
                 {summary?.boxscore?.teams && summary.boxscore.teams.length === 2 && (
                   <div>
                     <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
@@ -1346,7 +1349,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
             {/* Plays Section - Summary only */}
             {navPreset === 'summary' && summary && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
                 <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                   <FaFootballBall />
                   Play by Play - All Drives
@@ -1445,7 +1448,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
             {/* Prediction Section - Summary only */}
             {navPreset === 'summary' && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
                 <Prediction
                   gameId={gameId!}
                   competitionId={competition.id}
