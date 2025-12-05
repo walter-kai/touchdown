@@ -689,6 +689,137 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Latest Play - No Rotation */}
+                    {playLog.length > 0 && navPreset === 'scoreboard' && (() => {
+                      const latestPlay = playLog[0];
+                      const team = latestPlay.possession === homeTeam?.id ? homeTeam : awayTeam;
+                      const isHome = team?.id === homeTeam?.id;
+
+                      return (
+                        <div className="mt-4">
+                          <div className="text-[#b0b7bf] text-xs mb-2 flex items-center gap-2">
+                            <FaFootballBall className="text-[#00ffe7]" />
+                            Latest Play
+                          </div>
+                          <div className={`bg-gradient-to-r ${isHome ? 'from-[#faafe8]/10' : 'from-[#00ffe7]/10'} rounded-lg p-3 border-l-2 ${isHome ? 'border-[#faafe8]' : 'border-[#00ffe7]'}`}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <img src={team?.team.logo} alt="" className="w-5 h-5" />
+                              <span className={`text-xs font-bold ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
+                                Q{latestPlay.quarter} {latestPlay.clock}
+                              </span>
+                            </div>
+                            
+                            {/* Player headshots */}
+                            {latestPlay.athletesInvolved && latestPlay.athletesInvolved.length > 0 && (
+                              <div className="flex gap-2 mb-2">
+                                {latestPlay.athletesInvolved.slice(0, 3).map((athlete, idx) => (
+                                  athlete.headshot && (
+                                    <div key={idx} className="flex items-center gap-1">
+                                      <img
+                                        src={athlete.headshot}
+                                        alt={athlete.displayName}
+                                        className="w-8 h-8 rounded-full border-2 border-[#00ffe7]/30"
+                                      />
+                                      <div className="flex flex-col">
+                                        <span className="text-[#e0e7ef] text-xs font-semibold">{athlete.shortName}</span>
+                                        <span className="text-[#b0b7bf] text-[10px]">{athlete.position}</span>
+                                      </div>
+                                    </div>
+                                  )
+                                ))}
+                              </div>
+                            )}
+                            
+                            <p className="text-[#e0e7ef] text-xs">
+                              {latestPlay.text}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* My Picks Display with Headshots and Swap Button */}
+                    {(() => {
+                      const savedState = localStorage.getItem(`playerPick_${homeTeam?.id}_${awayTeam?.id}`);
+                      if (savedState) {
+                        const parsed = JSON.parse(savedState);
+                        if (parsed.players && parsed.players.length > 0) {
+                          // Check if locked
+                          let isLocked = false;
+                          let cooldownTime = 0;
+                          if (parsed.lockedAt) {
+                            const elapsed = Date.now() - parsed.lockedAt;
+                            const remaining = 120000 - elapsed;
+                            if (remaining > 0) {
+                              isLocked = true;
+                              cooldownTime = Math.ceil(remaining / 1000);
+                            }
+                          }
+                          
+                          // Calculate scores from playLog
+                          const playerScores: Record<string, number> = {};
+                          parsed.players.forEach((player: any) => {
+                            playerScores[player.id] = 0;
+                          });
+                          playLog.forEach((play: any) => {
+                            if (play.athletesInvolved) {
+                              play.athletesInvolved.forEach((athlete: any) => {
+                                if (playerScores.hasOwnProperty(athlete.id)) {
+                                  playerScores[athlete.id] += 1;
+                                }
+                              });
+                            }
+                          });
+                          
+                          return (
+                            <div className="mt-4 bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-3 border border-[#00ffe7]/30">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="text-[#00ffe7] font-bold text-xs">MY PICKS</span>
+                                {parsed.totalScore > 0 && (
+                                  <span className="text-[#faafe8] font-bold text-xs">{parsed.totalScore} pts</span>
+                                )}
+                              </div>
+                              <div className="flex gap-2 mb-3">
+                                {parsed.players.map((player: any) => (
+                                  player.headshot && (
+                                    <div key={player.id} className="flex-1 flex flex-col items-center bg-black/30 rounded p-2 relative">
+                                      <img
+                                        src={player.headshot}
+                                        alt={player.displayName}
+                                        className="w-12 h-12 rounded-full border-2 border-[#00ffe7]/30 mb-1"
+                                      />
+                                      <div className="text-white text-xs font-bold text-center truncate w-full">{player.shortName || player.displayName}</div>
+                                      <div className="text-[#b0b7bf] text-[10px]">{player.position.abbreviation}</div>
+                                      {isLocked && (
+                                        <div className="absolute -top-1 -right-1 bg-[#00ffe7] text-black text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                                          {playerScores[player.id] || 0}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )
+                                ))}
+                              </div>
+                              {isLocked ? (
+                                <div className="text-center py-2 bg-black/30 rounded">
+                                  <span className="text-[#faafe8] text-xs font-bold">
+                                    🔒 Locked - {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
+                                  </span>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => onTabChange('pick')}
+                                  className="w-full py-2 bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-black font-bold text-xs rounded hover:opacity-80 transition-opacity"
+                                >
+                                  SWAP NOW
+                                </button>
+                              )}
+                            </div>
+                          );
+                        }
+                      }
+                      return null;
+                    })()}
 
                       {/* Current Possession Section */}
                       {playLog.length > 0 && playLog[0]?.possession && (
@@ -1135,46 +1266,6 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                   Player Pick
                 </h3>
 
-                {/* Latest Play Status - Rotating Sentences */}
-                {playLog.length > 0 && (() => {
-                  const latestPlay = playLog[0];
-                  const team = latestPlay.possession === homeTeam?.id ? homeTeam : awayTeam;
-                  const isHome = team?.id === homeTeam?.id;
-                  const sentences = latestPlay.text.split(/\.\s+/).filter(s => s.trim()).map(s => s.trim() + '.');
-
-                  return (
-                    <div className="mb-6">
-                      <div className="text-[#b0b7bf] text-xs mb-2 flex items-center gap-2">
-                        <FaFootballBall className="text-[#00ffe7]" />
-                        Latest Play
-                      </div>
-                      <div className={`bg-gradient-to-r ${isHome ? 'from-[#faafe8]/10' : 'from-[#00ffe7]/10'} rounded-lg p-3 border-l-2 ${isHome ? 'border-[#faafe8]' : 'border-[#00ffe7]'}`}>
-                        <div className="flex items-center gap-2 mb-1">
-                          <img src={team?.team.logo} alt="" className="w-5 h-5" />
-                          <span className={`text-xs font-bold ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
-                            Q{latestPlay.quarter} {latestPlay.clock}
-                          </span>
-                        </div>
-                        <p className="text-[#e0e7ef] text-xs min-h-[2.5rem] transition-opacity duration-300">
-                          {sentences[currentSentenceIndex % sentences.length]}
-                        </p>
-                        {sentences.length > 1 && (
-                          <div className="flex gap-1 mt-2">
-                            {sentences.map((_, idx) => (
-                              <div
-                                key={idx}
-                                className={`h-1 rounded-full transition-all ${
-                                  idx === (currentSentenceIndex % sentences.length) ? 'w-4 bg-[#00ffe7]' : 'w-1 bg-[#00ffe7]/30'
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
-
                 <PlayerPick
                   homeTeamId={homeTeam?.id || ''}
                   awayTeamId={awayTeam?.id || ''}
@@ -1209,6 +1300,68 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                     </span>
                   )}
                 </div>
+                
+                {/* My Picks Display */}
+                {(() => {
+                  const savedState = localStorage.getItem(`playerPick_${homeTeam?.id}_${awayTeam?.id}`);
+                  if (savedState) {
+                    const parsed = JSON.parse(savedState);
+                    if (parsed.players && parsed.players.length > 0) {
+                      // Check if locked
+                      let isLocked = false;
+                      let cooldownTime = 0;
+                      if (parsed.lockedAt) {
+                        const elapsed = Date.now() - parsed.lockedAt;
+                        const remaining = 120000 - elapsed;
+                        if (remaining > 0) {
+                          isLocked = true;
+                          cooldownTime = Math.ceil(remaining / 1000);
+                        }
+                      }
+                      
+                      return (
+                        <div className="mb-4 bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-3 border border-[#00ffe7]/30">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[#00ffe7] font-bold text-xs">MY PICKS</span>
+                            {parsed.totalScore > 0 && (
+                              <span className="text-[#faafe8] font-bold text-xs">{parsed.totalScore} pts</span>
+                            )}
+                          </div>
+                          <div className="flex gap-2 mb-3">
+                            {parsed.players.map((player: any) => (
+                              player.headshot && (
+                                <div key={player.id} className="flex-1 flex flex-col items-center bg-black/30 rounded p-2">
+                                  <img
+                                    src={player.headshot}
+                                    alt={player.displayName}
+                                    className="w-12 h-12 rounded-full border-2 border-[#00ffe7]/30 mb-1"
+                                  />
+                                  <div className="text-white text-xs font-bold text-center truncate w-full">{player.shortName || player.displayName}</div>
+                                  <div className="text-[#b0b7bf] text-[10px]">{player.position.abbreviation}</div>
+                                </div>
+                              )
+                            ))}
+                          </div>
+                          {isLocked ? (
+                            <div className="text-center py-2 bg-black/30 rounded">
+                              <span className="text-[#faafe8] text-xs font-bold">
+                                🔒 Locked - {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
+                              </span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => onTabChange('pick')}
+                              className="w-full py-2 bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-black font-bold text-xs rounded hover:opacity-80 transition-opacity"
+                            >
+                              SWAP NOW
+                            </button>
+                          )}
+                        </div>
+                      );
+                    }
+                  }
+                  return null;
+                })()}
 
                 {playLog.length > 0 ? (
                   <div className="relative">

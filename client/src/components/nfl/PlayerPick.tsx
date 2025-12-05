@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes } from 'react-icons/fa';
+import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight } from 'react-icons/fa';
 
 interface Athlete {
   id: string;
@@ -11,8 +11,12 @@ interface Athlete {
   };
   headshot?: {
     href: string;
-  };
+  } | string; // Can be object from API or string from localStorage
   jersey?: string;
+  team?: {
+    id: string;
+    logo: string;
+  };
 }
 
 interface PlayerPickProps {
@@ -51,6 +55,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   const [homeTeamLogo, setHomeTeamLogo] = useState<string>('');
   const [awayTeamLogo, setAwayTeamLogo] = useState<string>('');
   const [selectedPlayers, setSelectedPlayers] = useState<Athlete[]>([]);
+  const [newPicks, setNewPicks] = useState<Athlete[]>([]); // New picks being selected
   const [isLocked, setIsLocked] = useState(false);
   const [cooldownTime, setCooldownTime] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -63,16 +68,23 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
     if (savedState) {
       const parsed = JSON.parse(savedState);
+      
+      // Always restore selections and total score
+      if (parsed.players && parsed.players.length > 0) {
+        setSelectedPlayers(parsed.players);
+        setTotalScore(parsed.totalScore || 0);
+      }
+      
+      // Check if still in cooldown period
       if (parsed.lockedAt) {
         const elapsed = Date.now() - parsed.lockedAt;
         const remaining = 120000 - elapsed; // 2 minutes in ms
         if (remaining > 0) {
-          setSelectedPlayers(parsed.players);
           setIsLocked(true);
           setCooldownTime(Math.ceil(remaining / 1000));
-          setTotalScore(parsed.totalScore || 0);
         } else {
-          localStorage.removeItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+          // Cooldown expired but keep selections
+          setIsLocked(false);
         }
       }
     }
@@ -109,13 +121,20 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       const timer = setInterval(() => {
         setCooldownTime((prev) => {
           if (prev <= 1) {
-            // Accumulate scores to total before unlocking
-            const setTotal = Object.values(currentSetScores).reduce((sum, score) => sum + score, 0);
-            setTotalScore(prevTotal => prevTotal + setTotal);
+            // Just unlock - keep selections and accumulated scores
             setIsLocked(false);
-            setSelectedPlayers([]);
-            setCurrentSetScores({});
-            localStorage.removeItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+            // Update localStorage to remove lock timestamp but keep selections
+            const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+            if (savedState) {
+              const parsed = JSON.parse(savedState);
+              const newState = {
+                players: parsed.players,
+                totalScore: totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0),
+                lockedAt: null
+              };
+              localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(newState));
+              setTotalScore(newState.totalScore);
+            }
             return 0;
           }
           return prev - 1;
@@ -123,7 +142,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [cooldownTime, homeTeamId, awayTeamId, currentSetScores]);
+  }, [cooldownTime, homeTeamId, awayTeamId, currentSetScores, totalScore]);
 
   // Fetch rosters
   useEffect(() => {
@@ -158,21 +177,53 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   const handlePlayerSelect = (player: Athlete) => {
     if (isLocked) return;
 
-    const isSelected = selectedPlayers.some((p) => p.id === player.id);
-    if (isSelected) {
-      setSelectedPlayers(selectedPlayers.filter((p) => p.id !== player.id));
-    } else if (selectedPlayers.length < 3) {
-      setSelectedPlayers([...selectedPlayers, player]);
+    // Normalize headshot to string URL for storage and add team info
+    const isHome = homeRoster.some(p => p.id === player.id);
+    const normalizedPlayer = {
+      ...player,
+      headshot: typeof player.headshot === 'object' && player.headshot?.href 
+        ? player.headshot.href 
+        : player.headshot,
+      team: {
+        id: isHome ? homeTeamId : awayTeamId,
+        logo: isHome ? homeTeamLogo : awayTeamLogo
+      }
+    };
+
+    const isInNew = newPicks.some((p) => p.id === player.id);
+    let updatedNewPicks;
+    
+    if (isInNew) {
+      // Deselect from new picks
+      updatedNewPicks = newPicks.filter((p) => p.id !== player.id);
+    } else if (newPicks.length < 3) {
+      // Add to new picks
+      updatedNewPicks = [...newPicks, normalizedPlayer];
+    } else {
+      // Replace oldest pick
+      updatedNewPicks = [...newPicks.slice(1), normalizedPlayer];
     }
+    
+    setNewPicks(updatedNewPicks);
   };
 
   const handleLockIn = () => {
-    if (selectedPlayers.length === 3) {
+    if (newPicks.length === 3) {
+      // Normalize all headshots to strings before saving
+      const normalizedPicks = newPicks.map(player => ({
+        ...player,
+        headshot: typeof player.headshot === 'object' && player.headshot?.href
+          ? player.headshot.href
+          : player.headshot
+      }));
+      
+      setSelectedPlayers(normalizedPicks);
+      setNewPicks([]);
       setIsLocked(true);
       setCooldownTime(120); // 2 minutes
       setCurrentSetScores({}); // Reset current set scores
       const state = {
-        players: selectedPlayers,
+        players: normalizedPicks,
         lockedAt: Date.now(),
         totalScore: totalScore
       };
@@ -200,22 +251,55 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
   return (
     <div>
-      {/* Header Button */}
-      <button
-        onClick={onToggle}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-[#faafe8]/5 transition-colors"
-      >
-        <h3 className="text-[#faafe8] font-bold text-xl flex items-center gap-2">
-          <FaFootballBall />
-          Player Pick
-        </h3>
-        <span className={`text-[#faafe8] transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-          ▼
-        </span>
-      </button>
+
 
       {/* Content */}
       <div className="px-6">
+        {/* Minimalistic Score List - Vertical table format */}
+        {!isLocked && selectedPlayers.length > 0 && (
+          <div className="bg-[#181a23]/50 rounded-lg p-3 mb-4 border border-[#00ffe7]/20">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[#00ffe7] text-xs font-bold">SELECTED PICKS</span>
+              <span className="text-[#b0b7bf] text-[10px]">Total: {totalScore} pts</span>
+            </div>
+            <div className="space-y-1">
+              {selectedPlayers.map((player, idx) => {
+                const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+                // Find team info
+                const isHome = homeRoster.some(p => p.id === player.id);
+                const teamLogo = isHome ? homeTeamLogo : awayTeamLogo;
+                
+                return (
+                  <div key={player.id} className="flex items-center gap-2 bg-black/30 rounded p-1.5">
+                    <div className="w-4 h-4 rounded-full bg-[#00ffe7] text-black text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                      {idx + 1}
+                    </div>
+                    {headshotUrl && (
+                      <img
+                        src={headshotUrl}
+                        alt={player.displayName}
+                        className="w-6 h-6 rounded-full border border-[#00ffe7]/50 flex-shrink-0"
+                      />
+                    )}
+                    {teamLogo && (
+                      <img src={teamLogo} alt="" className="w-4 h-4 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <span className="text-white text-[10px] font-bold truncate block">{player.shortName}</span>
+                    </div>
+                    <div className="text-[#b0b7bf] text-[9px] w-8 text-center flex-shrink-0">
+                      {player.position.abbreviation}
+                    </div>
+                    <div className="text-[#00ffe7] text-[10px] font-bold w-10 text-right flex-shrink-0">
+                      {currentSetScores[player.id] || 0} pts
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
         {/* Selected Players Display - Always show when locked, otherwise only when expanded */}
         {isLocked && (
           <div className="bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-6 border border-[#00ffe7]/30 mb-6">
@@ -236,31 +320,33 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {selectedPlayers.map((player, idx) => (
-                <div
-                  key={player.id}
-                  className="bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 relative"
-                >
-                  <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center">
-                    {idx + 1}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {player.headshot?.href ? (
-                      <img
-                        src={player.headshot.href}
-                        alt={player.displayName}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display = 'none';
-                          const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                          if (fallback) fallback.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div 
-                      className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
-                      style={{ display: player.headshot?.href ? 'none' : 'flex' }}
-                    >
+              {selectedPlayers.map((player, idx) => {
+                const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+                return (
+                  <div
+                    key={player.id}
+                    className="bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 relative"
+                  >
+                    <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center">
+                      {idx + 1}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {headshotUrl ? (
+                        <img
+                          src={headshotUrl}
+                          alt={player.displayName}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                            const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
+                        style={{ display: headshotUrl ? 'none' : 'flex' }}
+                      >
                       <FaUsers className="text-[#00ffe7]" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -275,7 +361,8 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                     </div>
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
           </div>
         )}
@@ -283,67 +370,122 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
         {/* Selection Interface - Only show when expanded */}
         {isExpanded && !isLocked && (
           <div className="space-y-6">
-            {/* Selected Players Display */}
+            {/* Current vs New Picks Display */}
             <div className="bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-6 border border-[#00ffe7]/30">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
-                    <FaUnlock className="text-red-500 text-sm" />
-                  </div>
-                  <div>
-                    <h4 className="text-white font-bold text-lg">Your Picks ({selectedPlayers.length}/3)</h4>
-                    <div className="text-sm text-gray-400">Total Score: <span className="text-[#00ffe7] font-bold">{totalScore}</span></div>
-                  </div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
+                  <FaUnlock className="text-red-500 text-sm" />
+                </div>
+                <div>
+                  <h4 className="text-white font-bold text-lg">Your Picks ({newPicks.length}/3)</h4>
                 </div>
               </div>
 
-              {selectedPlayers.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  {selectedPlayers.map((player, idx) => (
-                    <div
-                      key={player.id}
-                      className="bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 relative"
-                    >
-                      <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center">
-                        {idx + 1}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {player.headshot?.href ? (
-                          <img
-                            src={player.headshot.href}
-                            alt={player.displayName}
-                            className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50"
-                            onError={(e) => {
-                              (e.currentTarget as HTMLImageElement).style.display = 'none';
-                              const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div 
-                          className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
-                          style={{ display: player.headshot?.href ? 'none' : 'flex' }}
-                        >
-                          <FaUsers className="text-[#00ffe7]" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
-                          <div className="text-[#00ffe7] text-xs">
-                            {player.position.abbreviation} {player.jersey && `#${player.jersey}`}
+              {selectedPlayers.length > 0 || newPicks.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Current Picks Column */}
+                  <div>
+                    <div className="text-[#b0b7bf] text-xs mb-2 font-bold">CURRENT</div>
+                    <div className="space-y-2">
+                      {selectedPlayers.length > 0 ? selectedPlayers.map((player, idx) => {
+                        const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+                        return (
+                          <div
+                            key={player.id}
+                            className="bg-[#181a23]/90 rounded-lg p-3 border border-[#00ffe7]/30 flex items-center gap-2"
+                          >
+                            <div className="w-5 h-5 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
+                              {idx + 1}
+                            </div>
+                            {headshotUrl ? (
+                              <img
+                                src={headshotUrl}
+                                alt={player.displayName}
+                                className="w-10 h-10 rounded-full object-cover border-2 border-[#00ffe7]/50"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                  const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div 
+                              className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
+                              style={{ display: headshotUrl ? 'none' : 'flex' }}
+                            >
+                              <FaUsers className="text-[#00ffe7] text-sm" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
+                              <div className="text-[#00ffe7] text-[10px]">{player.position.abbreviation}</div>
+                            </div>
                           </div>
+                        );
+                      }) : (
+                        <div className="bg-[#181a23]/50 rounded-lg p-8 border border-dashed border-[#00ffe7]/20 text-center">
+                          <p className="text-gray-500 text-xs">No picks yet</p>
                         </div>
-                      </div>
+                      )}
                     </div>
-                  ))}
-                  {/* Empty slots */}
-                  {[...Array(3 - selectedPlayers.length)].map((_, idx) => (
-                    <div
-                      key={`empty-${idx}`}
-                      className="bg-[#181a23]/50 rounded-lg p-4 border border-dashed border-[#00ffe7]/20 flex items-center justify-center"
-                    >
-                      <span className="text-gray-500 text-sm">Select a player</span>
+                  </div>
+
+                  {/* Arrow */}
+                  {selectedPlayers.length > 0 && newPicks.length > 0 && (
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                      <FaArrowRight className="text-[#00ffe7] text-2xl" />
                     </div>
-                  ))}
+                  )}
+
+                  {/* New Picks Column */}
+                  <div className="relative">
+                    <div className="text-[#faafe8] text-xs mb-2 font-bold">NEW</div>
+                    <div className="space-y-2">
+                      {newPicks.length > 0 ? newPicks.map((player, idx) => {
+                        const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+                        return (
+                          <div
+                            key={player.id}
+                            className="bg-[#181a23]/90 rounded-lg p-3 border border-[#faafe8]/30 flex items-center gap-2"
+                          >
+                            <div className="w-5 h-5 rounded-full bg-[#faafe8] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
+                              {idx + 1}
+                            </div>
+                            {headshotUrl ? (
+                              <img
+                                src={headshotUrl}
+                                alt={player.displayName}
+                                className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                  const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div 
+                              className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0"
+                              style={{ display: headshotUrl ? 'none' : 'flex' }}
+                            >
+                              <FaUsers className="text-[#faafe8] text-sm" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
+                              <div className="text-[#faafe8] text-[10px]">{player.position.abbreviation}</div>
+                            </div>
+                          </div>
+                        );
+                      }) : (
+                        [...Array(3)].map((_, idx) => (
+                          <div
+                            key={`empty-${idx}`}
+                            className="bg-[#181a23]/50 rounded-lg p-3 border border-dashed border-[#faafe8]/20 flex items-center justify-center h-[58px]"
+                          >
+                            <span className="text-gray-500 text-xs">Pick {idx + 1}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="bg-[#181a23]/50 rounded-lg p-8 border border-dashed border-[#00ffe7]/20 text-center mb-4">
@@ -355,9 +497,9 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
               {/* Lock In Button */}
               <button
                 onClick={handleLockIn}
-                disabled={selectedPlayers.length !== 3}
-                className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
-                  selectedPlayers.length === 3
+                disabled={newPicks.length !== 3}
+                className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all mt-4 ${
+                  newPicks.length === 3
                     ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] hover:bg-[#00ffe7]/30 cursor-pointer'
                     : 'bg-gray-700/20 border-2 border-gray-600 text-gray-500 cursor-not-allowed'
                 }`}
@@ -401,25 +543,21 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
               </h4>
               <div className="space-y-2">
                 {currentRoster.map((player) => {
-                  const isSelected = selectedPlayers.some((p) => p.id === player.id);
+                  const isSelected = newPicks.some((p) => p.id === player.id);
+                  const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
                   return (
                     <button
                       key={player.id}
                       onClick={() => handlePlayerSelect(player)}
-                      disabled={!isSelected && selectedPlayers.length >= 3}
                       className={`w-full p-3 rounded-lg flex items-center gap-3 transition-all ${
                         isSelected
                           ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7]'
                           : 'bg-[#23263a]/50 border-2 border-transparent hover:border-[#00ffe7]/30'
-                      } ${
-                        !isSelected && selectedPlayers.length >= 3
-                          ? 'opacity-50 cursor-not-allowed'
-                          : 'cursor-pointer'
-                      }`}
+                      } cursor-pointer`}
                     >
-                      {player.headshot?.href ? (
+                      {headshotUrl ? (
                         <img
-                          src={player.headshot.href}
+                          src={headshotUrl}
                           alt={player.displayName}
                           className="w-10 h-10 rounded-full object-cover border-2 border-[#00ffe7]/50"
                           onError={(e) => {
@@ -431,7 +569,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                       ) : null}
                       <div 
                         className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
-                        style={{ display: player.headshot?.href ? 'none' : 'flex' }}
+                        style={{ display: headshotUrl ? 'none' : 'flex' }}
                       >
                         <FaUsers className="text-[#00ffe7] text-sm" />
                       </div>

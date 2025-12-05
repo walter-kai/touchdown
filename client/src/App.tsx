@@ -20,6 +20,7 @@ import LandingPage from './pages/x/Landing';
 import TickerBar from './components/common/TickerBar';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useAuth } from './providers/AuthContext';
+import { PicksProvider } from './providers/PicksContext';
 import LoginModal from './components/common/LoginModal';
 
 // Main App component
@@ -78,7 +79,8 @@ const App: React.FC = () => {
   }, [location.pathname, isGamePage]);
 
   return (
-    <div className="min-h-screen overflow-x-hidden relative bg-black/90 bg-blend-overlay">
+    <PicksProvider>
+      <div className="min-h-screen overflow-x-hidden relative bg-black/90 bg-blend-overlay">
       
       {/* Content Container */}
       <div className="relative z-10 flex flex-col min-h-screen">
@@ -154,6 +156,7 @@ const App: React.FC = () => {
         
       </div>
     </div>
+    </PicksProvider>
   );
 };
 
