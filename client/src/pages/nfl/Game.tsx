@@ -782,22 +782,20 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                               </div>
                               <div className="flex gap-2 mb-3">
                                 {parsed.players.map((player: any) => (
-                                  player.headshot && (
-                                    <div key={player.id} className="flex-1 flex flex-col items-center bg-black/30 rounded p-2 relative">
-                                      <img
-                                        src={player.headshot}
-                                        alt={player.displayName}
-                                        className="w-12 h-12 rounded-full border-2 border-[#00ffe7]/30 mb-1"
-                                      />
-                                      <div className="text-white text-xs font-bold text-center truncate w-full">{player.shortName || player.displayName}</div>
-                                      <div className="text-[#b0b7bf] text-[10px]">{player.position.abbreviation}</div>
-                                      {isLocked && (
-                                        <div className="absolute -top-1 -right-1 bg-[#00ffe7] text-black text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                                          {playerScores[player.id] || 0}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )
+                                  <div key={player.id} className="flex-1 flex flex-col items-center bg-black/30 rounded p-2 relative">
+                                    <img
+                                      src={player.headshot}
+                                      alt={player.displayName}
+                                      className="w-12 h-12 rounded-full border-2 border-[#00ffe7]/30 mb-1"
+                                    />
+                                    <div className="text-white text-xs font-bold text-center truncate w-full">{player.shortName || player.displayName}</div>
+                                    <div className="text-[#b0b7bf] text-[10px]">{player.position.abbreviation}</div>
+                                    {isLocked && (
+                                      <div className="absolute -top-1 -right-1 bg-[#00ffe7] text-black text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                                        {playerScores[player.id] || 0}
+                                      </div>
+                                    )}
+                                  </div>
                                 ))}
                               </div>
                               {isLocked ? (
@@ -1329,17 +1327,15 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                           </div>
                           <div className="flex gap-2 mb-3">
                             {parsed.players.map((player: any) => (
-                              player.headshot && (
-                                <div key={player.id} className="flex-1 flex flex-col items-center bg-black/30 rounded p-2">
-                                  <img
-                                    src={player.headshot}
-                                    alt={player.displayName}
-                                    className="w-12 h-12 rounded-full border-2 border-[#00ffe7]/30 mb-1"
-                                  />
-                                  <div className="text-white text-xs font-bold text-center truncate w-full">{player.shortName || player.displayName}</div>
-                                  <div className="text-[#b0b7bf] text-[10px]">{player.position.abbreviation}</div>
-                                </div>
-                              )
+                              <div key={player.id} className="flex-1 flex flex-col items-center bg-black/30 rounded p-2">
+                                <img
+                                  src={player.headshot}
+                                  alt={player.displayName}
+                                  className="w-12 h-12 rounded-full border-2 border-[#00ffe7]/30 mb-1"
+                                />
+                                <div className="text-white text-xs font-bold text-center truncate w-full">{player.shortName || player.displayName}</div>
+                                <div className="text-[#b0b7bf] text-[10px]">{player.position.abbreviation}</div>
+                              </div>
                             ))}
                           </div>
                           {isLocked ? (

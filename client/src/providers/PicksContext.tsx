@@ -23,11 +23,13 @@ interface PicksState {
 
 interface PicksContextType {
   getPicks: (homeTeamId: string, awayTeamId: string) => PicksState | null;
+  getPicksWithHeadshots: (homeTeamId: string, awayTeamId: string) => PicksState | null;
   savePicks: (homeTeamId: string, awayTeamId: string, picks: PicksState) => void;
   clearPicks: (homeTeamId: string, awayTeamId: string) => void;
   updateScore: (homeTeamId: string, awayTeamId: string, totalScore: number) => void;
   isLocked: (homeTeamId: string, awayTeamId: string) => boolean;
   getCooldownTime: (homeTeamId: string, awayTeamId: string) => number;
+  getPlayers: (homeTeamId: string, awayTeamId: string) => Player[];
 }
 
 const PicksContext = createContext<PicksContextType | undefined>(undefined);
@@ -107,8 +109,39 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
   };
 
+  // Get picks with guaranteed headshots (only returns picks that have headshots)
+  const getPicksWithHeadshots = (homeTeamId: string, awayTeamId: string): PicksState | null => {
+    const picks = getPicks(homeTeamId, awayTeamId);
+    if (!picks) return null;
+    
+    // Filter out players without headshots
+    const playersWithHeadshots = picks.players.filter(player => player.headshot);
+    
+    if (playersWithHeadshots.length === 0) return null;
+    
+    return {
+      ...picks,
+      players: playersWithHeadshots
+    };
+  };
+
+  // Get just the players array
+  const getPlayers = (homeTeamId: string, awayTeamId: string): Player[] => {
+    const picks = getPicks(homeTeamId, awayTeamId);
+    return picks?.players || [];
+  };
+
   return (
-    <PicksContext.Provider value={{ getPicks, savePicks, clearPicks, updateScore, isLocked, getCooldownTime }}>
+    <PicksContext.Provider value={{ 
+      getPicks, 
+      getPicksWithHeadshots,
+      savePicks, 
+      clearPicks, 
+      updateScore, 
+      isLocked, 
+      getCooldownTime,
+      getPlayers
+    }}>
       {children}
     </PicksContext.Provider>
   );

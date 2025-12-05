@@ -177,18 +177,43 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   const handlePlayerSelect = (player: Athlete) => {
     if (isLocked) return;
 
-    // Normalize headshot to string URL for storage and add team info
+    console.log('Raw player object:', player);
+    console.log('Player headshot type:', typeof player.headshot);
+    console.log('Player headshot value:', player.headshot);
+
+    // Get the actual headshot URL - ESPN API provides it in player.headshot.href
     const isHome = homeRoster.some(p => p.id === player.id);
-    const normalizedPlayer = {
-      ...player,
-      headshot: typeof player.headshot === 'object' && player.headshot?.href 
-        ? player.headshot.href 
-        : player.headshot,
+    let headshotUrl: string | undefined = undefined;
+    
+    // Check if headshot exists and extract the URL
+    if (player.headshot) {
+      if (typeof player.headshot === 'object' && 'href' in player.headshot) {
+        headshotUrl = player.headshot.href;
+        console.log('Extracted from object:', headshotUrl);
+      } else if (typeof player.headshot === 'string') {
+        headshotUrl = player.headshot;
+        console.log('Already string:', headshotUrl);
+      }
+    }
+    
+    console.log('Final headshot URL to save:', headshotUrl);
+    
+    const normalizedPlayer: any = {
+      id: player.id,
+      displayName: player.displayName,
+      shortName: player.shortName,
+      position: {
+        abbreviation: player.position.abbreviation
+      },
+      jersey: player.jersey,
+      headshot: headshotUrl, // This is now guaranteed to be a string URL or undefined
       team: {
         id: isHome ? homeTeamId : awayTeamId,
         logo: isHome ? homeTeamLogo : awayTeamLogo
       }
     };
+
+    console.log('Normalized player to add:', normalizedPlayer);
 
     const isInNew = newPicks.some((p) => p.id === player.id);
     let updatedNewPicks;
@@ -209,25 +234,21 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
   const handleLockIn = () => {
     if (newPicks.length === 3) {
-      // Normalize all headshots to strings before saving
-      const normalizedPicks = newPicks.map(player => ({
-        ...player,
-        headshot: typeof player.headshot === 'object' && player.headshot?.href
-          ? player.headshot.href
-          : player.headshot
-      }));
+      // Just use the picks as-is, headshot URLs are already extracted
+      console.log('Locking in picks:', newPicks);
       
-      setSelectedPlayers(normalizedPicks);
+      setSelectedPlayers(newPicks);
       setNewPicks([]);
       setIsLocked(true);
       setCooldownTime(120); // 2 minutes
       setCurrentSetScores({}); // Reset current set scores
       const state = {
-        players: normalizedPicks,
+        players: newPicks,
         lockedAt: Date.now(),
         totalScore: totalScore
       };
       localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(state));
+      console.log('Saved to localStorage:', state);
     }
   };
 
