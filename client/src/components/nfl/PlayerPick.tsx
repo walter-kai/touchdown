@@ -1,6 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight } from 'react-icons/fa';
+import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus } from 'react-icons/fa';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend, getEmptyImage } from 'react-dnd-html5-backend';
+import { TouchBackend } from 'react-dnd-touch-backend';
+import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
+import { usePreview } from 'react-dnd-preview';
+
+// Multi-backend configuration for both desktop and mobile
+const HTML5toTouch = {
+  backends: [
+    {
+      id: 'html5',
+      backend: HTML5Backend,
+      transition: MouseTransition,
+    },
+    {
+      id: 'touch',
+      backend: TouchBackend,
+      options: { enableMouseEvents: true },
+      preview: true,
+      transition: TouchTransition,
+    },
+  ],
+};
 
 interface Athlete {
   id: string;
@@ -41,6 +64,166 @@ interface PlayerPickProps {
   }>;
 }
 
+const ItemTypes = {
+  PLAYER: 'player',
+};
+
+interface DraggablePlayerCardProps {
+  player: Athlete;
+  index: number;
+  movePlayer: (dragIndex: number, hoverIndex: number) => void;
+}
+
+const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index, movePlayer }) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: ItemTypes.PLAYER,
+    item: { index, player },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const [, drop] = useDrop({
+    accept: ItemTypes.PLAYER,
+    hover: (item: { index: number }) => {
+      if (item.index !== index) {
+        movePlayer(item.index, index);
+        item.index = index;
+      }
+    },
+  });
+
+  const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+
+  return (
+    <div
+      ref={(node) => drag(drop(node))}
+      className={`bg-[#181a23]/90 rounded-lg p-3 border border-[#faafe8]/30 flex items-center gap-2 cursor-move transition-all duration-200 ${
+        isDragging ? 'opacity-30' : 'hover:scale-105 hover:border-[#faafe8]/60'
+      }`}
+      style={{ minHeight: '58px' }}
+    >
+      <div className="w-5 h-5 rounded-full bg-[#faafe8] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
+        {index + 1}
+      </div>
+      {headshotUrl ? (
+        <img
+          src={headshotUrl}
+          alt={player.displayName}
+          className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).style.display = 'none';
+            const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
+            if (fallback) fallback.style.display = 'flex';
+          }}
+        />
+      ) : null}
+      <div 
+        className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0"
+        style={{ display: headshotUrl ? 'none' : 'flex' }}
+      >
+        <FaUsers className="text-[#faafe8] text-sm" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
+        <div className="text-[#faafe8] text-[10px]">{player.position.abbreviation}</div>
+      </div>
+    </div>
+  );
+};
+
+interface EmptySlotProps {
+  index: number;
+  movePlayer: (dragIndex: number, hoverIndex: number) => void;
+}
+
+const EmptySlot: React.FC<EmptySlotProps> = ({ index, movePlayer }) => {
+  const [{ isOver }, drop] = useDrop({
+    accept: ItemTypes.PLAYER,
+    drop: (item: { index: number }) => {
+      movePlayer(item.index, index);
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+    }),
+  });
+
+  return (
+    <div
+      ref={drop}
+      className={`bg-[#181a23]/50 rounded-lg p-3 border border-dashed flex items-center gap-2 transition-all duration-200 ${
+        isOver ? 'border-[#faafe8] bg-[#faafe8]/20 scale-105 shadow-lg shadow-[#faafe8]/30' : 'border-[#faafe8]/20'
+      }`}
+      style={{ minHeight: '58px' }}
+    >
+      <div className={`w-5 h-5 rounded-full text-white font-bold text-xs flex items-center justify-center flex-shrink-0 transition-colors ${
+        isOver ? 'bg-[#faafe8]' : 'bg-[#faafe8]/30'
+      }`}>
+        {index + 1}
+      </div>
+      <div className={`w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 transition-all ${
+        isOver ? 'bg-[#faafe8]/30 border-[#faafe8]' : 'bg-[#23263a]/50 border-[#faafe8]/20'
+      }`}>
+        <FaPlus className={`text-sm transition-colors ${
+          isOver ? 'text-[#faafe8]' : 'text-[#faafe8]/40'
+        }`} />
+      </div>
+      <div className="flex-1">
+        <span className={`text-xs transition-colors ${
+          isOver ? 'text-[#faafe8]' : 'text-[#faafe8]/40'
+        }`}>Drag here</span>
+      </div>
+    </div>
+  );
+};
+
+// Custom drag preview component
+const MyPreview = () => {
+  const preview = usePreview<{ player: Athlete; index: number }>();
+  if (!preview.display) {
+    return null;
+  }
+  
+  const { item, style } = preview;
+  const headshotUrl = typeof item.player.headshot === 'string' ? item.player.headshot : item.player.headshot?.href;
+  
+  return (
+    <div 
+      style={{
+        ...style,
+        position: 'fixed',
+        pointerEvents: 'none',
+        zIndex: 100,
+        left: style.x,
+        top: style.y,
+        transform: 'translate(-50%, -50%)',
+      }} 
+      className="cursor-grabbing"
+    >
+      <div className="bg-[#181a23] rounded-lg p-3 border-2 border-[#faafe8] flex items-center gap-2 shadow-2xl shadow-[#faafe8]/50" style={{ minHeight: '58px', minWidth: '200px' }}>
+        <div className="w-5 h-5 rounded-full bg-[#faafe8] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
+          {item.index + 1}
+        </div>
+        {headshotUrl ? (
+          <img
+            src={headshotUrl}
+            alt={item.player.displayName}
+            className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0">
+            <FaUsers className="text-[#faafe8] text-sm" />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="text-white font-bold text-xs truncate">{item.player.shortName}</div>
+          <div className="text-[#faafe8] text-[10px]">{item.player.position.abbreviation}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const PlayerPick: React.FC<PlayerPickProps> = ({
   homeTeamId,
   awayTeamId,
@@ -78,7 +261,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       // Check if still in cooldown period
       if (parsed.lockedAt) {
         const elapsed = Date.now() - parsed.lockedAt;
-        const remaining = 120000 - elapsed; // 2 minutes in ms
+        const remaining = 5000 - elapsed; // 5 seconds in ms
         if (remaining > 0) {
           setIsLocked(true);
           setCooldownTime(Math.ceil(remaining / 1000));
@@ -215,13 +398,21 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
     console.log('Normalized player to add:', normalizedPlayer);
 
-    const isInNew = newPicks.some((p) => p.id === player.id);
+    // Check if player is already in current picks or new picks
+    const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
+    const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
+    
+    // Prevent duplicates - don't allow selection if already in either current or new
+    if (isInCurrent && !isInNew) {
+      return; // Player already in current picks, can't select
+    }
+    
     let updatedNewPicks;
     
     if (isInNew) {
       // Deselect from new picks
-      updatedNewPicks = newPicks.filter((p) => p.id !== player.id);
-    } else if (newPicks.length < 5) {
+      updatedNewPicks = newPicks.filter((p) => p && p.id !== player.id);
+    } else if (newPicks.filter(p => p).length < 5) {
       // Add to new picks
       updatedNewPicks = [...newPicks, normalizedPlayer];
     } else {
@@ -232,18 +423,38 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     setNewPicks(updatedNewPicks);
   };
 
+  const movePlayer = (dragIndex: number, hoverIndex: number) => {
+    if (dragIndex === hoverIndex) return;
+    
+    const updatedPicks = [...newPicks];
+    const draggedPlayer = updatedPicks[dragIndex];
+    const targetPlayer = updatedPicks[hoverIndex];
+    
+    // Swap: put dragged player in hover position, target player (if any) in drag position
+    updatedPicks[hoverIndex] = draggedPlayer;
+    updatedPicks[dragIndex] = targetPlayer;
+    
+    setNewPicks(updatedPicks);
+  };
+
   const handleLockIn = () => {
-    if (newPicks.length === 5) {
-      // Just use the picks as-is, headshot URLs are already extracted
-      console.log('Locking in picks:', newPicks);
+    // Create new array by swapping: take NEW pick if exists, otherwise keep CURRENT pick
+    const swappedPicks = [...Array(5)].map((_, idx) => {
+      const newPick = newPicks[idx];
+      const currentPick = selectedPlayers[idx];
+      return newPick || currentPick; // Use new if exists, otherwise keep current
+    }).filter(p => p); // Remove any undefined slots
+    
+    if (swappedPicks.length > 0) {
+      console.log('Locking in picks:', swappedPicks);
       
-      setSelectedPlayers(newPicks);
+      setSelectedPlayers(swappedPicks);
       setNewPicks([]);
       setIsLocked(true);
       setCooldownTime(120); // 2 minutes
       setCurrentSetScores({}); // Reset current set scores
       const state = {
-        players: newPicks,
+        players: swappedPicks,
         lockedAt: Date.now(),
         totalScore: totalScore
       };
@@ -271,11 +482,13 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   }
 
   return (
-    <div>
+    <DndProvider backend={MultiBackend} options={HTML5toTouch}>
+      <MyPreview />
+      <div>
 
 
       {/* Content */}
-      <div className="px-6">
+      <div className="">
         {/* Minimalistic Score List - Vertical table format */}
         {!isLocked && selectedPlayers.length > 0 && (
           <div className="bg-[#181a23]/50 rounded-lg p-3 mb-4 border border-[#00ffe7]/20">
@@ -398,11 +611,11 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                   <FaUnlock className="text-red-500 text-sm" />
                 </div>
                 <div>
-                  <h4 className="text-white font-bold text-lg">Your Picks ({newPicks.length}/3)</h4>
+                  <h4 className="text-white font-bold text-lg">Your Picks ({newPicks.filter(p => p).length}/5)</h4>
                 </div>
               </div>
 
-              {selectedPlayers.length > 0 || newPicks.length > 0 ? (
+              {selectedPlayers.length > 0 || newPicks.filter(p => p).length > 0 ? (
                 <div className="grid grid-cols-2 gap-4">
                   {/* Current Picks Column */}
                   <div>
@@ -451,7 +664,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                   </div>
 
                   {/* Arrow */}
-                  {selectedPlayers.length > 0 && newPicks.length > 0 && (
+                  {selectedPlayers.length > 0 && newPicks.filter(p => p).length > 0 && (
                     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
                       <FaArrowRight className="text-[#00ffe7] text-2xl" />
                     </div>
@@ -461,72 +674,36 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                   <div className="relative">
                     <div className="text-[#faafe8] text-xs mb-2 font-bold">NEW</div>
                     <div className="space-y-2">
-                      {newPicks.length > 0 ? newPicks.map((player, idx) => {
-                        const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
-                        return (
-                          <div
-                            key={player.id}
-                            className="bg-[#181a23]/90 rounded-lg p-3 border border-[#faafe8]/30 flex items-center gap-2"
-                          >
-                            <div className="w-5 h-5 rounded-full bg-[#faafe8] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
-                              {idx + 1}
-                            </div>
-                            {headshotUrl ? (
-                              <img
-                                src={headshotUrl}
-                                alt={player.displayName}
-                                className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50"
-                                onError={(e) => {
-                                  (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                  const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                                  if (fallback) fallback.style.display = 'flex';
-                                }}
-                              />
-                            ) : null}
-                            <div 
-                              className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0"
-                              style={{ display: headshotUrl ? 'none' : 'flex' }}
-                            >
-                              <FaUsers className="text-[#faafe8] text-sm" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
-                              <div className="text-[#faafe8] text-[10px]">{player.position.abbreviation}</div>
-                            </div>
-                          </div>
-                        );
-                      }) : (
-                        [...Array(3)].map((_, idx) => (
-                          <div
-                            key={`empty-${idx}`}
-                            className="bg-[#181a23]/50 rounded-lg p-3 border border-dashed border-[#faafe8]/20 flex items-center justify-center h-[58px]"
-                          >
-                            <span className="text-gray-500 text-xs">Pick {idx + 1}</span>
-                          </div>
-                        ))
-                      )}
+                      {[...Array(5)].map((_, idx) => {
+                        const player = newPicks[idx];
+                        if (player) {
+                          return <DraggablePlayerCard key={player.id} player={player} index={idx} movePlayer={movePlayer} />;
+                        } else {
+                          return <EmptySlot key={`empty-${idx}`} index={idx} movePlayer={movePlayer} />;
+                        }
+                      })}
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="bg-[#181a23]/50 rounded-lg p-8 border border-dashed border-[#00ffe7]/20 text-center mb-4">
                   <FaUsers className="text-gray-500 text-4xl mx-auto mb-2" />
-                  <p className="text-gray-400 text-sm">Select 3 players to continue</p>
+                  <p className="text-gray-400 text-sm">Select up to 5 players</p>
                 </div>
               )}
 
               {/* Swap Button */}
               <button
                 onClick={handleLockIn}
-                disabled={newPicks.length !== 5}
+                disabled={newPicks.filter(p => p).length === 0}
                 className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all mt-4 ${
-                  newPicks.length === 5
+                  newPicks.filter(p => p).length > 0
                     ? 'btn-pink cursor-pointer'
                     : 'bg-gray-700/20 border-2 border-gray-600 text-gray-500 cursor-not-allowed'
                 }`}
               >
                 <FaUnlock />
-                Swap
+                Lock In {newPicks.filter(p => p).length > 0 ? `(${newPicks.filter(p => p).length})` : ''}
               </button>
             </div>
 
@@ -562,56 +739,129 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                 {currentTeamLogo && <img src={currentTeamLogo} alt="" className="w-6 h-6" />}
                 {currentTeamInfo.name} Roster
               </h4>
-              <div className="space-y-2">
-                {currentRoster.map((player) => {
-                  const isSelected = newPicks.some((p) => p.id === player.id);
-                  const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
-                  return (
-                    <button
-                      key={player.id}
-                      onClick={() => handlePlayerSelect(player)}
-                      className={`w-full p-3 rounded-lg flex items-center gap-3 transition-all ${
-                        isSelected
-                          ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7]'
-                          : 'bg-[#23263a]/50 border-2 border-transparent hover:border-[#00ffe7]/30'
-                      } cursor-pointer`}
-                    >
-                      {headshotUrl ? (
-                        <img
-                          src={headshotUrl}
-                          alt={player.displayName}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-[#00ffe7]/50"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = 'none';
-                            const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                            if (fallback) fallback.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div 
-                        className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
-                        style={{ display: headshotUrl ? 'none' : 'flex' }}
-                      >
-                        <FaUsers className="text-[#00ffe7] text-sm" />
-                      </div>
-                      <div className="flex-1 text-left min-w-0">
-                        <div className={`font-bold text-sm truncate ${isSelected ? 'text-[#00ffe7]' : 'text-white'}`}>
-                          {player.displayName}
-                        </div>
-                        <div className="text-gray-400 text-xs">
-                          {player.position.abbreviation} {player.jersey && `• #${player.jersey}`}
-                        </div>
-                      </div>
-                      {isSelected && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0" />}
-                    </button>
-                  );
-                })}
+              
+              {/* Split into Offense and Defense columns */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Offense Column */}
+                <div>
+                  <h5 className="text-[#faafe8] font-bold text-sm mb-2 sticky top-0 bg-[#181a23] pb-1">OFFENSE</h5>
+                  <div className="space-y-2">
+                    {currentRoster.filter(player => {
+                      const pos = player.position.abbreviation;
+                      return ['QB', 'RB', 'WR', 'TE', 'FB', 'OL', 'OT', 'OG', 'C'].includes(pos);
+                    }).map((player) => {
+                      const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
+                      const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
+                      const isDuplicate = isInCurrent && !isInNew;
+                      const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+                      return (
+                        <button
+                          key={player.id}
+                          onClick={() => handlePlayerSelect(player)}
+                          disabled={isDuplicate}
+                          className={`w-full p-2 rounded-lg flex items-center gap-2 transition-all text-left ${
+                            isDuplicate
+                              ? 'bg-gray-700/20 border-2 border-gray-600 opacity-50 cursor-not-allowed'
+                              : isInNew
+                              ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7]'
+                              : 'bg-[#23263a]/50 border-2 border-transparent hover:border-[#00ffe7]/30 cursor-pointer'
+                          }`}
+                        >
+                          {headshotUrl ? (
+                            <img
+                              src={headshotUrl}
+                              alt={player.displayName}
+                              className="w-8 h-8 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className="w-8 h-8 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
+                            style={{ display: headshotUrl ? 'none' : 'flex' }}
+                          >
+                            <FaUsers className="text-[#00ffe7] text-xs" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
+                            <div className="text-gray-400 text-[10px]">
+                              {player.position.abbreviation} {player.jersey && `• #${player.jersey}`}
+                            </div>
+                          </div>
+                          {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs" />}
+                          {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Defense Column */}
+                <div>
+                  <h5 className="text-[#faafe8] font-bold text-sm mb-2 sticky top-0 bg-[#181a23] pb-1">DEFENSE</h5>
+                  <div className="space-y-2">
+                    {currentRoster.filter(player => {
+                      const pos = player.position.abbreviation;
+                      return ['DE', 'DT', 'LB', 'CB', 'S', 'DB', 'DL', 'SAF', 'MLB', 'OLB'].includes(pos);
+                    }).map((player) => {
+                      const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
+                      const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
+                      const isDuplicate = isInCurrent && !isInNew;
+                      const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+                      return (
+                        <button
+                          key={player.id}
+                          onClick={() => handlePlayerSelect(player)}
+                          disabled={isDuplicate}
+                          className={`w-full p-2 rounded-lg flex items-center gap-2 transition-all text-left ${
+                            isDuplicate
+                              ? 'bg-gray-700/20 border-2 border-gray-600 opacity-50 cursor-not-allowed'
+                              : isInNew
+                              ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7]'
+                              : 'bg-[#23263a]/50 border-2 border-transparent hover:border-[#00ffe7]/30 cursor-pointer'
+                          }`}
+                        >
+                          {headshotUrl ? (
+                            <img
+                              src={headshotUrl}
+                              alt={player.displayName}
+                              className="w-8 h-8 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className="w-8 h-8 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
+                            style={{ display: headshotUrl ? 'none' : 'flex' }}
+                          >
+                            <FaUsers className="text-[#00ffe7] text-xs" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
+                            <div className="text-gray-400 text-[10px]">
+                              {player.position.abbreviation} {player.jersey && `• #${player.jersey}`}
+                            </div>
+                          </div>
+                          {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs" />}
+                          {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         )}
       </div>
     </div>
+    </DndProvider>
   );
 };
 

@@ -48,12 +48,11 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return picksCache[key];
     }
 
-    // Load from localStorage
+    // Load from localStorage (don't update cache during render)
     const savedState = localStorage.getItem(key);
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
-        setPicksCache(prev => ({ ...prev, [key]: parsed }));
         return parsed;
       } catch (e) {
         console.error('Error parsing picks:', e);

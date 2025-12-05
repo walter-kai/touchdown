@@ -125,6 +125,11 @@ export interface Competition {
   situation?: Situation;
   leaders?: Leader[];
   headlines?: Headline[];
+  tickets?: Array<{
+    summary: string;
+    numberAvailable: number;
+    links: Array<{ href: string }>;
+  }>;
 }
 
 export interface Venue {
