@@ -13,13 +13,14 @@ import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
 
 interface NFLGameProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick') => void;
   onPresetChange: (preset: 'scoreboard' | 'summary') => void;
+  onGameStatusChange?: (status: 'pre' | 'in' | 'post') => void;
   onRegisterTabClick?: (callback: (tab: string) => void) => void;
 }
 
-const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChange, onRegisterTabClick }) => {
+const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
@@ -48,30 +49,34 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
       team: { id: string };
     }>;
   }>>([]);
-  const [isProbabilityExpanded, setIsProbabilityExpanded] = useState(false);
-  const [isPlayerPickExpanded, setIsPlayerPickExpanded] = useState(false);
   const [gameCountdown, setGameCountdown] = useState<number>(0);
+  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   
   // Carousel container ref
   const carouselRef = useRef<HTMLDivElement>(null);
   
   // Get tab index for carousel position
   const getTabIndex = (tab: string) => {
-    const scoreboard = ['info', 'player', 'headtohead', 'plays'];
-    const summary = ['info', 'player', 'headtohead', 'team', 'plays', 'prediction'];
-    const tabs = navPreset === 'scoreboard' ? scoreboard : summary;
+    const isUpcoming = event?.competitions[0]?.status?.type?.state === 'pre' && navPreset === 'scoreboard';
+    const scoreboardTabs = isUpcoming
+      ? ['info', 'headtohead', 'odds']
+      : ['info', 'player', 'headtohead', 'pick', 'plays', 'odds'];
+    const summaryTabs = ['info', 'player', 'headtohead', 'team', 'plays', 'prediction'];
+    const tabs = navPreset === 'scoreboard' ? scoreboardTabs : summaryTabs;
     return tabs.indexOf(tab);
   };
   
   // Update carousel position when tab changes
   useEffect(() => {
-    if (carouselRef.current) {
+    if (carouselRef.current && event) {
       const index = getTabIndex(activeTab);
       if (index !== -1) {
         // Calculate the percentage to move based on the number of slides
-        // For scoreboard (4 slides): each slide is 100/4 = 25% of viewport
+        // For upcoming scoreboard (3 slides): each slide is 100/3 = 33.333% of viewport
+        // For live scoreboard (6 slides): each slide is 100/6 = 16.666% of viewport
         // For summary (6 slides): each slide is 100/6 = 16.666% of viewport
-        const totalSlides = navPreset === 'scoreboard' ? 4 : 6;
+        const isUpcoming = event.competitions[0]?.status?.type?.state === 'pre' && navPreset === 'scoreboard';
+        const totalSlides = isUpcoming ? 3 : 6;
         const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
         
@@ -79,7 +84,32 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [activeTab, navPreset]);
+  }, [activeTab, navPreset, event]);
+
+  // Rotate sentences for latest play display
+  useEffect(() => {
+    if (playLog.length === 0) return;
+    const latestPlay = playLog[0];
+    const sentences = latestPlay.text.split(/\.\s+/).filter(s => s.trim());
+    if (sentences.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setCurrentSentenceIndex(prev => (prev + 1) % sentences.length);
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, [playLog]);
+
+  // Notify parent of game status changes
+  useEffect(() => {
+    if (event && onGameStatusChange) {
+      const gameState = event.competitions[0]?.status?.type?.state;
+      if (gameState) {
+        console.log('Game status being sent to parent:', gameState);
+        onGameStatusChange(gameState as 'pre' | 'in' | 'post');
+      }
+    }
+  }, [event, onGameStatusChange]);
 
   useEffect(() => {
     const fetchGameData = async () => {
@@ -341,6 +371,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
   const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
   const awayTeam = competition.competitors.find(c => c.homeAway === 'away');
   const isGameInSession = competition.status.type.state === 'in';
+  const isGameUpcoming = competition.status.type.state === 'pre';
   
   // Get venue image from summary if available
   const venueImage = summary?.gameInfo?.venue?.images?.[0]?.href;
@@ -390,10 +421,10 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
           <div 
             ref={carouselRef}
             className="flex transition-transform duration-500 ease-in-out"
-            style={{ width: `${navPreset === 'scoreboard' ? 400 : 600}%` }}
+            style={{ width: navPreset === 'scoreboard' && isGameUpcoming ? '300%' : '600%' }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 space-y-6 py-6 overflow-y-auto max-h-screen" style={{ width: `${navPreset === 'scoreboard' ? 25 : 16.666}%` }}>
+            <div className="w-full flex-shrink-0 space-y-6 py-6 overflow-y-auto max-h-screen" style={{ width: navPreset === 'scoreboard' && isGameUpcoming ? '33.333%' : '16.666%' }}>
           {/* Box Score */}
           <div className="p-6 mb-6">
             <div className="text-center mb-4">
@@ -659,68 +690,6 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                       </div>
                     </div>
 
-                        {/* Live Win Probability */}
-                        <div className="mt-6">
-                          <div className="">
-                            <button
-                              onClick={() => setIsProbabilityExpanded(!isProbabilityExpanded)}
-                              className="w-full px-6 py-4 flex items-center justify-between hover:bg-[#00ffe7]/5 transition-colors"
-                            >
-                              <h3 className="text-[#00ffe7] font-bold text-xl flex items-center gap-2">
-                                <FaChartBar />
-                                Live Win Probability
-                              </h3>
-                              <span className={`text-[#00ffe7] transition-transform ${isProbabilityExpanded ? 'rotate-180' : ''}`}>
-                                ▼
-                              </span>
-                            </button>
-                            {isProbabilityExpanded && (
-                              <div className="pb-6">
-                                <ProbChart
-                                  gameId={gameId!}
-                                  competitionId={competition.id}
-                                  gameStatus={competition.status.type.state}
-                                  homeTeamInfo={{
-                                    name: homeTeam?.team.displayName || '',
-                                    logo: getTeamLogo(homeTeam),
-                                    color: homeTeam?.team.color || 'faafe8'
-                                  }}
-                                  awayTeamInfo={{
-                                    name: awayTeam?.team.displayName || '',
-                                    logo: getTeamLogo(awayTeam),
-                                    color: awayTeam?.team.color || '00ffe7'
-                                  }}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Player Pick */}
-                        <div className="mt-6">
-                          <div className="">
-                            {/* Always render PlayerPick component to check lock state */}
-                            <PlayerPick
-                              homeTeamId={homeTeam?.id || ''}
-                              awayTeamId={awayTeam?.id || ''}
-                              homeTeamInfo={{
-                                name: homeTeam?.team.displayName || '',
-                                logo: getTeamLogo(homeTeam),
-                                color: homeTeam?.team.color || 'faafe8'
-                              }}
-                              awayTeamInfo={{
-                                name: awayTeam?.team.displayName || '',
-                                logo: getTeamLogo(awayTeam),
-                                color: awayTeam?.team.color || '00ffe7'
-                              }}
-                              isExpanded={isPlayerPickExpanded}
-                              onToggle={() => setIsPlayerPickExpanded(!isPlayerPickExpanded)}
-                              playLog={playLog}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
                       {/* Current Possession Section */}
                       {playLog.length > 0 && playLog[0]?.possession && (
                         <div className="pt-6 mb-6">
@@ -755,9 +724,8 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                           </div>
                         </div>
                       )}
-
-
-                  </div>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -924,7 +892,8 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         </div>
 
             {/* Player Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: `${navPreset === 'scoreboard' ? 25 : 16.666}%` }}>
+            {!(navPreset === 'scoreboard' && isGameUpcoming) && (
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
               {navPreset === 'scoreboard' && event && (
                 <div className="space-y-4">
                   <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
@@ -1059,9 +1028,10 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                 </div>
               )}
             </div>
+            )}
 
             {/* Head-to-Head Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: `${navPreset === 'scoreboard' ? 25 : 16.666}%` }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: navPreset === 'scoreboard' && isGameUpcoming ? '33.333%' : '16.666%' }}>
               {homeTeam && awayTeam && navPreset === 'scoreboard' && (
                 <div>
                   <HeadToHead
@@ -1157,9 +1127,77 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
               )}
             </div>
 
+            {/* Pick Section - Scoreboard */}
+            {navPreset === 'scoreboard' && !isGameUpcoming && (
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
+                <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                  <FaTrophy />
+                  Player Pick
+                </h3>
+
+                {/* Latest Play Status - Rotating Sentences */}
+                {playLog.length > 0 && (() => {
+                  const latestPlay = playLog[0];
+                  const team = latestPlay.possession === homeTeam?.id ? homeTeam : awayTeam;
+                  const isHome = team?.id === homeTeam?.id;
+                  const sentences = latestPlay.text.split(/\.\s+/).filter(s => s.trim()).map(s => s.trim() + '.');
+
+                  return (
+                    <div className="mb-6">
+                      <div className="text-[#b0b7bf] text-xs mb-2 flex items-center gap-2">
+                        <FaFootballBall className="text-[#00ffe7]" />
+                        Latest Play
+                      </div>
+                      <div className={`bg-gradient-to-r ${isHome ? 'from-[#faafe8]/10' : 'from-[#00ffe7]/10'} rounded-lg p-3 border-l-2 ${isHome ? 'border-[#faafe8]' : 'border-[#00ffe7]'}`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <img src={team?.team.logo} alt="" className="w-5 h-5" />
+                          <span className={`text-xs font-bold ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
+                            Q{latestPlay.quarter} {latestPlay.clock}
+                          </span>
+                        </div>
+                        <p className="text-[#e0e7ef] text-xs min-h-[2.5rem] transition-opacity duration-300">
+                          {sentences[currentSentenceIndex % sentences.length]}
+                        </p>
+                        {sentences.length > 1 && (
+                          <div className="flex gap-1 mt-2">
+                            {sentences.map((_, idx) => (
+                              <div
+                                key={idx}
+                                className={`h-1 rounded-full transition-all ${
+                                  idx === (currentSentenceIndex % sentences.length) ? 'w-4 bg-[#00ffe7]' : 'w-1 bg-[#00ffe7]/30'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <PlayerPick
+                  homeTeamId={homeTeam?.id || ''}
+                  awayTeamId={awayTeam?.id || ''}
+                  homeTeamInfo={{
+                    name: homeTeam?.team.displayName || '',
+                    logo: getTeamLogo(homeTeam),
+                    color: homeTeam?.team.color || 'faafe8'
+                  }}
+                  awayTeamInfo={{
+                    name: awayTeam?.team.displayName || '',
+                    logo: getTeamLogo(awayTeam),
+                    color: awayTeam?.team.color || '00ffe7'
+                  }}
+                  isExpanded={true}
+                  onToggle={() => {}}
+                  playLog={playLog}
+                />
+              </div>
+            )}
+
             {/* Plays Section - Scoreboard */}
             {navPreset === 'scoreboard' && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '25%' }}>
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
                     <FaFootballBall />
@@ -1171,7 +1209,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                     </span>
                   )}
                 </div>
-                
+
                 {playLog.length > 0 ? (
                   <div className="relative">
                     <div className="space-y-6">
@@ -1287,6 +1325,31 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                 ) : (
                   <p className="text-[#b0b7bf] text-center text-sm py-4">No plays recorded yet. Plays will appear here as the game progresses.</p>
                 )}
+              </div>
+            )}
+
+            {/* Odds Section - Scoreboard */}
+            {navPreset === 'scoreboard' && (
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: navPreset === 'scoreboard' && isGameUpcoming ? '33.333%' : '16.666%' }}>
+                <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                  <FaChartBar />
+                  Live Win Probability
+                </h3>
+                <ProbChart
+                  gameId={gameId!}
+                  competitionId={competition.id}
+                  gameStatus={competition.status.type.state}
+                  homeTeamInfo={{
+                    name: homeTeam?.team.displayName || '',
+                    logo: getTeamLogo(homeTeam),
+                    color: homeTeam?.team.color || 'faafe8'
+                  }}
+                  awayTeamInfo={{
+                    name: awayTeam?.team.displayName || '',
+                    logo: getTeamLogo(awayTeam),
+                    color: awayTeam?.team.color || '00ffe7'
+                  }}
+                />
               </div>
             )}
 

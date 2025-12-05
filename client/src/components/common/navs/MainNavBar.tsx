@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall } from 'react-icons/fa';
 
 interface GameNavBarProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays') => void;
-  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays') => void; // Called when button is clicked
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick') => void;
+  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick') => void; // Called when button is clicked
   preset?: 'scoreboard' | 'summary' | 'team' | 'player'; // Determines which buttons to show
+  gameStatus?: 'pre' | 'in' | 'post'; // Game status to conditionally show tabs
 }
 
-const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabClick, preset = 'scoreboard' }) => {
+const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabClick, preset = 'scoreboard', gameStatus }) => {
   const navigate = useNavigate();
 
   // All available navigation items
@@ -20,22 +21,30 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
     { id: 'headtohead', label: 'Head to Head', icon: <FaExchangeAlt /> },
     { id: 'plays', label: 'Plays', icon: <FaFootballBall /> },
-    { id: 'prediction', label: 'Predictions', icon: <FaPercentage /> },
     { id: 'odds', label: 'Odds', icon: <FaChartLine /> },
+    { id: 'pick', label: 'Pick', icon: <FaTrophy /> },
+    { id: 'prediction', label: 'Predictions', icon: <FaPercentage /> },
     { id: 'schedule', label: preset === 'player' ? 'Game Log' : 'Schedule', icon: <FaCalendar /> },
     { id: 'news', label: 'News', icon: <FaNewspaper /> },
   ];
 
   // Preset configurations
   const presetConfig = {
-    scoreboard: ['back', 'info', 'player', 'headtohead', 'plays'],
+    scoreboard: ['back', 'info', 'player', 'headtohead', 'pick', 'plays', 'odds'],
     summary: ['back', 'info', 'player', 'headtohead', 'team', 'plays', 'prediction'],
     team: ['back', 'info', 'schedule', 'news'], // Team page shows back, info, schedule, news
     player: ['back', 'info', 'schedule', 'news'], // Player page shows back, overview, game log, news
   };
 
+  // For upcoming games, hide 'player', 'pick', and 'plays' tabs regardless of preset
+  const isUpcomingGame = gameStatus === 'pre';
+  const tabsToHide = isUpcomingGame ? ['player', 'pick', 'plays'] : [];
+  
+  console.log('MainNavBar - gameStatus:', gameStatus, 'preset:', preset, 'isUpcomingGame:', isUpcomingGame, 'tabsToHide:', tabsToHide);
+
   // Filter nav items based on preset and maintain the order from presetConfig
   const navItems = presetConfig[preset]
+    .filter(id => !tabsToHide.includes(id))
     .map(id => allNavItems.find(item => item.id === id))
     .filter((item): item is NonNullable<typeof item> => item !== undefined);
 
