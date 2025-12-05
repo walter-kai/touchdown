@@ -72,9 +72,10 @@ interface DraggablePlayerCardProps {
   player: Athlete;
   index: number;
   movePlayer: (dragIndex: number, hoverIndex: number) => void;
+  isAnimating?: boolean;
 }
 
-const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index, movePlayer }) => {
+const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index, movePlayer, isAnimating }) => {
   const [{ isDragging }, drag] = useDrag({
     type: ItemTypes.PLAYER,
     item: { index, player },
@@ -98,19 +99,24 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
   return (
     <div
       ref={(node) => drag(drop(node))}
-      className={`bg-[#181a23]/90 rounded-lg p-3 border border-[#faafe8]/30 flex items-center gap-2 cursor-move transition-all duration-200 ${
-        isDragging ? 'opacity-30' : 'hover:scale-105 hover:border-[#faafe8]/60'
+      className={`bg-[#181a23]/90 rounded-lg p-4 border border-[#faafe8]/30 flex items-center gap-4 h-[72px] transition-all duration-1000 ${
+        isDragging ? 'opacity-30' : isAnimating ? 'opacity-100' : 'hover:scale-105 hover:border-[#faafe8]/60'
       }`}
-      style={{ minHeight: '58px' }}
+      style={{ 
+        ...(isAnimating && { 
+          animation: `slideToLeft 1000ms ease-out forwards`,
+          animationDelay: `${index * 80}ms`
+        })
+      }}
     >
-      <div className="w-5 h-5 rounded-full bg-[#faafe8] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
+      <div className="w-6 h-6 rounded-full bg-[#faafe8] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
         {index + 1}
       </div>
       {headshotUrl ? (
         <img
           src={headshotUrl}
           alt={player.displayName}
-          className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0"
+          className="w-12 h-12 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).style.display = 'none';
             const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -119,14 +125,14 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
         />
       ) : null}
       <div 
-        className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0"
+        className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0"
         style={{ display: headshotUrl ? 'none' : 'flex' }}
       >
         <FaUsers className="text-[#faafe8] text-sm" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
-        <div className="text-[#faafe8] text-[10px]">{player.position.abbreviation}</div>
+        <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
+        <div className="text-[#faafe8] text-xs">{player.position.abbreviation}{player.jersey && ` • #${player.jersey}`}</div>
       </div>
     </div>
   );
@@ -151,25 +157,24 @@ const EmptySlot: React.FC<EmptySlotProps> = ({ index, movePlayer }) => {
   return (
     <div
       ref={drop}
-      className={`bg-[#181a23]/50 rounded-lg p-3 border border-dashed flex items-center gap-2 transition-all duration-200 ${
+      className={`bg-[#181a23]/50 rounded-lg p-4 border border-dashed flex items-center gap-4 h-[72px] transition-all duration-200 ${
         isOver ? 'border-[#faafe8] bg-[#faafe8]/20 scale-105 shadow-lg shadow-[#faafe8]/30' : 'border-[#faafe8]/20'
       }`}
-      style={{ minHeight: '58px' }}
     >
-      <div className={`w-5 h-5 rounded-full text-white font-bold text-xs flex items-center justify-center flex-shrink-0 transition-colors ${
+      <div className={`w-6 h-6 rounded-full text-white font-bold text-xs flex items-center justify-center flex-shrink-0 transition-colors ${
         isOver ? 'bg-[#faafe8]' : 'bg-[#faafe8]/30'
       }`}>
         {index + 1}
       </div>
-      <div className={`w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 transition-all ${
+      <div className={`w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 transition-all ${
         isOver ? 'bg-[#faafe8]/30 border-[#faafe8]' : 'bg-[#23263a]/50 border-[#faafe8]/20'
       }`}>
         <FaPlus className={`text-sm transition-colors ${
           isOver ? 'text-[#faafe8]' : 'text-[#faafe8]/40'
         }`} />
       </div>
-      <div className="flex-1">
-        <span className={`text-xs transition-colors ${
+      <div className="flex-1 min-w-0">
+        <span className={`text-sm transition-colors ${
           isOver ? 'text-[#faafe8]' : 'text-[#faafe8]/40'
         }`}>Drag here</span>
       </div>
@@ -245,6 +250,8 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   const [activeTeam, setActiveTeam] = useState<'home' | 'away'>('home');
   const [currentSetScores, setCurrentSetScores] = useState<Record<string, number>>({});
   const [totalScore, setTotalScore] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showStats, setShowStats] = useState(false);
 
   // Load saved state from localStorage
   useEffect(() => {
@@ -439,18 +446,37 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
   const handleLockIn = () => {
     // Create new array by swapping: take NEW pick if exists, otherwise keep CURRENT pick
-    const swappedPicks = [...Array(5)].map((_, idx) => {
-      const newPick = newPicks[idx];
-      const currentPick = selectedPlayers[idx];
-      return newPick || currentPick; // Use new if exists, otherwise keep current
-    }).filter(p => p); // Remove any undefined slots
+    // First, remove any current picks that are being replaced by new picks
+    const newPickIds = new Set(newPicks.filter(p => p).map(p => p.id));
+    const remainingCurrent = selectedPlayers.filter(p => !newPickIds.has(p.id));
+    
+    // Merge: new picks first, then fill with remaining current picks
+    const swappedPicks = [...newPicks.filter(p => p), ...remainingCurrent]
+      .slice(0, 5); // Enforce max 5 cards
     
     if (swappedPicks.length > 0) {
       console.log('Locking in picks:', swappedPicks);
       
-      setSelectedPlayers(swappedPicks);
-      setNewPicks([]);
-      setIsLocked(true);
+      // Start animation sequence
+      setIsAnimating(true);
+      
+      // Step 1: After slide animation completes (1000ms), swap the data
+      setTimeout(() => {
+        setSelectedPlayers(swappedPicks);
+        setNewPicks([]);
+        setIsLocked(true);
+      }, 1000);
+      
+      // Step 2: After grid collapses (1200ms), show stats
+      setTimeout(() => {
+        setShowStats(true);
+      }, 1400);
+      
+      // Step 3: End animation state after everything completes
+      setTimeout(() => {
+        setIsAnimating(false);
+      }, 2000);
+      
       setCooldownTime(120); // 2 minutes
       setCurrentSetScores({}); // Reset current set scores
       const state = {
@@ -489,8 +515,8 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
       {/* Content */}
       <div className="">
-        {/* Minimalistic Score List - Vertical table format */}
-        {!isLocked && selectedPlayers.length > 0 && (
+        {/* Minimalistic Score List - Vertical table format - Always show when there are selected players */}
+        {selectedPlayers.length > 0 && (
           <div className="bg-[#181a23]/50 rounded-lg p-3 mb-4 border border-[#00ffe7]/20">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[#00ffe7] text-xs font-bold">SELECTED PICKS</span>
@@ -533,109 +559,67 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
             </div>
           </div>
         )}
-        
-        {/* Selected Players Display - Always show when locked, otherwise only when expanded */}
-        {isLocked && (
-          <div className="bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-6 border border-[#00ffe7]/30 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center">
-                  <FaLock className="text-green-500 text-sm" />
-                </div>
-                <div>
-                  <h4 className="text-white font-bold text-lg">Your Picks (Locked)</h4>
-                  <div className="text-sm text-gray-400">Total Score: <span className="text-[#00ffe7] font-bold">{totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0)}</span></div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-yellow-400">
-                <FaClock />
-                <span className="text-sm font-mono">{formatTime(cooldownTime)}</span>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {selectedPlayers.map((player, idx) => {
-                const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
-                return (
-                  <div
-                    key={player.id}
-                    className="bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 relative"
-                  >
-                    <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center">
-                      {idx + 1}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {headshotUrl ? (
-                        <img
-                          src={headshotUrl}
-                          alt={player.displayName}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = 'none';
-                            const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                            if (fallback) fallback.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div 
-                        className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
-                        style={{ display: headshotUrl ? 'none' : 'flex' }}
-                      >
-                      <FaUsers className="text-[#00ffe7]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
-                      <div className="text-[#00ffe7] text-xs">
-                        {player.position.abbreviation} {player.jersey && `#${player.jersey}`}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-[#00ffe7]">{currentSetScores[player.id] || 0}</div>
-                      <div className="text-xs text-gray-400">pts</div>
-                    </div>
-                  </div>
-                </div>
-              );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Selection Interface - Only show when expanded */}
-        {isExpanded && !isLocked && (
+        {/* Selection Interface - Always show when expanded OR when locked */}
+        {(isExpanded || isLocked) && (
           <div className="space-y-6">
             {/* Current vs New Picks Display */}
             <div className="bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-6 border border-[#00ffe7]/30">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
-                  <FaUnlock className="text-red-500 text-sm" />
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${
+                    isLocked 
+                      ? 'bg-[#00ffe7]/20 border-[#00ffe7]' 
+                      : 'bg-red-500/20 border-red-500'
+                  }`}>
+                    {isLocked ? <FaLock className="text-[#00ffe7] text-sm" /> : <FaUnlock className="text-red-500 text-sm" />}
+                  </div>
+                  <div>
+                    <h4 className="text-white font-bold text-lg">
+                      {isLocked ? 'Selected Picks' : `Your Picks (${newPicks.filter(p => p).length}/5)`}
+                    </h4>
+                    {isLocked && (
+                      <p className="text-[#b0b7bf] text-xs">
+                        🔒 Locked - {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-white font-bold text-lg">Your Picks ({newPicks.filter(p => p).length}/5)</h4>
-                </div>
+                {isLocked && (
+                  <div className="text-right">
+                    <div className="text-[#00ffe7] text-3xl font-bold">{totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0)}</div>
+                    <div className="text-[#b0b7bf] text-xs">Total pts</div>
+                  </div>
+                )}
               </div>
 
               {selectedPlayers.length > 0 || newPicks.filter(p => p).length > 0 ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className={`grid ${isLocked && !isAnimating ? 'grid-cols-1' : 'grid-cols-2'} gap-4 transition-all duration-1000`}>
                   {/* Current Picks Column */}
                   <div>
-                    <div className="text-[#b0b7bf] text-xs mb-2 font-bold">CURRENT</div>
+                    {!isLocked && <div className="text-[#b0b7bf] text-xs mb-2 font-bold">CURRENT</div>}
                     <div className="space-y-2">
                       {selectedPlayers.length > 0 ? selectedPlayers.map((player, idx) => {
                         const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+                        const playerScore = currentSetScores[player.id] || 0;
+                        // Check if this current pick is being replaced by a new pick
+                        const isBeingReplaced = isAnimating && newPicks.filter(p => p).some(p => p && p.id !== player.id);
+                        
                         return (
                           <div
                             key={player.id}
-                            className="bg-[#181a23]/90 rounded-lg p-3 border border-[#00ffe7]/30 flex items-center gap-2"
+                            className={`bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] transition-all duration-1000 ${
+                              isBeingReplaced ? 'opacity-0 scale-95' : 'opacity-100'
+                            }`}
                           >
-                            <div className="w-5 h-5 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
+                            <div className="w-6 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
                               {idx + 1}
                             </div>
                             {headshotUrl ? (
                               <img
                                 src={headshotUrl}
                                 alt={player.displayName}
-                                className="w-10 h-10 rounded-full object-cover border-2 border-[#00ffe7]/50"
+                                className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50"
                                 onError={(e) => {
                                   (e.currentTarget as HTMLImageElement).style.display = 'none';
                                   const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -644,15 +628,55 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                               />
                             ) : null}
                             <div 
-                              className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
+                              className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
                               style={{ display: headshotUrl ? 'none' : 'flex' }}
                             >
                               <FaUsers className="text-[#00ffe7] text-sm" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
-                              <div className="text-[#00ffe7] text-[10px]">{player.position.abbreviation}</div>
+                            <div className="min-w-0">
+                              <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
+                              <div className="text-[#00ffe7] text-xs">
+                                {player.position.abbreviation}{player.jersey && ` • #${player.jersey}`}
+                              </div>
                             </div>
+                            
+                            {/* Stats - Only show when locked */}
+                            {isLocked && (
+                              <div 
+                                className={`flex items-center gap-4 ml-auto ${
+                                  showStats ? 'opacity-100' : 'opacity-0'
+                                }`} 
+                                style={{ 
+                                  animation: showStats ? 'fadeInStats 600ms ease-out forwards' : 'none',
+                                  animationDelay: `${idx * 100}ms`
+                                }}
+                              >
+                                <div className="text-center">
+                                  <div className="text-[#b0b7bf] text-[10px]">CAR</div>
+                                  <div className="text-white font-bold text-sm">0</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-[#b0b7bf] text-[10px]">YDS</div>
+                                  <div className="text-white font-bold text-sm">0</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-[#b0b7bf] text-[10px]">AVG</div>
+                                  <div className="text-white font-bold text-sm">0.0</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-[#b0b7bf] text-[10px]">TD</div>
+                                  <div className="text-white font-bold text-sm">0</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-[#b0b7bf] text-[10px]">LONG</div>
+                                  <div className="text-white font-bold text-sm">0</div>
+                                </div>
+                                <div className="text-center border-l-2 border-[#00ffe7]/30 pl-4">
+                                  <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
+                                  <div className="text-[#b0b7bf] text-[10px]">PTS</div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       }) : (
@@ -664,26 +688,30 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                   </div>
 
                   {/* Arrow */}
-                  {selectedPlayers.length > 0 && newPicks.filter(p => p).length > 0 && (
+                  {!isLocked && selectedPlayers.length > 0 && newPicks.filter(p => p).length > 0 && (
                     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
                       <FaArrowRight className="text-[#00ffe7] text-2xl" />
                     </div>
                   )}
 
-                  {/* New Picks Column */}
-                  <div className="relative">
+                  {/* New Picks Column - Hide when locked (but keep visible during animation) */}
+                  {(!isLocked || isAnimating) && (
+                    <div className={`relative transition-all duration-1000 ${
+                      isAnimating ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                    }`}>
                     <div className="text-[#faafe8] text-xs mb-2 font-bold">NEW</div>
                     <div className="space-y-2">
                       {[...Array(5)].map((_, idx) => {
                         const player = newPicks[idx];
                         if (player) {
-                          return <DraggablePlayerCard key={player.id} player={player} index={idx} movePlayer={movePlayer} />;
+                          return <DraggablePlayerCard key={player.id} player={player} index={idx} movePlayer={movePlayer} isAnimating={isAnimating} />;
                         } else {
                           return <EmptySlot key={`empty-${idx}`} index={idx} movePlayer={movePlayer} />;
                         }
                       })}
                     </div>
-                  </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="bg-[#181a23]/50 rounded-lg p-8 border border-dashed border-[#00ffe7]/20 text-center mb-4">
@@ -692,21 +720,26 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                 </div>
               )}
 
-              {/* Swap Button */}
-              <button
-                onClick={handleLockIn}
-                disabled={newPicks.filter(p => p).length === 0}
-                className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all mt-4 ${
-                  newPicks.filter(p => p).length > 0
-                    ? 'btn-pink cursor-pointer'
-                    : 'bg-gray-700/20 border-2 border-gray-600 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                <FaUnlock />
-                Lock In {newPicks.filter(p => p).length > 0 ? `(${newPicks.filter(p => p).length})` : ''}
-              </button>
+              {/* Lock In Button - Hide when locked */}
+              {!isLocked && (
+                <button
+                  onClick={handleLockIn}
+                  disabled={newPicks.filter(p => p).length === 0}
+                  className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all mt-4 ${
+                    newPicks.filter(p => p).length > 0
+                      ? 'btn-pink cursor-pointer'
+                      : 'bg-gray-700/20 border-2 border-gray-600 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  <FaUnlock />
+                  Lock In {newPicks.filter(p => p).length > 0 ? `(${newPicks.filter(p => p).length})` : ''}
+                </button>
+              )}
             </div>
 
+            {/* Team Selector & Roster - Hide when locked */}
+            {!isLocked && (
+              <>
             {/* Team Selector */}
             <div className="flex gap-2">
               <button
@@ -857,6 +890,8 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                 </div>
               </div>
             </div>
+        </>
+        )}
           </div>
         )}
       </div>

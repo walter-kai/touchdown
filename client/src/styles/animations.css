@@ -292,3 +292,35 @@
 .delay-700 {
   animation-delay: 700ms;
 }
+
+/* Player Pick Lock-in Animations */
+@keyframes slideToLeft {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(-100% - 1rem));
+    opacity: 1;
+  }
+}
+
+@keyframes widenCell {
+  0% {
+    width: 100%;
+  }
+  100% {
+    width: 200%;
+  }
+}
+
+@keyframes fadeInStats {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

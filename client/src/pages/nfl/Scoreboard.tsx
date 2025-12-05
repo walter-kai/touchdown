@@ -63,8 +63,8 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   // Get tab index for carousel position
   const getTabIndex = (tab: string) => {
     const scoreboardTabs = isGameUpcoming
-      ? ['info', 'headtohead', 'odds']
-      : ['info', 'player', 'headtohead', 'pick', 'plays', 'odds'];
+      ? ['info', 'odds', 'headtohead']
+      : ['info', 'player', 'pick', 'plays', 'odds', 'headtohead'];
     return scoreboardTabs.indexOf(tab);
   };
 
@@ -665,18 +665,6 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
               </div>
             )}
 
-            {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
-              {homeTeam && awayTeam && (
-                <HeadToHead
-                  homeTeamId={homeTeam.id}
-                  awayTeamId={awayTeam.id}
-                  homeTeamName={homeTeam.team.displayName}
-                  awayTeamName={awayTeam.team.displayName}
-                />
-              )}
-            </div>
-
             {/* Pick Section */}
             {!isGameUpcoming && (
               <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
@@ -779,6 +767,18 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                     logo: getTeamLogo(awayTeam),
                     color: awayTeam.team.color || 'faafe8'
                   }}
+                />
+              )}
+            </div>
+
+            {/* Head to Head Section */}
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+              {homeTeam && awayTeam && (
+                <HeadToHead
+                  homeTeamId={homeTeam.id}
+                  awayTeamId={awayTeam.id}
+                  homeTeamName={homeTeam.team.displayName}
+                  awayTeamName={awayTeam.team.displayName}
                 />
               )}
             </div>
