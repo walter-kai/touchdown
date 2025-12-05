@@ -15,6 +15,24 @@ interface SummaryViewProps {
   playsRef: React.RefObject<HTMLDivElement>;
   predictionRef: React.RefObject<HTMLDivElement>;
   getTeamLogo: (team: any) => string;
+  playLog: Array<{
+    text: string;
+    quarter: number;
+    clock: string;
+    yardage?: number;
+    timestamp: Date;
+    possession?: string;
+    athletesInvolved?: Array<{
+      id: string;
+      fullName: string;
+      displayName: string;
+      shortName: string;
+      headshot: string;
+      jersey: string;
+      position: string;
+      team: { id: string };
+    }>;
+  }>;
 }
 
 const SummaryView: React.FC<SummaryViewProps> = ({ 
@@ -26,22 +44,65 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   teamRef,
   playsRef,
   predictionRef,
-  getTeamLogo 
+  getTeamLogo,
+  playLog
 }) => {
   const navigate = useNavigate();
   const competition = event.competitions[0];
   const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
   const awayTeam = competition.competitors.find(c => c.homeAway === 'away');
 
-  console.log('Summary component received:', summary);
-  console.log('Summary drives:', summary?.drives);
-  console.log('Summary drives.previous:', summary?.drives?.previous);
-
   return (
     <>
       {/* Player Statistics Section */}
       {summary?.boxscore?.players && (
         <div id="player" ref={playerRef} className="scroll-mt-20 py-4">
+          {/* Box Score */}
+          <div className="p-6 mb-6">
+            <div className="text-center mb-4">
+              <p className="text-[#e0e7ef] text-base md:text-lg font-bold">
+                {new Date(competition.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </p>
+              <p className="text-[#b0b7bf] text-sm">
+                {new Date(competition.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 items-center">
+              <button 
+                onClick={() => awayTeam?.id && navigate(`/nfl/team/${awayTeam.id}`)}
+                className="flex flex-col items-center hover:bg-[#00ffe7]/10 rounded-lg p-3 transition-all group cursor-pointer"
+              >
+                <img 
+                  src={getTeamLogo(awayTeam?.team)} 
+                  alt={awayTeam?.team?.displayName}
+                  className="w-16 h-16 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
+                />
+                <h2 className="text-[#e0e7ef] font-bold text-sm md:text-base text-center px-2 group-hover:text-[#00ffe7] transition-colors">
+                  {awayTeam?.team?.displayName}
+                </h2>
+                <p className="text-[#b0b7bf] text-xs">{awayTeam?.records?.[0]?.summary}</p>
+                <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-1">{awayTeam?.score || '0'}</p>
+              </button>
+
+              <button 
+                onClick={() => homeTeam?.id && navigate(`/nfl/team/${homeTeam.id}`)}
+                className="flex flex-col items-center hover:bg-[#00ffe7]/10 rounded-lg p-3 transition-all group cursor-pointer"
+              >
+                <img 
+                  src={getTeamLogo(homeTeam?.team)} 
+                  alt={homeTeam?.team?.displayName}
+                  className="w-16 h-16 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
+                />
+                <h2 className="text-[#e0e7ef] font-bold text-sm md:text-base text-center px-2 group-hover:text-[#00ffe7] transition-colors">
+                  {homeTeam?.team?.displayName}
+                </h2>
+                <p className="text-[#b0b7bf] text-xs">{homeTeam?.records?.[0]?.summary}</p>
+                <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-1">{homeTeam?.score || '0'}</p>
+              </button>
+            </div>
+          </div>
+
           <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
             <FaTrophy />
             Player Statistics
@@ -299,136 +360,133 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
       {/* Plays Section - Drive by Drive */}
       <div id="plays" ref={playsRef} className="scroll-mt-20 py-4">
-        <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
-          <FaFootballBall />
-          Play by Play - All Drives
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
+            <FaFootballBall />
+            Play-by-Play Log
+          </h3>
+          {playLog.length > 0 && (
+            <span className="text-[#b0b7bf] text-xs">
+              {playLog.length} {playLog.length === 1 ? 'play' : 'plays'} recorded
+            </span>
+          )}
+        </div>
 
-        {summary?.drives?.previous && summary.drives.previous.length > 0 ? (
-          <div className="">
+        {playLog.length > 0 ? (
+          <div className="relative">
             <div className="space-y-6">
-              {summary.drives.previous.map((drive, driveIdx) => {
-                    const driveTeam = drive.team;
-                    const isHomeTeam = driveTeam.id === homeTeam?.id;
-                    const bgClass = isHomeTeam ? 'from-[#faafe8]/10 border-l-4 border-[#faafe8]' : 'from-[#00ffe7]/10 border-l-4 border-[#00ffe7]';
-                    
-                    return (
-                      <div key={`drive-${drive.id}-${driveIdx}`} className={`bg-gradient-to-r ${bgClass} rounded-lg py-4 mb-4`}>
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <img src={getTeamLogo(driveTeam)} alt="" className="w-8 h-8" />
-                            <span className={`font-bold text-sm ${isHomeTeam ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
-                              {driveTeam.displayName} - {drive.description}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <p className={`font-bold text-sm ${isHomeTeam ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
-                              {drive.displayResult}
-                            </p>
-                            <p className="text-[#b0b7bf] text-xs">
-                              {drive.offensivePlays} plays, {drive.yards} yards, {drive.timeElapsed.displayValue}
-                            </p>
-                          </div>
-                        </div>
-
-                        {drive.plays && drive.plays.length > 0 && (
-                          <div className="space-y-4">
-                            {drive.plays.map((play, playIdx) => {
-                              const playText = play.text;
-                              const parts = playText.split(/\.\n+\s+(?=\w)|(?=PENALTY)/g).filter(part => part.trim());
-
-                              return (
-                                <div key={`play-${play.id}-${playIdx}`} className="relative flex items-start gap-4">
-                                  <div className="relative flex flex-col items-center flex-shrink-0" style={{ width: '48px' }}>
-                                    <div className={`w-4 h-4 rounded-full border-2 ${
-                                      play.scoringPlay 
-                                        ? 'bg-green-400 border-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]' 
-                                        : 'bg-[#23263a] border-[#00ffe7]/40'
-                                    } z-10`}></div>
-                                    <div className="text-center mt-1">
-                                      <p className="text-[10px] font-bold text-[#00ffe7]">Q{play.period.number}</p>
-                                      <p className="text-[9px] font-mono text-[#00ffe7]">{play.clock.displayValue}</p>
-                                    </div>
-                                  </div>
-
-                                  <div className={`flex-1 pb-4 ${play.scoringPlay ? 'bg-green-500/5 -ml-2 pl-2 pr-2 rounded-lg' : ''}`}>
-                                    <div className="space-y-1">
-                                      {parts.map((part, partIdx) => {
-                                        const trimmedPart = part.trim();
-                                        const isTimeout = trimmedPart.toLowerCase().includes('timeout');
-                                        return (
-                                          <p key={partIdx} className={`text-sm ${
-                                            play.scoringPlay ? 'text-green-400 font-medium' : 'text-[#b0b7bf]'
-                                          } flex items-center gap-2`}>
-                                            {isTimeout && <FaPauseCircle className="text-yellow-400 flex-shrink-0" />}
-                                            <span>{trimmedPart}{trimmedPart.endsWith('.') ? '' : '.'}</span>
-                                          </p>
-                                        );
-                                      })}
-                                    </div>
-
-                                    {play.scoringPlay && play.scoringType && (
-                                      <div className="flex items-center gap-2 mt-2">
-                                        <span className="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-1 rounded">
-                                          {play.scoringType.displayName}
-                                        </span>
-                                      </div>
-                                    )}
-
-                                    {play.statYardage !== undefined && (
-                                      <div className="flex items-center gap-2 mt-2">
-                                        <span className="text-[#b0b7bf] text-xs">Yards:</span>
-                                        <span className={`font-bold text-sm ${
-                                          play.statYardage > 0 ? 'text-green-400' : play.statYardage < 0 ? 'text-red-400' : 'text-gray-400'
-                                        }`}>{play.statYardage > 0 ? '+' : ''}{play.statYardage}</span>
-                                      </div>
-                                    )}
-
-                                    {play.athletesInvolved && play.athletesInvolved.length > 0 && (
-                                      <div className="flex flex-wrap gap-1.5 mt-2">
-                                        {play.athletesInvolved.slice(0, 3).map((athlete) => (
-                                          <div key={athlete.id} className="flex items-center gap-1 bg-[#1a1d2e]/30 rounded-full px-1.5 py-0.5">
-                                            {athlete.headshot && (
-                                              <img src={athlete.headshot} alt="" className="w-4 h-4 rounded-full" 
-                                                onError={(e) => e.currentTarget.style.display = 'none'} />
-                                            )}
-                                            <span className="text-gray-300 text-xs">{athlete.shortName}</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+              {(() => {
+                // Group consecutive plays by possession
+                const possessions: Array<{ possession?: string; plays: typeof playLog }> = [];
+                for (let i = 0; i < playLog.length; i++) {
+                  const p = playLog[i];
+                  const last = possessions[possessions.length - 1];
                   
-                  {/* End of Game Marker */}
-                  <div className="relative flex items-start gap-4">
-                    <div className="relative flex flex-col items-center flex-shrink-0" style={{ width: '48px' }}>
-                      <div className="w-4 h-4 rounded-full bg-[#faafe8] border-2 border-[#faafe8] shadow-[0_0_8px_rgba(250,175,232,0.6)] z-10"></div>
-                      <p className="text-[10px] font-bold text-[#faafe8] mt-1">END</p>
+                  // If play has no possession, use the last known possession
+                  const currentPossession = p.possession || last?.possession;
+                  
+                  if (!last || last.possession !== currentPossession) {
+                    possessions.push({ possession: currentPossession, plays: [p] as any });
+                  } else {
+                    last.plays.push(p as any);
+                  }
+                }
+
+                return possessions.map((group, groupIdx) => {
+                  const team = group.possession === homeTeam?.id ? homeTeam : awayTeam;
+                  const isHome = team?.id === homeTeam?.id;
+                  const bgClass = isHome ? 'from-[#faafe8]/10 border-l-4 border-[#faafe8]' : 'from-[#00ffe7]/10 border-l-4 border-[#00ffe7]';
+
+                  return (
+                    <div key={`pos-${groupIdx}`} className={`bg-gradient-to-r ${bgClass} rounded-lg py-4 mb-4`}> 
+                      <div className="flex items-center justify-between mb-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <img src={team?.team.logo} alt="" className="w-8 h-8" />
+                          <span className={`font-bold text-sm ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
+                            {team?.team.abbreviation} Possession
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-400">{group.plays.length} {group.plays.length === 1 ? 'play' : 'plays'}</div>
+                      </div>
+
+                      <div className="space-y-4 px-4">
+                        {group.plays.map((play, idx) => {
+                          const playText = play.text;
+                          const parts = playText.split(/\\.\\n+\\s+(?=\\w)|(?=PENALTY)/g).filter(part => part.trim());
+                          const isLatest = groupIdx === 0 && idx === 0;
+
+                          return (
+                            <div key={`${groupIdx}-${idx}`} className={`relative flex items-start gap-4 ${isLatest ? 'animate-[slide-in-play_0.5s_ease-out]' : ''}`}>
+                              <div className="relative flex flex-col items-center flex-shrink-0" style={{ width: '48px' }}>
+                                <div className={`w-4 h-4 rounded-full border-2 ${
+                                  isLatest ? 'bg-[#00ffe7] border-[#00ffe7] animate-[pulse-dot_2s_ease-in-out_infinite]' : 'bg-[#23263a] border-[#00ffe7]/40'
+                                } z-10`}></div>
+                                <div className="text-center mt-1">
+                                  <p className={`text-[10px] font-bold ${isLatest ? 'text-[#00ffe7]' : 'text-[#b0b7bf]'}`}>Q{play.quarter}</p>
+                                  <p className={`text-[9px] font-mono ${isLatest ? 'text-[#00ffe7]' : 'text-[#b0b7bf]'}`}>{play.clock}</p>
+                                </div>
+                              </div>
+
+                              <div className={`flex-1 pb-4 ${isLatest ? 'bg-[#00ffe7]/5 -ml-2 pl-2 pr-2 rounded-lg' : ''}`}>
+                                <div className="space-y-1">
+                                  {parts.map((part, partIdx) => {
+                                    const trimmedPart = part.trim();
+                                    const isTimeout = trimmedPart.toLowerCase().includes('timeout');
+                                    return (
+                                      <p key={partIdx} className={`text-sm ${isLatest ? 'text-[#e0e7ef] font-medium' : 'text-[#b0b7bf]'} flex items-center gap-2`}>
+                                        {isTimeout && <FaPauseCircle className="text-yellow-400 flex-shrink-0" />}
+                                        <span>{trimmedPart}{trimmedPart.endsWith('.') ? '' : '.'}</span>
+                                      </p>
+                                    );
+                                  })}
+                                </div>
+
+                                {play.yardage !== undefined && (
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <span className="text-[#b0b7bf] text-xs">Yards:</span>
+                                    <span className={`font-bold text-sm ${
+                                      play.yardage > 0 ? 'text-green-400' : play.yardage < 0 ? 'text-red-400' : 'text-gray-400'
+                                    }`}>{play.yardage > 0 ? '+' : ''}{play.yardage}</span>
+                                  </div>
+                                )}
+
+                                {play.athletesInvolved && play.athletesInvolved.length > 0 && (
+                                  <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {play.athletesInvolved.slice(0, 3).map((athlete) => (
+                                      <div key={athlete.id} className="flex items-center gap-1 bg-[#1a1d2e]/30 rounded-full px-1.5 py-0.5">
+                                        <img src={athlete.headshot} alt="" className="w-8 h-6 rounded-full" onError={(e) => e.currentTarget.style.display = 'none'} />
+                                        <span className="text-gray-300 text-xs">{athlete.shortName}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="flex-1 pb-2">
-                      <p className="text-sm text-[#b0b7bf] italic">Game Complete</p>
-                  </div>
+                  );
+                });
+              })()}
+              
+              {/* End of Game Marker */}
+              <div className="relative flex items-start gap-4">
+                <div className="relative flex flex-col items-center flex-shrink-0" style={{ width: '48px' }}>
+                  <div className="w-4 h-4 rounded-full bg-[#faafe8] border-2 border-[#faafe8] shadow-[0_0_8px_rgba(250,175,232,0.6)] z-10"></div>
+                  <p className="text-[10px] font-bold text-[#faafe8] mt-1">END</p>
+                </div>
+                <div className="flex-1 pb-2">
+                  <p className="text-sm text-[#b0b7bf] italic">
+                    {competition.status.type.state === 'in' ? 'Game In Progress' : 'Game Complete'}
+                  </p>
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-[#b0b7bf] mb-2">No drive data available.</p>
-              <p className="text-xs text-gray-500">
-                {!summary?.drives ? 'Drives object missing' : 
-                 !summary.drives.previous ? 'Previous drives missing' : 
-                 'Previous drives array is empty'}
-              </p>
-            </div>
-          )}
+          </div>
+        ) : (
+          <p className="text-[#b0b7bf] text-center text-sm py-4">No plays recorded yet. Plays will appear here as the game progresses.</p>
+        )}
       </div>
 
       {/* Predictions Section */}
