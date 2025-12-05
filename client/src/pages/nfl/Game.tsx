@@ -782,7 +782,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                               </div>
                               <div className="flex gap-2 mb-3">
                                 {parsed.players.map((player: any) => (
-                                  <div key={player.id} className="flex-1 flex flex-col items-center bg-black/30 rounded p-2 relative">
+                                  <div key={player.id} className="flex-1 flex flex-col items-center bg-black/30 rounded p-2">
                                     <img
                                       src={player.headshot}
                                       alt={player.displayName}
@@ -790,11 +790,9 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                                     />
                                     <div className="text-white text-xs font-bold text-center truncate w-full">{player.shortName || player.displayName}</div>
                                     <div className="text-[#b0b7bf] text-[10px]">{player.position.abbreviation}</div>
-                                    {isLocked && (
-                                      <div className="absolute -top-1 -right-1 bg-[#00ffe7] text-black text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                                        {playerScores[player.id] || 0}
-                                      </div>
-                                    )}
+                                    <div className="mt-2 bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] font-bold text-lg rounded px-3 py-1">
+                                      {playerScores[player.id] || 0}
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -807,7 +805,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                               ) : (
                                 <button
                                   onClick={() => onTabChange('pick')}
-                                  className="w-full py-2 bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-black font-bold text-xs rounded hover:opacity-80 transition-opacity"
+                                  className="btn-pink w-full py-2 font-bold text-xs rounded"
                                 >
                                   SWAP NOW
                                 </button>
@@ -1171,92 +1169,9 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                   />
                 </div>
               )}
-              {summary?.leaders && summary.leaders.length > 0 && navPreset === 'summary' && (
-                <div>
-                  <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
-                    <FaChartBar />
-                    Head-to-Head Leaders
-                  </h3>
-                  <div className="space-y-4">
-                    {summary.leaders.map((teamLeaderGroup, teamIdx) => {
-                      const isHomeTeam = teamLeaderGroup.team.id === homeTeam?.id;
-                      const isAwayTeam = teamLeaderGroup.team.id === awayTeam?.id;
-                      
-                      if (!isHomeTeam && !isAwayTeam) return null;
-                      
-                      return (
-                        <div key={`team-leaders-${teamIdx}`}>
-                          {teamLeaderGroup.leaders.map((category, catIdx) => {
-                            const otherTeamGroup = summary.leaders.find(g => g.team.id !== teamLeaderGroup.team.id);
-                            const otherCategory = otherTeamGroup?.leaders.find(c => c.name === category.name);
-                            
-                            if (!otherCategory || !category.leaders || !otherCategory.leaders || !category.leaders[0] || !otherCategory.leaders[0]) return null;
-                            
-                            const homeLeader = isHomeTeam ? category.leaders[0] : otherCategory.leaders[0];
-                            const awayLeader = isAwayTeam ? category.leaders[0] : otherCategory.leaders[0];
-                            
-                            if (teamIdx !== 0) return null;
-                            
-                            return (
-                              <div key={`category-${catIdx}`} className="bg-[#23263a]/50 rounded-lg p-4 border border-[#00ffe7]/10">
-                                <h4 className="text-[#b0b7bf] font-semibold text-sm mb-4 text-center">{category.displayName}</h4>
-                                <div className="grid grid-cols-3 gap-4 items-center">
-                                  <div 
-                                    className="flex flex-col items-center cursor-pointer hover:bg-[#00ffe7]/5 p-2 rounded transition-colors"
-                                    onClick={() => navigate(`/nfl/player/${awayLeader.athlete.id}`)}
-                                  >
-                                    <img 
-                                      src={awayLeader.athlete.headshot?.href || `https://robohash.org/${awayLeader.athlete.id}?set=set5`}
-                                      alt={awayLeader.athlete.displayName}
-                                      className="w-16 h-16 rounded-full mb-2 border-2 border-[#00ffe7]/30"
-                                      onError={(e) => { e.currentTarget.src = `https://robohash.org/${awayLeader.athlete.id}?set=set5`; }}
-                                    />
-                                    <p className="text-[#e0e7ef] font-semibold text-sm text-center">{awayLeader.athlete.displayName}</p>
-                                    <p className="text-[#b0b7bf] text-xs">#{awayLeader.athlete.jersey}</p>
-                                    {awayLeader.displayValue && (
-                                      <div className="mt-2 text-center">
-                                        {awayLeader.displayValue.split(',').map((stat, i) => (
-                                          <p key={i} className="text-[#00ffe7] font-bold text-sm">{stat.trim()}</p>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center justify-center">
-                                    <span className="text-[#b0b7bf] text-sm font-bold">VS</span>
-                                  </div>
-                                  <div 
-                                    className="flex flex-col items-center cursor-pointer hover:bg-[#faafe8]/5 p-2 rounded transition-colors"
-                                    onClick={() => navigate(`/nfl/player/${homeLeader.athlete.id}`)}
-                                  >
-                                    <img 
-                                      src={homeLeader.athlete.headshot?.href || `https://robohash.org/${homeLeader.athlete.id}?set=set5`}
-                                      alt={homeLeader.athlete.displayName}
-                                      className="w-16 h-16 rounded-full mb-2 border-2 border-[#faafe8]/30"
-                                      onError={(e) => { e.currentTarget.src = `https://robohash.org/${homeLeader.athlete.id}?set=set5`; }}
-                                    />
-                                    <p className="text-[#e0e7ef] font-semibold text-sm text-center">{homeLeader.athlete.displayName}</p>
-                                    <p className="text-[#b0b7bf] text-xs">#{homeLeader.athlete.jersey}</p>
-                                    {homeLeader.displayValue && (
-                                      <div className="mt-2 text-center">
-                                        {homeLeader.displayValue.split(',').map((stat, i) => (
-                                          <p key={i} className="text-[#faafe8] font-bold text-sm">{stat.trim()}</p>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Pick Section - Scoreboard */}
+            {/* Pick Section - Scoreboard */}}
             {navPreset === 'scoreboard' && !isGameUpcoming && (
               <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
                 <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
@@ -1317,6 +1232,21 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                         }
                       }
                       
+                      // Calculate scores from playLog
+                      const playerScores: Record<string, number> = {};
+                      parsed.players.forEach((player: any) => {
+                        playerScores[player.id] = 0;
+                      });
+                      playLog.forEach((play: any) => {
+                        if (play.athletesInvolved) {
+                          play.athletesInvolved.forEach((athlete: any) => {
+                            if (playerScores.hasOwnProperty(athlete.id)) {
+                              playerScores[athlete.id] += 1;
+                            }
+                          });
+                        }
+                      });
+                      
                       return (
                         <div className="mb-4 bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-3 border border-[#00ffe7]/30">
                           <div className="flex items-center justify-between mb-3">
@@ -1335,6 +1265,9 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                                 />
                                 <div className="text-white text-xs font-bold text-center truncate w-full">{player.shortName || player.displayName}</div>
                                 <div className="text-[#b0b7bf] text-[10px]">{player.position.abbreviation}</div>
+                                <div className="mt-2 bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] font-bold text-lg rounded px-3 py-1">
+                                  {playerScores[player.id] || 0}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -1347,7 +1280,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                           ) : (
                             <button
                               onClick={() => onTabChange('pick')}
-                              className="w-full py-2 bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-black font-bold text-xs rounded hover:opacity-80 transition-opacity"
+                              className="btn-purple w-full py-2 font-bold text-xs rounded"
                             >
                               SWAP NOW
                             </button>
@@ -1482,7 +1415,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
               <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: navPreset === 'scoreboard' && isGameUpcoming ? '33.333%' : '16.666%' }}>
                 <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                   <FaChartBar />
-                  Live Win Probability
+                  Odds
                 </h3>
                 <ProbChart
                   gameId={gameId!}
@@ -1675,6 +1608,93 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
                     color: awayTeam?.team.color || 'faafe8'
                   }}
                 />
+              </div>
+            )}
+
+            {/* Head-to-Head Leaders Section - Summary only */}
+            {summary?.leaders && summary.leaders.length > 0 && navPreset === 'summary' && (
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
+                <div>
+                  <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                    <FaChartBar />
+                    Head-to-Head Leaders
+                  </h3>
+                  <div className="space-y-4">
+                    {summary.leaders.map((teamLeaderGroup, teamIdx) => {
+                      const isHomeTeam = teamLeaderGroup.team.id === homeTeam?.id;
+                      const isAwayTeam = teamLeaderGroup.team.id === awayTeam?.id;
+                      
+                      if (!isHomeTeam && !isAwayTeam) return null;
+                      
+                      return (
+                        <div key={`team-leaders-${teamIdx}`}>
+                          {teamLeaderGroup.leaders.map((category, catIdx) => {
+                            const otherTeamGroup = summary.leaders.find(g => g.team.id !== teamLeaderGroup.team.id);
+                            const otherCategory = otherTeamGroup?.leaders.find(c => c.name === category.name);
+                            
+                            if (!otherCategory || !category.leaders || !otherCategory.leaders || !category.leaders[0] || !otherCategory.leaders[0]) return null;
+                            
+                            const homeLeader = isHomeTeam ? category.leaders[0] : otherCategory.leaders[0];
+                            const awayLeader = isAwayTeam ? category.leaders[0] : otherCategory.leaders[0];
+                            
+                            if (teamIdx !== 0) return null;
+                            
+                            return (
+                              <div key={`category-${catIdx}`} className="bg-[#23263a]/50 rounded-lg p-4 border border-[#00ffe7]/10">
+                                <h4 className="text-[#b0b7bf] font-semibold text-sm mb-4 text-center">{category.displayName}</h4>
+                                <div className="grid grid-cols-3 gap-4 items-center">
+                                  <div 
+                                    className="flex flex-col items-center cursor-pointer hover:bg-[#00ffe7]/5 p-2 rounded transition-colors"
+                                    onClick={() => navigate(`/nfl/player/${awayLeader.athlete.id}`)}
+                                  >
+                                    <img 
+                                      src={awayLeader.athlete.headshot?.href || `https://robohash.org/${awayLeader.athlete.id}?set=set5`}
+                                      alt={awayLeader.athlete.displayName}
+                                      className="w-16 h-16 rounded-full mb-2 border-2 border-[#00ffe7]/30"
+                                      onError={(e) => { e.currentTarget.src = `https://robohash.org/${awayLeader.athlete.id}?set=set5`; }}
+                                    />
+                                    <p className="text-[#e0e7ef] font-semibold text-sm text-center">{awayLeader.athlete.displayName}</p>
+                                    <p className="text-[#b0b7bf] text-xs">#{awayLeader.athlete.jersey}</p>
+                                    {awayLeader.displayValue && (
+                                      <div className="mt-2 text-center">
+                                        {awayLeader.displayValue.split(',').map((stat, i) => (
+                                          <p key={i} className="text-[#00ffe7] font-bold text-sm">{stat.trim()}</p>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center justify-center">
+                                    <span className="text-[#b0b7bf] text-sm font-bold">VS</span>
+                                  </div>
+                                  <div 
+                                    className="flex flex-col items-center cursor-pointer hover:bg-[#faafe8]/5 p-2 rounded transition-colors"
+                                    onClick={() => navigate(`/nfl/player/${homeLeader.athlete.id}`)}
+                                  >
+                                    <img 
+                                      src={homeLeader.athlete.headshot?.href || `https://robohash.org/${homeLeader.athlete.id}?set=set5`}
+                                      alt={homeLeader.athlete.displayName}
+                                      className="w-16 h-16 rounded-full mb-2 border-2 border-[#faafe8]/30"
+                                      onError={(e) => { e.currentTarget.src = `https://robohash.org/${homeLeader.athlete.id}?set=set5`; }}
+                                    />
+                                    <p className="text-[#e0e7ef] font-semibold text-sm text-center">{homeLeader.athlete.displayName}</p>
+                                    <p className="text-[#b0b7bf] text-xs">#{homeLeader.athlete.jersey}</p>
+                                    {homeLeader.displayValue && (
+                                      <div className="mt-2 text-center">
+                                        {homeLeader.displayValue.split(',').map((stat, i) => (
+                                          <p key={i} className="text-[#faafe8] font-bold text-sm">{stat.trim()}</p>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
           </div>

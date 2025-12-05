@@ -221,7 +221,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     if (isInNew) {
       // Deselect from new picks
       updatedNewPicks = newPicks.filter((p) => p.id !== player.id);
-    } else if (newPicks.length < 3) {
+    } else if (newPicks.length < 5) {
       // Add to new picks
       updatedNewPicks = [...newPicks, normalizedPlayer];
     } else {
@@ -233,7 +233,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   };
 
   const handleLockIn = () => {
-    if (newPicks.length === 3) {
+    if (newPicks.length === 5) {
       // Just use the picks as-is, headshot URLs are already extracted
       console.log('Locking in picks:', newPicks);
       
@@ -515,18 +515,18 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                 </div>
               )}
 
-              {/* Lock In Button */}
+              {/* Swap Button */}
               <button
                 onClick={handleLockIn}
-                disabled={newPicks.length !== 3}
+                disabled={newPicks.length !== 5}
                 className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all mt-4 ${
-                  newPicks.length === 3
-                    ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] hover:bg-[#00ffe7]/30 cursor-pointer'
+                  newPicks.length === 5
+                    ? 'btn-pink cursor-pointer'
                     : 'bg-gray-700/20 border-2 border-gray-600 text-gray-500 cursor-not-allowed'
                 }`}
               >
                 <FaUnlock />
-                Lock In Selection
+                Swap
               </button>
             </div>
 
