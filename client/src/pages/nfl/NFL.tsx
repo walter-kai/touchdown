@@ -166,7 +166,7 @@ const NFLScoreboard: React.FC = () => {
 		<div className="flex items-center justify-center gap-4 mb-5">
 			<FaFootballBall className="text-4xl text-[#00ffe7] animate-pulse" />
 			<h1 className="text-4xl md:text-5xl font-bold text-[#00ffe7]">
-				NFL SCOREBOARD
+				NFL Drive v1.0
 			</h1>
 			<FaFootballBall className="text-4xl text-[#00ffe7] animate-pulse" />
 		</div>

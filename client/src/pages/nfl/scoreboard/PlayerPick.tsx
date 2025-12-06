@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus } from 'react-icons/fa';
+import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus, FaCrosshairs, FaHandPointer } from 'react-icons/fa';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend, getEmptyImage } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
+import Situation from './situation';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {
@@ -58,10 +59,57 @@ interface PlayerPickProps {
   isExpanded: boolean;
   onToggle: () => void;
   playLog: Array<{
+    text: string;
+    quarter: number;
+    clock: string;
+    yardage?: number;
+    timestamp: Date;
+    possession?: string;
     athletesInvolved?: Array<{
       id: string;
+      fullName: string;
+      displayName: string;
+      shortName: string;
+      headshot: string;
+      jersey: string;
+      position: string;
+      team: { id: string };
     }>;
   }>;
+  situation?: {
+    lastPlay?: {
+      start?: { yardLine: number };
+      end?: { yardLine: number };
+      athletesInvolved?: Array<{
+        displayName: string;
+        headshot: string;
+        position: string;
+      }>;
+    };
+    downDistanceText?: string;
+    possession?: string;
+    awayTimeouts?: number;
+    homeTimeouts?: number;
+  };
+  homeTeam?: {
+    id: string;
+    team: {
+      displayName: string;
+      abbreviation: string;
+      logo?: string;
+      logos?: Array<{ href: string }>;
+    };
+  };
+  awayTeam?: {
+    id: string;
+    team: {
+      displayName: string;
+      abbreviation: string;
+      logo?: string;
+      logos?: Array<{ href: string }>;
+    };
+  };
+  getTeamLogo?: (team: any) => string;
 }
 
 const ItemTypes = {
@@ -73,6 +121,7 @@ interface DraggablePlayerCardProps {
   index: number;
   movePlayer: (dragIndex: number, hoverIndex: number) => void;
   isAnimating?: boolean;
+  isDragging?: boolean;
 }
 
 const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index, movePlayer, isAnimating }) => {
@@ -99,19 +148,17 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
   return (
     <div
       ref={(node) => drag(drop(node))}
-      className={`bg-[#181a23]/90 rounded-lg p-4 border border-[#faafe8]/30 flex items-center gap-4 h-[72px] transition-all duration-1000 ${
-        isDragging ? 'opacity-30' : isAnimating ? 'opacity-100' : 'hover:scale-105 hover:border-[#faafe8]/60'
+      className={`bg-[#181a23]/90 rounded-lg p-3 border border-[#faafe8]/30 flex items-center gap-3 h-[72px] transition-all duration-1000 ${
+        isDragging ? 'opacity-100' : isAnimating ? '' : 'hover:border-[#faafe8]'
       }`}
       style={{ 
         ...(isAnimating && { 
           animation: `slideToLeft 1000ms ease-out forwards`,
-          animationDelay: `${index * 80}ms`
+          animationDelay: `${index * 100}ms`,
+          willChange: 'transform'
         })
       }}
     >
-      <div className="w-6 h-6 rounded-full bg-[#faafe8] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
-        {index + 1}
-      </div>
       {headshotUrl ? (
         <img
           src={headshotUrl}
@@ -141,42 +188,57 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
 interface EmptySlotProps {
   index: number;
   movePlayer: (dragIndex: number, hoverIndex: number) => void;
+  isActive: boolean;
+  onSlotClick: (index: number) => void;
 }
 
-const EmptySlot: React.FC<EmptySlotProps> = ({ index, movePlayer }) => {
-  const [{ isOver }, drop] = useDrop({
+const EmptySlot: React.FC<EmptySlotProps> = ({ index, movePlayer, isActive, onSlotClick }) => {
+  const [{ isOver, canDrop }, drop] = useDrop({
     accept: ItemTypes.PLAYER,
     drop: (item: { index: number }) => {
       movePlayer(item.index, index);
     },
     collect: (monitor) => ({
       isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
     }),
   });
+
+  const isDragging = canDrop;
 
   return (
     <div
       ref={drop}
-      className={`bg-[#181a23]/50 rounded-lg p-4 border border-dashed flex items-center gap-4 h-[72px] transition-all duration-200 ${
-        isOver ? 'border-[#faafe8] bg-[#faafe8]/20 scale-105 shadow-lg shadow-[#faafe8]/30' : 'border-[#faafe8]/20'
+      onClick={() => onSlotClick(index)}
+      className={`bg-[#181a23]/50 rounded-lg p-3 border border-dashed flex items-center gap-3 h-[72px] transition-all duration-200 cursor-pointer ${
+        isActive
+          ? 'border-[#faafe8] bg-[#faafe8]/20 shadow-[0_0_12px_#faafe8]'
+          : isOver 
+          ? 'border-[#faafe8] bg-[#faafe8]/20' 
+          : 'border-[#faafe8]/20 hover:border-[#faafe8]/40'
       }`}
     >
-      <div className={`w-6 h-6 rounded-full text-white font-bold text-xs flex items-center justify-center flex-shrink-0 transition-colors ${
-        isOver ? 'bg-[#faafe8]' : 'bg-[#faafe8]/30'
-      }`}>
-        {index + 1}
-      </div>
       <div className={`w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 transition-all ${
-        isOver ? 'bg-[#faafe8]/30 border-[#faafe8]' : 'bg-[#23263a]/50 border-[#faafe8]/20'
+        isActive 
+          ? 'bg-[#faafe8]/30 border-[#faafe8]'
+          : isOver 
+          ? 'bg-[#faafe8]/30 border-[#faafe8]' 
+          : 'bg-[#23263a]/50 border-[#faafe8]/20'
       }`}>
         <FaPlus className={`text-sm transition-colors ${
-          isOver ? 'text-[#faafe8]' : 'text-[#faafe8]/40'
+          isActive ? 'text-[#faafe8]' : isOver ? 'text-[#faafe8]' : 'text-[#faafe8]/40'
         }`} />
       </div>
       <div className="flex-1 min-w-0">
         <span className={`text-sm transition-colors ${
-          isOver ? 'text-[#faafe8]' : 'text-[#faafe8]/40'
-        }`}>Drag here</span>
+          isActive 
+            ? 'text-[#faafe8] font-bold'
+            : isOver 
+            ? 'text-[#faafe8]' 
+            : 'text-[#faafe8]/40'
+        }`}>
+          {isDragging ? 'Drag here' : isActive ? 'Select player →' : 'Pick'}
+        </span>
       </div>
     </div>
   );
@@ -236,7 +298,11 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   awayTeamInfo,
   isExpanded,
   onToggle,
-  playLog
+  playLog,
+  situation,
+  homeTeam,
+  awayTeam,
+  getTeamLogo
 }) => {
   const [homeRoster, setHomeRoster] = useState<Athlete[]>([]);
   const [awayRoster, setAwayRoster] = useState<Athlete[]>([]);
@@ -252,6 +318,8 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   const [totalScore, setTotalScore] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [isRosterOpen, setIsRosterOpen] = useState(false);
+  const [activeSlot, setActiveSlot] = useState<number | null>(null);
 
   // Load saved state from localStorage
   useEffect(() => {
@@ -263,6 +331,8 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       if (parsed.players && parsed.players.length > 0) {
         setSelectedPlayers(parsed.players);
         setTotalScore(parsed.totalScore || 0);
+        // If we have saved players, show stats
+        setShowStats(true);
       }
       
       // Check if still in cooldown period
@@ -313,6 +383,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
           if (prev <= 1) {
             // Just unlock - keep selections and accumulated scores
             setIsLocked(false);
+            // Keep showStats true so scores remain visible
             // Update localStorage to remove lock timestamp but keep selections
             const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
             if (savedState) {
@@ -326,6 +397,13 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
               setTotalScore(newState.totalScore);
             }
             return 0;
+          }
+          // Update localStorage with remaining time
+          const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+          if (savedState) {
+            const parsed = JSON.parse(savedState);
+            parsed.lockedAt = Date.now() - ((120 - (prev - 1)) * 1000); // Calculate original lock time
+            localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(parsed));
           }
           return prev - 1;
         });
@@ -419,9 +497,23 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     if (isInNew) {
       // Deselect from new picks
       updatedNewPicks = newPicks.filter((p) => p && p.id !== player.id);
+      // Clear active slot if deselecting
+      setActiveSlot(null);
+    } else if (activeSlot !== null) {
+      // Insert player into the active slot
+      updatedNewPicks = [...newPicks];
+      updatedNewPicks[activeSlot] = normalizedPlayer;
+      // Clear active slot after insertion
+      setActiveSlot(null);
     } else if (newPicks.filter(p => p).length < 5) {
-      // Add to new picks
-      updatedNewPicks = [...newPicks, normalizedPlayer];
+      // No slot selected - add to first empty slot
+      const firstEmptyIndex = newPicks.findIndex(p => !p);
+      if (firstEmptyIndex !== -1) {
+        updatedNewPicks = [...newPicks];
+        updatedNewPicks[firstEmptyIndex] = normalizedPlayer;
+      } else {
+        updatedNewPicks = [...newPicks, normalizedPlayer];
+      }
     } else {
       // Replace oldest pick
       updatedNewPicks = [...newPicks.slice(1), normalizedPlayer];
@@ -445,37 +537,39 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   };
 
   const handleLockIn = () => {
-    // Create new array by swapping: take NEW pick if exists, otherwise keep CURRENT pick
-    // First, remove any current picks that are being replaced by new picks
-    const newPickIds = new Set(newPicks.filter(p => p).map(p => p.id));
-    const remainingCurrent = selectedPlayers.filter(p => !newPickIds.has(p.id));
-    
-    // Merge: new picks first, then fill with remaining current picks
-    const swappedPicks = [...newPicks.filter(p => p), ...remainingCurrent]
-      .slice(0, 5); // Enforce max 5 cards
+    // Position-by-position swap: if NEW pick exists at index, use it; otherwise keep CURRENT pick
+    const swappedPicks = Array(5).fill(null).map((_, idx) => {
+      // If there's a new pick at this index, use it
+      if (newPicks[idx]) {
+        return newPicks[idx];
+      }
+      // Otherwise keep the current pick at this index
+      return selectedPlayers[idx] || null;
+    }).filter(p => p !== null); // Remove any null entries
     
     if (swappedPicks.length > 0) {
       console.log('Locking in picks:', swappedPicks);
       
       // Start animation sequence
       setIsAnimating(true);
+      setActiveSlot(null); // Clear active slot
       
-      // Step 1: After slide animation completes (1000ms), swap the data
+      // Step 1: After slide animation completes (1200ms with delays), swap the data and lock
       setTimeout(() => {
         setSelectedPlayers(swappedPicks);
         setNewPicks([]);
         setIsLocked(true);
-      }, 1000);
+      }, 1200);
       
-      // Step 2: After grid collapses (1200ms), show stats
-      setTimeout(() => {
-        setShowStats(true);
-      }, 1400);
-      
-      // Step 3: End animation state after everything completes
+      // Step 2: Very shortly after lock (1250ms), end animation state to trigger widening
       setTimeout(() => {
         setIsAnimating(false);
-      }, 2000);
+      }, 1250);
+      
+      // Step 3: After widening completes (2050ms = 1250 + 800), show stats with fade
+      setTimeout(() => {
+        setShowStats(true);
+      }, 2050);
       
       setCooldownTime(120); // 2 minutes
       setCurrentSetScores({}); // Reset current set scores
@@ -562,55 +656,84 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
         {/* Selection Interface - Always show when expanded OR when locked */}
         {(isExpanded || isLocked) && (
-          <div className="space-y-6">
+          <div className="space-y-0">
+
+
             {/* Current vs New Picks Display */}
-            <div className="bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-6 border border-[#00ffe7]/30">
+            <div className="my-6 bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-6 border border-[#00ffe7]/30">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${
+                  <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
                     isLocked 
-                      ? 'bg-[#00ffe7]/20 border-[#00ffe7]' 
-                      : 'bg-red-500/20 border-red-500'
+                      ? 'bg-[#4169e1]/20 border-[#4169e1] shadow-[0_0_10px_#4169e1]' 
+                      : 'bg-yellow-500/20 border-yellow-500'
                   }`}>
-                    {isLocked ? <FaLock className="text-[#00ffe7] text-sm" /> : <FaUnlock className="text-red-500 text-sm" />}
+                    {isLocked ? <FaLock className="text-[#4169e1] text-sm" /> : <FaCrosshairs className="text-yellow-500 text-sm" />}
                   </div>
                   <div>
-                    <h4 className="text-white font-bold text-lg">
+                    <h4 className="text-white font-bold text-lg transition-all duration-500">
                       {isLocked ? 'Selected Picks' : `Your Picks (${newPicks.filter(p => p).length}/5)`}
                     </h4>
-                    {isLocked && (
-                      <p className="text-[#b0b7bf] text-xs">
-                        🔒 Locked - {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
-                      </p>
-                    )}
                   </div>
                 </div>
-                {isLocked && (
-                  <div className="text-right">
-                    <div className="text-[#00ffe7] text-3xl font-bold">{totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0)}</div>
+                
+                {/* Lock In Button or Total Score */}
+                {!isLocked && isRosterOpen ? (
+                  <button
+                    onClick={handleLockIn}
+                    disabled={newPicks.filter(p => p).length === 0}
+                    className={`py-2 px-4 flex items-center gap-2 min-w-[120px] h-[60px] ${
+                      newPicks.filter(p => p).length > 0
+                        ? 'btn-pink'
+                        : 'bg-gray-700/20 border-2 border-gray-600 text-gray-500 cursor-not-allowed rounded'
+                    }`}
+                  >
+                    <FaUnlock />
+                    Lock In {newPicks.filter(p => p).length > 0 ? `(${newPicks.filter(p => p).length})` : ''}
+                  </button>
+                ) : (
+                  <div className={`text-right transition-all duration-500 min-w-[120px] h-[60px] flex flex-col justify-center ${
+                    isLocked ? 'opacity-100' : 'opacity-0'
+                  }`}>
+                    <div className="text-[#00ffe7] text-3xl font-bold leading-tight">{totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0)}</div>
                     <div className="text-[#b0b7bf] text-xs">Total pts</div>
                   </div>
                 )}
               </div>
 
               {selectedPlayers.length > 0 || newPicks.filter(p => p).length > 0 ? (
-                <div className={`grid ${isLocked && !isAnimating ? 'grid-cols-1' : 'grid-cols-2'} gap-4 transition-all duration-1000`}>
+                <div className={`relative grid ${isLocked || !isRosterOpen ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                   {/* Current Picks Column */}
                   <div>
-                    {!isLocked && <div className="text-[#b0b7bf] text-xs mb-2 font-bold">CURRENT</div>}
+                    <div className="text-[#b0b7bf] text-xs mb-2 font-bold h-[20px] flex items-center">
+                      {!isLocked ? (
+                        'CURRENT'
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          🔒 Locked
+                        </div>
+                      )}
+                    </div>
                     <div className="space-y-2">
                       {selectedPlayers.length > 0 ? selectedPlayers.map((player, idx) => {
                         const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
                         const playerScore = currentSetScores[player.id] || 0;
-                        // Check if this current pick is being replaced by a new pick
-                        const isBeingReplaced = isAnimating && newPicks.filter(p => p).some(p => p && p.id !== player.id);
+                        // Check if THIS specific pick is being replaced by checking if there's a new pick at this index
+                        const isBeingReplaced = isAnimating && newPicks[idx] && newPicks[idx].id !== player.id;
                         
                         return (
                           <div
                             key={player.id}
-                            className={`bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] transition-all duration-1000 ${
-                              isBeingReplaced ? 'opacity-0 scale-95' : 'opacity-100'
+                            className={`bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] ${
+                              isBeingReplaced ? 'opacity-30' : 'opacity-100'
                             }`}
+                            style={{
+                              marginBottom: '8px',
+                              width: !isLocked ? '100%' : isAnimating ? '50%' : '100%',
+                              transition: isLocked && isAnimating 
+                                ? 'opacity 1000ms ease-in-out' 
+                                : 'opacity 1000ms ease-in-out, width 800ms ease-in-out'
+                            }}
                           >
                             <div className="w-6 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
                               {idx + 1}
@@ -619,7 +742,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                               <img
                                 src={headshotUrl}
                                 alt={player.displayName}
-                                className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50"
+                                className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
                                 onError={(e) => {
                                   (e.currentTarget as HTMLImageElement).style.display = 'none';
                                   const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -633,48 +756,26 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                             >
                               <FaUsers className="text-[#00ffe7] text-sm" />
                             </div>
-                            <div className="min-w-0">
-                              <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
-                              <div className="text-[#00ffe7] text-xs">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-white font-bold text-sm whitespace-nowrap overflow-hidden text-ellipsis">{player.shortName}</div>
+                              <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis">
                                 {player.position.abbreviation}{player.jersey && ` • #${player.jersey}`}
                               </div>
                             </div>
                             
-                            {/* Stats - Only show when locked */}
-                            {isLocked && (
+                            {/* Score - Show when not actively picking players */}
+                            {(isLocked || !isRosterOpen) && showStats && (
                               <div 
-                                className={`flex items-center gap-4 ml-auto ${
-                                  showStats ? 'opacity-100' : 'opacity-0'
-                                }`} 
+                                className={`text-center transition-all duration-700 ${
+                                  showStats ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                                }`}
                                 style={{ 
-                                  animation: showStats ? 'fadeInStats 600ms ease-out forwards' : 'none',
-                                  animationDelay: `${idx * 100}ms`
+                                  transitionDelay: `${idx * 100}ms`,
+                                  transformOrigin: 'center'
                                 }}
                               >
-                                <div className="text-center">
-                                  <div className="text-[#b0b7bf] text-[10px]">CAR</div>
-                                  <div className="text-white font-bold text-sm">0</div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="text-[#b0b7bf] text-[10px]">YDS</div>
-                                  <div className="text-white font-bold text-sm">0</div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="text-[#b0b7bf] text-[10px]">AVG</div>
-                                  <div className="text-white font-bold text-sm">0.0</div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="text-[#b0b7bf] text-[10px]">TD</div>
-                                  <div className="text-white font-bold text-sm">0</div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="text-[#b0b7bf] text-[10px]">LONG</div>
-                                  <div className="text-white font-bold text-sm">0</div>
-                                </div>
-                                <div className="text-center border-l-2 border-[#00ffe7]/30 pl-4">
-                                  <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
-                                  <div className="text-[#b0b7bf] text-[10px]">PTS</div>
-                                </div>
+                                <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
+                                <div className="text-[#b0b7bf] text-[10px]">PTS</div>
                               </div>
                             )}
                           </div>
@@ -687,26 +788,18 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                     </div>
                   </div>
 
-                  {/* Arrow */}
-                  {!isLocked && selectedPlayers.length > 0 && newPicks.filter(p => p).length > 0 && (
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                      <FaArrowRight className="text-[#00ffe7] text-2xl" />
-                    </div>
-                  )}
 
-                  {/* New Picks Column - Hide when locked (but keep visible during animation) */}
-                  {(!isLocked || isAnimating) && (
-                    <div className={`relative transition-all duration-1000 ${
-                      isAnimating ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                    }`}>
-                    <div className="text-[#faafe8] text-xs mb-2 font-bold">NEW</div>
+                  {/* New Picks Column - Hide when locked or roster closed */}
+                  {!isLocked && isRosterOpen && (
+                    <div className="relative transition-all duration-1000">
+                    <div className="text-[#faafe8] text-xs mb-2 font-bold h-[20px] flex items-center">NEW</div>
                     <div className="space-y-2">
                       {[...Array(5)].map((_, idx) => {
                         const player = newPicks[idx];
                         if (player) {
                           return <DraggablePlayerCard key={player.id} player={player} index={idx} movePlayer={movePlayer} isAnimating={isAnimating} />;
                         } else {
-                          return <EmptySlot key={`empty-${idx}`} index={idx} movePlayer={movePlayer} />;
+                          return <EmptySlot key={`empty-${idx}`} index={idx} movePlayer={movePlayer} isActive={activeSlot === idx} onSlotClick={(slotIndex) => setActiveSlot(activeSlot === slotIndex ? null : slotIndex)} />;
                         }
                       })}
                     </div>
@@ -719,35 +812,114 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                   <p className="text-gray-400 text-sm">Select up to 5 players</p>
                 </div>
               )}
-
-              {/* Lock In Button - Hide when locked */}
-              {!isLocked && (
-                <button
-                  onClick={handleLockIn}
-                  disabled={newPicks.filter(p => p).length === 0}
-                  className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all mt-4 ${
-                    newPicks.filter(p => p).length > 0
-                      ? 'btn-pink cursor-pointer'
-                      : 'bg-gray-700/20 border-2 border-gray-600 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  <FaUnlock />
-                  Lock In {newPicks.filter(p => p).length > 0 ? `(${newPicks.filter(p => p).length})` : ''}
-                </button>
-              )}
             </div>
 
-            {/* Team Selector & Roster - Hide when locked */}
-            {!isLocked && (
+            {/* Toggle Button / Countdown Timer Panel */}
+            {isLocked ? (
+              <div className={`space-y-4 transition-all duration-700 ${
+                showStats ? 'opacity-100' : 'opacity-0'
+              }`}>
+                <div className="bg-gradient-to-r from-[#00ffe7]/5 to-[#faafe8]/5 rounded-lg p-4 border border-[#00ffe7]/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#00ffe7]/20 border-2 border-[#00ffe7] flex items-center justify-center">
+                        <FaLock className="text-[#00ffe7] text-sm" />
+                      </div>
+                      <div>
+                        <div className="text-white font-bold text-sm">Picks Locked</div>
+                        <div className="text-[#b0b7bf] text-xs">Next selection available in</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FaClock className="text-[#00ffe7] text-xl" />
+                      <div className="text-[#00ffe7] text-3xl font-bold font-mono">
+                        {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Play Log */}
+                {playLog.length > 0 && (
+                  <div className="bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/20 max-h-[400px] overflow-y-auto">
+                    <h5 className="text-[#00ffe7] font-bold text-sm mb-3">Play Log</h5>
+                    <div className="space-y-2">
+                      {playLog.slice().reverse().map((play, idx) => (
+                        <div key={idx} className="bg-black/30 rounded p-2 text-xs">
+                          <div className="text-gray-400">
+                            {play.athletesInvolved && play.athletesInvolved.length > 0 && (
+                              <div className="text-[#00ffe7]">
+                                {play.athletesInvolved.map((athlete, i) => {
+                                  const player = [...homeRoster, ...awayRoster].find(p => p.id === athlete.id);
+                                  const isSelected = selectedPlayers.some(p => p.id === athlete.id);
+                                  return (
+                                    <span key={i} className={isSelected ? 'font-bold text-[#faafe8]' : ''}>
+                                      {player ? player.shortName : athlete.id}
+                                      {i < play.athletesInvolved!.length - 1 ? ', ' : ''}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {/* Field View Button */}
+                <button
+                  onClick={() => {
+                    if (!isExpanded) {
+                      onToggle();
+                    }
+                    setIsRosterOpen(false);
+                  }}
+                  className={`p-4 flex items-center justify-center gap-3 ${
+                    isExpanded && !isRosterOpen ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] rounded' : 'btn-standard'
+                  }`}>
+                  <FaFootballBall className="text-xl" />
+                  <span>Field</span>
+                </button>
+
+                {/* Pick Players Button */}
+                <button
+                  onClick={() => setIsRosterOpen(!isRosterOpen)}
+                  className={`p-4 flex items-center justify-center gap-3 ${
+                    isRosterOpen ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] rounded' : 'btn-standard'
+                  }`}>
+                  <FaHandPointer className="text-xl" />
+                  <span>{isRosterOpen ? 'Cancel' : 'Pick Players'}</span>
+                </button>
+              </div>
+            )}
+
+            {/* Field Situation View - Show when expanded and not in roster mode */}
+            {isExpanded && !isRosterOpen && situation && homeTeam && awayTeam && getTeamLogo && (
+              <div className="bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-6 border border-[#00ffe7]/30">
+                <Situation
+                  situation={situation}
+                  homeTeam={homeTeam}
+                  awayTeam={awayTeam}
+                  playLog={playLog}
+                  getTeamLogo={getTeamLogo}
+                />
+              </div>
+            )}
+            {/* Team Selector & Roster - Show when roster is open and not locked */}
+            {!isLocked && isRosterOpen && (
               <>
             {/* Team Selector */}
-            <div className="flex gap-2">
+            <div className="flex gap-0 pt-6">
               <button
                 onClick={() => setActiveTeam('home')}
-                className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
+                className={`flex-1 py-3 rounded-t-lg font-bold flex items-center justify-center gap-2 transition-all border-2 ${
                   activeTeam === 'home'
-                    ? 'bg-[#faafe8]/20 border-2 border-[#faafe8] text-[#faafe8]'
-                    : 'bg-[#181a23] border-2 border-[#faafe8]/30 text-gray-400 hover:border-[#faafe8]/50'
+                    ? 'bg-[#faafe8]/20 border-[#faafe8] text-[#faafe8]'
+                    : 'bg-[#181a23] border-[#faafe8]/30 text-gray-400 hover:border-[#faafe8]/50'
                 }`}
               >
                 {homeTeamLogo && <img src={homeTeamLogo} alt="" className="w-6 h-6" />}
@@ -755,10 +927,10 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
               </button>
               <button
                 onClick={() => setActiveTeam('away')}
-                className={`flex-1 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
+                className={`flex-1 py-3 rounded-t-lg font-bold flex items-center justify-center gap-2 transition-all border-2 ${
                   activeTeam === 'away'
-                    ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7]'
-                    : 'bg-[#181a23] border-2 border-[#00ffe7]/30 text-gray-400 hover:border-[#00ffe7]/50'
+                    ? 'bg-[#00ffe7]/20 border-[#00ffe7] text-[#00ffe7]'
+                    : 'bg-[#181a23] border-[</h4>#00ffe7]/30 text-gray-400 hover:border-[#00ffe7]/50'
                 }`}
               >
                 {awayTeamLogo && <img src={awayTeamLogo} alt="" className="w-6 h-6" />}
@@ -767,8 +939,8 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
             </div>
 
             {/* Player List */}
-            <div className="bg-[#181a23]/90 rounded-lg border border-[#00ffe7]/30 p-4 max-h-[500px] overflow-y-auto">
-              <h4 className="text-[#00ffe7] font-bold mb-4 sticky top-0 bg-[#181a23] pb-2 flex items-center gap-2">
+            <div className="bg-[#181a23]/90 rounded-b-lg border-2 border-t-0 border-[#00ffe7]/30 p-4">
+              <h4 className="text-[#00ffe7] font-bold mb-4 flex items-center gap-2">
                 {currentTeamLogo && <img src={currentTeamLogo} alt="" className="w-6 h-6" />}
                 {currentTeamInfo.name} Roster
               </h4>
@@ -777,7 +949,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 {/* Offense Column */}
                 <div>
-                  <h5 className="text-[#faafe8] font-bold text-sm mb-2 sticky top-0 bg-[#181a23] pb-1">OFFENSE</h5>
+                  <h5 className="text-[#faafe8] font-bold text-sm mb-2">OFFENSE</h5>
                   <div className="space-y-2">
                     {currentRoster.filter(player => {
                       const pos = player.position.abbreviation;
@@ -834,7 +1006,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
                 {/* Defense Column */}
                 <div>
-                  <h5 className="text-[#faafe8] font-bold text-sm mb-2 sticky top-0 bg-[#181a23] pb-1">DEFENSE</h5>
+                  <h5 className="text-[#faafe8] font-bold text-sm mb-2">DEFENSE</h5>
                   <div className="space-y-2">
                     {currentRoster.filter(player => {
                       const pos = player.position.abbreviation;

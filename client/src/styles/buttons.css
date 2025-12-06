@@ -1,6 +1,6 @@
 .btn-standard {
-  @apply text-center bg-gradient-to-br from-[#2d3047] to-[#181a23] text-[#e0e7ef] font-[500] rounded transition duration-200;
-  @apply active:bg-gradient-to-br active:from-[#181a23] active:to-[#2d3047] hover:font-bold border border-[#23263a] shadow-[0_0_8px_rgba(35,38,58,0.5)] hover:shadow-[0_0_12px_#00ffe7] hover:brightness-110 active:brightness-95;
+  @apply text-center bg-transparent text-[#00ffe7] font-bold rounded transition duration-200;
+  @apply hover:bg-[#00ffe7]/10 border-2 border-[#00ffe7]/30 hover:border-[#00ffe7] shadow-[0_0_8px_rgba(0,255,231,0.2)] hover:shadow-[0_0_12px_#00ffe7];
 }
 
 .btn-teal {

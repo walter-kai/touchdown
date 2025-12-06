@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
 import axios from 'axios';
-import ScoreboardView from './Scoreboard';
+import ScoreboardView from './scoreboard/Scoreboard';
 import SummaryView from './Summary';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';

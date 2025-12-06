@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaFootballBall, FaChartBar, FaClock, FaPauseCircle } from 'react-icons/fa';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import ProbChart from '@/components/nfl/ProbabilityChart';
-import PlayerPick from '@/components/nfl/PlayerPick';
+import PlayerPick from '@/pages/nfl/scoreboard/PlayerPick';
 import { usePicks } from '@/providers/PicksContext';
 import type { Event } from '@/types/espn/scoreboard';
 
@@ -685,6 +685,10 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                     isExpanded={isPickExpanded}
                     onToggle={() => setIsPickExpanded(!isPickExpanded)}
                     playLog={playLog}
+                    situation={competition.situation}
+                    homeTeam={homeTeam}
+                    awayTeam={awayTeam}
+                    getTeamLogo={getTeamLogo}
                   />
                 )}
               </div>
