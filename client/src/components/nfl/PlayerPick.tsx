@@ -6,7 +6,6 @@ import { HTML5Backend, getEmptyImage } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
-import Situation from './situation';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {
@@ -59,57 +58,10 @@ interface PlayerPickProps {
   isExpanded: boolean;
   onToggle: () => void;
   playLog: Array<{
-    text: string;
-    quarter: number;
-    clock: string;
-    yardage?: number;
-    timestamp: Date;
-    possession?: string;
     athletesInvolved?: Array<{
       id: string;
-      fullName: string;
-      displayName: string;
-      shortName: string;
-      headshot: string;
-      jersey: string;
-      position: string;
-      team: { id: string };
     }>;
   }>;
-  situation?: {
-    lastPlay?: {
-      start?: { yardLine: number };
-      end?: { yardLine: number };
-      athletesInvolved?: Array<{
-        displayName: string;
-        headshot: string;
-        position: string;
-      }>;
-    };
-    downDistanceText?: string;
-    possession?: string;
-    awayTimeouts?: number;
-    homeTimeouts?: number;
-  };
-  homeTeam?: {
-    id: string;
-    team: {
-      displayName: string;
-      abbreviation: string;
-      logo?: string;
-      logos?: Array<{ href: string }>;
-    };
-  };
-  awayTeam?: {
-    id: string;
-    team: {
-      displayName: string;
-      abbreviation: string;
-      logo?: string;
-      logos?: Array<{ href: string }>;
-    };
-  };
-  getTeamLogo?: (team: any) => string;
 }
 
 const ItemTypes = {
@@ -298,11 +250,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   awayTeamInfo,
   isExpanded,
   onToggle,
-  playLog,
-  situation,
-  homeTeam,
-  awayTeam,
-  getTeamLogo
+  playLog
 }) => {
   const [homeRoster, setHomeRoster] = useState<Athlete[]>([]);
   const [awayRoster, setAwayRoster] = useState<Athlete[]>([]);
@@ -320,7 +268,6 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   const [showStats, setShowStats] = useState(false);
   const [isRosterOpen, setIsRosterOpen] = useState(false);
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
-  const [isViewTransitioning, setIsViewTransitioning] = useState(false);
 
   // Load saved state from localStorage
   useEffect(() => {
@@ -560,10 +507,9 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
         setSelectedPlayers(swappedPicks);
         setNewPicks([]);
         setIsLocked(true);
-        setIsRosterOpen(false); // Close roster to trigger grid shrinking
       }, 1200);
       
-      // Step 2: Very shortly after lock (1250ms), end animation state to allow widening animation
+      // Step 2: Very shortly after lock (1250ms), end animation state to trigger widening
       setTimeout(() => {
         setIsAnimating(false);
       }, 1250);
@@ -658,11 +604,9 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
         {/* Selection Interface - Always show when expanded OR when locked */}
         {(isExpanded || isLocked) && (
-          <div className="space-y-0">
-
-
+          <div className="space-y-6">
             {/* Current vs New Picks Display */}
-            <div className="my-6 bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-6 border border-[#00ffe7]/30">
+            <div className="bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-6 border border-[#00ffe7]/30">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
@@ -684,9 +628,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                   <button
                     onClick={handleLockIn}
                     disabled={newPicks.filter(p => p).length === 0}
-                    className={`py-2 px-4 flex items-center gap-2 min-w-[120px] h-[60px] transition-opacity duration-300 ${
-                      isViewTransitioning ? 'opacity-0' : 'opacity-100'
-                    } ${
+                    className={`py-2 px-4 flex items-center gap-2 min-w-[120px] h-[60px] ${
                       newPicks.filter(p => p).length > 0
                         ? 'btn-pink'
                         : 'bg-gray-700/20 border-2 border-gray-600 text-gray-500 cursor-not-allowed rounded'
@@ -706,13 +648,9 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
               </div>
 
               {selectedPlayers.length > 0 || newPicks.filter(p => p).length > 0 ? (
-                <div className="relative flex gap-4">
+                <div className={`relative grid ${isLocked || !isRosterOpen ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                   {/* Current Picks Column */}
-                  <div 
-                    className="transition-all duration-800 ease-in-out"
-                    style={{
-                      width: (isRosterOpen && !isLocked) || isViewTransitioning || isAnimating ? 'calc(50% - 0.5rem)' : '100%'
-                    }}>
+                  <div>
                     <div className="text-[#b0b7bf] text-xs mb-2 font-bold h-[20px] flex items-center">
                       {!isLocked ? (
                         'CURRENT'
@@ -732,11 +670,15 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                         return (
                           <div
                             key={player.id}
-                            className={`bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] transition-all duration-800 ${
+                            className={`bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] ${
                               isBeingReplaced ? 'opacity-30' : 'opacity-100'
                             }`}
                             style={{
-                              marginBottom: '8px'
+                              marginBottom: '8px',
+                              width: !isLocked ? '100%' : isAnimating ? '50%' : '100%',
+                              transition: isLocked && isAnimating 
+                                ? 'opacity 1000ms ease-in-out' 
+                                : 'opacity 1000ms ease-in-out, width 800ms ease-in-out'
                             }}
                           >
                             <div className="w-6 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
@@ -795,13 +737,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
                   {/* New Picks Column - Hide when locked or roster closed */}
                   {!isLocked && isRosterOpen && (
-                    <div 
-                      className="transition-all duration-800 ease-in-out"
-                      style={{
-                        width: 'calc(50% - 0.5rem)',
-                        opacity: isViewTransitioning ? 0 : 1
-                      }}
-                    >
+                    <div className="relative transition-all duration-1000">
                     <div className="text-[#faafe8] text-xs mb-2 font-bold h-[20px] flex items-center">NEW</div>
                     <div className="space-y-2">
                       {[...Array(5)].map((_, idx) => {
@@ -879,33 +815,17 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 pb-6">
+              <div className="grid grid-cols-2 gap-4">
                 {/* Field View Button */}
                 <button
                   onClick={() => {
                     if (!isExpanded) {
                       onToggle();
                     }
-                    if (isRosterOpen) {
-                      // Start animation sequence - fade out NEW column first
-                      setIsViewTransitioning(true);
-                      
-                      console.log('Field clicked - closing roster. isRosterOpen:', isRosterOpen, 'isLocked:', isLocked);
-                      
-                      // Step 1: After fade completes, close roster (triggers grid + width change together)
-                      setTimeout(() => {
-                        setIsRosterOpen(false);
-                        console.log('Roster closed after 800ms');
-                      }, 800);
-                      
-                      // Step 2: Shortly after, end transition state
-                      setTimeout(() => {
-                        setIsViewTransitioning(false);
-                      }, 850);
-                    }
+                    setIsRosterOpen(false);
                   }}
                   className={`p-4 flex items-center justify-center gap-3 ${
-                    isExpanded && !isRosterOpen ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] rounded' : 'btn-standard'
+                    isExpanded ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] rounded' : 'btn-standard'
                   }`}>
                   <FaFootballBall className="text-xl" />
                   <span>Field</span>
@@ -913,22 +833,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
                 {/* Pick Players Button */}
                 <button
-                  onClick={() => {
-                    if (!isRosterOpen && isExpanded) {
-                      // Open roster immediately (triggers grid change + shrinking together)
-                      setIsRosterOpen(true);
-                      
-                      // Start transition for fade-in effect
-                      setIsViewTransitioning(true);
-                      
-                      // End transition after fade completes
-                      setTimeout(() => {
-                        setIsViewTransitioning(false);
-                      }, 800);
-                    } else {
-                      setIsRosterOpen(!isRosterOpen);
-                    }
-                  }}
+                  onClick={() => setIsRosterOpen(!isRosterOpen)}
                   className={`p-4 flex items-center justify-center gap-3 ${
                     isRosterOpen ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] rounded' : 'btn-standard'
                   }`}>
@@ -938,21 +843,8 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
               </div>
             )}
 
-            {/* Field Situation View - Show when expanded and not in roster mode */}
-            {isExpanded && !isRosterOpen && situation && homeTeam && awayTeam && getTeamLogo && (
-              <div className="bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-6 border border-[#00ffe7]/30 animate-fade-in">
-                <Situation
-                  situation={situation}
-                  homeTeam={homeTeam}
-                  awayTeam={awayTeam}
-                  playLog={playLog}
-                  getTeamLogo={getTeamLogo}
-                />
-              </div>
-            )}
             {/* Team Selector & Roster - Show when roster is open and not locked */}
             {!isLocked && isRosterOpen && (
-              <div className="animate-fade-in">
               <>
             {/* Team Selector */}
             <div className="flex gap-0">
@@ -972,7 +864,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                 className={`flex-1 py-3 rounded-t-lg font-bold flex items-center justify-center gap-2 transition-all border-2 ${
                   activeTeam === 'away'
                     ? 'bg-[#00ffe7]/20 border-[#00ffe7] text-[#00ffe7]'
-                    : 'bg-[#181a23] border-[</h4>#00ffe7]/30 text-gray-400 hover:border-[#00ffe7]/50'
+                    : 'bg-[#181a23] border-[#00ffe7]/30 text-gray-400 hover:border-[#00ffe7]/50'
                 }`}
               >
                 {awayTeamLogo && <img src={awayTeamLogo} alt="" className="w-6 h-6" />}
@@ -1105,7 +997,6 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
               </div>
             </div>
         </>
-        </div>
         )}
           </div>
         )}
