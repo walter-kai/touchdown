@@ -18,7 +18,7 @@ console.log(JSON.stringify(process.env, null, 2));
 console.log('=============================');
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.BACKEND_PORT;
 
 // Middleware
 app.use(morgan('combined')); // Logs HTTP requests
@@ -51,6 +51,11 @@ app.get('*', (req, res) => {
 
 // Start HTTP server
 const server = app.listen(port, () => {
+  console.log(`=== SERVER STARTED ===`);
   console.log(`Server is running on http://localhost:${port}`);
+  console.log(`PORT: ${port}`);
+  console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`HOST_URL: ${process.env.HOST_URL}`);
+  console.log(`======================`);
 });
 

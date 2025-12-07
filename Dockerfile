@@ -69,4 +69,4 @@ RUN apk add --no-cache nodejs npm && npm install --only=production
 EXPOSE 3001 443
 
 # Start Nginx and backend server using the start script in package.json
-CMD ["sh", "-c", "npm run start & nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "echo 'Starting backend server...' && npm run start & echo 'Starting nginx...' && nginx -g 'daemon off;'"]
