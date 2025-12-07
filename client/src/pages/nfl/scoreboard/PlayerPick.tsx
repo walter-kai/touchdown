@@ -325,38 +325,89 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   const [isViewTransitioning, setIsViewTransitioning] = useState(false);
   const [isLockingIn, setIsLockingIn] = useState(false);
 
-  // Load saved state from localStorage
+  // Load saved state from localStorage and backend
   useEffect(() => {
-    const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
-    if (savedState) {
-      const parsed = JSON.parse(savedState);
-      
-      // Always restore selections and total score
-      if (parsed.players && parsed.players.length > 0) {
-        setSelectedPlayers(parsed.players);
-        setTotalScore(parsed.totalScore || 0);
-        // If we have saved players, show stats
-        setShowStats(true);
+    const loadUserPicks = async () => {
+      try {
+        // First check backend for user's picks
+        const token = localStorage.getItem('dexter_access_token');
+        if (token && gameId) {
+          const response = await fetch(`/api/picks/game/${gameId}/user`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.picks && result.picks.players) {
+              const picks = result.picks;
+              
+              // Restore selections
+              setSelectedPlayers(picks.players);
+              setTotalScore(picks.totalScore || 0);
+              setShowStats(true);
+              
+              // Calculate remaining cooldown time from backend timestamp
+              if (picks.timestamp) {
+                const lockedAt = picks.timestamp._seconds 
+                  ? picks.timestamp._seconds * 1000 
+                  : new Date(picks.timestamp).getTime();
+                const elapsed = Date.now() - lockedAt;
+                const cooldownDuration = 120 * 1000; // 2 minutes in ms
+                const remaining = cooldownDuration - elapsed;
+                
+                if (remaining > 0) {
+                  setIsLocked(true);
+                  setCooldownTime(Math.ceil(remaining / 1000));
+                } else {
+                  // Cooldown expired but keep selections
+                  setIsLocked(false);
+                }
+              }
+              
+              return; // Skip localStorage if we got backend data
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user picks from backend:', error);
       }
       
-      // Check if still in cooldown period
-      if (parsed.lockedAt) {
-        const elapsed = Date.now() - parsed.lockedAt;
-        const remaining = 5000 - elapsed; // 5 seconds in ms
-        if (remaining > 0) {
-          setIsLocked(true);
-          setCooldownTime(Math.ceil(remaining / 1000));
-        } else {
-          // Cooldown expired but keep selections
-          setIsLocked(false);
+      // Fallback to localStorage if backend fails or no picks found
+      const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        
+        // Always restore selections and total score
+        if (parsed.players && parsed.players.length > 0) {
+          setSelectedPlayers(parsed.players);
+          setTotalScore(parsed.totalScore || 0);
+          setShowStats(true);
+        }
+        
+        // Check if still in cooldown period
+        if (parsed.lockedAt) {
+          const elapsed = Date.now() - parsed.lockedAt;
+          const cooldownDuration = 120 * 1000; // 2 minutes in ms
+          const remaining = cooldownDuration - elapsed;
+          if (remaining > 0) {
+            setIsLocked(true);
+            setCooldownTime(Math.ceil(remaining / 1000));
+          } else {
+            // Cooldown expired but keep selections
+            setIsLocked(false);
+          }
         }
       }
-    }
-  }, [homeTeamId, awayTeamId]);
+    };
+    
+    loadUserPicks();
+  }, [homeTeamId, awayTeamId, gameId]);
 
   // Calculate scores for current set based on playLog
   useEffect(() => {
-    if (selectedPlayers.length === 0 || !isLocked) {
+    if (selectedPlayers.length === 0) {
       setCurrentSetScores({});
       return;
     }
@@ -377,7 +428,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     });
 
     setCurrentSetScores(scores);
-  }, [playLog, selectedPlayers, isLocked]);
+  }, [playLog, selectedPlayers]);
 
   // Cooldown timer
   useEffect(() => {
@@ -650,7 +701,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
           <div className="bg-[#181a23]/50 rounded-lg p-3 mb-4 border border-[#00ffe7]/20">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[#00ffe7] text-xs font-bold">SELECTED PICKS</span>
-              <span className="text-[#b0b7bf] text-[10px]">Total: {totalScore} pts</span>
+              <span className="text-[#b0b7bf] text-[10px]">Total: {totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0)} pts</span>
             </div>
             <div className="space-y-1">
               {selectedPlayers.map((player, idx) => {
@@ -892,34 +943,6 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                   </div>
                 </div>
 
-                {/* Play Log */}
-                {playLog.length > 0 && (
-                  <div className="bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/20 max-h-[400px] overflow-y-auto">
-                    <h5 className="text-[#00ffe7] font-bold text-sm mb-3">Play Log</h5>
-                    <div className="space-y-2">
-                      {playLog.slice().reverse().map((play, idx) => (
-                        <div key={idx} className="bg-black/30 rounded p-2 text-xs">
-                          <div className="text-gray-400">
-                            {play.athletesInvolved && play.athletesInvolved.length > 0 && (
-                              <div className="text-[#00ffe7]">
-                                {play.athletesInvolved.map((athlete, i) => {
-                                  const player = [...homeRoster, ...awayRoster].find(p => p.id === athlete.id);
-                                  const isSelected = selectedPlayers.some(p => p.id === athlete.id);
-                                  return (
-                                    <span key={i} className={isSelected ? 'font-bold text-[#faafe8]' : ''}>
-                                      {player ? player.shortName : athlete.id}
-                                      {i < play.athletesInvolved!.length - 1 ? ', ' : ''}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4 pb-6">

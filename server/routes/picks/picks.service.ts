@@ -93,15 +93,21 @@ export async function createPick(args: CreatePickArgs) {
   batch.set(userPickRef, {
     userId: args.userId,
     gameId: args.gameId,
-    players: players.map(p => ({
-      id: p.id,
-      displayName: p.displayName || p.shortName,
-      shortName: p.shortName,
-      position: p.position?.abbreviation,
-      jersey: p.jersey,
-      headshot: p.headshot,
-      team: p.team,
-    })),
+    players: players.map(p => {
+      const playerData: any = {
+        id: p.id,
+        displayName: p.displayName || p.shortName,
+        shortName: p.shortName,
+      };
+      
+      // Only add fields if they're defined
+      if (p.position?.abbreviation !== undefined) playerData.position = p.position.abbreviation;
+      if (p.jersey !== undefined) playerData.jersey = p.jersey;
+      if (p.headshot !== undefined) playerData.headshot = p.headshot;
+      if (p.team !== undefined) playerData.team = p.team;
+      
+      return playerData;
+    }),
     totalScore: args.picksState.totalScore || 0,
     lockedAt: args.picksState.lockedAt,
     homeTeamId: args.homeTeamId,
