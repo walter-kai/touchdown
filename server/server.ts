@@ -18,6 +18,12 @@ console.log('=== ENVIRONMENT VARIABLES ===');
 console.log(JSON.stringify(process.env, null, 2));
 console.log('=============================');
 
+// Validate required environment variable
+if (!process.env.BACKEND_PORT) {
+  console.error('FATAL: BACKEND_PORT environment variable is not set');
+  process.exit(1);
+}
+
 const app = express();
 const port = process.env.BACKEND_PORT;
 

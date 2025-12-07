@@ -61,12 +61,16 @@ COPY --from=server-build /app/types ./types
 # Copy Nginx configuration
 COPY ./nginx.conf /etc/nginx/nginx.conf
 
-# Install production dependencies for the server
+# Install production dependencies for the server and netcat for health checks
 COPY ./package*.json ./
-RUN apk add --no-cache nodejs npm && npm install --only=production
+RUN apk add --no-cache nodejs npm netcat-openbsd && npm install --only=production
+
+# Set environment variables for production
+ENV BACKEND_PORT=3001
+ENV NODE_ENV=production
 
 # Expose ports for Nginx and backend server
 EXPOSE 3001 443
 
-# Start Nginx and backend server using the start script in package.json
-CMD ["sh", "-c", "echo 'Starting backend server...' && npm run start & echo 'Starting nginx...' && nginx -g 'daemon off;'"]
+# Start backend server and wait for it to be ready before starting nginx
+CMD ["sh", "-c", "npm run start & echo 'Waiting for backend on port 3001...' && while ! nc -z 127.0.0.1 3001; do sleep 1; done && echo 'Backend ready, starting nginx...' && nginx -g 'daemon off;'"]
