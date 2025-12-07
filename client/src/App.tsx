@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
-import OnlineFooterNavBar from './components/common/navs/FooterNavBar';
-import GameNavBar from './components/common/navs/MainNavBar';
+import GameNavBar from './components/common/navs/NavBar';
+import LoginNav from './components/common/navs/LoginNav';
 
 import NFL from './pages/nfl/NFL';
 import NFLTeamPage from './pages/nfl/Team';
@@ -136,21 +136,11 @@ const App: React.FC = () => {
     <PicksProvider>
       <div className="min-h-screen overflow-x-hidden relative bg-black/90 bg-blend-overlay">
       
+      {/* Top Login/Nav */}
+      <LoginNav />
+
       {/* Content Container */}
       <div className="relative z-10 flex flex-col min-h-screen">
-        {location.pathname.startsWith("/i/") && user && (
-          <>
-     
-            <OnlineFooterNavBar 
-              navigate={navigate}
-              toggleButtonRef={onlineToggleButtonRef as React.RefObject<HTMLButtonElement>}
-              showFooterMenu={showOnlineFooterMenu}
-              setShowFooterMenu={setShowOnlineFooterMenu}
-              menuRef={onlineMenuRef as React.RefObject<HTMLDivElement>}
-              currentPath={location.pathname}
-            />
-          </>
-        )}
         
         {/* Main content area that grows to fill space */}
         <div className="flex-1 relative">

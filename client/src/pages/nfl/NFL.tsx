@@ -10,19 +10,8 @@ import type {
 } from '@/types/espn/scoreboard';
 import type { NewsArticle } from '@/types/espn/news';
 import NewsCard from '@/components/nfl/NewsCard';
-import GoogleLoginButton from '@/components/common/GoogleLoginButton';
 
-const AuthDebug: React.FC = () => {
-  const { user } = useAuth();
-  const token = typeof window !== 'undefined' ? localStorage.getItem('dexter_access_token') : null;
-  return (
-    <div className="mx-auto mb-3 max-w-md text-xs text-gray-400">
-      <div>Auth user: {user ? (user.email || user.username || user.displayName) : 'none'}</div>
-      <div>Token present: {token ? 'yes' : 'no'}</div>
-    </div>
-  );
-};
-import { useAuth } from '@/providers/AuthContext';
+// Removed AuthDebug banner per design request
 
 interface ESPNData extends ScoreboardResponse {
   news?: {
@@ -32,7 +21,6 @@ interface ESPNData extends ScoreboardResponse {
 
 const NFLScoreboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuth();
   const [games, setGames] = useState<Event[]>([]);
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [byeTeams, setByeTeams] = useState<TeamOnBye[]>([]);
@@ -173,45 +161,10 @@ const NFLScoreboard: React.FC = () => {
   }, [countdown, selectedWeek]);
 
   return (
-	<div className="max-w-7xl mx-auto px-4 py-12">
+  <>
+  <div className="max-w-7xl mx-auto px-4 py-8">
 	
-	{/* Header */}
-	<div className="mb-8 text-center">
-    <AuthDebug />
-		<div className="flex items-center justify-center gap-4 mb-5">
-			<FaFootballBall className="text-4xl text-[#00ffe7] animate-pulse" />
-			<h1 className="text-4xl md:text-5xl font-bold text-[#00ffe7]">
-				NFL Drive v1.0
-			</h1>
-			<FaFootballBall className="text-4xl text-[#00ffe7] animate-pulse" />
-		</div>
-		
-		{/* Google Login Button */}
-		{!isAuthenticated && (
-			<div className="mb-6">
-				<GoogleLoginButton />
-			</div>
-		)}
-		
-		{/* User Info */}
-    {isAuthenticated && user && (
-      <div className="mb-6 flex items-center justify-center gap-4">
-        {user.photoUrl && (
-          <img src={user.photoUrl} alt={user.displayName || user.username || 'User'} className="w-10 h-10 rounded-full border-2 border-[#00ffe7]" />
-        )}
-        <span className="text-lg text-white font-medium">
-          Welcome, {user.displayName || user.username || user.email}
-        </span>
-        <button
-          onClick={logout}
-          className="px-3 py-1.5 text-sm rounded-md bg-red-600/80 hover:bg-red-600 text-white border border-red-400/40"
-        >
-          Log out
-        </button>
-      </div>
-    )}
-		
-		{/* Week Navigation */}
+  {/* Week Navigation */}
 		<div className="flex items-center justify-center gap-4 mb-4">
 			<button
 				onClick={handlePreviousWeek}
@@ -271,7 +224,7 @@ const NFLScoreboard: React.FC = () => {
 		</div>
 	)}
 
-	{/* Error State */}
+  {/* Error State */}
 	{error && (
 		<div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 sm:p-5 md:p-6 text-center">
 		<p className="text-red-400 font-bold mb-2 text-sm sm:text-base">Error loading data</p>
@@ -279,7 +232,7 @@ const NFLScoreboard: React.FC = () => {
 		</div>
 	)}
 
-	{/* Games Grid */}
+  {/* Games Grid */}
 	{!initialLoading && games.length > 0 && (() => {
 		const liveGames = games.filter(game => game.status.type.state === 'in');
 		const completedGames = games.filter(game => game.status.type.completed);
@@ -335,7 +288,7 @@ const NFLScoreboard: React.FC = () => {
 		);
 	})()}
 
-	{/* No Games */}
+  {/* No Games */}
 	{!initialLoading && games.length === 0 && !error && (
 		<div className="text-center py-12 sm:py-16 md:py-20">
 		<FaFootballBall className="text-4xl sm:text-5xl md:text-6xl text-[#faafe8] mx-auto mb-3 sm:mb-4" />
@@ -343,7 +296,7 @@ const NFLScoreboard: React.FC = () => {
 		</div>
 	)}
 
-	{/* News Section - Moved to Bottom */}
+  {/* News Section - Moved to Bottom */}
 	{news.length > 0 && (
 		<div className="mt-12">
 			<h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
@@ -357,8 +310,8 @@ const NFLScoreboard: React.FC = () => {
 			</div>
 		</div>
 	)}
-
-	</div>
+  
+  </>
   );
 };
 
