@@ -799,123 +799,127 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                 )}
               </div>
 
-              {selectedPlayers.length > 0 || newPicks.filter(p => p).length > 0 ? (
-                <div className="relative flex gap-4">
-                  {/* Current Picks Column */}
+              <div className="relative flex gap-4">
+                {/* Current Picks Column */}
+                <div 
+                  className="transition-all duration-800 ease-in-out"
+                  style={{
+                    width: (isRosterOpen && !isLocked) || isViewTransitioning || isAnimating ? 'calc(50% - 0.5rem)' : '100%'
+                  }}>
+                  <div className="text-[#b0b7bf] text-xs mb-2 font-bold h-[20px] flex items-center">
+                    {!isLocked ? (
+                      'CURRENT'
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        🔒 Locked
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {[...Array(5)].map((_, idx) => {
+                      const player = selectedPlayers[idx];
+                      if (!player) {
+                        return (
+                          <div
+                            key={`empty-current-${idx}`}
+                            className="bg-[#181a23]/50 rounded-lg p-4 border border-dashed border-[#00ffe7]/20 flex items-center gap-4 h-[72px]"
+                          >
+                            <div className="w-6 h-6 rounded-full bg-[#00ffe7]/20 text-[#00ffe7] font-bold text-xs flex items-center justify-center flex-shrink-0">
+                              {idx + 1}
+                            </div>
+                            <div className="text-[#b0b7bf] text-sm">Empty Slot</div>
+                          </div>
+                        );
+                      }
+
+                      const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+                      const playerScore = currentSetScores[player.id] || 0;
+                      // Check if THIS specific pick is being replaced by checking if there's a new pick at this index
+                      const isBeingReplaced = isAnimating && newPicks[idx] && newPicks[idx].id !== player.id;
+                      
+                      return (
+                        <div
+                          key={player.id}
+                          className={`bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] transition-all duration-800 ${
+                            isBeingReplaced ? 'opacity-30' : 'opacity-100'
+                          }`}
+                          style={{
+                            marginBottom: '8px'
+                          }}
+                        >
+                          <div className="w-6 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
+                            {idx + 1}
+                          </div>
+                          {headshotUrl ? (
+                            <img
+                              src={headshotUrl}
+                              alt={player.displayName}
+                              className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
+                            style={{ display: headshotUrl ? 'none' : 'flex' }}
+                          >
+                            <FaUsers className="text-[#00ffe7] text-sm" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-white font-bold text-sm whitespace-nowrap overflow-hidden text-ellipsis">{player.shortName}</div>
+                            <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                              {typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}
+                            </div>
+                          </div>
+                          
+                          {/* Score - Show when not actively picking players */}
+                          {(isLocked || !isRosterOpen) && showStats && (
+                            <div 
+                              className={`text-center transition-all duration-700 ${
+                                showStats ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                              }`}
+                              style={{ 
+                                transitionDelay: `${idx * 100}ms`,
+                                transformOrigin: 'center'
+                              }}
+                            >
+                              <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
+                              <div className="text-[#b0b7bf] text-[10px]">PTS</div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+
+                {/* New Picks Column - Hide when locked or roster closed */}
+                {!isLocked && isRosterOpen && (
                   <div 
                     className="transition-all duration-800 ease-in-out"
                     style={{
-                      width: (isRosterOpen && !isLocked) || isViewTransitioning || isAnimating ? 'calc(50% - 0.5rem)' : '100%'
-                    }}>
-                    <div className="text-[#b0b7bf] text-xs mb-2 font-bold h-[20px] flex items-center">
-                      {!isLocked ? (
-                        'CURRENT'
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          🔒 Locked
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      {selectedPlayers.length > 0 ? selectedPlayers.map((player, idx) => {
-                        const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
-                        const playerScore = currentSetScores[player.id] || 0;
-                        // Check if THIS specific pick is being replaced by checking if there's a new pick at this index
-                        const isBeingReplaced = isAnimating && newPicks[idx] && newPicks[idx].id !== player.id;
-                        
-                        return (
-                          <div
-                            key={player.id}
-                            className={`bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] transition-all duration-800 ${
-                              isBeingReplaced ? 'opacity-30' : 'opacity-100'
-                            }`}
-                            style={{
-                              marginBottom: '8px'
-                            }}
-                          >
-                            <div className="w-6 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
-                              {idx + 1}
-                            </div>
-                            {headshotUrl ? (
-                              <img
-                                src={headshotUrl}
-                                alt={player.displayName}
-                                className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
-                                onError={(e) => {
-                                  (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                  const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                                  if (fallback) fallback.style.display = 'flex';
-                                }}
-                              />
-                            ) : null}
-                            <div 
-                              className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
-                              style={{ display: headshotUrl ? 'none' : 'flex' }}
-                            >
-                              <FaUsers className="text-[#00ffe7] text-sm" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-white font-bold text-sm whitespace-nowrap overflow-hidden text-ellipsis">{player.shortName}</div>
-                              <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis">
-                                {typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}
-                              </div>
-                            </div>
-                            
-                            {/* Score - Show when not actively picking players */}
-                            {(isLocked || !isRosterOpen) && showStats && (
-                              <div 
-                                className={`text-center transition-all duration-700 ${
-                                  showStats ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
-                                }`}
-                                style={{ 
-                                  transitionDelay: `${idx * 100}ms`,
-                                  transformOrigin: 'center'
-                                }}
-                              >
-                                <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
-                                <div className="text-[#b0b7bf] text-[10px]">PTS</div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      }) : (
-                        <div className="bg-[#181a23]/50 rounded-lg p-8 border border-dashed border-[#00ffe7]/20 text-center">
-                          <p className="text-gray-500 text-xs">No picks yet</p>
-                        </div>
-                      )}
-                    </div>
+                      width: 'calc(50% - 0.5rem)',
+                      opacity: isViewTransitioning ? 0 : 1
+                    }}
+                  >
+                  <div className="text-[#faafe8] text-xs mb-2 font-bold h-[20px] flex items-center">NEW</div>
+                  <div className="space-y-2">
+                    {[...Array(5)].map((_, idx) => {
+                      const player = newPicks[idx];
+                      if (player) {
+                        return <DraggablePlayerCard key={player.id} player={player} index={idx} movePlayer={movePlayer} isAnimating={isAnimating} />;
+                      } else {
+                        return <EmptySlot key={`empty-${idx}`} index={idx} movePlayer={movePlayer} isActive={activeSlot === idx} onSlotClick={(slotIndex) => setActiveSlot(activeSlot === slotIndex ? null : slotIndex)} />;
+                      }
+                    })}
                   </div>
-
-
-                  {/* New Picks Column - Hide when locked or roster closed */}
-                  {!isLocked && isRosterOpen && (
-                    <div 
-                      className="transition-all duration-800 ease-in-out"
-                      style={{
-                        width: 'calc(50% - 0.5rem)',
-                        opacity: isViewTransitioning ? 0 : 1
-                      }}
-                    >
-                    <div className="text-[#faafe8] text-xs mb-2 font-bold h-[20px] flex items-center">NEW</div>
-                    <div className="space-y-2">
-                      {[...Array(5)].map((_, idx) => {
-                        const player = newPicks[idx];
-                        if (player) {
-                          return <DraggablePlayerCard key={player.id} player={player} index={idx} movePlayer={movePlayer} isAnimating={isAnimating} />;
-                        } else {
-                          return <EmptySlot key={`empty-${idx}`} index={idx} movePlayer={movePlayer} isActive={activeSlot === idx} onSlotClick={(slotIndex) => setActiveSlot(activeSlot === slotIndex ? null : slotIndex)} />;
-                        }
-                      })}
-                    </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-[#181a23]/50 rounded-lg p-8 border border-dashed border-[#00ffe7]/20 text-center mb-4">
-                  <FaUsers className="text-gray-500 text-4xl mx-auto mb-2" />
-                  <p className="text-gray-400 text-sm">Select up to 5 players</p>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Toggle Button / Countdown Timer Panel */}

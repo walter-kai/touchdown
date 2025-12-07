@@ -47,7 +47,7 @@ const Boxscore: React.FC<BoxscoreProps> = ({
   return (
     <div>
       {/* 2x2 Grid for Game Info */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-2 mb-2">
         {/* Date & Time */}
         <div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#00ffe7]/20">
           <p className="text-[#b0b7bf] text-xs mb-1">Game Date</p>
@@ -128,12 +128,12 @@ const Boxscore: React.FC<BoxscoreProps> = ({
       </div>
 
       {/* Team Scores */}
-      <div className="border border-[#00ffe7]/30 rounded-lg p-6 bg-[#181a23]/30">
+      <div className="border border-[#00ffe7]/30 rounded-lg bg-[#181a23]/30">
         <div className="flex items-center justify-between">
           {/* Away Team */}
           <button
             onClick={() => awayTeam?.id && navigate(`/nfl/team/${awayTeam.id}`)}
-            className="flex flex-col items-center hover:bg-[#00ffe7]/10 rounded-lg p-3 transition-all group cursor-pointer flex-1"
+            className="flex flex-col items-center hover:bg-[#00ffe7]/10 active:bg-[#00ffe7]/20 rounded-lg py-3 transition-all group cursor-pointer flex-1 focus:outline-none"
           >
             <img
               src={getTeamLogo(awayTeam?.team)}
@@ -156,7 +156,7 @@ const Boxscore: React.FC<BoxscoreProps> = ({
           {/* Home Team */}
           <button
             onClick={() => homeTeam?.id && navigate(`/nfl/team/${homeTeam.id}`)}
-            className="flex flex-col items-center hover:bg-[#00ffe7]/10 rounded-lg p-3 transition-all group cursor-pointer flex-1"
+            className="flex flex-col items-center hover:bg-[#00ffe7]/10 active:bg-[#00ffe7]/20 rounded-lg py-3 transition-all group cursor-pointer flex-1 focus:outline-none"
           >
             <img
               src={getTeamLogo(homeTeam?.team)}

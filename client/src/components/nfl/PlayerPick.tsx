@@ -633,8 +633,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                 )}
               </div>
 
-              {selectedPlayers.length > 0 || newPicks.filter(p => p).length > 0 ? (
-                <div className={`relative grid ${isLocked || !isRosterOpen ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+              <div className={`relative grid ${isLocked || !isRosterOpen ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                   {/* Current Picks Column */}
                   <div>
                     <div className="text-[#b0b7bf] text-xs mb-2 font-bold h-[20px] flex items-center">
@@ -647,7 +646,22 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                       )}
                     </div>
                     <div className="space-y-2">
-                      {selectedPlayers.length > 0 ? selectedPlayers.map((player, idx) => {
+                      {[...Array(5)].map((_, idx) => {
+                        const player = selectedPlayers[idx];
+                        if (!player) {
+                          return (
+                            <div
+                              key={`empty-current-${idx}`}
+                              className="bg-[#181a23]/50 rounded-lg p-4 border border-dashed border-[#00ffe7]/20 flex items-center gap-4 h-[72px]"
+                            >
+                              <div className="w-6 h-6 rounded-full bg-[#00ffe7]/20 text-[#00ffe7] font-bold text-xs flex items-center justify-center flex-shrink-0">
+                                {idx + 1}
+                              </div>
+                              <div className="text-[#b0b7bf] text-sm">Empty Slot</div>
+                            </div>
+                          );
+                        }
+
                         const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
                         const playerScore = currentSetScores[player.id] || 0;
                         // Check if THIS specific pick is being replaced by checking if there's a new pick at this index
@@ -694,11 +708,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                             )}
                           </div>
                         );
-                      }) : (
-                        <div className="bg-[#181a23]/50 rounded-lg p-8 border border-dashed border-[#00ffe7]/20 text-center">
-                          <p className="text-gray-500 text-xs">No picks yet</p>
-                        </div>
-                      )}
+                      })}
                     </div>
                   </div>
 
@@ -720,12 +730,6 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="bg-[#181a23]/50 rounded-lg p-8 border border-dashed border-[#00ffe7]/20 text-center mb-4">
-                  <FaUsers className="text-gray-500 text-4xl mx-auto mb-2" />
-                  <p className="text-gray-400 text-sm">Select up to 5 players</p>
-                </div>
-              )}
             </div>
 
             {/* Toggle Button / Countdown Timer Panel */}

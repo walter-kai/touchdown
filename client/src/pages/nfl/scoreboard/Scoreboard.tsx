@@ -114,7 +114,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
   return (
     <div className="pb-24">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-2">
         {/* Carousel Container */}
         <div className="overflow-hidden relative">
           <div
