@@ -1,14 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../providers/AuthContext';
+import { FaExclamationCircle } from 'react-icons/fa';
 
 const GoogleLoginButton: React.FC = () => {
   const { login, isAuthenticated, user, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-hide tooltip after 5 seconds when error is set
+  useEffect(() => {
+    if (error && showTooltip) {
+      tooltipTimeoutRef.current = setTimeout(() => {
+        setShowTooltip(false);
+      }, 5000);
+    }
+    
+    return () => {
+      if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+      }
+    };
+  }, [error, showTooltip]);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     setError(null);
+    setShowTooltip(false);
     try {
       const popupWidth = 500;
       const popupHeight = 600;
@@ -69,6 +88,7 @@ const GoogleLoginButton: React.FC = () => {
         window.removeEventListener('storage', storageHandler);
         setIsLoading(false);
         setError('Login timeout. Please try again.');
+        setShowTooltip(true);
       }, 60000);
 
       // Clean up on unmount
@@ -79,6 +99,7 @@ const GoogleLoginButton: React.FC = () => {
       };
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
+      setShowTooltip(true);
       setIsLoading(false);
     }
   };
@@ -108,7 +129,43 @@ const GoogleLoginButton: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="relative flex items-center gap-2">
+      {/* Error icon tooltip trigger (to the left of button) */}
+      {error && (
+        <div className="relative">
+          <button
+            onClick={() => setShowTooltip(!showTooltip)}
+            className="text-red-500 hover:text-red-400 transition-colors"
+            title="Show error details"
+          >
+            <FaExclamationCircle className="w-5 h-5" />
+          </button>
+          
+          {/* Tooltip popup */}
+          {showTooltip && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 animate-fade-in">
+              <div className="bg-[#1a1d2e] border border-red-500/50 rounded-lg px-4 py-2 shadow-[0_0_15px_rgba(239,68,68,0.3)] min-w-[200px] max-w-[300px]">
+                <div className="flex items-start gap-2">
+                  <FaExclamationCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-400">{error}</p>
+                </div>
+                <button
+                  onClick={() => setShowTooltip(false)}
+                  className="absolute top-1 right-1 text-gray-400 hover:text-white transition-colors"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              {/* Arrow pointing down */}
+              <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-[#1a1d2e] mx-auto" />
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Login button */}
       <button
         onClick={handleGoogleLogin}
         disabled={isLoading}
@@ -128,9 +185,6 @@ const GoogleLoginButton: React.FC = () => {
           {isLoading ? 'Logging in…' : 'Log in'}
         </span>
       </button>
-      {error && (
-        <p className="text-xs text-red-500">{error}</p>
-      )}
     </div>
   );
 };
