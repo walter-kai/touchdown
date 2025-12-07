@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import ApiError from '../utils/api-error';
 import logger from '../utils/logger';
+import { User, ProviderData } from '../../types/User';
 
 // Initialize Google OAuth client
 const googleClient = new OAuth2Client(
@@ -13,25 +14,7 @@ const googleClient = new OAuth2Client(
 
 export interface AuthResponse {
   accessToken: string;
-  user: {
-    uid: string;
-    walletAddress?: string;
-    username: string;
-    email: string;
-    displayName?: string;
-    photoUrl?: string;
-    createdAt: Date;
-    lastLogin: Date;
-    referralId?: string;
-    telegramId?: string;
-    googleId?: string;
-    googleEmail?: string;
-    googleName?: string;
-    googlePicture?: string;
-    isEmailVerified?: boolean;
-    locale?: string;
-    authMethod?: string;
-  };
+  user: User;
   expiresIn: number;
 }
 
@@ -81,17 +64,27 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
 
     if (!userDoc.exists) {
       // Create new user document
+      const providerData: ProviderData = {
+        authTime: now,
+        googleId,
+        googleEmail: email,
+        googleName: name || '',
+        googlePicture: picture || '',
+        isEmailVerified: email_verified || false,
+        locale: locale || '',
+      };
+
       userData = {
         uid,
         email,
-        username: name || email.split('@')[0],
         displayName: name || '',
         photoUrl: picture || '',
-        isEmailVerified: email_verified || false,
-        locale: locale || '',
         authMethod: 'google' as const,
+        provider: 'google' as const,
         createdAt: now,
         lastLogin: now,
+        providerData,
+        username: name || email.split('@')[0],
       };
 
       await userDocRef.set({
@@ -99,7 +92,7 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
         authMethod: 'google',
         provider: 'google',
         providerData: {
-          uid,
+          authTime: admin.firestore.FieldValue.serverTimestamp(),
           googleId,
           googleEmail: email,
           googleName: name || '',
@@ -124,34 +117,41 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
         provider: 'google',
         providerData: {
           ...(existingData?.providerData || {}),
-          uid,
+          authTime: admin.firestore.FieldValue.serverTimestamp(),
           googleId,
           googleEmail: email,
-          googleName: name || existingData?.providerData?.googleName,
-          googlePicture: picture || existingData?.providerData?.googlePicture,
-          isEmailVerified: email_verified ?? existingData?.providerData?.isEmailVerified,
-          locale: locale || existingData?.providerData?.locale,
+          googleName: name || existingData?.providerData?.googleName || '',
+          googlePicture: picture || existingData?.providerData?.googlePicture || '',
+          isEmailVerified: email_verified ?? existingData?.providerData?.isEmailVerified ?? false,
+          locale: locale || existingData?.providerData?.locale || '',
         },
         displayName: name || existingData?.displayName,
         photoUrl: picture || existingData?.photoUrl,
         lastLogin: admin.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });
 
+      const providerData: ProviderData = {
+        authTime: existingData?.providerData?.authTime?.toDate() || now,
+        googleId,
+        googleEmail: email,
+        googleName: name || existingData?.providerData?.googleName || '',
+        googlePicture: picture || existingData?.providerData?.googlePicture || '',
+        isEmailVerified: email_verified ?? existingData?.providerData?.isEmailVerified ?? false,
+        locale: locale || existingData?.providerData?.locale || '',
+      };
+
       userData = {
         uid,
-        googleId,
         email,
-        username: existingData?.username || name || email.split('@')[0],
         displayName: name || existingData?.displayName || '',
         photoUrl: picture || existingData?.photoUrl || '',
-        isEmailVerified: email_verified || existingData?.providerData?.isEmailVerified || false,
-        locale: locale || existingData?.providerData?.locale || '',
         authMethod: 'google' as const,
+        provider: 'google' as const,
         createdAt: existingData?.createdAt?.toDate() || now,
         lastLogin: now,
-        ...(existingData?.walletAddress && { walletAddress: existingData.walletAddress }),
+        providerData,
+        username: existingData?.username || name || email.split('@')[0],
         ...(existingData?.referralId && { referralId: existingData.referralId }),
-        ...(existingData?.telegramId && { telegramId: existingData.telegramId }),
       };
 
       logger.info(`User logged in with Google: ${email}`);
@@ -258,17 +258,27 @@ export async function testAutoLogin(): Promise<AuthResponse> {
 
   if (!userDoc.exists) {
     // Create test user if doesn't exist
+    const providerData: ProviderData = {
+      authTime: now,
+      googleId,
+      googleEmail: email,
+      googleName: 'Walt Yao',
+      googlePicture: 'https://lh3.googleusercontent.com/a/ACg8ocKG07JjIWrgu49iCx1H62_drz4vc4Ti01TAxrsmh_8Hx-tLmcWW-w=s96-c',
+      isEmailVerified: true,
+      locale: '',
+    };
+
     userData = {
       uid,
       email,
-      username: 'Walt Yao',
       displayName: 'Walt Yao',
       photoUrl: 'https://lh3.googleusercontent.com/a/ACg8ocKG07JjIWrgu49iCx1H62_drz4vc4Ti01TAxrsmh_8Hx-tLmcWW-w=s96-c',
-      isEmailVerified: true,
-      locale: '',
       authMethod: 'google' as const,
+      provider: 'google' as const,
       createdAt: now,
       lastLogin: now,
+      providerData,
+      username: 'Walt Yao',
     };
 
     await userDocRef.set({
@@ -276,14 +286,13 @@ export async function testAutoLogin(): Promise<AuthResponse> {
       authMethod: 'google',
       provider: 'google',
       providerData: {
-        uid,
+        authTime: admin.firestore.FieldValue.serverTimestamp(),
         googleId,
         googleEmail: email,
         googleName: 'Walt Yao',
         googlePicture: 'https://lh3.googleusercontent.com/a/ACg8ocKG07JjIWrgu49iCx1H62_drz4vc4Ti01TAxrsmh_8Hx-tLmcWW-w=s96-c',
         isEmailVerified: true,
         locale: '',
-        authTime: admin.firestore.FieldValue.serverTimestamp(),
       },
       displayName: 'Walt Yao',
       photoUrl: 'https://lh3.googleusercontent.com/a/ACg8ocKG07JjIWrgu49iCx1H62_drz4vc4Ti01TAxrsmh_8Hx-tLmcWW-w=s96-c',
@@ -300,21 +309,28 @@ export async function testAutoLogin(): Promise<AuthResponse> {
       lastLogin: admin.firestore.FieldValue.serverTimestamp(),
     });
 
+    const providerData: ProviderData = {
+      authTime: existingData?.providerData?.authTime?.toDate() || now,
+      googleId,
+      googleEmail: email,
+      googleName: existingData?.providerData?.googleName || 'Walt Yao',
+      googlePicture: existingData?.providerData?.googlePicture || 'https://lh3.googleusercontent.com/a/ACg8ocKG07JjIWrgu49iCx1H62_drz4vc4Ti01TAxrsmh_8Hx-tLmcWW-w=s96-c',
+      isEmailVerified: existingData?.providerData?.isEmailVerified ?? true,
+      locale: existingData?.providerData?.locale || '',
+    };
+
     userData = {
       uid,
-      googleId,
       email,
-      username: existingData?.username || 'Walt Yao',
       displayName: existingData?.displayName || 'Walt Yao',
       photoUrl: existingData?.photoUrl || 'https://lh3.googleusercontent.com/a/ACg8ocKG07JjIWrgu49iCx1H62_drz4vc4Ti01TAxrsmh_8Hx-tLmcWW-w=s96-c',
-      isEmailVerified: true,
-      locale: '',
       authMethod: 'google' as const,
+      provider: 'google' as const,
       createdAt: existingData?.createdAt?.toDate() || now,
       lastLogin: now,
-      ...(existingData?.walletAddress && { walletAddress: existingData.walletAddress }),
+      providerData,
+      username: existingData?.username || 'Walt Yao',
       ...(existingData?.referralId && { referralId: existingData.referralId }),
-      ...(existingData?.telegramId && { telegramId: existingData.telegramId }),
     };
 
     logger.info(`Test user auto-login: ${email}`);

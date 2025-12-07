@@ -110,13 +110,6 @@ const App: React.FC = () => {
   const isTeamPage = location.pathname.startsWith('/nfl/team/');
   const isPlayerPage = location.pathname.startsWith('/nfl/player/');
 
-  // Redirect unauthenticated users from /i/ routes
-  useEffect(() => {
-    if (location.pathname.startsWith('/i/') && !user) {
-      navigate('/');
-    }
-  }, [location.pathname, user, navigate]);
-
   // Reset scroll position on route change (except for hash navigation)
   useEffect(() => {
     if (!location.hash) {

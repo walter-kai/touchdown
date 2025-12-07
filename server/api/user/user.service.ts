@@ -1,11 +1,12 @@
 import admin from 'firebase-admin';
 import ApiError from '../../utils/api-error';
 import logger from '../../utils/logger';
+import { User, ProviderData } from '../../../types/User';
 
 /**
  * Get user profile by UID
  */
-export async function getUserProfile(uid: string) {
+export async function getUserProfile(uid: string): Promise<User> {
   try {
     let userDoc;
     let userDocRef;
@@ -19,7 +20,7 @@ export async function getUserProfile(uid: string) {
     if (!userDoc.exists && uid.startsWith('google_')) {
       const query = admin.firestore()
         .collection('users')
-        .where('providerData.uid', '==', uid)
+        .where('providerData.googleId', '==', uid.replace('google_', ''))
         .limit(1);
       
       const snapshot = await query.get();
@@ -36,24 +37,36 @@ export async function getUserProfile(uid: string) {
 
     const data = userDoc.data();
     
+    // Construct providerData from Firebase data
+    const providerData: ProviderData = {
+      authTime: data?.providerData?.authTime?.toDate() || new Date(),
+      googleId: data?.providerData?.googleId || '',
+      googleEmail: data?.providerData?.googleEmail || data?.email || '',
+      googleName: data?.providerData?.googleName || data?.displayName || '',
+      googlePicture: data?.providerData?.googlePicture || data?.photoUrl || '',
+      isEmailVerified: data?.providerData?.isEmailVerified ?? false,
+      locale: data?.providerData?.locale || '',
+    };
+    
     return {
-      uid,
-      walletAddress: data?.walletAddress || '',
-      username: data?.username || '',
+      uid: data?.uid || uid,
       email: data?.email || '',
       displayName: data?.displayName || '',
       photoUrl: data?.photoUrl || '',
+      authMethod: data?.authMethod || 'simple',
+      provider: data?.provider || data?.authMethod || 'simple',
       createdAt: data?.createdAt?.toDate() || new Date(),
       lastLogin: data?.lastLogin?.toDate() || new Date(),
-      referralId: data?.referralId || '',
-      telegramId: data?.telegramId || '',
-      authMethod: data?.authMethod || 'simple',
-      googleId: data?.googleId || '',
-      googleEmail: data?.googleEmail || '',
-      googleName: data?.googleName || '',
-      googlePicture: data?.googlePicture || '',
-      isEmailVerified: data?.isEmailVerified || false,
-      locale: data?.locale || '',
+      providerData,
+      username: data?.username,
+      referralId: data?.referralId,
+      // Deprecated fields for backward compatibility
+      googleId: data?.providerData?.googleId,
+      googleEmail: data?.providerData?.googleEmail,
+      googleName: data?.providerData?.googleName,
+      googlePicture: data?.providerData?.googlePicture,
+      isEmailVerified: data?.providerData?.isEmailVerified,
+      locale: data?.providerData?.locale,
     };
   } catch (error) {
     logger.error(error, 'Error fetching user profile:');
@@ -69,7 +82,7 @@ export async function getUserProfile(uid: string) {
 /**
  * Update user profile
  */
-export async function updateUserProfile(uid: string, updates: any) {
+export async function updateUserProfile(uid: string, updates: any): Promise<User> {
   try {
     const userDocRef = admin.firestore().collection('users').doc(uid);
     const userDoc = await userDocRef.get();
