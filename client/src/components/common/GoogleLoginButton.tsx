@@ -41,6 +41,7 @@ const GoogleLoginButton: React.FC = () => {
             if (token && userRaw) {
               const userObj = JSON.parse(userRaw);
               login(token, userObj, 7 * 24 * 60 * 60);
+              // No backend upsert call; Google OAuth flow already sets session
             }
           } catch {}
           setIsLoading(false);

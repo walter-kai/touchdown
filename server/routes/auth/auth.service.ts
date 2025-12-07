@@ -8,7 +8,7 @@ import logger from '../../utils/logger';
 const googleClient = new OAuth2Client(
   process.env.GOOGLE_OAUTH_CLIENT_ID,
   process.env.GOOGLE_OAUTH_SECRET,
-  `${process.env.BASE_URL || 'http://localhost:3000'}/auth/google/callback`
+  'http://localhost:3000/auth/google/callback'
 );
 
 export interface AuthResponse {
@@ -71,11 +71,9 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
       throw new ApiError(400, 'Email not provided by Google');
     }
 
-    // Use Google ID as the user ID
+    // Use email as the user document ID
     const uid = `google_${googleId}`;
-
-    // Check if user already exists
-    const userDocRef = admin.firestore().collection('users').doc(uid);
+    const userDocRef = admin.firestore().collection('users').doc(email);
     const userDoc = await userDocRef.get();
 
     let userData;
@@ -85,14 +83,10 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
       // Create new user document
       userData = {
         uid,
-        googleId,
         email,
-        googleEmail: email,
         username: name || email.split('@')[0],
         displayName: name || '',
         photoUrl: picture || '',
-        googleName: name || '',
-        googlePicture: picture || '',
         isEmailVerified: email_verified || false,
         locale: locale || '',
         authMethod: 'google' as const,
@@ -101,7 +95,20 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
       };
 
       await userDocRef.set({
-        ...userData,
+        email,
+        authMethod: 'google',
+        provider: 'google',
+        providerData: {
+          uid,
+          googleId,
+          googleEmail: email,
+          googleName: name || '',
+          googlePicture: picture || '',
+          isEmailVerified: email_verified || false,
+          locale: locale || '',
+        },
+        displayName: name || '',
+        photoUrl: picture || '',
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         lastLogin: admin.firestore.FieldValue.serverTimestamp(),
       });
@@ -111,27 +118,34 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
       // Update existing user
       const existingData = userDoc.data();
       
-      await userDocRef.update({
-        lastLogin: admin.firestore.FieldValue.serverTimestamp(),
-        googleName: name || existingData?.googleName,
-        googlePicture: picture || existingData?.googlePicture,
+      await userDocRef.set({
+        email,
+        authMethod: 'google',
+        provider: 'google',
+        providerData: {
+          ...(existingData?.providerData || {}),
+          uid,
+          googleId,
+          googleEmail: email,
+          googleName: name || existingData?.providerData?.googleName,
+          googlePicture: picture || existingData?.providerData?.googlePicture,
+          isEmailVerified: email_verified ?? existingData?.providerData?.isEmailVerified,
+          locale: locale || existingData?.providerData?.locale,
+        },
         displayName: name || existingData?.displayName,
         photoUrl: picture || existingData?.photoUrl,
-        isEmailVerified: email_verified || existingData?.isEmailVerified,
-      });
+        lastLogin: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
 
       userData = {
         uid,
         googleId,
         email,
-        googleEmail: email,
         username: existingData?.username || name || email.split('@')[0],
         displayName: name || existingData?.displayName || '',
         photoUrl: picture || existingData?.photoUrl || '',
-        googleName: name || '',
-        googlePicture: picture || '',
-        isEmailVerified: email_verified || false,
-        locale: locale || existingData?.locale || '',
+        isEmailVerified: email_verified || existingData?.providerData?.isEmailVerified || false,
+        locale: locale || existingData?.providerData?.locale || '',
         authMethod: 'google' as const,
         createdAt: existingData?.createdAt?.toDate() || now,
         lastLogin: now,

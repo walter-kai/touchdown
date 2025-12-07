@@ -65,6 +65,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               setUser(userData);
               userStorage.setUser(userData);
               console.log('User session restored:', userData.email || userData.walletAddress);
+
+              // No extra upsert/verification call; rely on `/api/auth/google/*` flow
             } else {
               console.log('Failed to restore user session, clearing token');
               jwtStorage.clearToken();

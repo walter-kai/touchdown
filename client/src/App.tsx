@@ -136,8 +136,8 @@ const App: React.FC = () => {
     <PicksProvider>
       <div className="min-h-screen overflow-x-hidden relative bg-black/90 bg-blend-overlay">
       
-      {/* Top Login/Nav */}
-      <LoginNav />
+      {/* Top Login/Nav (hide on auth processing page) */}
+      {location.pathname !== '/auth/google/callback' && <LoginNav />}
 
       {/* Content Container */}
       <div className="relative z-10 flex flex-col min-h-screen">

@@ -63,10 +63,38 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   // Save picks to localStorage and cache
-  const savePicks = (homeTeamId: string, awayTeamId: string, picks: PicksState) => {
+  const savePicks = async (homeTeamId: string, awayTeamId: string, picks: PicksState) => {
     const key = getKey(homeTeamId, awayTeamId);
     localStorage.setItem(key, JSON.stringify(picks));
     setPicksCache(prev => ({ ...prev, [key]: picks }));
+
+    // If this represents a lock-in, also persist to backend (Firebase via server)
+    if (picks.lockedAt) {
+      try {
+        const token = localStorage.getItem('dexter_access_token');
+        const resp = await fetch('/api/picks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            homeTeamId,
+            awayTeamId,
+            picksState: picks,
+          })
+        });
+        if (!resp.ok) {
+          const detail = await resp.text().catch(() => '');
+          console.error('Failed to persist pick lock-in:', resp.status, detail);
+        } else {
+          const json = await resp.json().catch(() => ({} as any));
+          console.log('Persisted pick lock-in:', json);
+        }
+      } catch (e) {
+        console.error('Error persisting pick lock-in:', e);
+      }
+    }
   };
 
   // Clear picks from localStorage and cache

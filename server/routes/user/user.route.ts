@@ -22,4 +22,6 @@ router.put('/profile', authenticate, updateProfile);
  */
 router.get('/checkName', checkUsername);
 
+// Remove legacy picks subroutes; picks now lives under /api/picks
+
 export default router;

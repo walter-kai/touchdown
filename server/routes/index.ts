@@ -5,6 +5,7 @@ import telegramRoute from "./telegram/telegram.route";
 import linkRoute from "./link/link.route";
 import authRoute from "./auth/auth.route";
 import userRoute from "./user/user.route";
+import picksRoute from "./picks/picks.route";
 
 const router = express.Router();
 
@@ -21,6 +22,10 @@ const defaultRoutes: ReadonlyArray<RouteObj> = [
   {
     path: "/user",
     route: userRoute,
+  },
+  {
+    path: "/picks",
+    route: picksRoute,
   },
   {
     path: "/telegram",
