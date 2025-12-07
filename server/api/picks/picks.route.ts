@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticate } from '../../middleware/auth';
+import { authenticate } from '../../auth/middleware/auth';
 import { postPick, getUserPicks, getGameStats } from './picks.controller';
 
 const router = express.Router();

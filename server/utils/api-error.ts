@@ -1,4 +1,4 @@
-import { HTTPErrorStatusCode } from "../error";
+import { HTTPErrorStatusCode } from "./error";
 
 class ApiError extends Error {
   statusCode: HTTPErrorStatusCode;

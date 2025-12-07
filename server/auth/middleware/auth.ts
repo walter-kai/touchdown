@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import ApiError from '../utils/api-error';
+import ApiError from '../../utils/api-error';
 
 // Extend Express Request to include user info
 export interface AuthenticatedRequest extends Request {

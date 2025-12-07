@@ -1,8 +1,8 @@
 import admin from 'firebase-admin';
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
-import ApiError from '../../utils/api-error';
-import logger from '../../utils/logger';
+import ApiError from '../utils/api-error';
+import logger from '../utils/logger';
 
 // Initialize Google OAuth client
 const googleClient = new OAuth2Client(

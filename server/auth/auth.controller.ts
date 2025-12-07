@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { authenticateWithGoogle, getGoogleAuthUrl, handleGoogleCallback, testAutoLogin } from './auth.service';
-import catchAsync from '../../utils/catch-async';
-import ApiError from '../../utils/api-error';
+import catchAsync from '../utils/catch-async';
+import ApiError from '../utils/api-error';
 
 interface GoogleAuthRequest {
   idToken: string;
