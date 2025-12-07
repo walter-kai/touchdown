@@ -7,8 +7,28 @@ import logger from '../../utils/logger';
  */
 export async function getUserProfile(uid: string) {
   try {
-    const userDocRef = admin.firestore().collection('users').doc(uid);
-    const userDoc = await userDocRef.get();
+    let userDoc;
+    let userDocRef;
+    
+    // First try to get by UID (document ID)
+    userDocRef = admin.firestore().collection('users').doc(uid);
+    userDoc = await userDocRef.get();
+
+    // If not found and UID starts with "google_", try to find by email
+    // (Google users are stored with email as document ID)
+    if (!userDoc.exists && uid.startsWith('google_')) {
+      const query = admin.firestore()
+        .collection('users')
+        .where('providerData.uid', '==', uid)
+        .limit(1);
+      
+      const snapshot = await query.get();
+      
+      if (!snapshot.empty) {
+        userDoc = snapshot.docs[0];
+        userDocRef = userDoc.ref;
+      }
+    }
 
     if (!userDoc.exists) {
       throw new ApiError(404, 'User not found');

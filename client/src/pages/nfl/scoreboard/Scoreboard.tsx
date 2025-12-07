@@ -670,6 +670,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
               <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
                 {homeTeam && awayTeam && (
                   <PlayerPick
+                    gameId={event.id}
                     homeTeamId={homeTeam.id}
                     awayTeamId={awayTeam.id}
                     homeTeamInfo={{

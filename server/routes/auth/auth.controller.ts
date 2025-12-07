@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { authenticateWithGoogle, getGoogleAuthUrl, handleGoogleCallback } from './auth.service';
+import { authenticateWithGoogle, getGoogleAuthUrl, handleGoogleCallback, testAutoLogin } from './auth.service';
 import catchAsync from '../../utils/catch-async';
 import ApiError from '../../utils/api-error';
 
@@ -90,6 +90,40 @@ export const googleCallback = catchAsync(async (req: Request, res: Response, nex
           window.close();
         </script>
         <p>Login successful! This window will close automatically...</p>
+      </body>
+    </html>
+  `);
+});
+
+/**
+ * GET /test
+ * Auto-login for development/testing
+ */
+export const testLogin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const result = await testAutoLogin();
+
+  // Send success page that stores token and redirects
+  return res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Test Login</title>
+      </head>
+      <body>
+        <script>
+          // Store in localStorage
+          var ttlMs = ${result.expiresIn} * 1000;
+          var expiryTime = Date.now() + ttlMs;
+          localStorage.setItem('dexter_access_token', '${result.accessToken}');
+          localStorage.setItem('dexter_token_expiry', String(expiryTime));
+          localStorage.setItem('dexter_user', '${JSON.stringify(result.user).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}');
+          
+          // Redirect to home
+          setTimeout(function() {
+            window.location.href = '/';
+          }, 500);
+        </script>
+        <p>Test login successful! Redirecting...</p>
       </body>
     </html>
   `);

@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateGoogle, initiateGoogleLogin, googleCallback } from './auth.controller';
+import { authenticateGoogle, initiateGoogleLogin, googleCallback, testLogin } from './auth.controller';
 
 const router = express.Router();
 
@@ -20,5 +20,11 @@ router.get('/google/login', initiateGoogleLogin);
  * Handle Google OAuth callback
  */
 router.get('/google/callback', googleCallback);
+
+/**
+ * GET /test
+ * Auto-login for testing (development only)
+ */
+router.get('/test', testLogin);
 
 export default router;

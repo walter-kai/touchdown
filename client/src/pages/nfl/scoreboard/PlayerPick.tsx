@@ -44,6 +44,7 @@ interface Athlete {
 }
 
 interface PlayerPickProps {
+  gameId: string;
   homeTeamId: string;
   awayTeamId: string;
   homeTeamInfo: {
@@ -292,6 +293,7 @@ const MyPreview = () => {
 };
 
 const PlayerPick: React.FC<PlayerPickProps> = ({
+  gameId,
   homeTeamId,
   awayTeamId,
   homeTeamInfo,
@@ -537,7 +539,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     setNewPicks(updatedPicks);
   };
 
-  const handleLockIn = () => {
+  const handleLockIn = async () => {
     // Position-by-position swap: if NEW pick exists at index, use it; otherwise keep CURRENT pick
     const swappedPicks = Array(5).fill(null).map((_, idx) => {
       // If there's a new pick at this index, use it
@@ -550,6 +552,42 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     
     if (swappedPicks.length > 0) {
       console.log('Locking in picks:', swappedPicks);
+      
+      // Save to localStorage and backend
+      const state = {
+        players: swappedPicks,
+        lockedAt: Date.now(),
+        totalScore: totalScore
+      };
+      localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(state));
+      console.log('Saved to localStorage:', state);
+      
+      // Send to backend API
+      try {
+        const token = localStorage.getItem('dexter_access_token');
+        const response = await fetch('/api/picks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            gameId,
+            homeTeamId,
+            awayTeamId,
+            picksState: state
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Picks saved to backend:', result);
+        } else {
+          console.error('Failed to save picks to backend:', response.status, await response.text());
+        }
+      } catch (error) {
+        console.error('Error saving picks to backend:', error);
+      }
       
       // Start animation sequence
       setIsAnimating(true);
@@ -575,13 +613,6 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       
       setCooldownTime(120); // 2 minutes
       setCurrentSetScores({}); // Reset current set scores
-      const state = {
-        players: swappedPicks,
-        lockedAt: Date.now(),
-        totalScore: totalScore
-      };
-      localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(state));
-      console.log('Saved to localStorage:', state);
     }
   };
 
