@@ -26,6 +26,7 @@ app.use(cors());
 app.use(express.json());
 // app.use(express.static(path.join(__dirname, '../client/build')));
 app.use("/api", routes);
+app.use("/auth", routes); // Also mount routes at /auth for OAuth callbacks
 
 
 // 404 handler for API routes
