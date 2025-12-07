@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import catchAsync from '../../utils/catch-async';
 import ApiError from '../../utils/api-error';
-import { createPick } from './picks.service';
+import { createPick, getUserPicksForGame, getAthleteStatsForGame } from './picks.service';
 
 // POST /picks
 export const postPick = catchAsync(async (req: Request, res: Response) => {
@@ -26,4 +26,34 @@ export const postPick = catchAsync(async (req: Request, res: Response) => {
   });
 
   return res.status(200).json({ ok: true, id: result.id, collection: 'picks' });
+});
+
+// GET /picks/game/:gameId/user
+export const getUserPicks = catchAsync(async (req: Request, res: Response) => {
+  const { user } = req as any;
+  const { gameId } = req.params;
+
+  if (!user?.email) {
+    throw new ApiError(400, 'Missing user email from token');
+  }
+  if (!gameId) {
+    throw new ApiError(400, 'Missing gameId parameter');
+  }
+
+  const picks = await getUserPicksForGame(user.email, gameId);
+
+  return res.status(200).json({ ok: true, picks });
+});
+
+// GET /picks/game/:gameId/stats
+export const getGameStats = catchAsync(async (req: Request, res: Response) => {
+  const { gameId } = req.params;
+
+  if (!gameId) {
+    throw new ApiError(400, 'Missing gameId parameter');
+  }
+
+  const stats = await getAthleteStatsForGame(gameId);
+
+  return res.status(200).json({ ok: true, stats });
 });
