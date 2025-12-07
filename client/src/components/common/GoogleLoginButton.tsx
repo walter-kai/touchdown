@@ -28,6 +28,11 @@ const GoogleLoginButton: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setShowTooltip(false);
+    
+    let broadcastChannel: BroadcastChannel | null = null;
+    let pollInterval: NodeJS.Timeout | null = null;
+    let timeout: NodeJS.Timeout | null = null;
+    
     try {
       const popupWidth = 500;
       const popupHeight = 600;
@@ -45,12 +50,13 @@ const GoogleLoginButton: React.FC = () => {
         throw new Error('Popup blocked. Please allow popups for this site.');
       }
 
-      // Listen for postMessage from the popup (sent by auth callback)
+      // Method 1: Listen for postMessage from the popup (sent by auth callback)
       const messageHandler = (event: MessageEvent) => {
         // Verify origin if needed (for security in production)
         // if (event.origin !== window.location.origin) return;
 
         if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+          console.log('[AUTH] Received postMessage:', event.data);
           window.removeEventListener('message', messageHandler);
           
           const { token, user } = event.data;
@@ -63,29 +69,77 @@ const GoogleLoginButton: React.FC = () => {
 
       window.addEventListener('message', messageHandler);
 
-      // Also listen for storage events (fallback mechanism from auth callback)
+      // Method 2: BroadcastChannel listener (modern browsers, works across tabs)
+      try {
+        broadcastChannel = new BroadcastChannel('google_auth_channel');
+        broadcastChannel.onmessage = (event) => {
+          console.log('[AUTH] Received BroadcastChannel message:', event.data);
+          if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+            const { token, user } = event.data;
+            if (token && user) {
+              login(token, user, event.data.expiresIn || 7 * 24 * 60 * 60);
+              setIsLoading(false);
+              if (broadcastChannel) broadcastChannel.close();
+              window.removeEventListener('message', messageHandler);
+              window.removeEventListener('storage', storageHandler);
+            }
+          }
+        };
+      } catch (e) {
+        console.log('[AUTH] BroadcastChannel not supported');
+      }
+
+      // Method 3: Listen for storage events (fallback mechanism from auth callback)
       const storageHandler = (event: StorageEvent) => {
         if (event.key === 'dexter_oauth_result' && event.newValue) {
           try {
+            console.log('[AUTH] Received storage event');
             const result = JSON.parse(event.newValue);
             if (result.type === 'GOOGLE_AUTH_SUCCESS' && result.token && result.user) {
               window.removeEventListener('storage', storageHandler);
               window.removeEventListener('message', messageHandler);
+              if (broadcastChannel) broadcastChannel.close();
               login(result.token, result.user, result.expiresIn || 7 * 24 * 60 * 60);
               setIsLoading(false);
               // Clean up the storage flag
               localStorage.removeItem('dexter_oauth_result');
             }
-          } catch {}
+          } catch (e) {
+            console.error('[AUTH] Error parsing storage event:', e);
+          }
         }
       };
 
       window.addEventListener('storage', storageHandler);
 
+      // Method 4: Polling check for localStorage (in case storage event doesn't fire)
+      pollInterval = setInterval(() => {
+        try {
+          const oauthResult = localStorage.getItem('dexter_oauth_result');
+          if (oauthResult) {
+            console.log('[AUTH] Found auth result via polling');
+            const result = JSON.parse(oauthResult);
+            if (result.type === 'GOOGLE_AUTH_SUCCESS' && result.token && result.user) {
+              if (pollInterval) clearInterval(pollInterval);
+              window.removeEventListener('storage', storageHandler);
+              window.removeEventListener('message', messageHandler);
+              if (broadcastChannel) broadcastChannel.close();
+              login(result.token, result.user, result.expiresIn || 7 * 24 * 60 * 60);
+              setIsLoading(false);
+              localStorage.removeItem('dexter_oauth_result');
+            }
+          }
+        } catch (e) {
+          console.error('[AUTH] Error in polling:', e);
+        }
+      }, 500);
+
       // Timeout fallback: if no response in 60 seconds, stop loading
-      const timeout = setTimeout(() => {
+      timeout = setTimeout(() => {
+        if (pollInterval) clearInterval(pollInterval);
         window.removeEventListener('message', messageHandler);
         window.removeEventListener('storage', storageHandler);
+        if (broadcastChannel) broadcastChannel.close();
         setIsLoading(false);
         setError('Login timeout. Please try again.');
         setShowTooltip(true);
@@ -93,9 +147,11 @@ const GoogleLoginButton: React.FC = () => {
 
       // Clean up on unmount
       return () => {
-        clearTimeout(timeout);
+        if (timeout) clearTimeout(timeout);
+        if (pollInterval) clearInterval(pollInterval);
         window.removeEventListener('message', messageHandler);
         window.removeEventListener('storage', storageHandler);
+        if (broadcastChannel) broadcastChannel.close();
       };
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
@@ -143,7 +199,7 @@ const GoogleLoginButton: React.FC = () => {
           
           {/* Tooltip popup */}
           {showTooltip && (
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 animate-fade-in">
+            <div className="absolute right-full top-1/2 -translate-y-1/2 mr-2 z-50 animate-fade-in">
               <div className="bg-[#1a1d2e] border border-red-500/50 rounded-lg px-4 py-2 shadow-[0_0_15px_rgba(239,68,68,0.3)] min-w-[200px] max-w-[300px]">
                 <div className="flex items-start gap-2">
                   <FaExclamationCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
@@ -158,8 +214,8 @@ const GoogleLoginButton: React.FC = () => {
                   </svg>
                 </button>
               </div>
-              {/* Arrow pointing down */}
-              <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-[#1a1d2e] mx-auto" />
+              {/* Arrow pointing right */}
+              <div className="absolute top-1/2 left-full -translate-y-1/2 w-0 h-0 border-t-[6px] border-b-[6px] border-l-[6px] border-t-transparent border-b-transparent border-l-[#1a1d2e]" />
             </div>
           )}
         </div>
