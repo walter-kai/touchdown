@@ -4,6 +4,7 @@ import { FaTrophy, FaFootballBall, FaChartBar, FaClock, FaPauseCircle } from 're
 import HeadToHead from '@/components/nfl/HeadToHead';
 import ProbChart from '@/components/nfl/ProbabilityChart';
 import PlayerPick from '@/pages/nfl/scoreboard/PlayerPick';
+import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
 import { usePicks } from '@/providers/PicksContext';
 import type { Event } from '@/types/espn/scoreboard';
 
@@ -113,7 +114,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
   return (
     <div className="pb-24">
-      <div className="max-w-7xl mx-auto py-8 px-4">
+      <div className="max-w-7xl mx-auto px-4">
         {/* Carousel Container */}
         <div className="overflow-hidden relative">
           <div
@@ -122,126 +123,28 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             style={{ width: isGameUpcoming ? '300%' : '600%' }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 space-y-6 py-6 overflow-y-auto max-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 space-y-6 py-6 max-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
               {/* Box Score */}
-              <div className="p-6 mb-6">
-                <div className="text-center mb-4">
-                  <h2>
-                    {new Date(competition.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    , {new Date(competition.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 items-center">
-                  <button
-                    onClick={() => awayTeam?.id && navigate(`/nfl/team/${awayTeam.id}`)}
-                    className="flex flex-col items-center hover:bg-[#00ffe7]/10 rounded-lg p-3 transition-all group cursor-pointer"
-                  >
-                    <img
-                      src={getTeamLogo(awayTeam?.team)}
-                      alt={awayTeam?.team?.displayName}
-                      className="w-16 h-16 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
-                    />
-                    <h2 className="text-[#e0e7ef] font-bold text-sm md:text-base text-center px-2 group-hover:text-[#00ffe7] transition-colors">
-                      {awayTeam?.team?.displayName}
-                    </h2>
-                    <p className="text-[#b0b7bf] text-xs">{awayTeam?.records?.[0]?.summary}</p>
-                    <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-1">{awayTeam?.score || '0'}</p>
-                  </button>
-
-                  <button
-                    onClick={() => homeTeam?.id && navigate(`/nfl/team/${homeTeam.id}`)}
-                    className="flex flex-col items-center hover:bg-[#00ffe7]/10 rounded-lg p-3 transition-all group cursor-pointer"
-                  >
-                    <img
-                      src={getTeamLogo(homeTeam?.team)}
-                      alt={homeTeam?.team?.displayName}
-                      className="w-16 h-16 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
-                    />
-                    <h2 className="text-[#e0e7ef] font-bold text-sm md:text-base text-center px-2 group-hover:text-[#00ffe7] transition-colors">
-                      {homeTeam?.team?.displayName}
-                    </h2>
-                    <p className="text-[#b0b7bf] text-xs">{homeTeam?.records?.[0]?.summary}</p>
-                    <p className="text-[#00ffe7] text-3xl md:text-4xl font-bold mt-1">{homeTeam?.score || '0'}</p>
-                  </button>
-                </div>
+              <div className=" mb-6">
+                {/* Boxscore Component */}
+                <Boxscore 
+                  homeTeam={homeTeam}
+                  awayTeam={awayTeam}
+                  competition={competition}
+                  getTeamLogo={getTeamLogo}
+                  gameCountdown={gameCountdown}
+                  gameDate={competition.date}
+                />
               </div>
 
-              {/* Game Status & Situation */}
-              <div>
-                <div className="text-center mb-6">
-                  {competition.status.type.state === 'in' ? (
-                    // Live game
-                    <div className="inline-flex items-center gap-2 bg-red-500/20 border border-red-500 rounded-full px-4 py-2">
-                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                      <span className="text-red-500 font-bold text-sm">LIVE</span>
-                      <span className="text-[#e0e7ef] font-bold">Q{competition.status.period} - {competition.status.displayClock}</span>
-                    </div>
-                  ) : competition.status.type.state === 'post' ? (
-                    // Final game
-                    <div className="inline-flex items-center gap-2 bg-[#b0b7bf]/20 border border-[#b0b7bf] rounded-full px-4 py-2">
-                      <span className="text-[#b0b7bf] font-bold">FINAL</span>
-                    </div>
-                  ) : (
-                    // Pre-game with countdown
-                    <div className="inline-flex items-center gap-2 bg-[#00ffe7]/20 border border-[#00ffe7] rounded-full px-4 py-2">
-                      <span className="text-[#00ffe7] font-bold text-sm">STARTS IN</span>
-                      <span className="text-[#e0e7ef] font-bold">
-                        {(() => {
-                          if (gameCountdown <= 0) return 'Soon';
-                          
-                          const days = Math.floor(gameCountdown / (1000 * 60 * 60 * 24));
-                          const hours = Math.floor((gameCountdown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                          const minutes = Math.floor((gameCountdown % (1000 * 60 * 60)) / (1000 * 60));
-                          const seconds = Math.floor((gameCountdown % (1000 * 60)) / 1000);
-                          
-                          if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-                          if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
-                          if (minutes > 0) return `${minutes}m ${seconds}s`;
-                          return `${seconds}s`;
-                        })()}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Live Game Situation */}
-                {competition.situation && competition.status.type.state === 'in' && (
-                  <div className="space-y-6">
-                    {/* Football Field Visualization */}
-                    {competition.situation.lastPlay && (
-                      <div className="">
-                        {/* Current Drive Info */}
-                        <div className="mb-6">
-                          {/* Down & Distance + Possession - Side by Side */}
-                          <div className="flex items-center justify-between gap-4 mb-4">
-                            {/* Down & Distance */}
-                            {competition.situation.downDistanceText && (
-                              <div className="flex-1 text-center">
-                                <p className="text-[#b0b7bf] text-xs mb-2">Down & Distance</p>
-                                <p className="text-[#faafe8] font-bold text-xl">{competition.situation.downDistanceText}</p>
-                              </div>
-                            )}
-                            
-                            {/* Possession */}
-                            <div className="flex-1 text-center">
-                              <p className="text-[#b0b7bf] text-xs mb-2">Possession</p>
-                              <div className="flex items-center justify-center gap-2">
-                                <img
-                                  src={competition.situation.possession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
-                                  alt="Possession"
-                                  className="w-10 h-10"
-                                />
-                                <p className="text-[#00ffe7] font-bold text-xl">
-                                  {competition.situation.possession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Field Visualization */}
-                        <div className="border-t border-[#00ffe7]/10 pt-6 mb-6">
+              {/* Live Game Situation */}
+              {competition.situation && competition.status.type.state === 'in' && (
+                <div className="space-y-6">
+                  {/* Football Field Visualization */}
+                  {competition.situation.lastPlay && (
+                    <div className="">
+                      {/* Field Visualization */}
+                      <div className="border-t border-[#00ffe7]/10 pt-6 mb-6">
                           {/* Football Field */}
                           <div className="relative w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg overflow-hidden" style={{ height: '200px' }}>
                             {/* End zones - 10% each */}
@@ -506,9 +409,9 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                   </div>
                 )}
 
-                {/* Pre-game or Post-game Info */}
-                {competition.status.type.state !== 'in' && (
-                  <div className="text-center">
+              {/* Pre-game or Post-game Info */}
+              {competition.status.type.state !== 'in' && (
+                <div className="text-center">
                     {/* Line Scores */}
                     {(homeTeam?.linescores || awayTeam?.linescores) && (
                       <div className="p-2">
@@ -559,8 +462,8 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                   </div>
                 )}
 
-                {/* Venue & Game Information */}
-                <div className="overflow-hidden">
+              {/* Venue & Game Information */}
+              <div className="overflow-hidden">
                   {competition.venue && (
                     <div className="p-4">
                       <div className="mb-3">
@@ -607,12 +510,12 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                     </div>
                   )}
                 </div>
-              </div>
+              {/* End of Info Section  */}
             </div>
 
             {/* Player Section */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: '16.666%' }}>
                 <div className="space-y-4">
                   <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                     <FaTrophy />
@@ -667,7 +570,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
             {/* Pick Section */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: '16.666%' }}>
                 {homeTeam && awayTeam && (
                   <PlayerPick
                     gameId={event.id}
@@ -697,7 +600,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
             {/* Plays Section */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: '16.666%' }}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
                     <FaFootballBall />
@@ -752,7 +655,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             )}
 
             {/* Odds Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
               <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                 <FaChartBar />
                 Betting Odds
@@ -777,7 +680,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto max-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}
