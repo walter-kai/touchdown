@@ -180,7 +180,7 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
-        <div className="text-[#faafe8] text-xs">{player.position.abbreviation}{player.jersey && ` • #${player.jersey}`}</div>
+        <div className="text-[#faafe8] text-xs">{typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}</div>
       </div>
     </div>
   );
@@ -285,7 +285,7 @@ const MyPreview = () => {
         )}
         <div className="flex-1 min-w-0">
           <div className="text-white font-bold text-xs truncate">{item.player.shortName}</div>
-          <div className="text-[#faafe8] text-[10px]">{item.player.position.abbreviation}</div>
+          <div className="text-[#faafe8] text-[10px]">{typeof item.player.position === 'string' ? item.player.position : item.player.position?.abbreviation}</div>
         </div>
       </div>
     </div>
@@ -729,7 +729,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                       <span className="text-white text-[10px] font-bold truncate block">{player.shortName}</span>
                     </div>
                     <div className="text-[#b0b7bf] text-[9px] w-8 text-center flex-shrink-0">
-                      {player.position.abbreviation}
+                      {typeof player.position === 'string' ? player.position : player.position?.abbreviation}
                     </div>
                     <div className="text-[#00ffe7] text-[10px] font-bold w-10 text-right flex-shrink-0">
                       {currentSetScores[player.id] || 0} pts
@@ -857,7 +857,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                             <div className="flex-1 min-w-0">
                               <div className="text-white font-bold text-sm whitespace-nowrap overflow-hidden text-ellipsis">{player.shortName}</div>
                               <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis">
-                                {player.position.abbreviation}{player.jersey && ` • #${player.jersey}`}
+                                {typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}
                               </div>
                             </div>
                             
@@ -1060,7 +1060,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                   <h5 className="text-[#faafe8] font-bold text-sm mb-2">OFFENSE</h5>
                   <div className="space-y-2">
                     {currentRoster.filter(player => {
-                      const pos = player.position.abbreviation;
+                      const pos = typeof player.position === 'string' ? player.position : player.position?.abbreviation;
                       return ['QB', 'RB', 'WR', 'TE', 'FB', 'OL', 'OT', 'OG', 'C'].includes(pos);
                     }).map((player) => {
                       const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
@@ -1101,7 +1101,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                           <div className="flex-1 min-w-0">
                             <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
                             <div className="text-gray-400 text-[10px]">
-                              {player.position.abbreviation} {player.jersey && `• #${player.jersey}`}
+                              {typeof player.position === 'string' ? player.position : player.position?.abbreviation} {player.jersey && `• #${player.jersey}`}
                             </div>
                           </div>
                           {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs" />}
@@ -1117,7 +1117,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                   <h5 className="text-[#faafe8] font-bold text-sm mb-2">DEFENSE</h5>
                   <div className="space-y-2">
                     {currentRoster.filter(player => {
-                      const pos = player.position.abbreviation;
+                      const pos = typeof player.position === 'string' ? player.position : player.position?.abbreviation;
                       return ['DE', 'DT', 'LB', 'CB', 'S', 'DB', 'DL', 'SAF', 'MLB', 'OLB'].includes(pos);
                     }).map((player) => {
                       const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
@@ -1158,7 +1158,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                           <div className="flex-1 min-w-0">
                             <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
                             <div className="text-gray-400 text-[10px]">
-                              {player.position.abbreviation} {player.jersey && `• #${player.jersey}`}
+                              {typeof player.position === 'string' ? player.position : player.position?.abbreviation} {player.jersey && `• #${player.jersey}`}
                             </div>
                           </div>
                           {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs" />}
