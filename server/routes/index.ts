@@ -4,6 +4,7 @@ import telegramRoute from "./telegram/telegram.route";
 
 import linkRoute from "./link/link.route";
 import authRoute from "./auth/auth.route";
+import userRoute from "./user/user.route";
 
 const router = express.Router();
 
@@ -16,6 +17,10 @@ const defaultRoutes: ReadonlyArray<RouteObj> = [
   {
     path: "/auth",
     route: authRoute,
+  },
+  {
+    path: "/user",
+    route: userRoute,
   },
   {
     path: "/telegram",

@@ -1,18 +1,24 @@
 import express from 'express';
-import { authenticateMetaMask, authenticateSimple } from './auth.controller';
+import { authenticateGoogle, initiateGoogleLogin, googleCallback } from './auth.controller';
 
 const router = express.Router();
 
 /**
- * POST /auth/metamask
- * Authenticate user with MetaMask signature
+ * POST /auth/google
+ * Authenticate user with Google ID token
  */
-router.post('/metamask', authenticateMetaMask);
+router.post('/google', authenticateGoogle);
 
 /**
- * POST /auth/simple
- * Authenticate user with simple registration (no wallet required)
+ * GET /auth/google/login
+ * Initiate Google OAuth flow
  */
-router.post('/simple', authenticateSimple);
+router.get('/google/login', initiateGoogleLogin);
+
+/**
+ * GET /auth/google/callback
+ * Handle Google OAuth callback
+ */
+router.get('/google/callback', googleCallback);
 
 export default router;

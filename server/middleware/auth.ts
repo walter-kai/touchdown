@@ -54,6 +54,9 @@ export const authenticateJWT = (req: AuthenticatedRequest, res: Response, next: 
   }
 };
 
+// Alias for consistency
+export const authenticate = authenticateJWT;
+
 /**
  * Optional JWT Authentication Middleware
  * Sets user info if token is present, but doesn't require it

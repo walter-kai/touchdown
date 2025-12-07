@@ -8,6 +8,8 @@ import cors from 'cors';
 import morgan from 'morgan';
 import { Server as WebSocketServer } from 'ws'; // WebSocket library
 // import subgraph from './routes/subgraph/service'; // Import getPairs function
+// Initialize Firebase Admin SDK once
+import './utils/firebase';
 import routes from './routes';
 
 

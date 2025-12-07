@@ -10,6 +10,19 @@ import type {
 } from '@/types/espn/scoreboard';
 import type { NewsArticle } from '@/types/espn/news';
 import NewsCard from '@/components/nfl/NewsCard';
+import GoogleLoginButton from '@/components/common/GoogleLoginButton';
+
+const AuthDebug: React.FC = () => {
+  const { user } = useAuth();
+  const token = typeof window !== 'undefined' ? localStorage.getItem('dexter_access_token') : null;
+  return (
+    <div className="mx-auto mb-3 max-w-md text-xs text-gray-400">
+      <div>Auth user: {user ? (user.email || user.username || user.displayName) : 'none'}</div>
+      <div>Token present: {token ? 'yes' : 'no'}</div>
+    </div>
+  );
+};
+import { useAuth } from '@/providers/AuthContext';
 
 interface ESPNData extends ScoreboardResponse {
   news?: {
@@ -19,6 +32,7 @@ interface ESPNData extends ScoreboardResponse {
 
 const NFLScoreboard: React.FC = () => {
   const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
   const [games, setGames] = useState<Event[]>([]);
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [byeTeams, setByeTeams] = useState<TeamOnBye[]>([]);
@@ -163,6 +177,7 @@ const NFLScoreboard: React.FC = () => {
 	
 	{/* Header */}
 	<div className="mb-8 text-center">
+    <AuthDebug />
 		<div className="flex items-center justify-center gap-4 mb-5">
 			<FaFootballBall className="text-4xl text-[#00ffe7] animate-pulse" />
 			<h1 className="text-4xl md:text-5xl font-bold text-[#00ffe7]">
@@ -170,6 +185,31 @@ const NFLScoreboard: React.FC = () => {
 			</h1>
 			<FaFootballBall className="text-4xl text-[#00ffe7] animate-pulse" />
 		</div>
+		
+		{/* Google Login Button */}
+		{!isAuthenticated && (
+			<div className="mb-6">
+				<GoogleLoginButton />
+			</div>
+		)}
+		
+		{/* User Info */}
+    {isAuthenticated && user && (
+      <div className="mb-6 flex items-center justify-center gap-4">
+        {user.photoUrl && (
+          <img src={user.photoUrl} alt={user.displayName || user.username || 'User'} className="w-10 h-10 rounded-full border-2 border-[#00ffe7]" />
+        )}
+        <span className="text-lg text-white font-medium">
+          Welcome, {user.displayName || user.username || user.email}
+        </span>
+        <button
+          onClick={logout}
+          className="px-3 py-1.5 text-sm rounded-md bg-red-600/80 hover:bg-red-600 text-white border border-red-400/40"
+        >
+          Log out
+        </button>
+      </div>
+    )}
 		
 		{/* Week Navigation */}
 		<div className="flex items-center justify-center gap-4 mb-4">
@@ -200,29 +240,30 @@ const NFLScoreboard: React.FC = () => {
 			</div>
 		)}
 	</div>
+  {/* Teams on Bye - Ticker Banner */}
+  {byeTeams.length > 0 && (
+    <div className="mb-6 bg-[#181a23]/90 rounded-lg border border-[#faafe8]/30 overflow-hidden">
+      <div className="flex items-center gap-4 px-4 py-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-sm font-bold text-[#faafe8]">TEAMS ON BYE:</span>
+        </div>
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1">
+          {byeTeams.map((team) => (
+            <button
+              key={team.id}
+              onClick={() => navigate(`/nfl/team/${team.id}`)}
+              className="flex items-center gap-2 bg-[#23263a]/50 hover:bg-[#23263a] border border-[#faafe8]/20 hover:border-[#faafe8]/50 rounded px-3 py-1 transition-all flex-shrink-0"
+            >
+              {team.logo && <img src={team.logo} alt={team.displayName} className="w-5 h-5" />}
+              <span className="text-white text-xs font-semibold">{team.abbreviation}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )}
 
-	{/* Teams on Bye */}
-	{byeTeams.length > 0 && (
-		<div className="mb-8 bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-4 shadow-[0_0_16px_rgba(250,175,232,0.1)]">
-			<h3 className="text-lg font-bold text-[#faafe8] mb-3">Teams on Bye</h3>
-			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-				{byeTeams.map((team) => (
-					<button
-						key={team.id}
-						onClick={() => navigate(`/nfl/team/${team.id}`)}
-						className="flex items-center gap-2 bg-[#23263a]/50 hover:bg-[#23263a] border border-[#faafe8]/20 hover:border-[#faafe8]/50 rounded-lg px-3 py-2 transition-all"
-					>
-						{team.logo && (
-							<img src={team.logo} alt={team.displayName} className="w-6 h-6" />
-						)}
-						<span className="text-white text-sm font-semibold">{team.abbreviation}</span>
-					</button>
-				))}
-			</div>
-		</div>
-	)}
-
-	{/* Loading State */}
+  {/* Loading State */}
 	{initialLoading && games.length === 0 && (
 		<div className="text-center py-20">
 		<FaClock className="text-6xl text-[#00ffe7] mx-auto mb-4 animate-pulse" />

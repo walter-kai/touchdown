@@ -1,6 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle } from 'react-icons/fa';
+import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock } from 'react-icons/fa';
 import Prediction from '@/components/nfl/Prediction';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
@@ -43,10 +43,49 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const carouselRef = useRef<HTMLDivElement>(null);
+  const [timeUntilGame, setTimeUntilGame] = useState<string>('');
 
   const competition = event.competitions[0];
   const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
   const awayTeam = competition.competitors.find(c => c.homeAway === 'away');
+  const gameStatus = competition.status.type.state;
+  const isPreGame = gameStatus === 'pre';
+
+  // Countdown timer for pre-game
+  useEffect(() => {
+    if (!isPreGame) return;
+
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const gameTime = new Date(competition.date).getTime();
+      const distance = gameTime - now;
+
+      if (distance < 0) {
+        setTimeUntilGame('Starting soon');
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      if (days > 0) {
+        setTimeUntilGame(`${days}d ${hours}h ${minutes}m`);
+      } else if (hours > 0) {
+        setTimeUntilGame(`${hours}h ${minutes}m ${seconds}s`);
+      } else if (minutes > 0) {
+        setTimeUntilGame(`${minutes}m ${seconds}s`);
+      } else {
+        setTimeUntilGame(`${seconds}s`);
+      }
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
+  }, [isPreGame, competition.date]);
 
   // Get tab index for carousel position
   const getTabIndex = (tab: string) => {
@@ -126,10 +165,17 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
               {/* Game Status */}
               <div className="text-center mb-6">
-                <div className="inline-flex items-center gap-2 bg-[#b0b7bf]/20 border border-[#b0b7bf] rounded-full px-4 py-2">
-                  <FaPauseCircle className="text-[#b0b7bf]" />
-                  <span className="text-[#b0b7bf] font-bold text-sm">FINAL</span>
-                </div>
+                {isPreGame ? (
+                  <div className="inline-flex items-center gap-2 bg-orange-500/20 border border-orange-500 rounded-full px-4 py-2">
+                    <FaClock className="text-orange-500 animate-pulse" />
+                    <span className="text-orange-500 font-bold text-sm">{timeUntilGame || 'Loading...'}</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-2 bg-[#b0b7bf]/20 border border-[#b0b7bf] rounded-full px-4 py-2">
+                    <FaPauseCircle className="text-[#b0b7bf]" />
+                    <span className="text-[#b0b7bf] font-bold text-sm">FINAL</span>
+                  </div>
+                )}
               </div>
 
               {/* Line Scores */}

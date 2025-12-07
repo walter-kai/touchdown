@@ -1,16 +1,21 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { jwtStorage } from '../utils/jwtStorage';
-import { User } from '../types/User';
+import { userStorage } from '../utils/userStorage';
+import { User } from '../../../types/User';
 
 interface AuthContextType {
   user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
   setUser: (user: User | null) => void;
+  login: (token: string, user: User, expiresIn?: number) => void;
   logout: () => void;
   currentRoute: string;
   showLoginModal: boolean;
   triggerLoginModal: () => void;
   closeLoginModal: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +34,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const location = useLocation();
   const currentRoute = location.pathname;
@@ -40,6 +46,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Check if user has valid JWT token
         if (jwtStorage.isAuthenticated()) {
           console.log('Found existing JWT token - user session restored');
+          // Optimistically hydrate from localStorage
+          const cached = userStorage.getUser();
+          if (cached) {
+            setUser(cached);
+          }
           
           // Fetch current user profile to restore session
           try {
@@ -50,16 +61,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             });
             
             if (response.ok) {
-              const { user } = await response.json();
-              setUser(user);
-              console.log('User session restored:', user.walletAddress);
+              const { user: userData } = await response.json();
+              setUser(userData);
+              userStorage.setUser(userData);
+              console.log('User session restored:', userData.email || userData.walletAddress);
             } else {
               console.log('Failed to restore user session, clearing token');
               jwtStorage.clearToken();
+              userStorage.clear();
             }
           } catch (error) {
             console.error('Error fetching user profile:', error);
             jwtStorage.clearToken();
+            userStorage.clear();
           }
         } else {
           console.log('No valid JWT token found');
@@ -67,16 +81,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch (error) {
         console.error('Error initializing auth:', error);
         jwtStorage.clearToken();
+      } finally {
+        setIsLoading(false);
       }
     };
 
     initializeAuth();
   }, []);
 
+  // Minimal, standard listener for popup postMessage
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data as any;
+      if (!data || typeof data !== 'object' || !data.type) return;
+      if (data.type === 'GOOGLE_AUTH_SUCCESS') {
+        const { token, user: userData, expiresIn } = data as { token: string; user: User; expiresIn?: number };
+        const ttl = typeof expiresIn === 'number' ? expiresIn : 7 * 24 * 60 * 60;
+        jwtStorage.setToken(token, ttl);
+        userStorage.setUser(userData);
+        setUser(userData);
+        setShowLoginModal(false);
+        console.log('Google auth success via postMessage (minimal listener)');
+      }
+      if (data.type === 'GOOGLE_AUTH_ERROR') {
+        console.warn('Google auth error:', data.error);
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
+  const login = (token: string, userData: User, expiresIn: number = 7 * 24 * 60 * 60) => {
+    jwtStorage.setToken(token, expiresIn);
+    userStorage.setUser(userData);
+    setUser(userData);
+    console.log('User logged in:', userData.email || userData.walletAddress);
+  };
+
   const logout = async () => {
     try {
       // Clear JWT token
       jwtStorage.clearToken();
+      userStorage.clear();
       
       // Clear user state
       setUser(null);
@@ -87,6 +133,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    if (!jwtStorage.isAuthenticated()) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/user/profile', {
+        headers: {
+          'Authorization': `Bearer ${jwtStorage.getToken()}`
+        }
+      });
+      
+      if (response.ok) {
+        const { user: userData } = await response.json();
+        setUser(userData);
+        userStorage.setUser(userData);
+      } else {
+        jwtStorage.clearToken();
+        userStorage.clear();
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+    }
+  };
+
   const triggerLoginModal = () => setShowLoginModal(true);
   const closeLoginModal = () => {
     setShowLoginModal(false);
@@ -94,10 +166,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value = {
     user,
-    setUser: (newUser: User | null) => {
-      setUser(newUser);
-    },
+    isAuthenticated: !!user,
+    isLoading,
+    setUser,
+    login,
     logout,
+    refreshUser,
     currentRoute,
     showLoginModal,
     triggerLoginModal,

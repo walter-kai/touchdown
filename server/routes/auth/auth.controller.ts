@@ -1,33 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
-import { authenticateWithMetaMask, authenticateWithSimple } from './auth.service';
+import { authenticateWithGoogle, getGoogleAuthUrl, handleGoogleCallback } from './auth.service';
 import catchAsync from '../../utils/catch-async';
 import ApiError from '../../utils/api-error';
 
-interface AuthRequest {
-  walletAddress: string;
-  signature: string;
-  message: string;
-}
-
-interface SimpleAuthRequest {
-  walletAddress?: string;
-  username: string;
-  email?: string;
-  referralId?: string;
+interface GoogleAuthRequest {
+  idToken: string;
 }
 
 /**
- * POST /auth/metamask
- * Authenticate user with MetaMask signature
+ * POST /auth/google
+ * Authenticate user with Google ID token
  */
-export const authenticateMetaMask = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { walletAddress, signature, message }: AuthRequest = req.body;
+export const authenticateGoogle = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { idToken }: GoogleAuthRequest = req.body;
 
-  if (!walletAddress || !signature || !message) {
-    throw new ApiError(400, 'Missing required fields: walletAddress, signature, message');
+  if (!idToken) {
+    throw new ApiError(400, 'Missing required field: idToken');
   }
 
-  const result = await authenticateWithMetaMask({ walletAddress, signature, message });
+  const result = await authenticateWithGoogle({ idToken });
 
   return res.status(200).json({
     success: true,
@@ -36,20 +27,70 @@ export const authenticateMetaMask = catchAsync(async (req: Request, res: Respons
 });
 
 /**
- * POST /auth/simple
- * Authenticate user with simple registration (no wallet required)
+ * GET /auth/google/login
+ * Redirect to Google OAuth consent screen
  */
-export const authenticateSimple = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { walletAddress, username, email, referralId }: SimpleAuthRequest = req.body;
+export const initiateGoogleLogin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const authUrl = getGoogleAuthUrl();
+  res.redirect(authUrl);
+  return res as any;
+});
 
-  if (!username || username.length < 3) {
-    throw new ApiError(400, 'Username must be at least 3 characters');
+/**
+ * GET /auth/google/callback
+ * Handle Google OAuth callback
+ */
+export const googleCallback = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { code } = req.query;
+
+  if (!code || typeof code !== 'string') {
+    throw new ApiError(400, 'Missing authorization code');
   }
 
-  const result = await authenticateWithSimple({ walletAddress, username, email, referralId });
+  const result = await handleGoogleCallback(code);
 
-  return res.status(200).json({
-    success: true,
-    data: result
-  });
+  // If client requested JSON, return structured data instead of HTML page
+  const wantsJson =
+    (typeof req.headers.accept === 'string' && req.headers.accept.includes('application/json')) ||
+    (typeof req.query.format === 'string' && req.query.format.toLowerCase() === 'json');
+
+  if (wantsJson) {
+    return res.status(200).json({ success: true, data: result });
+  }
+
+  // Send success message to parent window
+  return res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Login Successful</title>
+      </head>
+      <body>
+        <script>
+          try {
+            // Persist directly into opener's localStorage as a robust fallback
+            if (window.opener && window.opener.localStorage) {
+              var ttlMs = (typeof ${result.expiresIn} === 'number' ? ${result.expiresIn} : ${7 * 24 * 60 * 60}) * 1000;
+              var expiryTime = Date.now() + ttlMs;
+              window.opener.localStorage.setItem('dexter_access_token', '${result.accessToken}');
+              window.opener.localStorage.setItem('dexter_token_expiry', String(expiryTime));
+              window.opener.localStorage.setItem('dexter_user', '${JSON.stringify(result.user).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}');
+              // Also write oauth result to trigger storage listeners
+              window.opener.localStorage.setItem('dexter_oauth_result', JSON.stringify({ type: 'GOOGLE_AUTH_SUCCESS', token: '${result.accessToken}', user: ${JSON.stringify(result.user)}, expiresIn: ${result.expiresIn} }));
+            }
+          } catch (e) { /* ignore */ }
+          window.opener.postMessage(
+            {
+              type: 'GOOGLE_AUTH_SUCCESS',
+              token: '${result.accessToken}',
+              user: ${JSON.stringify(result.user)}
+            },
+            '*'
+          );
+          window.close();
+        </script>
+        <p>Login successful! This window will close automatically...</p>
+      </body>
+    </html>
+  `);
 });

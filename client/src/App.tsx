@@ -10,18 +10,72 @@ import NFLPlayerPage from './pages/nfl/Player';
 import NFLGame from './pages/nfl/Game';
 
 
-import PrivacyPolicy from './pages/x/legal/PrivacyPolicy';
-import TermsOfService from './pages/x/legal/TermsOfService';
+
 import NotFound from './pages/NotFound';
-import Settings from './pages/i/Settings';
 
-import LandingPage from './pages/x/Landing';
 
-import TickerBar from './components/common/TickerBar';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useAuth } from './providers/AuthContext';
 import { PicksProvider } from './providers/PicksContext';
 import LoginModal from './components/common/LoginModal';
+
+// Google OAuth callback handler (in-tab redirect)
+const GoogleOAuthCallback: React.FC = () => {
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        if (!code) {
+          // Missing code: redirect home
+          window.location.replace('/');
+          return;
+        }
+
+        // Exchange code with backend
+        const resp = await fetch(`/api/auth/google/callback?code=${encodeURIComponent(code)}&format=json`, {
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!resp.ok) {
+          // On failure, go home
+          window.location.replace('/');
+          return;
+        }
+
+        const data = await resp.json();
+        const result = data?.data || data;
+        // If opened as a popup, notify opener and close
+        if (window.opener) {
+          try {
+            window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS', token: result.accessToken, user: result.user, expiresIn: result.expiresIn }, '*');
+          } catch {}
+          window.close();
+          return;
+        }
+        // Otherwise store locally and redirect
+        try {
+          const ttlMs = (typeof result.expiresIn === 'number' ? result.expiresIn : 7 * 24 * 60 * 60) * 1000;
+          const expiryTime = Date.now() + ttlMs;
+          localStorage.setItem('dexter_access_token', result.accessToken);
+          localStorage.setItem('dexter_token_expiry', String(expiryTime));
+          localStorage.setItem('dexter_user', JSON.stringify(result.user));
+        } catch {}
+        window.location.replace('/');
+      } catch (err) {
+        window.location.replace('/');
+      }
+    };
+    run();
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center text-white">
+      <div className="bg-[#181a23] border border-[#00ffe7]/30 rounded-lg p-6">
+        Processing login...
+      </div>
+    </div>
+  );
+};
 
 // Main App component
 const App: React.FC = () => {
@@ -84,11 +138,6 @@ const App: React.FC = () => {
       
       {/* Content Container */}
       <div className="relative z-10 flex flex-col min-h-screen">
-        {(location.pathname.startsWith("/x/") || location.pathname === "/") && (
-          <>
-            <TickerBar />
-          </>
-        )}
         {location.pathname.startsWith("/i/") && user && (
           <>
      
@@ -121,16 +170,11 @@ const App: React.FC = () => {
                 <Routes location={location}>
                   <Route path="/" element={<NFL />} />
                   <Route path="/nfl" element={<NFL />} />
+                  <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
                   <Route path="/nfl/game/:gameId" element={<NFLGame activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays'} onTabChange={(tab) => setGameTab(tab)} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays'} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/player/:playerId" element={<NFLPlayerPage activeTab={gameTab as 'info' | 'schedule' | 'news'} onTabChange={(tab) => setGameTab(tab as any)} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   
-
-                  <Route path="/settings" element={<Settings />} />
-                  
-                  {/* Legal routes under /legal/ */}
-                  <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
-                  <Route path="/legal/terms-of-service" element={<TermsOfService />} />
                   
                   <Route path="*" element={<NotFound />} />
                 </Routes>

@@ -1,248 +1,222 @@
 import admin from 'firebase-admin';
 import jwt from 'jsonwebtoken';
-// import { ethers } from 'ethers';
+import { OAuth2Client } from 'google-auth-library';
 import ApiError from '../../utils/api-error';
 import logger from '../../utils/logger';
 
-export interface AuthRequest {
-  walletAddress: string;
-  signature: string;
-  message: string;
-}
+// Initialize Google OAuth client
+const googleClient = new OAuth2Client(
+  process.env.GOOGLE_OAUTH_CLIENT_ID,
+  process.env.GOOGLE_OAUTH_SECRET,
+  `${process.env.BASE_URL || 'http://localhost:3000'}/auth/google/callback`
+);
 
 export interface AuthResponse {
   accessToken: string;
   user: {
-    walletAddress: string;
     uid: string;
+    walletAddress?: string;
     username: string;
     email: string;
+    displayName?: string;
+    photoUrl?: string;
     createdAt: Date;
     lastLogin: Date;
     referralId?: string;
     telegramId?: string;
-    photoUrl?: string;
+    googleId?: string;
+    googleEmail?: string;
+    googleName?: string;
+    googlePicture?: string;
+    isEmailVerified?: boolean;
+    locale?: string;
+    authMethod?: string;
   };
   expiresIn: number;
 }
 
+export interface GoogleAuthRequest {
+  idToken: string;
+}
+
 /**
- * Verify MetaMask signature and authenticate user
+ * Authenticate user with Google OAuth
  */
-export async function authenticateWithMetaMask(authRequest: AuthRequest): Promise<AuthResponse> {
-  const { walletAddress, signature, message } = authRequest;
+export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Promise<AuthResponse> {
+  const { idToken } = authRequest;
 
   try {
-    // Basic validation
-    if (!walletAddress || !signature || !message) {
-      throw new ApiError(400, 'Missing required authentication data');
-    }
+    // Verify Google ID token
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_OAUTH_CLIENT_ID,
+    });
 
-    // Validate wallet address format
-    if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
-      throw new ApiError(401, 'Invalid wallet address format');
-    }
-
-    // Optional: Verify the signature matches the wallet address
-    try {
-      // const recoveredAddress = ethers.utils.verifyMessage(message, signature);
-      // if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
-      //   throw new ApiError(401, 'Signature does not match wallet address');
-      // }
-      logger.info(`Signature verified for wallet: ${walletAddress}`);
-    } catch (verifyError) {
-      logger.error(verifyError, 'Signature verification failed:');
-      throw new ApiError(401, 'Invalid signature');
-    }
-
-    // Validate wallet address format (basic check)
-    if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
-      throw new ApiError(401, 'Invalid wallet address format');
-    }
-
-    // For now, skip message format validation to test the flow
-    // TODO: Add proper signature verification in production
+    const payload = ticket.getPayload();
     
-    // Check if message contains timestamp for basic validation
-    if (!message || message.length < 10) {
-      throw new ApiError(401, 'Invalid message');
+    if (!payload) {
+      throw new ApiError(401, 'Invalid Google token');
     }
 
-    // Use wallet address as user ID
-    const uid = walletAddress.toLowerCase();
+    const {
+      sub: googleId,
+      email,
+      name,
+      picture,
+      email_verified,
+      locale
+    } = payload;
 
-    // Create JWT payload
-    const payload = {
-      uid,
-      walletAddress: walletAddress.toLowerCase(),
-      authMethod: 'metamask',
-      iat: Math.floor(Date.now() / 1000),
-    };
+    if (!email) {
+      throw new ApiError(400, 'Email not provided by Google');
+    }
 
-    // Create JWT (expires in 24 hours)
-    const expiresIn = 24 * 60 * 60; // 24 hours in seconds
-    const accessToken = jwt.sign(
-      payload,
-      process.env.JWT_SECRET || 'fallback-secret-change-in-production',
-      { 
-        expiresIn,
-        issuer: 'dexter-city',
-        audience: 'dexter-city-users'
-      }
-    );
+    // Use Google ID as the user ID
+    const uid = `google_${googleId}`;
 
-    // Create or update user in Firestore using Admin SDK
+    // Check if user already exists
     const userDocRef = admin.firestore().collection('users').doc(uid);
     const userDoc = await userDocRef.get();
 
     let userData;
+    const now = new Date();
 
     if (!userDoc.exists) {
       // Create new user document
       userData = {
-        walletAddress: walletAddress.toLowerCase(),
-        username: '',
-        email: '',
-        createdAt: new Date(),
-        lastLogin: new Date(),
+        uid,
+        googleId,
+        email,
+        googleEmail: email,
+        username: name || email.split('@')[0],
+        displayName: name || '',
+        photoUrl: picture || '',
+        googleName: name || '',
+        googlePicture: picture || '',
+        isEmailVerified: email_verified || false,
+        locale: locale || '',
+        authMethod: 'google' as const,
+        createdAt: now,
+        lastLogin: now,
       };
-      
+
       await userDocRef.set({
         ...userData,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         lastLogin: admin.firestore.FieldValue.serverTimestamp(),
       });
+
+      logger.info(`New user created with Google auth: ${email}`);
     } else {
-      // Update last login and get existing data
+      // Update existing user
+      const existingData = userDoc.data();
+      
       await userDocRef.update({
         lastLogin: admin.firestore.FieldValue.serverTimestamp(),
+        googleName: name || existingData?.googleName,
+        googlePicture: picture || existingData?.googlePicture,
+        displayName: name || existingData?.displayName,
+        photoUrl: picture || existingData?.photoUrl,
+        isEmailVerified: email_verified || existingData?.isEmailVerified,
       });
-      
-      const existingData = userDoc.data();
+
       userData = {
-        walletAddress: walletAddress.toLowerCase(),
-        username: existingData?.username || '',
-        email: existingData?.email || '',
-        createdAt: existingData?.createdAt?.toDate() || new Date(),
-        lastLogin: new Date(),
+        uid,
+        googleId,
+        email,
+        googleEmail: email,
+        username: existingData?.username || name || email.split('@')[0],
+        displayName: name || existingData?.displayName || '',
+        photoUrl: picture || existingData?.photoUrl || '',
+        googleName: name || '',
+        googlePicture: picture || '',
+        isEmailVerified: email_verified || false,
+        locale: locale || existingData?.locale || '',
+        authMethod: 'google' as const,
+        createdAt: existingData?.createdAt?.toDate() || now,
+        lastLogin: now,
+        ...(existingData?.walletAddress && { walletAddress: existingData.walletAddress }),
         ...(existingData?.referralId && { referralId: existingData.referralId }),
         ...(existingData?.telegramId && { telegramId: existingData.telegramId }),
-        ...(existingData?.photoUrl && { photoUrl: existingData.photoUrl }),
       };
+
+      logger.info(`User logged in with Google: ${email}`);
     }
-
-    logger.info(`User authenticated with JWT: ${walletAddress}`);
-
-    return {
-      accessToken,
-      user: {
-        ...userData,
-        uid
-      },
-      expiresIn
-    };
-
-  } catch (error) {
-    logger.error(error, 'MetaMask authentication error:');
-    
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    
-    throw new ApiError(500, 'Authentication failed');
-  }
-}
-
-export interface SimpleAuthRequest {
-  walletAddress?: string;
-  username: string;
-  email?: string;
-  referralId?: string;
-}
-
-/**
- * Authenticate user with simple registration (no wallet required)
- */
-export async function authenticateWithSimple(authRequest: SimpleAuthRequest): Promise<AuthResponse> {
-  const { walletAddress, username, email, referralId } = authRequest;
-
-  try {
-    // Basic validation
-    if (!username || username.length < 3) {
-      throw new ApiError(400, 'Username must be at least 3 characters');
-    }
-
-    // Check if username is already taken
-    const usernameQuery = await admin.firestore()
-      .collection('users')
-      .where('username', '==', username.trim())
-      .limit(1)
-      .get();
-
-    if (!usernameQuery.empty) {
-      throw new ApiError(400, 'Username is already taken');
-    }
-
-    // Use provided wallet address or generate a unique ID
-    const uid = walletAddress?.toLowerCase() || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // Create JWT payload
-    const payload = {
+    const jwtPayload = {
       uid,
-      ...(walletAddress && { walletAddress: walletAddress.toLowerCase() }),
-      authMethod: 'simple',
+      email,
+      googleId,
+      authMethod: 'google',
       iat: Math.floor(Date.now() / 1000),
     };
 
-    // Create JWT (expires in 24 hours)
-    const expiresIn = 24 * 60 * 60; // 24 hours in seconds
+    // Create JWT (expires in 7 days)
+    const expiresIn = 7 * 24 * 60 * 60; // 7 days in seconds
     const accessToken = jwt.sign(
-      payload,
+      jwtPayload,
       process.env.JWT_SECRET || 'fallback-secret-change-in-production',
-      { 
+      {
         expiresIn,
         issuer: 'dexter-city',
         audience: 'dexter-city-users'
       }
     );
 
-    // Create user document in Firestore
-    const userDocRef = admin.firestore().collection('users').doc(uid);
-    
-    const userData = {
-      ...(walletAddress && { walletAddress: walletAddress.toLowerCase() }),
-      username: username.trim(),
-      email: email?.trim() || '',
-      createdAt: new Date(),
-      lastLogin: new Date(),
-      ...(referralId && { referralId: referralId.trim() }),
-    };
-    
-    await userDocRef.set({
-      ...userData,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      lastLogin: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    logger.info(`User created with simple auth: ${username}`);
-
     return {
       accessToken,
-      user: {
-        ...userData,
-        uid,
-        walletAddress: walletAddress?.toLowerCase() || '',
-      },
+      user: userData,
       expiresIn
     };
 
   } catch (error) {
-    logger.error(error, 'Simple authentication error:');
+    logger.error(error, 'Google authentication error:');
     
     if (error instanceof ApiError) {
       throw error;
     }
     
-    throw new ApiError(500, 'Authentication failed');
+    throw new ApiError(500, 'Google authentication failed');
+  }
+}
+
+/**
+ * Generate Google OAuth URL for login flow
+ */
+export function getGoogleAuthUrl(): string {
+  const scopes = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+  ];
+
+  return googleClient.generateAuthUrl({
+    access_type: 'offline',
+    scope: scopes,
+    prompt: 'consent',
+  });
+}
+
+/**
+ * Exchange Google authorization code for tokens
+ */
+export async function handleGoogleCallback(code: string): Promise<AuthResponse> {
+  try {
+    const { tokens } = await googleClient.getToken(code);
+    
+    if (!tokens.id_token) {
+      throw new ApiError(400, 'No ID token received from Google');
+    }
+
+    return authenticateWithGoogle({ idToken: tokens.id_token });
+
+  } catch (error) {
+    logger.error(error, 'Google callback error:');
+    
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    
+    throw new ApiError(500, 'Failed to process Google authentication');
   }
 }
