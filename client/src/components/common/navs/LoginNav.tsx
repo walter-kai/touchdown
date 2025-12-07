@@ -21,7 +21,7 @@ const LoginNav: React.FC = () => {
 						/>
 						<div className="flex flex-col leading-tight">
 							<span className="text-[#e0e7ef] font-semibold tracking-wide">NFL Drive</span>
-							<span className="text-xs text-[#00ffe7]">v1.0</span>
+							<span className="text-xs text-[#00ffe7]">v1.1</span>
 						</div>
 					</button>
 
