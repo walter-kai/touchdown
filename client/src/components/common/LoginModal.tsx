@@ -57,7 +57,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       ).join('');
       
       // Create a simple authentication request without signature
-      const response = await fetch('/api/auth/simple', {
+      const response = await fetch('/auth/simple', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

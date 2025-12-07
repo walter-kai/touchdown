@@ -33,7 +33,7 @@ const GoogleOAuthCallback: React.FC = () => {
         }
 
         // Exchange code with backend
-        const resp = await fetch(`/api/auth/google/callback?code=${encodeURIComponent(code)}&format=json`, {
+        const resp = await fetch(`/auth/google/callback?code=${encodeURIComponent(code)}&format=json`, {
           headers: { 'Accept': 'application/json' }
         });
         if (!resp.ok) {

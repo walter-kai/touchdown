@@ -16,11 +16,6 @@ const GoogleLoginButton: React.FC = () => {
       const popupTop = window.screenY + (window.outerHeight - popupHeight) / 2;
 
       // Open popup to Google login
-      const width = 500;
-      const height = 600;
-      const left = window.screenX + (window.outerWidth - width) / 2;
-      const top = window.screenY + (window.outerHeight - height) / 2;
-
       const popup = window.open(
         '/auth/google/login',
         'Google Login',
@@ -31,22 +26,57 @@ const GoogleLoginButton: React.FC = () => {
         throw new Error('Popup blocked. Please allow popups for this site.');
       }
 
-      const checkClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkClosed);
-          // Final fallback: hydrate from localStorage if available
-          try {
-            const token = localStorage.getItem('dexter_access_token');
-            const userRaw = localStorage.getItem('dexter_user');
-            if (token && userRaw) {
-              const userObj = JSON.parse(userRaw);
-              login(token, userObj, 7 * 24 * 60 * 60);
-              // No backend upsert call; Google OAuth flow already sets session
-            }
-          } catch {}
+      // Listen for postMessage from the popup (sent by auth callback)
+      const messageHandler = (event: MessageEvent) => {
+        // Verify origin if needed (for security in production)
+        // if (event.origin !== window.location.origin) return;
+
+        if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+          window.removeEventListener('message', messageHandler);
+          
+          const { token, user } = event.data;
+          if (token && user) {
+            login(token, user, 7 * 24 * 60 * 60);
+          }
           setIsLoading(false);
         }
-      }, 500);
+      };
+
+      window.addEventListener('message', messageHandler);
+
+      // Also listen for storage events (fallback mechanism from auth callback)
+      const storageHandler = (event: StorageEvent) => {
+        if (event.key === 'dexter_oauth_result' && event.newValue) {
+          try {
+            const result = JSON.parse(event.newValue);
+            if (result.type === 'GOOGLE_AUTH_SUCCESS' && result.token && result.user) {
+              window.removeEventListener('storage', storageHandler);
+              window.removeEventListener('message', messageHandler);
+              login(result.token, result.user, result.expiresIn || 7 * 24 * 60 * 60);
+              setIsLoading(false);
+              // Clean up the storage flag
+              localStorage.removeItem('dexter_oauth_result');
+            }
+          } catch {}
+        }
+      };
+
+      window.addEventListener('storage', storageHandler);
+
+      // Timeout fallback: if no response in 60 seconds, stop loading
+      const timeout = setTimeout(() => {
+        window.removeEventListener('message', messageHandler);
+        window.removeEventListener('storage', storageHandler);
+        setIsLoading(false);
+        setError('Login timeout. Please try again.');
+      }, 60000);
+
+      // Clean up on unmount
+      return () => {
+        clearTimeout(timeout);
+        window.removeEventListener('message', messageHandler);
+        window.removeEventListener('storage', storageHandler);
+      };
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
       setIsLoading(false);

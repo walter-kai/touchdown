@@ -16,7 +16,7 @@ Users create accounts by providing:
 ### Authentication Flow
 
 ```
-POST /api/auth/simple
+POST /auth/simple
 Body: {
   username: string,
   email?: string,
@@ -58,7 +58,7 @@ Google OAuth will be added to provide:
 - ✅ Updated landing pages and documentation
 
 **Legacy Support:**
-- The MetaMask authentication endpoint (`/api/auth/metamask`) remains available for backwards compatibility but is deprecated
+- The MetaMask authentication endpoint (`/auth/metamask`) remains available for backwards compatibility but is deprecated
 
 ### Implementation Notes
 
@@ -67,7 +67,7 @@ For developers planning to add Google OAuth:
 1. Install Google OAuth library: `npm install @react-oauth/google`
 2. Create Google OAuth credentials in Google Cloud Console
 3. Add `GoogleOAuthProvider` wrapper in App.tsx
-4. Create new endpoint: `/api/auth/google`
+4. Create new endpoint: `/auth/google`
 5. Update LoginModal to include "Sign in with Google" button
 6. Store Google user ID alongside username in Firestore
 

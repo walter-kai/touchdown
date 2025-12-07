@@ -1,4 +1,8 @@
-import { HTTPErrorStatusCode } from "./error";
+type HTTPError = Error & {
+  statusCode: HTTPErrorStatusCode;
+};
+
+type HTTPErrorStatusCode = 400 | 401 | 404 | 500;
 
 class ApiError extends Error {
   statusCode: HTTPErrorStatusCode;
