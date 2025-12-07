@@ -3,7 +3,6 @@ import express from "express";
 import telegramRoute from "./telegram/telegram.route";
 
 import linkRoute from "./link/link.route";
-import authRoute from "./auth/auth.route";
 import userRoute from "./user/user.route";
 import picksRoute from "./picks/picks.route";
 
@@ -15,10 +14,6 @@ type RouteObj = {
 };
 
 const defaultRoutes: ReadonlyArray<RouteObj> = [
-  {
-    path: "/auth",
-    route: authRoute,
-  },
   {
     path: "/user",
     route: userRoute,

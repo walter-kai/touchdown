@@ -11,6 +11,7 @@ import { Server as WebSocketServer } from 'ws'; // WebSocket library
 // Initialize Firebase Admin SDK once
 import './utils/firebase';
 import routes from './routes';
+import authRoute from './routes/auth/auth.route';
 
 // Log environment variables on startup
 console.log('=== ENVIRONMENT VARIABLES ===');
@@ -24,22 +25,27 @@ const port = process.env.BACKEND_PORT;
 app.use(morgan('combined')); // Logs HTTP requests
 app.use(cors());
 app.use(express.json());
-// app.use(express.static(path.join(__dirname, '../client/build')));
-app.use("/api", routes);
-app.use("/auth", routes); // Also mount routes at /auth for OAuth callbacks
 
+// API and Auth routes MUST come before static files
+app.use("/api", routes);
+
+// Mount auth routes directly at /auth for OAuth callbacks
+app.use("/auth", authRoute);
+
+// Add test route to verify auth is mounted
+app.get('/auth-test', (req, res) => {
+  res.json({ message: 'Auth routes are mounted correctly' });
+});
 
 // 404 handler for API routes
 app.use('/api/*', (req: Request, res: Response) => {
   res.status(404).json({ error: "API route not found" });
 });
 
-app.post('/', (req: Request, res: Response) => {
-  res.redirect('/');
-});
-
-// Serve React application  
+// Serve React application static files
 app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Catch-all for React Router - MUST be last
 app.get('*', (req, res) => {
   const indexPath = path.join(__dirname, '../client/dist', 'index.html');
   res.sendFile(indexPath, (err) => {

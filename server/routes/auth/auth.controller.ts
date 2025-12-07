@@ -31,7 +31,10 @@ export const authenticateGoogle = catchAsync(async (req: Request, res: Response,
  * Redirect to Google OAuth consent screen
  */
 export const initiateGoogleLogin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  console.log('=== INITIATE GOOGLE LOGIN ===');
   const authUrl = getGoogleAuthUrl();
+  console.log('Auth URL:', authUrl);
+  console.log('============================');
   res.redirect(authUrl);
   return res as any;
 });
