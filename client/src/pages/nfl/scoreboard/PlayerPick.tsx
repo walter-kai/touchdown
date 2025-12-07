@@ -323,6 +323,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   const [isRosterOpen, setIsRosterOpen] = useState(false);
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
   const [isViewTransitioning, setIsViewTransitioning] = useState(false);
+  const [isLockingIn, setIsLockingIn] = useState(false);
 
   // Load saved state from localStorage
   useEffect(() => {
@@ -551,6 +552,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     }).filter(p => p !== null); // Remove any null entries
     
     if (swappedPicks.length > 0) {
+      setIsLockingIn(true);
       console.log('Locking in picks:', swappedPicks);
       
       // Save to localStorage and backend
@@ -609,6 +611,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       // Step 3: After widening completes (2050ms = 1250 + 800), show stats with fade
       setTimeout(() => {
         setShowStats(true);
+        setIsLockingIn(false);
       }, 2050);
       
       setCooldownTime(120); // 2 minutes
@@ -714,17 +717,26 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                 {!isLocked && isRosterOpen ? (
                   <button
                     onClick={handleLockIn}
-                    disabled={newPicks.filter(p => p).length === 0}
-                    className={`py-2 px-4 flex items-center gap-2 min-w-[120px] h-[60px] transition-opacity duration-300 ${
+                    disabled={newPicks.filter(p => p).length === 0 || isLockingIn}
+                    className={`py-2 px-4 flex items-center justify-center gap-2 min-w-[120px] h-[60px] transition-opacity duration-300 ${
                       isViewTransitioning ? 'opacity-0' : 'opacity-100'
                     } ${
-                      newPicks.filter(p => p).length > 0
+                      newPicks.filter(p => p).length > 0 && !isLockingIn
                         ? 'btn-pink'
                         : 'bg-gray-700/20 border-2 border-gray-600 text-gray-500 cursor-not-allowed rounded'
                     }`}
                   >
-                    <FaUnlock />
-                    Lock In {newPicks.filter(p => p).length > 0 ? `(${newPicks.filter(p => p).length})` : ''}
+                    {isLockingIn ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Locking...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaUnlock />
+                        Lock In {newPicks.filter(p => p).length > 0 ? `(${newPicks.filter(p => p).length})` : ''}
+                      </>
+                    )}
                   </button>
                 ) : (
                   <div className={`text-right transition-all duration-500 min-w-[120px] h-[60px] flex flex-col justify-center ${

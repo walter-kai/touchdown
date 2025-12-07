@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaFootballBall, FaArrowLeft, FaCalendar, FaChartLine, FaTrophy, FaNewspaper, FaInfoCircle } from 'react-icons/fa';
 import axios from 'axios';
-import type { AthleteOverview, AthleteBio } from '@/types/espn/player';
+import type { AthleteOverview, AthleteBio } from '@/types/espn/athlete';
 
 interface NFLPlayerProps {
   activeTab?: 'info' | 'schedule' | 'news';
