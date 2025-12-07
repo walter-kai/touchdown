@@ -12,6 +12,10 @@ import { Server as WebSocketServer } from 'ws'; // WebSocket library
 import './utils/firebase';
 import routes from './routes';
 
+// Log environment variables on startup
+console.log('=== ENVIRONMENT VARIABLES ===');
+console.log(JSON.stringify(process.env, null, 2));
+console.log('=============================');
 
 const app = express();
 const port = process.env.PORT || 3001;

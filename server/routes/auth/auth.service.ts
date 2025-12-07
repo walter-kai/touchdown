@@ -7,7 +7,8 @@ import logger from '../../utils/logger';
 // Determine the base URL based on environment
 const getBaseUrl = () => {
   if (process.env.NODE_ENV === 'production') {
-    return process.env.PRODUCTION_URL || 'https://touchdown-882290629693.us-central1.run.app';
+    // Use explicit production URL or fall back to Cloud Run hostname
+    return process.env.BASE_URL || 'https://touchdown-882290629693.us-central1.run.app';
   }
   return 'http://localhost:3000';
 };
@@ -16,7 +17,7 @@ const getBaseUrl = () => {
 const googleClient = new OAuth2Client(
   process.env.GOOGLE_OAUTH_CLIENT_ID,
   process.env.GOOGLE_OAUTH_SECRET,
-  `${getBaseUrl()}/auth/google/callback`
+  `${getBaseUrl()}/api/auth/google/callback`
 );
 
 export interface AuthResponse {
