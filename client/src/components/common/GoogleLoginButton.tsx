@@ -22,7 +22,7 @@ const GoogleLoginButton: React.FC = () => {
       const top = window.screenY + (window.outerHeight - height) / 2;
 
       const popup = window.open(
-        '/api/auth/google/login',
+        '/auth/google/login',
         'Google Login',
         `width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop}`
       );
