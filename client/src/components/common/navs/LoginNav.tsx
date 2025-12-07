@@ -15,7 +15,7 @@ const LoginNav: React.FC = () => {
 						className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
 					>
 						<img
-							src="/logos/Drive Logo.png"
+							src="/logos/Drive-logo.png"
 							alt="Drive"
 							className="h-8 w-8 rounded-sm shadow-[0_0_12px_rgba(0,255,231,0.25)]"
 						/>
