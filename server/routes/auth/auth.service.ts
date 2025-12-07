@@ -8,7 +8,7 @@ import logger from '../../utils/logger';
 const googleClient = new OAuth2Client(
   process.env.GOOGLE_OAUTH_CLIENT_ID,
   process.env.GOOGLE_OAUTH_SECRET,
-  `${process.env.HOST_URL}/api/auth/google/callback`
+  `${process.env.HOST_URL}/auth/google/callback`
 );
 
 export interface AuthResponse {
