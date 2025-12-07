@@ -4,20 +4,11 @@ import { OAuth2Client } from 'google-auth-library';
 import ApiError from '../../utils/api-error';
 import logger from '../../utils/logger';
 
-// Determine the base URL based on environment
-const getBaseUrl = () => {
-  if (process.env.NODE_ENV === 'production') {
-    // Use explicit production URL or fall back to Cloud Run hostname
-    return process.env.BASE_URL || 'https://touchdown-882290629693.us-central1.run.app';
-  }
-  return 'http://localhost:3000';
-};
-
 // Initialize Google OAuth client
 const googleClient = new OAuth2Client(
   process.env.GOOGLE_OAUTH_CLIENT_ID,
   process.env.GOOGLE_OAUTH_SECRET,
-  `${getBaseUrl()}/api/auth/google/callback`
+  `${process.env.HOST_URL || 'http://localhost:3000'}/api/auth/google/callback`
 );
 
 export interface AuthResponse {
