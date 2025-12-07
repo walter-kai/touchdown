@@ -974,7 +974,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                     isExpanded && !isRosterOpen ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] rounded' : 'btn-standard'
                   }`}>
                   <FaFootballBall className="text-xl" />
-                  <span>Field</span>
+                  <span>Plays</span>
                 </button>
 
                 {/* Pick Players Button */}

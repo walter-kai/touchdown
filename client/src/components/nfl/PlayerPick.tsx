@@ -6,6 +6,10 @@ import { HTML5Backend, getEmptyImage } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
+import PlayerAvatar from './pick/PlayerAvatar';
+import ScoreDisplay from './pick/ScoreDisplay';
+import TeamSelector from './pick/TeamSelector';
+import PlayerRosterList from './pick/PlayerRosterList';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {
@@ -111,24 +115,12 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
         })
       }}
     >
-      {headshotUrl ? (
-        <img
-          src={headshotUrl}
-          alt={player.displayName}
-          className="w-12 h-12 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).style.display = 'none';
-            const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-            if (fallback) fallback.style.display = 'flex';
-          }}
-        />
-      ) : null}
-      <div 
-        className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0"
-        style={{ display: headshotUrl ? 'none' : 'flex' }}
-      >
-        <FaUsers className="text-[#faafe8] text-sm" />
-      </div>
+      <PlayerAvatar 
+        headshotUrl={headshotUrl} 
+        displayName={player.displayName} 
+        size="large"
+        borderColor="border-[#faafe8]/50"
+      />
       <div className="flex-1 min-w-0">
         <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
         <div className="text-[#faafe8] text-xs">{player.position.abbreviation}{player.jersey && ` • #${player.jersey}`}</div>
@@ -223,17 +215,12 @@ const MyPreview = () => {
         <div className="w-5 h-5 rounded-full bg-[#faafe8] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
           {item.index + 1}
         </div>
-        {headshotUrl ? (
-          <img
-            src={headshotUrl}
-            alt={item.player.displayName}
-            className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0"
-          />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0">
-            <FaUsers className="text-[#faafe8] text-sm" />
-          </div>
-        )}
+        <PlayerAvatar 
+          headshotUrl={headshotUrl} 
+          displayName={item.player.displayName} 
+          size="medium"
+          borderColor="border-[#faafe8]/50"
+        />
         <div className="flex-1 min-w-0">
           <div className="text-white font-bold text-xs truncate">{item.player.shortName}</div>
           <div className="text-[#faafe8] text-[10px]">{item.player.position.abbreviation}</div>
@@ -576,13 +563,12 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                     <div className="w-4 h-4 rounded-full bg-[#00ffe7] text-black text-[10px] font-bold flex items-center justify-center flex-shrink-0">
                       {idx + 1}
                     </div>
-                    {headshotUrl && (
-                      <img
-                        src={headshotUrl}
-                        alt={player.displayName}
-                        className="w-6 h-6 rounded-full border border-[#00ffe7]/50 flex-shrink-0"
-                      />
-                    )}
+                    <PlayerAvatar 
+                      headshotUrl={headshotUrl} 
+                      displayName={player.displayName} 
+                      size="small"
+                      borderColor="border-[#00ffe7]/50"
+                    />
                     {teamLogo && (
                       <img src={teamLogo} alt="" className="w-4 h-4 flex-shrink-0" />
                     )}
@@ -684,24 +670,12 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                             <div className="w-6 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
                               {idx + 1}
                             </div>
-                            {headshotUrl ? (
-                              <img
-                                src={headshotUrl}
-                                alt={player.displayName}
-                                className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
-                                onError={(e) => {
-                                  (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                  const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                                  if (fallback) fallback.style.display = 'flex';
-                                }}
-                              />
-                            ) : null}
-                            <div 
-                              className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
-                              style={{ display: headshotUrl ? 'none' : 'flex' }}
-                            >
-                              <FaUsers className="text-[#00ffe7] text-sm" />
-                            </div>
+                            <PlayerAvatar 
+                              headshotUrl={headshotUrl} 
+                              displayName={player.displayName} 
+                              size="large"
+                              borderColor="border-[#00ffe7]/50"
+                            />
                             <div className="flex-1 min-w-0">
                               <div className="text-white font-bold text-sm whitespace-nowrap overflow-hidden text-ellipsis">{player.shortName}</div>
                               <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis">
@@ -711,18 +685,12 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                             
                             {/* Score - Show when not actively picking players */}
                             {(isLocked || !isRosterOpen) && showStats && (
-                              <div 
-                                className={`text-center transition-all duration-700 ${
-                                  showStats ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
-                                }`}
-                                style={{ 
-                                  transitionDelay: `${idx * 100}ms`,
-                                  transformOrigin: 'center'
-                                }}
-                              >
-                                <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
-                                <div className="text-[#b0b7bf] text-[10px]">PTS</div>
-                              </div>
+                              <ScoreDisplay 
+                                score={playerScore} 
+                                size="medium" 
+                                showStats={showStats} 
+                                index={idx}
+                              />
                             )}
                           </div>
                         );
@@ -847,30 +815,12 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
             {!isLocked && isRosterOpen && (
               <>
             {/* Team Selector */}
-            <div className="flex gap-0">
-              <button
-                onClick={() => setActiveTeam('home')}
-                className={`flex-1 py-3 rounded-t-lg font-bold flex items-center justify-center gap-2 transition-all border-2 ${
-                  activeTeam === 'home'
-                    ? 'bg-[#faafe8]/20 border-[#faafe8] text-[#faafe8]'
-                    : 'bg-[#181a23] border-[#faafe8]/30 text-gray-400 hover:border-[#faafe8]/50'
-                }`}
-              >
-                {homeTeamLogo && <img src={homeTeamLogo} alt="" className="w-6 h-6" />}
-                {homeTeamInfo.name}
-              </button>
-              <button
-                onClick={() => setActiveTeam('away')}
-                className={`flex-1 py-3 rounded-t-lg font-bold flex items-center justify-center gap-2 transition-all border-2 ${
-                  activeTeam === 'away'
-                    ? 'bg-[#00ffe7]/20 border-[#00ffe7] text-[#00ffe7]'
-                    : 'bg-[#181a23] border-[#00ffe7]/30 text-gray-400 hover:border-[#00ffe7]/50'
-                }`}
-              >
-                {awayTeamLogo && <img src={awayTeamLogo} alt="" className="w-6 h-6" />}
-                {awayTeamInfo.name}
-              </button>
-            </div>
+            <TeamSelector 
+              homeTeamInfo={{ name: homeTeamInfo.name, logo: homeTeamLogo }}
+              awayTeamInfo={{ name: awayTeamInfo.name, logo: awayTeamLogo }}
+              activeTeam={activeTeam}
+              onTeamChange={setActiveTeam}
+            />
 
             {/* Player List */}
             <div className="bg-[#181a23]/90 rounded-b-lg border-2 border-t-0 border-[#00ffe7]/30 p-4">
@@ -882,118 +832,24 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
               {/* Split into Offense and Defense columns */}
               <div className="grid grid-cols-2 gap-4">
                 {/* Offense Column */}
-                <div>
-                  <h5 className="text-[#faafe8] font-bold text-sm mb-2">OFFENSE</h5>
-                  <div className="space-y-2">
-                    {currentRoster.filter(player => {
-                      const pos = player.position.abbreviation;
-                      return ['QB', 'RB', 'WR', 'TE', 'FB', 'OL', 'OT', 'OG', 'C'].includes(pos);
-                    }).map((player) => {
-                      const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
-                      const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
-                      const isDuplicate = isInCurrent && !isInNew;
-                      const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
-                      return (
-                        <button
-                          key={player.id}
-                          onClick={() => handlePlayerSelect(player)}
-                          disabled={isDuplicate}
-                          className={`w-full p-2 rounded-lg flex items-center gap-2 transition-all text-left ${
-                            isDuplicate
-                              ? 'bg-gray-700/20 border-2 border-gray-600 opacity-50 cursor-not-allowed'
-                              : isInNew
-                              ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7]'
-                              : 'bg-[#23263a]/50 border-2 border-transparent hover:border-[#00ffe7]/30 cursor-pointer'
-                          }`}
-                        >
-                          {headshotUrl ? (
-                            <img
-                              src={headshotUrl}
-                              alt={player.displayName}
-                              className="w-8 h-8 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                                if (fallback) fallback.style.display = 'flex';
-                              }}
-                            />
-                          ) : null}
-                          <div 
-                            className="w-8 h-8 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
-                            style={{ display: headshotUrl ? 'none' : 'flex' }}
-                          >
-                            <FaUsers className="text-[#00ffe7] text-xs" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
-                            <div className="text-gray-400 text-[10px]">
-                              {player.position.abbreviation} {player.jersey && `• #${player.jersey}`}
-                            </div>
-                          </div>
-                          {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs" />}
-                          {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                <PlayerRosterList 
+                  title="OFFENSE"
+                  roster={currentRoster}
+                  positionFilter={['QB', 'RB', 'WR', 'TE', 'FB', 'OL', 'OT', 'OG', 'C']}
+                  selectedPlayers={newPicks.filter(p => p)}
+                  currentPlayers={selectedPlayers}
+                  onPlayerSelect={handlePlayerSelect}
+                />
 
                 {/* Defense Column */}
-                <div>
-                  <h5 className="text-[#faafe8] font-bold text-sm mb-2">DEFENSE</h5>
-                  <div className="space-y-2">
-                    {currentRoster.filter(player => {
-                      const pos = player.position.abbreviation;
-                      return ['DE', 'DT', 'LB', 'CB', 'S', 'DB', 'DL', 'SAF', 'MLB', 'OLB'].includes(pos);
-                    }).map((player) => {
-                      const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
-                      const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
-                      const isDuplicate = isInCurrent && !isInNew;
-                      const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
-                      return (
-                        <button
-                          key={player.id}
-                          onClick={() => handlePlayerSelect(player)}
-                          disabled={isDuplicate}
-                          className={`w-full p-2 rounded-lg flex items-center gap-2 transition-all text-left ${
-                            isDuplicate
-                              ? 'bg-gray-700/20 border-2 border-gray-600 opacity-50 cursor-not-allowed'
-                              : isInNew
-                              ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7]'
-                              : 'bg-[#23263a]/50 border-2 border-transparent hover:border-[#00ffe7]/30 cursor-pointer'
-                          }`}
-                        >
-                          {headshotUrl ? (
-                            <img
-                              src={headshotUrl}
-                              alt={player.displayName}
-                              className="w-8 h-8 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                                if (fallback) fallback.style.display = 'flex';
-                              }}
-                            />
-                          ) : null}
-                          <div 
-                            className="w-8 h-8 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
-                            style={{ display: headshotUrl ? 'none' : 'flex' }}
-                          >
-                            <FaUsers className="text-[#00ffe7] text-xs" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
-                            <div className="text-gray-400 text-[10px]">
-                              {player.position.abbreviation} {player.jersey && `• #${player.jersey}`}
-                            </div>
-                          </div>
-                          {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs" />}
-                          {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                <PlayerRosterList 
+                  title="DEFENSE"
+                  roster={currentRoster}
+                  positionFilter={['DE', 'DT', 'LB', 'CB', 'S', 'DB', 'DL', 'SAF', 'MLB', 'OLB']}
+                  selectedPlayers={newPicks.filter(p => p)}
+                  currentPlayers={selectedPlayers}
+                  onPlayerSelect={handlePlayerSelect}
+                />
               </div>
             </div>
         </>
