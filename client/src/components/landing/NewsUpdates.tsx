@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FaYoutube, FaTwitter, FaEye, FaHeart, FaComment, FaRetweet, FaFilter, FaSort, FaChevronDown, FaChevronUp, FaCode, FaNewspaper } from 'react-icons/fa';
-import LoadingScreenDots from '../common/LoadingScreenDots';
+import LoadingScreenDots from '../common/LoadingDots';
 
 interface Author {
   id: string;

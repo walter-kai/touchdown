@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { FaRedo, FaArrowRight } from 'react-icons/fa';
-import LoadingScreenDots from '../../common/LoadingScreenDots';
+import LoadingScreenDots from '../../common/LoadingDots';
 
 interface SliderCaptchaProps {
   width?: number;

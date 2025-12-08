@@ -4,9 +4,13 @@ import { FaFootballBall } from 'react-icons/fa';
 import axios from 'axios';
 import ScoreboardView from './scoreboard/Scoreboard';
 import SummaryView from './Summary';
+import { useLoading } from '@/providers/LoadingContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
+
+// Firebase Firestore endpoint (assuming you have a backend endpoint)
+const FIRESTORE_API = '/api/playbyplay';
 
 interface NFLGameProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick';
@@ -18,9 +22,9 @@ interface NFLGameProps {
 
 const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
   const { gameId } = useParams<{ gameId: string }>();
+  const { showLoading, hideLoading } = useLoading();
   const [event, setEvent] = useState<Event | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [navPreset, setNavPreset] = useState<'scoreboard' | 'summary'>('scoreboard');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -44,8 +48,53 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
       team: { id: string };
     }>;
   }>>([]);
-  
+  const [playsLoaded, setPlaysLoaded] = useState(false);
 
+  // Load previous plays from Firebase on mount
+  useEffect(() => {
+    const loadPreviousPlays = async () => {
+      if (!gameId || playsLoaded) return;
+
+      try {
+        showLoading('Loading play history...');
+        console.log(`Loading previous plays for game ${gameId} from Firebase...`);
+        
+        // Fetch from your backend API that connects to Firebase
+        const response = await axios.get(`${FIRESTORE_API}/${gameId}`);
+        
+        if (response.data && response.data.plays && Array.isArray(response.data.plays)) {
+          const allPlays: Array<any> = response.data.plays.map((play: any) => ({
+            text: play.text || '',
+            quarter: play.quarter || 0,
+            clock: play.clock || '0:00',
+            yardage: play.yardLine,
+            timestamp: play.timestamp ? new Date(play.timestamp) : new Date(),
+            possession: play.team,
+            athletesInvolved: play.athletesInvolved || [],
+            type: play.type || '',
+            scoreValue: play.scoreValue || 0
+          }));
+          
+          // Already in descending order from Firebase query (most recent first)
+          setPlayLog(allPlays);
+          setPlaysLoaded(true);
+          console.log(`✅ Loaded ${allPlays.length} previous plays from Firebase`);
+        } else {
+          console.log('No plays found in Firebase for this game');
+          setPlaysLoaded(true);
+        }
+      } catch (error: any) {
+        console.error('Error loading previous plays from Firebase:', error);
+        // Set playsLoaded to true even on error to prevent infinite retries
+        setPlaysLoaded(true);
+      } finally {
+        hideLoading();
+      }
+    };
+
+    loadPreviousPlays();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameId, playsLoaded]); // Removed showLoading and hideLoading from dependencies
 
   // Notify parent of game status changes
   useEffect(() => {
@@ -64,7 +113,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
       try {
         if (!event) {
-          setLoading(true);
+          showLoading('Loading game details...');
         } else {
           setIsRefreshing(true);
         }
@@ -109,7 +158,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
               if (!game) {
                 // If we have no game data at all, show error
                 setError('Game not found');
-                setLoading(false);
+                hideLoading();
                 setIsRefreshing(false);
                 return;
               }
@@ -120,7 +169,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         
         if (!game) {
           setError('Game data not available');
-          setLoading(false);
+          hideLoading();
           setIsRefreshing(false);
           return;
         }
@@ -130,17 +179,29 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
           const currentPlayText = game.competitions[0].situation.lastPlay.text;
           const previousPlayText = event?.competitions[0].situation?.lastPlay?.text;
           
+          // Only add if it's a new play AND not already in playLog (avoid duplicates from Firebase)
           if (currentPlayText !== previousPlayText) {
-            const newPlay = {
-              text: currentPlayText,
-              quarter: game.competitions[0].status.period,
-              clock: game.competitions[0].status.displayClock,
-              timestamp: new Date(),
-              yardage: game.competitions[0].situation.lastPlay.statYardage,
-              possession: game.competitions[0].situation.possession,
-              athletesInvolved: game.competitions[0].situation.lastPlay.athletesInvolved
-            };
-            setPlayLog(prev => [newPlay, ...prev]);
+            setPlayLog(prev => {
+              const isDuplicate = prev.some(p => 
+                p.text === currentPlayText && 
+                p.quarter === game.competitions[0].status.period
+              );
+              
+              if (!isDuplicate) {
+                const newPlay = {
+                  text: currentPlayText,
+                  quarter: game.competitions[0].status.period,
+                  clock: game.competitions[0].status.displayClock,
+                  timestamp: new Date(),
+                  yardage: game.competitions[0].situation?.lastPlay?.statYardage,
+                  possession: game.competitions[0].situation?.possession,
+                  athletesInvolved: game.competitions[0].situation?.lastPlay?.athletesInvolved
+                };
+                console.log('➕ New play added from ESPN:', currentPlayText.substring(0, 50));
+                return [newPlay, ...prev];
+              }
+              return prev;
+            });
           }
         }
         
@@ -151,18 +212,19 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         setEvent(game);
         setLastUpdated(new Date());
         setCountdown(30); // Reset countdown
-        setLoading(false);
+        hideLoading();
         setIsRefreshing(false);
       } catch (err) {
         console.error('Error fetching game data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load game data');
-        setLoading(false);
+        hideLoading();
         setIsRefreshing(false);
       }
     };
 
     fetchGameData();
-  }, [gameId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameId]); // Only re-run when gameId changes
 
   // Countdown timer effect for auto-refresh (only for live games)
   useEffect(() => {
@@ -218,17 +280,29 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
               const currentPlayText = game.competitions[0].situation.lastPlay.text;
               const previousPlayText = event?.competitions[0].situation?.lastPlay?.text;
               
+              // Only add if it's a new play AND not already in playLog (avoid duplicates from Firebase)
               if (currentPlayText !== previousPlayText) {
-                const newPlay = {
-                  text: currentPlayText,
-                  quarter: game.competitions[0].status.period,
-                  clock: game.competitions[0].status.displayClock,
-                  timestamp: new Date(),
-                  yardage: game.competitions[0].situation.lastPlay.statYardage,
-                  possession: game.competitions[0].situation.possession,
-                  athletesInvolved: game.competitions[0].situation.lastPlay.athletesInvolved
-                };
-                setPlayLog(prev => [newPlay, ...prev]);
+                setPlayLog(prev => {
+                  const isDuplicate = prev.some(p => 
+                    p.text === currentPlayText && 
+                    p.quarter === game.competitions[0].status.period
+                  );
+                  
+                  if (!isDuplicate) {
+                    const newPlay = {
+                      text: currentPlayText,
+                      quarter: game.competitions[0].status.period,
+                      clock: game.competitions[0].status.displayClock,
+                      timestamp: new Date(),
+                      yardage: game.competitions[0].situation?.lastPlay?.statYardage,
+                      possession: game.competitions[0].situation?.possession,
+                      athletesInvolved: game.competitions[0].situation?.lastPlay?.athletesInvolved
+                    };
+                    console.log('➕ New play added from ESPN:', currentPlayText.substring(0, 50));
+                    return [newPlay, ...prev];
+                  }
+                  return prev;
+                });
               }
             }
             
@@ -257,22 +331,12 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [countdown, gameId, event, navPreset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countdown, gameId, navPreset]); // Removed event and playLog from dependencies
 
   const handleManualRefresh = () => {
     setCountdown(0); // Trigger immediate refresh
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a] flex items-center justify-center">
-        <div className="text-center">
-          <FaFootballBall className="text-6xl text-[#00ffe7] mx-auto mb-4 animate-bounce" />
-          <p className="text-[#e0e7ef] text-xl">Loading game details...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error || !event) {
     return (

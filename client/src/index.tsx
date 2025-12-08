@@ -5,6 +5,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './providers/AuthContext';
+import { LoadingProvider } from './providers/LoadingContext';
 
 
 const root = ReactDOM.createRoot(
@@ -14,9 +15,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <Router>
       <AuthProvider>
-
+        <LoadingProvider>
             <App />
-
+        </LoadingProvider>
       </AuthProvider>
   </Router>
 );

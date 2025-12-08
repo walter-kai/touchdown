@@ -17,7 +17,9 @@ import NotFound from './pages/NotFound';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useAuth } from './providers/AuthContext';
 import { PicksProvider } from './providers/PicksContext';
+import { LoadingProvider, useLoading } from './providers/LoadingContext';
 import LoginModal from './components/common/LoginModal';
+import LoadingFootball from './components/common/LoadingFootball';
 
 // Google OAuth callback handler (in-tab redirect)
 const GoogleOAuthCallback: React.FC = () => {
@@ -88,6 +90,7 @@ const App: React.FC = () => {
   const toggleButtonRef = React.useRef<HTMLButtonElement>(null);
   const onlineToggleButtonRef = React.useRef<HTMLButtonElement>(null);
   const { showLoginModal, closeLoginModal, user } = useAuth();
+  const { isLoading, loadingMessage } = useLoading();
   const nodeRef = useRef<HTMLDivElement>(null);
   
   // State for game page navigation
@@ -127,6 +130,9 @@ const App: React.FC = () => {
 
   return (
     <PicksProvider>
+      {/* Global Loading Overlay */}
+      {isLoading && <LoadingFootball message={loadingMessage} />}
+      
       <div className="min-h-screen overflow-x-hidden relative bg-black/90 bg-blend-overlay">
       
       {/* Top Login/Nav (hide on auth processing page) */}

@@ -13,11 +13,6 @@ import './utils/firebase';
 import routes from './api';
 import authRoute from './auth/auth.route';
 
-// Log environment variables on startup
-console.log('=== ENVIRONMENT VARIABLES ===');
-console.log(JSON.stringify(process.env, null, 2));
-console.log('=============================');
-
 // Validate required environment variable
 if (!process.env.BACKEND_PORT) {
   console.error('FATAL: BACKEND_PORT environment variable is not set');

@@ -515,7 +515,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
                   <FaFootballBall />
-                  Play-by-Play Log
+                  Plays
                 </h3>
                 {playLog.length > 0 && (
                   <span className="text-[#b0b7bf] text-xs">

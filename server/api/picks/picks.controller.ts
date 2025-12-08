@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import catchAsync from '../../utils/catch-async';
 import ApiError from '../../utils/api-error';
-import { createPick, getUserPicksForGame, getAthleteStatsForGame } from './picks.service';
+import { createPick, getUserPicksForGame, getAllPicksForGame } from './picks.service';
 
 // POST /picks
 export const postPick = catchAsync(async (req: Request, res: Response) => {
@@ -53,7 +53,7 @@ export const getGameStats = catchAsync(async (req: Request, res: Response) => {
     throw new ApiError(400, 'Missing gameId parameter');
   }
 
-  const stats = await getAthleteStatsForGame(gameId);
+  const allPicks = await getAllPicksForGame(gameId);
 
-  return res.status(200).json({ ok: true, stats });
+  return res.status(200).json({ ok: true, picks: allPicks, totalUsers: allPicks.length });
 });

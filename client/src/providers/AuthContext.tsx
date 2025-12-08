@@ -117,7 +117,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     jwtStorage.setToken(token, expiresIn);
     userStorage.setUser(userData);
     setUser(userData);
-    console.log('User logged in:', userData.email || userData.walletAddress);
+    console.log('User logged in:', userData.email);
   };
 
   const logout = async () => {
