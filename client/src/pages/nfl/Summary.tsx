@@ -120,21 +120,13 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             <div className="w-full flex-shrink-0 space-y-6 py-6 max-h-screen" style={{ width: '16.666%' }}>
               {/* Box Score */}
               <div className="mb-6">
-                <div className="text-center mb-4">
-                  <p className="text-[#e0e7ef] text-base md:text-lg font-bold">
-                    {new Date(competition.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </p>
-                  <p className="text-[#b0b7bf] text-sm">
-                    {new Date(competition.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                  </p>
-                </div>
-
                 {/* Boxscore Component */}
                 <Boxscore 
                   homeTeam={homeTeam}
                   awayTeam={awayTeam}
                   competition={competition}
                   getTeamLogo={getTeamLogo}
+                  gameDate={competition.date}
                 />
               </div>
 

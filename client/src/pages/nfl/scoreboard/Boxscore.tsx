@@ -97,34 +97,38 @@ const Boxscore: React.FC<BoxscoreProps> = ({
           )}
         </div>
 
-        {/* Down & Distance */}
-        <div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#faafe8]/20">
-          <p className="text-[#b0b7bf] text-xs mb-1">Down & Distance</p>
-          {competition.situation?.downDistanceText && competition.status.type.state === 'in' ? (
-            <p className="text-[#faafe8] font-bold text-lg">{competition.situation.downDistanceText}</p>
-          ) : (
-            <p className="text-[#e0e7ef] text-sm">-</p>
-          )}
-        </div>
+        {/* Down & Distance - Only show for live games */}
+        {competition.status.type.state === 'in' && (
+          <div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#faafe8]/20">
+            <p className="text-[#b0b7bf] text-xs mb-1">Down & Distance</p>
+            {competition.situation?.downDistanceText ? (
+              <p className="text-[#faafe8] font-bold text-lg">{competition.situation.downDistanceText}</p>
+            ) : (
+              <p className="text-[#e0e7ef] text-sm">-</p>
+            )}
+          </div>
+        )}
 
-        {/* Possession */}
-        <div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#00ffe7]/20">
-          <p className="text-[#b0b7bf] text-xs mb-1">Possession</p>
-          {competition.situation?.possession && competition.status.type.state === 'in' ? (
-            <div className="flex items-center gap-2">
-              <img
-                src={competition.situation.possession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
-                alt="Possession"
-                className="w-8 h-8"
-              />
-              <p className="text-[#00ffe7] font-bold text-lg">
-                {competition.situation.possession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
-              </p>
-            </div>
-          ) : (
-            <p className="text-[#e0e7ef] text-sm">-</p>
-          )}
-        </div>
+        {/* Possession - Only show for live games */}
+        {competition.status.type.state === 'in' && (
+          <div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#00ffe7]/20">
+            <p className="text-[#b0b7bf] text-xs mb-1">Possession</p>
+            {competition.situation?.possession ? (
+              <div className="flex items-center gap-2">
+                <img
+                  src={competition.situation.possession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
+                  alt="Possession"
+                  className="w-8 h-8"
+                />
+                <p className="text-[#00ffe7] font-bold text-lg">
+                  {competition.situation.possession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
+                </p>
+              </div>
+            ) : (
+              <p className="text-[#e0e7ef] text-sm">-</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Team Scores */}
