@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import catchAsync from '../../utils/catch-async';
 import ApiError from '../../utils/api-error';
-import { createPick, getUserPicksForGame, getAllPicksForGame } from './picks.service';
+import { createPick, getUserPicksForGame, getAllPicksForGame, getLatestUserPick, getUserPickHistory } from './picks.service';
 
 // POST /picks
 export const postPick = catchAsync(async (req: Request, res: Response) => {
@@ -56,4 +56,38 @@ export const getGameStats = catchAsync(async (req: Request, res: Response) => {
   const allPicks = await getAllPicksForGame(gameId);
 
   return res.status(200).json({ ok: true, picks: allPicks, totalUsers: allPicks.length });
+});
+
+// GET /picks/game/:gameId/user/latest
+export const getLatestPick = catchAsync(async (req: Request, res: Response) => {
+  const { user } = req as any;
+  const { gameId } = req.params;
+
+  if (!user?.email) {
+    throw new ApiError(400, 'Missing user email from token');
+  }
+  if (!gameId) {
+    throw new ApiError(400, 'Missing gameId parameter');
+  }
+
+  const latestPick = await getLatestUserPick(user.email, gameId);
+
+  return res.status(200).json({ ok: true, pick: latestPick });
+});
+
+// GET /picks/game/:gameId/user/history
+export const getPickHistory = catchAsync(async (req: Request, res: Response) => {
+  const { user } = req as any;
+  const { gameId } = req.params;
+
+  if (!user?.email) {
+    throw new ApiError(400, 'Missing user email from token');
+  }
+  if (!gameId) {
+    throw new ApiError(400, 'Missing gameId parameter');
+  }
+
+  const history = await getUserPickHistory(user.email, gameId);
+
+  return res.status(200).json({ ok: true, history, totalPicks: history.length });
 });

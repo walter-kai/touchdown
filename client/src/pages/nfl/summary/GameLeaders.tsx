@@ -9,7 +9,7 @@ interface HeadToHeadProps {
   awayTeamId?: string;
 }
 
-const HeadToHead: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamId }) => {
+const GameLeaders: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamId }) => {
   const navigate = useNavigate();
 
   if (!summary?.leaders || summary.leaders.length === 0) {
@@ -27,7 +27,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamId
     <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-4">
       <h3 className="text-[#00ffe7] font-bold text-lg mb-4 flex items-center gap-2">
         <FaExchangeAlt />
-        Head-to-Head Leaders
+        Game Leaders
       </h3>
 
       <div className="space-y-3">
@@ -43,10 +43,6 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamId
 
           return (
             <div key={`category-${catIdx}`} className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
-              <div className="text-[#b0b7bf] font-semibold text-xs mb-2 text-center">
-                {category.displayName}
-              </div>
-
               <div className="grid grid-cols-3 gap-2 items-center">
                 {/* Away Leader */}
                 <div
@@ -117,4 +113,4 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamId
   );
 };
 
-export default HeadToHead;
+export default GameLeaders;

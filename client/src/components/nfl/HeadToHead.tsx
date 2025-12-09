@@ -73,11 +73,12 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
   
   return (
     <div>
-      <h3 className="text-[#00ffe7] font-bold text-2xl mb-6">
-        Head to Head
+      <h3 className="text-[#00ffe7] font-bold text-lg mb-4 flex items-center gap-2">
+        <FaFootballBall className="text-[#00ffe7]" />
+        Head-to-Head Leaders
       </h3>
       
-      <div className="space-y-6">
+      <div className="space-y-3">
         {homeTeamLeaders.map((homeLeader: Leader, idx: number) => {
           const homeTopLeader = homeLeader.leaders?.[0];
           if (!homeTopLeader) return null;
@@ -89,24 +90,23 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
           return (
             <div 
               key={idx} 
-              className="border-b border-[#00ffe7]/10 pb-4 last:border-b-0"
+              className="bg-[#181a23]/50 rounded-lg p-3 border border-[#00ffe7]/20"
             >
-              {/* Category Name */}
-              <p className="text-[#b0b7bf] text-sm mb-3 text-center font-semibold">
+              {/* Category Header */}
+              <div className="text-[#00ffe7] text-xs font-bold uppercase mb-3 text-center">
                 {homeLeader.displayName}
-              </p>
-            
-            {/* Head to Head Comparison */}
-            <div className="flex items-start justify-between gap-6">
-              
-              {/* Away Team Player + Stats (Left) */}
-              <div className="flex flex-col items-center gap-3 flex-1">
-                <div className="flex items-center gap-2 w-full justify-center">
+              </div>
+
+              {/* Head to Head Comparison */}
+              <div className="flex items-center justify-between gap-3">
+                
+                {/* Away Team Player (Left) */}
+                <div className="flex items-center gap-2 flex-1">
                   {awayTopLeader ? (
                     <>
-                      {awayTopLeader.athlete.headshot ? (
+                      {awayTopLeader.athlete.headshot?.href ? (
                         <img 
-                          src={awayTopLeader.athlete.headshot}
+                          src={awayTopLeader.athlete.headshot.href}
                           alt={awayTopLeader.athlete.displayName}
                           className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
                           onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
@@ -119,20 +119,21 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                       ) : null}
                       <div 
                         className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
-                        style={{ display: awayTopLeader.athlete.headshot ? 'none' : 'flex' }}
+                        style={{ display: awayTopLeader.athlete.headshot?.href ? 'none' : 'flex' }}
                         onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
                       >
-                        <FaFootballBall className="text-[#faafe8]" />
+                        <FaFootballBall className="text-[#faafe8] text-xs" />
                       </div>
-                      <div className="text-left">
+
+                      <div className="flex-1 min-w-0">
                         <div 
-                          className="text-sm font-bold text-white cursor-pointer hover:text-[#faafe8] transition-colors"
+                          className="font-bold text-white cursor-pointer hover:text-[#faafe8] transition-colors truncate"
                           onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
                         >
                           {awayTopLeader.athlete.displayName}
                         </div>
-                        <div className="text-xs text-gray-400">
-                          {awayLeader?.abbreviation}
+                        <div className="text-[#faafe8] font-bold text-sm">
+                          {awayTopLeader.displayValue}
                         </div>
                       </div>
                     </>
@@ -140,41 +141,26 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                     <div className="text-gray-500 text-xs">No data</div>
                   )}
                 </div>
-                <div className="flex flex-col items-center gap-1">
-                  {awayTopLeader?.displayValue ? (
-                    awayTopLeader.displayValue.split(',').map((stat, idx) => (
-                      <div key={idx} className="text-sm font-bold text-[#faafe8]">
-                        {stat.trim()}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-sm font-bold text-[#faafe8]">—</div>
-                  )}
-                </div>
-              </div>
-              
-              {/* VS Divider */}
-              <div className="flex items-center justify-center pt-8">
-                <div className="text-sm text-gray-400">vs</div>
-              </div>
-              
-              {/* Home Team Player + Stats (Right) */}
-              <div className="flex flex-col items-center gap-3 flex-1">
-                <div className="flex items-center gap-2 w-full justify-center">
-                  <div className="text-right">
+                
+                {/* VS Divider (Center) */}
+                <div className="text-gray-400 text-xs font-bold px-2 flex-shrink-0">VS</div>
+                
+                {/* Home Team Player (Right) */}
+                <div className="flex items-center gap-2 flex-1 justify-end">
+                  <div className="flex-1 min-w-0 text-right">
                     <div 
-                      className="text-sm font-bold text-white cursor-pointer hover:text-[#00ffe7] transition-colors"
+                      className="font-bold text-white cursor-pointer hover:text-[#00ffe7] transition-colors truncate"
                       onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
                     >
                       {homeTopLeader.athlete.displayName}
                     </div>
-                    <div className="text-xs text-gray-400">
-                      {homeLeader.abbreviation}
+                    <div className="text-[#00ffe7] font-bold text-sm">
+                      {homeTopLeader.displayValue}
                     </div>
                   </div>
-                  {homeTopLeader.athlete.headshot ? (
+                  {homeTopLeader.athlete.headshot?.href ? (
                     <img 
-                      src={homeTopLeader.athlete.headshot}
+                      src={homeTopLeader.athlete.headshot.href}
                       alt={homeTopLeader.athlete.displayName}
                       className="w-10 h-10 rounded-full object-cover border-2 border-[#00ffe7]/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
                       onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
@@ -187,24 +173,16 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                   ) : null}
                   <div 
                     className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
-                    style={{ display: homeTopLeader.athlete.headshot ? 'none' : 'flex' }}
+                    style={{ display: homeTopLeader.athlete.headshot?.href ? 'none' : 'flex' }}
                     onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
                   >
-                    <FaFootballBall className="text-[#00ffe7]" />
+                    <FaFootballBall className="text-[#00ffe7] text-xs" />
                   </div>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  {homeTopLeader.displayValue.split(',').map((stat, idx) => (
-                    <div key={idx} className="text-sm font-bold text-[#00ffe7]">
-                      {stat.trim()}
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
       </div>
     </div>
   );

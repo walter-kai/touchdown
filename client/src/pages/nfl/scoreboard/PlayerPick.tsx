@@ -331,19 +331,21 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
           
           if (response.ok) {
             const result = await response.json();
-            if (result.picks && result.picks.players) {
-              const picks = result.picks;
+            // New structure: result.picks is an array of pick submissions
+            if (result.picks && result.picks.picks && result.picks.picks.length > 0) {
+              // Get the most recent pick (last in array)
+              const latestPick = result.picks.picks[result.picks.picks.length - 1];
               
-              // Restore selections
-              setSelectedPlayers(picks.players);
-              setTotalScore(picks.totalScore || 0);
+              // Restore selections from the latest pick
+              setSelectedPlayers(latestPick.players);
+              setTotalScore(latestPick.totalScore || 0);
               setShowStats(true);
               
               // Calculate remaining cooldown time from backend timestamp
-              if (picks.timestamp) {
-                const lockedAt = picks.timestamp._seconds 
-                  ? picks.timestamp._seconds * 1000 
-                  : new Date(picks.timestamp).getTime();
+              if (latestPick.timestamp) {
+                const lockedAt = latestPick.timestamp._seconds 
+                  ? latestPick.timestamp._seconds * 1000 
+                  : new Date(latestPick.timestamp).getTime();
                 const elapsed = Date.now() - lockedAt;
                 const cooldownDuration = 120 * 1000; // 2 minutes in ms
                 const remaining = cooldownDuration - elapsed;
@@ -823,50 +825,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
           );
         })()}
 
-        {/* Minimalistic Score List - Vertical table format - Always show when there are selected players */}
-        {selectedPlayers.length > 0 && (
-          <div className="bg-[#181a23]/50 rounded-lg p-3 mb-4 border border-[#00ffe7]/20">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[#00ffe7] text-xs font-bold">SELECTED PICKS</span>
-              <span className="text-[#b0b7bf] text-[10px]">Total: {totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0)} pts</span>
-            </div>
-            <div className="space-y-1">
-              {selectedPlayers.map((player, idx) => {
-                const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
-                // Find team info
-                const isHome = homeRoster.some(p => p.id === player.id);
-                const teamLogo = isHome ? homeTeamLogo : awayTeamLogo;
-                
-                return (
-                  <div key={player.id} className="flex items-center gap-2 bg-black/30 rounded p-1.5">
-                    <div className="w-4 h-4 rounded-full bg-[#00ffe7] text-black text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                      {idx + 1}
-                    </div>
-                    {headshotUrl && (
-                      <img
-                        src={headshotUrl}
-                        alt={player.displayName}
-                        className="w-7 h-6 rounded-full border border-[#00ffe7]/50 flex-shrink-0"
-                      />
-                    )}
-                    {teamLogo && (
-                      <img src={teamLogo} alt="" className="w-4 h-4 flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <span className="text-white text-[10px] font-bold truncate block">{player.shortName}</span>
-                    </div>
-                    <div className="text-[#b0b7bf] text-[9px] w-8 text-center flex-shrink-0">
-                      {typeof player.position === 'string' ? player.position : player.position?.abbreviation}
-                    </div>
-                    <div className="text-[#00ffe7] text-[10px] font-bold w-10 text-right flex-shrink-0">
-                      {currentSetScores[player.id] || 0} pts
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+
 
         {/* Selection Interface - Always show when expanded OR when locked */}
         {(isExpanded || isLocked) && (

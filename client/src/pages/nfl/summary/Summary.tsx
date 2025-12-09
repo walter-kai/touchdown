@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock } from 'react-icons/fa';
 import Prediction from '@/components/nfl/Prediction';
 import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
-import HeadToHead from '@/pages/nfl/summary/HeadToHead';
+import GameLeaders from '@/pages/nfl/summary/GameLeaders';
+import SelectedAthletes from '@/components/nfl/SelectedAthletes';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
 
@@ -179,8 +180,22 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 </div>
               )}
 
+              {/* User's Selected Picks */}
+              {homeTeam && awayTeam && (
+                <div className="mb-6">
+                  <SelectedAthletes
+                    gameId={gameId}
+                    homeTeamId={homeTeam.id}
+                    awayTeamId={awayTeam.id}
+                    homeTeamLogo={getTeamLogo(homeTeam.team)}
+                    awayTeamLogo={getTeamLogo(awayTeam.team)}
+                    playLog={playLog}
+                  />
+                </div>
+              )}
+
               {/* Head-to-Head Leaders - Condensed */}
-              <HeadToHead 
+              <GameLeaders 
                 summary={summary}
                 homeTeamId={homeTeam?.id}
                 awayTeamId={awayTeam?.id}

@@ -17,7 +17,7 @@ export interface Athlete {
   displayName: string;
   shortName?: string;
   links?: Link[];
-  headshot?: string | { href: string; alt?: string };
+  headshot?: { href: string; alt?: string };
   jersey?: string;
   position: {
     id?: string;
