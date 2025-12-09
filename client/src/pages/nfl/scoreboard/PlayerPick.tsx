@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus, FaCrosshairs, FaHandPointer } from 'react-icons/fa';
+import LoadingFootball from '../../../components/common/LoadingFootball';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend, getEmptyImage } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
@@ -681,11 +682,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   const currentTeamLogo = activeTeam === 'home' ? homeTeamLogo : awayTeamLogo;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-[#00ffe7] text-lg">Loading players...</div>
-      </div>
-    );
+    return <LoadingFootball message="Loading players..." />;
   }
 
   return (

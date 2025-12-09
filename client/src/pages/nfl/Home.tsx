@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaFootballBall, FaPlay, FaClock, FaNewspaper, FaCalendar, FaChevronLeft, FaChevronRight, FaTrophy, FaMapMarkerAlt } from "react-icons/fa";
+import { FaFootballBall, FaPlay, FaNewspaper, FaCalendar, FaChevronLeft, FaChevronRight, FaTrophy, FaMapMarkerAlt } from "react-icons/fa";
 import axios from "axios";
+import LoadingFootball from '../../components/common/LoadingFootball';
 import type {
   Event,
   TeamOnBye,
@@ -217,12 +218,7 @@ const NFLScoreboard: React.FC = () => {
   )}
 
   {/* Loading State */}
-	{initialLoading && games.length === 0 && (
-		<div className="text-center py-20">
-		<FaClock className="text-6xl text-[#00ffe7] mx-auto mb-4 animate-pulse" />
-		<p className="text-[#e0e7ef] text-base sm:text-lg md:text-xl">Loading NFL scores...</p>
-		</div>
-	)}
+	{initialLoading && games.length === 0 && <LoadingFootball message="Loading NFL scores..." />}
 
   {/* Error State */}
 	{error && (
@@ -254,6 +250,21 @@ const NFLScoreboard: React.FC = () => {
 				</div>
 			</div>
 			)}
+
+      {/* Upcoming Games */}
+			{upcomingGames.length > 0 && (
+			<div>
+				<h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
+				<FaCalendar />
+				Upcoming ({upcomingGames.length})
+				</h2>
+				<div className={`grid gap-4 ${upcomingGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
+				{upcomingGames.map((game) => (
+					<GameSummaryCard key={game.id} game={game} navigate={navigate} />
+				))}
+				</div>
+			</div>
+			)}
 			
 			{/* Completed Games */}
 			{completedGames.length > 0 && (
@@ -270,20 +281,6 @@ const NFLScoreboard: React.FC = () => {
 			</div>
 			)}
 			
-			{/* Upcoming Games */}
-			{upcomingGames.length > 0 && (
-			<div>
-				<h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
-				<FaCalendar />
-				Upcoming ({upcomingGames.length})
-				</h2>
-				<div className={`grid gap-4 ${upcomingGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
-				{upcomingGames.map((game) => (
-					<GameSummaryCard key={game.id} game={game} navigate={navigate} />
-				))}
-				</div>
-			</div>
-			)}
 		</div>
 		);
 	})()}

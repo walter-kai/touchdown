@@ -4,7 +4,7 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import GameNavBar from './components/common/navs/NavBar';
 import LoginNav from './components/common/navs/LoginNav';
 
-import NFL from './pages/nfl/NFL';
+import NFL from './pages/nfl/Home';
 import NFLTeamPage from './pages/nfl/Team';
 import NFLPlayerPage from './pages/nfl/Player';
 import NFLGame from './pages/nfl/Game';

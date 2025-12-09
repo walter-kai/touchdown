@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { FaNewspaper, FaClock } from "react-icons/fa";
+import { FaNewspaper } from "react-icons/fa";
 import axios from "axios";
 import type { NewsResponse, NewsArticle } from '../../../../types/espn/news';
 import NewsCard from '../../components/nfl/NewsCard';
+import LoadingFootball from '../../components/common/LoadingFootball';
 
 interface NewsPageProps {
   teamId?: string;
@@ -56,12 +57,7 @@ const NFLNews: React.FC<NewsPageProps> = () => {
       </div>
 
       {/* Loading State */}
-      {loading && (
-        <div className="text-center py-20">
-          <FaClock className="text-6xl text-[#faafe8] mx-auto mb-4 animate-pulse" />
-          <p className="text-[#e0e7ef] text-base sm:text-lg md:text-xl">Loading news...</p>
-        </div>
-      )}
+      {loading && <LoadingFootball message="Loading news..." />}
 
       {/* Error State */}
       {error && (

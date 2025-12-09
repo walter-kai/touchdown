@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaFootballBall, FaArrowLeft, FaCalendar, FaChartLine, FaTrophy, FaNewspaper, FaInfoCircle } from 'react-icons/fa';
 import axios from 'axios';
 import type { AthleteOverview, AthleteBio } from '@/types/espn/athlete';
+import LoadingFootball from '../../components/common/LoadingFootball';
 
 interface NFLPlayerProps {
   activeTab?: 'info' | 'schedule' | 'news';
@@ -147,14 +148,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
   }, [playerId]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a] flex items-center justify-center">
-        <div className="text-center">
-          <FaFootballBall className="text-6xl text-[#00ffe7] mx-auto mb-4 animate-bounce" />
-          <p className="text-[#e0e7ef] text-xl">Loading player data...</p>
-        </div>
-      </div>
-    );
+    return <LoadingFootball message="Loading player data..." />;
   }
 
   if (error || !overview) {

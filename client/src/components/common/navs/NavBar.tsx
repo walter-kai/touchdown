@@ -15,7 +15,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
 
   // All available navigation items
   const allNavItems = [
-    { id: 'back', label: 'Scoreboard', icon: <FaArrowLeft />, action: () => navigate('/nfl') },
+    // { id: 'back', label: 'Scoreboard', icon: <FaArrowLeft />, action: () => navigate('/nfl') },
     { id: 'info', label: preset === 'player' ? 'Overview' : 'Info', icon: <FaInfoCircle /> },
     { id: 'player', label: 'Players', icon: <FaTrophy /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
@@ -30,10 +30,10 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
 
   // Preset configurations
   const presetConfig = {
-    scoreboard: ['back', 'info', 'pick', 'plays', 'odds', 'headtohead'],
-    summary: ['back', 'info', 'player', 'headtohead', 'team', 'plays', 'prediction'],
-    team: ['back', 'info', 'schedule', 'news'], // Team page shows back, info, schedule, news
-    player: ['back', 'info', 'schedule', 'news'], // Player page shows back, overview, game log, news
+    scoreboard: ['info', 'pick', 'plays', 'odds', 'headtohead'],
+    summary: ['info', 'player', 'headtohead', 'team', 'plays', 'prediction'],
+    team: ['info', 'schedule', 'news'], // Team page shows back, info, schedule, news
+    player: ['info', 'schedule', 'news'], // Player page shows back, overview, game log, news
   };
 
   // For upcoming games, hide 'player', 'pick', and 'plays' tabs regardless of preset
@@ -54,38 +54,31 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
         <div className="flex items-center justify-around py-2 sm:py-3 gap-1 sm:gap-2">
           {navItems.map((item) => {
             const isActive = item.id === activeTab;
-            const isBack = item.id === 'back';
             
             return (
               <button
                 key={item.id}
                 onClick={() => {
-                  if (item.action) {
-                    item.action();
-                  } else {
-                    // Call onTabClick first (to set programmatic scroll flag), then onTabChange
-                    if (onTabClick) {
-                      onTabClick(item.id as any);
-                    }
-                    onTabChange(item.id as any);
+                  // Call onTabClick first (to set programmatic scroll flag), then onTabChange
+                  if (onTabClick) {
+                    onTabClick(item.id as any);
                   }
+                  onTabChange(item.id as any);
                 }}
                 className={`
                   flex flex-col items-center justify-center gap-1 sm:gap-1.5 
                   px-2 sm:px-4 py-2 sm:py-2.5 rounded-lg 
                   transition-all duration-200 min-w-0 flex-1
-                  ${isBack 
-                    ? 'bg-[#faafe8]/10 border border-[#faafe8]/30 text-[#faafe8] hover:bg-[#faafe8]/20' 
-                    : isActive 
-                      ? 'bg-[#00ffe7] text-[#1a1d2e] shadow-[0_0_12px_#00ffe7]' 
-                      : 'text-[#00ffe7] hover:bg-[#00ffe7]/10'
+                  ${isActive 
+                    ? 'bg-[#00ffe7] text-[#1a1d2e] shadow-[0_0_12px_#00ffe7]' 
+                    : 'text-[#00ffe7] hover:bg-[#00ffe7]/10'
                   }
                 `}
               >
-                <span className={`text-base sm:text-xl ${isActive && !isBack ? 'text-[#1a1d2e]' : ''}`}>
+                <span className={`text-base sm:text-xl ${isActive ? 'text-[#1a1d2e]' : ''}`}>
                   {item.icon}
                 </span>
-                <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight truncate max-w-full ${isActive && !isBack ? 'text-[#1a1d2e]' : ''}`}>
+                <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight truncate max-w-full ${isActive ? 'text-[#1a1d2e]' : ''}`}>
                   {item.label}
                 </span>
               </button>
