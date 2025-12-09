@@ -719,7 +719,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                     <div className="flex items-center gap-3 mb-3">
                       {topLeader.athlete.headshot ? (
                         <img 
-                          src={topLeader.athlete.headshot}
+                          src={topLeader.athlete.headshot.href}
                           alt={topLeader.athlete.displayName}
                           className="w-16 h-16 rounded-full object-cover border-2 border-[#faafe8]/30 flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
                           onClick={() => navigate(`/nfl/player/${topLeader.athlete.id}`)}

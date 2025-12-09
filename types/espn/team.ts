@@ -1,5 +1,7 @@
 // ESPN Team API Response Types
-import type { Link, Athlete, Leader } from './game';
+import type { Link } from './game';
+import type { Athlete } from './athlete';
+import type { Leader } from './scoreboard';
 
 export interface TeamLogo {
   href: string;
@@ -83,8 +85,9 @@ export interface Franchise {
   };
 }
 
-// Re-export shared types from game.ts for backward compatibility
-export type { Athlete, Leader } from './game';
+// Re-export shared types for backward compatibility
+export type { Athlete } from './athlete';
+export type { Leader } from './scoreboard';
 
 export interface CompetitorScore {
   value: number;
