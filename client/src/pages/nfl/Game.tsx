@@ -55,6 +55,35 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
     const loadPreviousPlays = async () => {
       if (!gameId || playsLoaded) return;
 
+      // Check localStorage first
+      const cacheKey = `playlog_${gameId}`;
+      const cachedData = localStorage.getItem(cacheKey);
+      
+      if (cachedData) {
+        try {
+          const { plays, timestamp } = JSON.parse(cachedData);
+          const cacheAge = Date.now() - timestamp;
+          const CACHE_DURATION = 1 * 60 * 1000; // 1 minute
+          
+          // Use cached data if less than 1 minute old
+          if (cacheAge < CACHE_DURATION && Array.isArray(plays)) {
+            console.log(`✅ Using cached plays (${plays.length} plays, ${Math.round(cacheAge / 1000)}s old)`);
+            const historicalPlays = plays.map((play: any) => ({
+              ...play,
+              timestamp: new Date(play.timestamp)
+            }));
+            setPlayLog(historicalPlays);
+            setPlaysLoaded(true);
+            return;
+          } else {
+            console.log('Cache expired, fetching fresh data...');
+          }
+        } catch (error) {
+          console.error('Error parsing cached plays:', error);
+          localStorage.removeItem(cacheKey);
+        }
+      }
+
       try {
         showLoading('Loading play history...');
         console.log(`Loading previous plays for game ${gameId} from backend API...`);
@@ -77,6 +106,12 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
           
           // Sort by timestamp descending (most recent first)
           historicalPlays.sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime());
+          
+          // Cache the data
+          localStorage.setItem(cacheKey, JSON.stringify({
+            plays: historicalPlays,
+            timestamp: Date.now()
+          }));
           
           setPlayLog(historicalPlays);
           setPlaysLoaded(true);

@@ -404,38 +404,55 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     }
 
     const scores: Record<string, number> = {};
-    selectedPlayers.forEach(player => {
-      scores[player.id] = 0;
-    });
-
-    // Get the lock time from localStorage to determine when picks were locked
+    
+    // Get player history from localStorage (tracks when players were active)
     const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
-    let lockTimestamp: number | null = null;
+    let playerHistory: Record<string, Array<{ start: number; end?: number }>> = {};
+    let currentPlayerLockTimes: Record<string, number> = {};
+    
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
-        lockTimestamp = parsed.lockedAt;
+        playerHistory = parsed.playerHistory || {};
+        currentPlayerLockTimes = parsed.playerLockTimes || {};
       } catch (e) {
-        console.error('Error parsing lock time:', e);
+        console.error('Error parsing player history:', e);
       }
     }
 
-    playLog.forEach(play => {
-      // Only count plays that occurred AFTER the picks were locked
-      const playTimestamp = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
+    selectedPlayers.forEach(player => {
+      scores[player.id] = 0;
       
-      // If we have a lock time, only count plays after that time
-      if (lockTimestamp && playTimestamp < lockTimestamp) {
-        return; // Skip this play - it happened before the player was selected
+      // Get all time periods this player was active
+      const activePeriods = playerHistory[player.id] || [];
+      
+      // Add current active period if player is currently locked
+      if (currentPlayerLockTimes[player.id]) {
+        activePeriods.push({ start: currentPlayerLockTimes[player.id] });
       }
-
-      if (play.athletesInvolved) {
-        play.athletesInvolved.forEach(athlete => {
-          if (scores.hasOwnProperty(athlete.id)) {
-            scores[athlete.id]++;
-          }
+      
+      playLog.forEach(play => {
+        const playTimestamp = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
+        
+        // Check if play occurred during any of the player's active periods
+        const playDuringActivePeriod = activePeriods.some(period => {
+          const afterStart = playTimestamp >= period.start;
+          const beforeEnd = !period.end || playTimestamp <= period.end;
+          return afterStart && beforeEnd;
         });
-      }
+        
+        if (!playDuringActivePeriod) {
+          return; // Skip this play - player wasn't active
+        }
+
+        if (play.athletesInvolved) {
+          play.athletesInvolved.forEach(athlete => {
+            if (athlete.id === player.id) {
+              scores[player.id]++;
+            }
+          });
+        }
+      });
     });
 
     setCurrentSetScores(scores);
@@ -457,7 +474,9 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
               const newState = {
                 players: parsed.players,
                 totalScore: totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0),
-                lockedAt: null
+                lockedAt: null,
+                playerLockTimes: parsed.playerLockTimes || {}, // Preserve player lock times
+                playerHistory: parsed.playerHistory || {} // Preserve player history
               };
               localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(newState));
               setTotalScore(newState.totalScore);
@@ -617,11 +636,60 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       setIsLockingIn(true);
       console.log('Locking in picks:', swappedPicks);
       
+      // Track which players are new vs kept and update player history
+      const currentTime = Date.now();
+      const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+      let existingPlayerLockTimes: Record<string, number> = {};
+      let playerHistory: Record<string, Array<{ start: number; end?: number }>> = {};
+      
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          existingPlayerLockTimes = parsed.playerLockTimes || {};
+          playerHistory = parsed.playerHistory || {};
+        } catch (e) {
+          console.error('Error parsing existing player data:', e);
+        }
+      }
+      
+      // Find players being removed (in selectedPlayers but not in swappedPicks)
+      const removedPlayerIds = selectedPlayers
+        .filter(oldPlayer => !swappedPicks.some(newPlayer => newPlayer.id === oldPlayer.id))
+        .map(p => p.id);
+      
+      // Close out the active period for removed players
+      removedPlayerIds.forEach(playerId => {
+        if (existingPlayerLockTimes[playerId]) {
+          if (!playerHistory[playerId]) {
+            playerHistory[playerId] = [];
+          }
+          // Add the period from when they were locked in until now
+          playerHistory[playerId].push({
+            start: existingPlayerLockTimes[playerId],
+            end: currentTime
+          });
+        }
+      });
+      
+      // Build player lock times - preserve existing times for kept players, add new time for new players
+      const playerLockTimes: Record<string, number> = {};
+      swappedPicks.forEach((player, idx) => {
+        // If this player was already in selectedPlayers, keep their original lock time
+        if (selectedPlayers.some(p => p.id === player.id) && existingPlayerLockTimes[player.id]) {
+          playerLockTimes[player.id] = existingPlayerLockTimes[player.id];
+        } else {
+          // New player - set lock time to now
+          playerLockTimes[player.id] = currentTime;
+        }
+      });
+      
       // Save to localStorage and backend
       const state = {
         players: swappedPicks,
-        lockedAt: Date.now(),
-        totalScore: totalScore
+        lockedAt: currentTime,
+        totalScore: totalScore,
+        playerLockTimes: playerLockTimes,
+        playerHistory: playerHistory
       };
       localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(state));
       console.log('Saved to localStorage:', state);
@@ -677,7 +745,8 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       }, 2050);
       
       setCooldownTime(120); // 2 minutes
-      setCurrentSetScores({}); // Reset current set scores
+      // Don't reset all scores - only scores for newly swapped players will be recalculated
+      // Preserve existing player scores
     }
   };
 
@@ -817,7 +886,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                   </div>
                   <div>
                     <h4 className="text-white font-bold text-lg transition-all duration-500">
-                      {isLocked ? 'Selected Picks' : `Your Picks (${newPicks.filter(p => p).length}/5)`}
+                      {isLocked ? 'Selected Picks' : 'Your Picks'}
                     </h4>
                   </div>
                 </div>
@@ -898,27 +967,39 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
                       const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
                       const playerScore = currentSetScores[player.id] || 0;
+                      const teamLogo = player.team?.logo || (player.team?.logos && player.team.logos.length > 0 ? player.team.logos[0].href : null);
                       // Check if THIS specific pick is being replaced by checking if there's a new pick at this index
                       const isBeingReplaced = isAnimating && newPicks[idx] && newPicks[idx].id !== player.id;
                       
                       return (
                         <div
                           key={player.id}
-                          className={`bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] transition-all duration-800 ${
+                          className={`relative overflow-hidden bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] transition-all duration-800 ${
                             isBeingReplaced ? 'opacity-30' : 'opacity-100'
                           }`}
                           style={{
                             marginBottom: '8px'
                           }}
                         >
-                          <div className="w-7 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
-                            {idx + 1}
-                          </div>
+                          {/* Large team logo background */}
+                          {teamLogo && (
+                            <img 
+                              src={teamLogo} 
+                              alt="" 
+                              className="absolute right-[10%] top-1/2 -translate-y-1/2 opacity-10 pointer-events-none"
+                              style={{
+                                width: '120px',
+                                height: '120px',
+                                objectFit: 'contain'
+                              }}
+                            />
+                          )}
+
                           {headshotUrl ? (
                             <img
                               src={headshotUrl}
                               alt={player.displayName}
-                              className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
+                              className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0 relative z-10"
                               onError={(e) => {
                                 (e.currentTarget as HTMLImageElement).style.display = 'none';
                                 const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -927,26 +1008,22 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                             />
                           ) : null}
                           <div 
-                            className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
+                            className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0 relative z-10"
                             style={{ display: headshotUrl ? 'none' : 'flex' }}
                           >
                             <FaUsers className="text-[#00ffe7] text-sm" />
                           </div>
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 relative z-10">
                             <div className="text-white font-bold text-sm whitespace-nowrap overflow-hidden text-ellipsis">{player.displayName}</div>
                             <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis">
                               {typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}
                             </div>
                           </div>
-                          {(() => {
-                            const teamLogo = player.team?.logo || (player.team?.logos && player.team.logos.length > 0 ? player.team.logos[0].href : null);
-                            return teamLogo ? <img src={teamLogo} alt="" className="w-6 h-6 flex-shrink-0" /> : null;
-                          })()}
                           
                           {/* Score - Show when not actively picking players */}
                           {(isLocked || !isRosterOpen) && showStats && (
                             <div 
-                              className={`text-center transition-all duration-700 ${
+                              className={`text-center transition-all duration-700 relative z-10 ${
                                 showStats ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
                               }`}
                               style={{ 
