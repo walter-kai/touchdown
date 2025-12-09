@@ -10,6 +10,7 @@ import PlayerAvatar from './pick/PlayerAvatar';
 import ScoreDisplay from './pick/ScoreDisplay';
 import TeamSelector from './pick/TeamSelector';
 import PlayerRosterList from './pick/PlayerRosterList';
+import type { Athlete } from '@/types/espn/athlete';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {
@@ -28,23 +29,6 @@ const HTML5toTouch = {
     },
   ],
 };
-
-interface Athlete {
-  id: string;
-  displayName: string;
-  shortName: string;
-  position: {
-    abbreviation: string;
-  };
-  headshot?: {
-    href: string;
-  } | string; // Can be object from API or string from localStorage
-  jersey?: string;
-  team?: {
-    id: string;
-    logo: string;
-  };
-}
 
 interface PlayerPickProps {
   homeTeamId: string;
@@ -654,7 +638,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                               key={`empty-current-${idx}`}
                               className="bg-[#181a23]/50 rounded-lg p-4 border border-dashed border-[#00ffe7]/20 flex items-center gap-4 h-[72px]"
                             >
-                              <div className="w-6 h-6 rounded-full bg-[#00ffe7]/20 text-[#00ffe7] font-bold text-xs flex items-center justify-center flex-shrink-0">
+                              <div className="w-7 h-6 rounded-full bg-[#00ffe7]/20 text-[#00ffe7] font-bold text-xs flex items-center justify-center flex-shrink-0">
                                 {idx + 1}
                               </div>
                               <div className="text-[#b0b7bf] text-sm">Empty Slot</div>
@@ -681,7 +665,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                                 : 'opacity 1000ms ease-in-out, width 800ms ease-in-out'
                             }}
                           >
-                            <div className="w-6 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
+                            <div className="w-7 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
                               {idx + 1}
                             </div>
                             <PlayerAvatar 
@@ -829,7 +813,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
             {/* Player List */}
             <div className="bg-[#181a23]/90 rounded-b-lg border-2 border-t-0 border-[#00ffe7]/30 p-4">
               <h4 className="text-[#00ffe7] font-bold mb-4 flex items-center gap-2">
-                {currentTeamLogo && <img src={currentTeamLogo} alt="" className="w-6 h-6" />}
+                {currentTeamLogo && <img src={currentTeamLogo} alt="" className="w-7 h-6" />}
                 {currentTeamInfo.name} Roster
               </h4>
               

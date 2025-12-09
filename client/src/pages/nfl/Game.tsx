@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
 import axios from 'axios';
 import ScoreboardView from './scoreboard/Scoreboard';
-import SummaryView from './Summary';
+import SummaryView from './summary/Summary';
 import { useLoading } from '@/providers/LoadingContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
@@ -57,34 +57,36 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
       try {
         showLoading('Loading play history...');
-        console.log(`Loading previous plays for game ${gameId} from Firebase...`);
+        console.log(`Loading previous plays for game ${gameId} from backend API...`);
         
         // Fetch from your backend API that connects to Firebase
         const response = await axios.get(`${FIRESTORE_API}/${gameId}`);
         
         if (response.data && response.data.plays && Array.isArray(response.data.plays)) {
-          const allPlays: Array<any> = response.data.plays.map((play: any) => ({
+          const historicalPlays = response.data.plays.map((play: any) => ({
             text: play.text || '',
             quarter: play.quarter || 0,
             clock: play.clock || '0:00',
             yardage: play.yardLine,
             timestamp: play.timestamp ? new Date(play.timestamp) : new Date(),
-            possession: play.team,
+            possession: play.possession?.id || play.possession || play.team, // Extract ID if object, use string if available, fallback to team
             athletesInvolved: play.athletesInvolved || [],
             type: play.type || '',
             scoreValue: play.scoreValue || 0
           }));
           
-          // Already in descending order from Firebase query (most recent first)
-          setPlayLog(allPlays);
+          // Sort by timestamp descending (most recent first)
+          historicalPlays.sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime());
+          
+          setPlayLog(historicalPlays);
           setPlaysLoaded(true);
-          console.log(`✅ Loaded ${allPlays.length} previous plays from Firebase`);
+          console.log(`✅ Loaded ${historicalPlays.length} historical plays from backend`);
         } else {
-          console.log('No plays found in Firebase for this game');
+          console.log('No plays found in backend for this game');
           setPlaysLoaded(true);
         }
       } catch (error: any) {
-        console.error('Error loading previous plays from Firebase:', error);
+        console.error('Error loading previous plays from backend:', error);
         // Set playsLoaded to true even on error to prevent infinite retries
         setPlaysLoaded(true);
       } finally {
@@ -94,7 +96,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
 
     loadPreviousPlays();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId, playsLoaded]); // Removed showLoading and hideLoading from dependencies
+  }, [gameId]); // Only re-run when gameId changes
 
   // Notify parent of game status changes
   useEffect(() => {
@@ -179,25 +181,29 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
           const currentPlayText = game.competitions[0].situation.lastPlay.text;
           const previousPlayText = event?.competitions[0].situation?.lastPlay?.text;
           
-          // Only add if it's a new play AND not already in playLog (avoid duplicates from Firebase)
+          // Only add if it's a new play AND not already in playLog (merge with historical plays)
           if (currentPlayText !== previousPlayText) {
             setPlayLog(prev => {
+              // Check for duplicates based on text, quarter, and similar timestamp
               const isDuplicate = prev.some(p => 
                 p.text === currentPlayText && 
-                p.quarter === game.competitions[0].status.period
+                p.quarter === game.competitions[0].status.period &&
+                p.clock === game.competitions[0].status.displayClock
               );
               
               if (!isDuplicate) {
+                const possession = game.competitions[0].situation?.possession;
                 const newPlay = {
                   text: currentPlayText,
                   quarter: game.competitions[0].status.period,
                   clock: game.competitions[0].status.displayClock,
                   timestamp: new Date(),
                   yardage: game.competitions[0].situation?.lastPlay?.statYardage,
-                  possession: game.competitions[0].situation?.possession,
+                  possession: typeof possession,
                   athletesInvolved: game.competitions[0].situation?.lastPlay?.athletesInvolved
                 };
-                console.log('➕ New play added from ESPN:', currentPlayText.substring(0, 50));
+                console.log('➕ New play from ESPN merged with historical plays:', currentPlayText.substring(0, 50));
+                // Add to front of array (most recent first)
                 return [newPlay, ...prev];
               }
               return prev;
@@ -280,25 +286,29 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
               const currentPlayText = game.competitions[0].situation.lastPlay.text;
               const previousPlayText = event?.competitions[0].situation?.lastPlay?.text;
               
-              // Only add if it's a new play AND not already in playLog (avoid duplicates from Firebase)
+              // Only add if it's a new play AND not already in playLog (merge with historical plays)
               if (currentPlayText !== previousPlayText) {
                 setPlayLog(prev => {
+                  // Check for duplicates based on text, quarter, and similar timestamp
                   const isDuplicate = prev.some(p => 
                     p.text === currentPlayText && 
-                    p.quarter === game.competitions[0].status.period
+                    p.quarter === game.competitions[0].status.period &&
+                    p.clock === game.competitions[0].status.displayClock
                   );
                   
                   if (!isDuplicate) {
+                    const possession = game.competitions[0].situation?.possession;
                     const newPlay = {
                       text: currentPlayText,
                       quarter: game.competitions[0].status.period,
                       clock: game.competitions[0].status.displayClock,
                       timestamp: new Date(),
                       yardage: game.competitions[0].situation?.lastPlay?.statYardage,
-                      possession: game.competitions[0].situation?.possession,
+                      possession: typeof possession,
                       athletesInvolved: game.competitions[0].situation?.lastPlay?.athletesInvolved
                     };
-                    console.log('➕ New play added from ESPN:', currentPlayText.substring(0, 50));
+                    console.log('➕ New play from ESPN auto-refresh merged with historical plays');
+                    // Add to front of array (most recent first)
                     return [newPlay, ...prev];
                   }
                   return prev;

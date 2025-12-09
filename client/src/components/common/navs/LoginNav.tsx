@@ -6,7 +6,7 @@ const LoginNav: React.FC = () => {
 	const navigate = useNavigate();
 
 	return (
-		<header className="sticky top-0 z-50 w-full bg-[#0b0e17]/90 backdrop-blur-md border-b border-[#00ffe7]/30">
+		<header className="fixed top-0 z-50 w-full bg-[#0b0e17]/90 backdrop-blur-md border-b border-[#00ffe7]/30">
 			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 				<div className="h-14 flex items-center justify-between">
 					{/* Left: Drive logo + NFL Drive header */}

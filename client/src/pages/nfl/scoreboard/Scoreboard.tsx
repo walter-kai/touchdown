@@ -123,7 +123,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             style={{ width: isGameUpcoming ? '300%' : '600%' }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 space-y-6 py-6 max-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 space-y-6 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
               {/* Box Score */}
               <div className=" mb-6">
                 {/* Boxscore Component */}
@@ -195,7 +195,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                                 style={{ left: `${10 + (competition.situation.lastPlay.end.yardLine * 0.8)}%` }}
                               >
                                 <div className="relative group">
-                                  <div className="w-16 h-16 rounded-full bg-yellow-400/30 flex items-center justify-center border-4 border-yellow-400 shadow-2xl shadow-yellow-400/50">
+                                  <div className="w-20 h-16 rounded-full bg-yellow-400/30 flex items-center justify-center border-4 border-yellow-400 shadow-2xl shadow-yellow-400/50">
                                     <img
                                       src={competition.situation.lastPlay.athletesInvolved[0].headshot}
                                       alt={competition.situation.lastPlay.athletesInvolved[0].displayName}
@@ -433,7 +433,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                               <tr className="border-b border-[#00ffe7]/10">
                                 <td className="py-3">
                                   <div className="flex items-center gap-2">
-                                    <img src={getTeamLogo(awayTeam?.team)} alt={awayTeam?.team.abbreviation} className="w-6 h-6" />
+                                    <img src={getTeamLogo(awayTeam?.team)} alt={awayTeam?.team.abbreviation} className="w-7 h-6" />
                                     <span className="text-[#e0e7ef] font-bold">{awayTeam?.team.abbreviation}</span>
                                   </div>
                                 </td>
@@ -445,7 +445,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                               <tr>
                                 <td className="py-3">
                                   <div className="flex items-center gap-2">
-                                    <img src={getTeamLogo(homeTeam?.team)} alt={homeTeam?.team.abbreviation} className="w-6 h-6" />
+                                    <img src={getTeamLogo(homeTeam?.team)} alt={homeTeam?.team.abbreviation} className="w-7 h-6" />
                                     <span className="text-[#e0e7ef] font-bold">{homeTeam?.team.abbreviation}</span>
                                   </div>
                                 </td>
@@ -515,7 +515,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
             {/* Player Section */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '16.666%' }}>
                 <div className="space-y-4">
                   <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                     <FaTrophy />
@@ -529,34 +529,44 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                             {category.displayName}
                           </h4>
                           <div className="space-y-3">
-                            {category.leaders.map((leader, leaderIdx) => (
-                              <button
-                                key={`${leader.athlete.id}-${leaderIdx}`}
-                                onClick={() => navigate(`/nfl/player/${leader.athlete.id}`)}
-                                className="w-full text-left hover:bg-[#00ffe7]/5 rounded-lg p-2 transition-all group cursor-pointer"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <img
-                                    src={leader.athlete.headshot}
-                                    alt={leader.athlete.displayName}
-                                    className="w-10 h-10 rounded-full group-hover:scale-110 transition-transform"
-                                  />
-                                  <div className="flex-1">
-                                    <p className="text-[#e0e7ef] font-bold text-sm group-hover:text-[#00ffe7] transition-colors">
-                                      {leader.athlete.displayName}
-                                    </p>
-                                    <p className="text-[#b0b7bf] text-xs">
-                                      {leader.athlete.position?.abbreviation || ''}
-                                    </p>
+                            {category.leaders.map((leader, leaderIdx) => {
+                              const headshot = leader.athlete.headshot;
+                              const headshotUrl = typeof headshot === 'string' ? headshot : headshot?.href;
+                              return (
+                                <button
+                                  key={`${leader.athlete.id}-${leaderIdx}`}
+                                  onClick={() => navigate(`/nfl/player/${leader.athlete.id}`)}
+                                  className="w-full text-left hover:bg-[#00ffe7]/5 rounded-lg p-2 transition-all group cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {headshotUrl ? (
+                                      <img
+                                        src={headshotUrl}
+                                        alt={leader.athlete.displayName}
+                                        className="w-10 h-10 rounded-full group-hover:scale-110 transition-transform object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-10 h-10 rounded-full bg-[#23263a] flex items-center justify-center group-hover:scale-110 transition-transform border-2 border-[#00ffe7]/30">
+                                        <FaFootballBall className="text-[#00ffe7] text-sm" />
+                                      </div>
+                                    )}
+                                    <div className="flex-1">
+                                      <p className="text-[#e0e7ef] font-bold text-sm group-hover:text-[#00ffe7] transition-colors">
+                                        {leader.athlete.displayName}
+                                      </p>
+                                      <p className="text-[#b0b7bf] text-xs">
+                                        {leader.athlete.position?.abbreviation || ''}
+                                      </p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-[#00ffe7] font-bold text-lg">
+                                        {leader.displayValue}
+                                      </p>
+                                    </div>
                                   </div>
-                                  <div className="text-right">
-                                    <p className="text-[#00ffe7] font-bold text-lg">
-                                      {leader.displayValue}
-                                    </p>
-                                  </div>
-                                </div>
-                              </button>
-                            ))}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       ))}
@@ -570,7 +580,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
             {/* Pick Section */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '16.666%' }}>
                 {homeTeam && awayTeam && (
                   <PlayerPick
                     gameId={event.id}
@@ -600,7 +610,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
             {/* Plays Section */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '16.666%' }}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
                     <FaFootballBall />
@@ -615,38 +625,98 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
                 {playLog.length > 0 ? (
                   <div className="space-y-4">
-                    {playLog.map((play, idx) => {
-                      const team = play.possession === homeTeam?.id ? homeTeam : awayTeam;
-                      const isHome = team?.id === homeTeam?.id;
-                      const borderColor = isHome ? 'border-[#faafe8]' : 'border-[#00ffe7]';
-                      const bgGradient = isHome ? 'from-[#faafe8]/10' : 'from-[#00ffe7]/10';
+                    {(() => {
+                      // Group plays by possession with better logic
+                      const groupedPlays: Array<{
+                        possession: string | undefined;
+                        team: any;
+                        plays: typeof playLog;
+                      }> = [];
+                      
+                      playLog.forEach((play, idx) => {
+                        const team = play.possession === homeTeam?.id ? homeTeam : awayTeam;
+                        const lastGroup = groupedPlays[groupedPlays.length - 1];
+                        
+                        // Group if same possession OR if both are undefined/null (same team)
+                        const isSamePossession = lastGroup && (
+                          (lastGroup.possession === play.possession && play.possession !== undefined) ||
+                          (lastGroup.team?.id === team?.id && (!lastGroup.possession || !play.possession))
+                        );
+                        
+                        if (isSamePossession) {
+                          lastGroup.plays.push(play);
+                        } else {
+                          groupedPlays.push({
+                            possession: play.possession,
+                            team,
+                            plays: [play]
+                          });
+                        }
+                      });
 
-                      return (
-                        <div
-                          key={`play-${idx}`}
-                          className={`p-3 bg-gradient-to-r ${bgGradient} border-l-4 ${borderColor} rounded-lg`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              {team && (
-                                <img
-                                  src={getTeamLogo(team.team)}
-                                  alt={team.team.displayName}
-                                  className="w-6 h-6"
-                                />
-                              )}
-                              <span className="text-[#b0b7bf] text-xs font-semibold">
-                                Q{play.quarter} - {play.clock}
+                      return groupedPlays.map((group, groupIdx) => {
+                        const isHome = group.team?.id === homeTeam?.id;
+                        const borderColor = isHome ? 'border-[#faafe8]' : 'border-[#00ffe7]';
+                        const bgGradient = isHome ? 'from-[#faafe8]/10' : 'from-[#00ffe7]/10';
+                        const textColor = isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]';
+
+                        return (
+                          <div
+                            key={`possession-${groupIdx}`}
+                            className={`p-3 bg-gradient-to-r ${bgGradient} border-l-4 ${borderColor} rounded-lg`}
+                          >
+                            {/* Possession Header - shown once per group */}
+                            <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
+                              <div className="flex items-center gap-2">
+                                {group.team && (
+                                  <img
+                                    src={getTeamLogo(group.team.team)}
+                                    alt={group.team.team.displayName}
+                                    className="w-8 h-7"
+                                  />
+                                )}
+                                <span className={`${textColor} text-sm font-bold`}>
+                                  {group.team?.team.displayName || 'Unknown'}
+                                </span>
+                              </div>
+                              <span className="text-[#b0b7bf] text-xs">
+                                {group.plays.length} {group.plays.length === 1 ? 'play' : 'plays'}
                               </span>
                             </div>
-                            <span className="text-[#b0b7bf] text-xs">
-                              {Math.floor((new Date().getTime() - play.timestamp.getTime()) / 1000)}s ago
-                            </span>
+
+                            {/* Plays in this possession */}
+                            <div className="space-y-2">
+                              {group.plays.map((play, playIdx) => {
+                                const primaryAthlete = play.athletesInvolved && play.athletesInvolved.length > 0 ? play.athletesInvolved[0] : null;
+                                const headshotUrl = primaryAthlete?.headshot;
+
+                                return (
+                                  <div key={`play-${groupIdx}-${playIdx}`} className="flex items-start gap-2 py-1">
+                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                      {headshotUrl && (
+                                        <img
+                                          src={headshotUrl}
+                                          alt={primaryAthlete.displayName}
+                                          className="w-9 h-8 rounded-full object-cover border-2 border-white/30 flex-shrink-0"
+                                        />
+                                      )}
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-baseline gap-2 mb-1">
+                                          <span className={`${textColor} text-[10px] font-bold`}>
+                                            Q{play.quarter} - {play.clock}
+                                          </span>
+                                        </div>
+                                        <p className="text-[#e0e7ef] text-sm leading-snug">{play.text}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
-                          <p className="text-[#e0e7ef] text-sm">{play.text}</p>
-                        </div>
-                      );
-                    })}
+                        );
+                      });
+                    })()}
                   </div>
                 ) : (
                   <p className="text-[#b0b7bf] text-center py-8">No plays recorded yet.</p>
@@ -655,7 +725,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             )}
 
             {/* Odds Section */}
-            <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
               <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                 <FaChartBar />
                 Betting Odds
@@ -680,7 +750,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}

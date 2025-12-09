@@ -29,7 +29,7 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
             : 'bg-[#181a23] border-[#faafe8]/30 text-gray-400 hover:border-[#faafe8]/50'
         }`}
       >
-        {homeTeamInfo.logo && <img src={homeTeamInfo.logo} alt="" className="w-6 h-6" />}
+        {homeTeamInfo.logo && <img src={homeTeamInfo.logo} alt="" className="w-7 h-6" />}
         {homeTeamInfo.name}
       </button>
       <button
@@ -40,7 +40,7 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
             : 'bg-[#181a23] border-[#00ffe7]/30 text-gray-400 hover:border-[#00ffe7]/50'
         }`}
       >
-        {awayTeamInfo.logo && <img src={awayTeamInfo.logo} alt="" className="w-6 h-6" />}
+        {awayTeamInfo.logo && <img src={awayTeamInfo.logo} alt="" className="w-7 h-6" />}
         {awayTeamInfo.name}
       </button>
     </div>

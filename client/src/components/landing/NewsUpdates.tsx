@@ -432,7 +432,7 @@ const NewsUpdates: React.FC = () => {
                   {/* Close button */}
                   <button
                     onClick={() => setShowTicker(false)}
-                    className="absolute top-2 right-2 z-10 bg-[#ff005c] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs hover:bg-[#ff3380] transition"
+                    className="absolute top-2 right-2 z-10 bg-[#ff005c] text-white w-7 h-6 rounded-full flex items-center justify-center text-xs hover:bg-[#ff3380] transition"
                   >
                     ✕
                   </button>

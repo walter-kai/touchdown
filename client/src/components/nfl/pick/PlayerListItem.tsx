@@ -1,18 +1,6 @@
 import React from 'react';
 import { FaUsers, FaCheckCircle, FaLock } from 'react-icons/fa';
-
-interface Athlete {
-  id: string;
-  displayName: string;
-  shortName: string;
-  position: {
-    abbreviation: string;
-  };
-  headshot?: {
-    href: string;
-  } | string;
-  jersey?: string;
-}
+import type { Athlete } from '@/types/espn/athlete';
 
 interface PlayerListItemProps {
   player: Athlete;

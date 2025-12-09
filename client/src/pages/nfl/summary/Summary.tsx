@@ -118,7 +118,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             style={{ width: '500%' }}
           >
             {/* Info Section */}
-            <div className="w-full flex-shrink-0 space-y-6 py-6 max-h-screen" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 space-y-6 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
               {/* Box Score */}
               <div className="mb-6">
                 {/* Boxscore Component */}
@@ -260,7 +260,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             </div>
 
             {/* Player Statistics Section */}
-            <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
               <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                 <FaTrophy />
                 Player Statistics
@@ -364,7 +364,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             </div>
 
             {/* Team Stats Section */}
-            <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
               <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                 <FaChartBar />
                 Team Statistics
@@ -429,7 +429,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             </div>
 
             {/* Plays Section - Drive by Drive */}
-            <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
                   <FaFootballBall />
@@ -549,7 +549,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             </div>
 
             {/* Predictions Section */}
-            <div className="w-full flex-shrink-0 py-6 max-h-screen" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
               {homeTeam && awayTeam && (
                 <Prediction
                   gameId={gameId}

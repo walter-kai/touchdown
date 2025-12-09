@@ -21,6 +21,7 @@ export const getGamePlayByPlay = async (gameId: string) => {
     // Convert Firestore timestamps to serializable format
     const plays = (gameData?.plays || []).map((play: any) => ({
       ...play,
+      possession: play.possession?.id || play.possession || play.team,
       timestamp: play.timestamp?.toDate ? play.timestamp.toDate().toISOString() : play.timestamp
     }));
     
@@ -78,6 +79,7 @@ export const saveGamePlayByPlay = async (gameId: string, plays: any[]) => {
       clock: play.clock || '0:00',
       timestamp: play.timestamp || admin.firestore.Timestamp.now(),
       team: play.team?.id || null,
+      possession: play.possession?.id || play.possession || play.team?.id || null,
       type: play.type?.text || play.type?.abbreviation || '',
       scoreValue: play.scoreValue || 0,
       yardLine: play.drive?.end?.yardLine || play.drive?.start?.yardLine || null,

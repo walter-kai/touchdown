@@ -1,6 +1,75 @@
 // Player Profile API Types
 
-import type { Link, Image, Athlete as BaseAthlete } from './game';
+import type { Link, Image } from './game';
+
+// ============================================
+// SHARED ATHLETE INTERFACE
+// Used across scoreboard, summary, and roster APIs
+// ============================================
+
+export interface Athlete {
+  id: string;
+  uid?: string;
+  guid?: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  displayName: string;
+  shortName?: string;
+  links?: Link[];
+  headshot?: string | { href: string; alt?: string };
+  jersey?: string;
+  position: {
+    id?: string;
+    name?: string;
+    displayName?: string;
+    abbreviation: string;
+  };
+  team?: {
+    id: string;
+    uid?: string;
+    slug?: string;
+    location?: string;
+    name?: string;
+    nickname?: string;
+    abbreviation?: string;
+    displayName?: string;
+    shortDisplayName?: string;
+    color?: string;
+    alternateColor?: string;
+    logo?: string;
+    logos?: Array<{
+      href: string;
+      width?: number;
+      height?: number;
+      rel?: string[];
+    }>;
+  };
+  active?: boolean;
+  status?: {
+    id: string;
+    name: string;
+    type: string;
+    abbreviation: string;
+  };
+  college?: {
+    id: string;
+    mascot?: string;
+    name: string;
+    shortName?: string;
+    abbrev?: string;
+  };
+  debutYear?: number;
+  type?: string;
+  displayBirthPlace?: string;
+  displayHeight?: string;
+  displayWeight?: string;
+  displayDOB?: string;
+  age?: number;
+  displayJersey?: string;
+  displayExperience?: string;
+  displayDraft?: string;
+}
 
 // ============================================
 // ATHLETE BIO API
@@ -479,7 +548,38 @@ export interface CategoryStat {
 // EXTENDED PLAYER PROFILE
 // ============================================
 
-export interface PlayerProfile extends BaseAthlete {
+export interface PlayerProfile {
+  id: string;
+  uid?: string;
+  guid?: string;
+  displayName: string;
+  shortName?: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  headshot?: string | { href: string; alt?: string };
+  jersey?: string;
+  position?: {
+    id?: string;
+    name?: string;
+    displayName?: string;
+    abbreviation: string;
+  };
+  team?: {
+    id: string;
+    uid?: string;
+    slug?: string;
+    location?: string;
+    name?: string;
+    nickname?: string;
+    abbreviation?: string;
+    displayName?: string;
+    shortDisplayName?: string;
+    color?: string;
+    alternateColor?: string;
+    logo?: string;
+  };
+  
   // Additional fields from overview API
   overview?: AthleteOverview;
   eventLog?: EventLog;

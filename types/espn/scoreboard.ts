@@ -1,6 +1,8 @@
 // ESPN Scoreboard API Response Types
 // Source: https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard
 
+import type { Athlete } from './athlete';
+
 export interface ScoreboardResponse {
   leagues: League[];
   season: Season;
@@ -203,23 +205,6 @@ export interface LeaderDetail {
   team: {
     id: string;
   };
-}
-
-export interface Athlete {
-  id: string;
-  fullName: string;
-  displayName: string;
-  shortName: string;
-  links: Link[];
-  headshot: string;
-  jersey: string;
-  position: {
-    abbreviation: string;
-  };
-  team: {
-    id: string;
-  };
-  active: boolean;
 }
 
 export interface Status {

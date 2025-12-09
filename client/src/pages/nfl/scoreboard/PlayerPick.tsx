@@ -8,6 +8,9 @@ import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
 import Situation from './situation';
+import PlayerAvatar from '../../../components/nfl/pick/PlayerAvatar';
+import PlayerRosterList from '../../../components/nfl/pick/PlayerRosterList';
+import type { Athlete } from '@/types/espn/athlete';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {
@@ -26,23 +29,6 @@ const HTML5toTouch = {
     },
   ],
 };
-
-interface Athlete {
-  id: string;
-  displayName: string;
-  shortName: string;
-  position: {
-    abbreviation: string;
-  };
-  headshot?: {
-    href: string;
-  } | string; // Can be object from API or string from localStorage
-  jersey?: string;
-  team?: {
-    id: string;
-    logo: string;
-  };
-}
 
 interface PlayerPickProps {
   gameId: string;
@@ -146,6 +132,7 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
   });
 
   const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+  const teamLogo = player.team?.logo || (player.team?.logos && player.team.logos.length > 0 ? player.team.logos[0].href : null);
 
   return (
     <div
@@ -183,6 +170,9 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
         <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
         <div className="text-[#faafe8] text-xs">{typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}</div>
       </div>
+      {teamLogo && (
+        <img src={teamLogo} alt="" className="w-6 h-6 flex-shrink-0" />
+      )}
     </div>
   );
 };
@@ -418,7 +408,27 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       scores[player.id] = 0;
     });
 
+    // Get the lock time from localStorage to determine when picks were locked
+    const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+    let lockTimestamp: number | null = null;
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        lockTimestamp = parsed.lockedAt;
+      } catch (e) {
+        console.error('Error parsing lock time:', e);
+      }
+    }
+
     playLog.forEach(play => {
+      // Only count plays that occurred AFTER the picks were locked
+      const playTimestamp = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
+      
+      // If we have a lock time, only count plays after that time
+      if (lockTimestamp && playTimestamp < lockTimestamp) {
+        return; // Skip this play - it happened before the player was selected
+      }
+
       if (play.athletesInvolved) {
         play.athletesInvolved.forEach(athlete => {
           if (scores.hasOwnProperty(athlete.id)) {
@@ -429,7 +439,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     });
 
     setCurrentSetScores(scores);
-  }, [playLog, selectedPlayers]);
+  }, [playLog, selectedPlayers, homeTeamId, awayTeamId]);
 
   // Cooldown timer
   useEffect(() => {
@@ -693,6 +703,57 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
       {/* Content */}
       <div className="">
+        {/* Latest Play Display */}
+        {playLog.length > 0 && (() => {
+          const latestPlay = playLog[0];
+          const team = latestPlay.possession === homeTeam?.id ? homeTeam : awayTeam;
+          const isHome = team?.id === homeTeam?.id;
+
+          return (
+            <div className="mb-4">
+              <div className="text-[#b0b7bf] text-xs mb-2 flex items-center gap-2">
+                <FaFootballBall className="text-[#00ffe7]" />
+                Latest Play
+              </div>
+              <div className={`bg-gradient-to-r ${isHome ? 'from-[#faafe8]/10' : 'from-[#00ffe7]/10'} rounded-lg p-3 border-l-2 ${isHome ? 'border-[#faafe8]' : 'border-[#00ffe7]'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  {team && getTeamLogo && (
+                    <img src={getTeamLogo(team.team)} alt="" className="w-5 h-5" />
+                  )}
+                  <span className={`text-xs font-bold ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
+                    Q{latestPlay.quarter} {latestPlay.clock}
+                  </span>
+                </div>
+                
+                {/* Player headshots */}
+                {latestPlay.athletesInvolved && latestPlay.athletesInvolved.length > 0 && (
+                  <div className="flex gap-2 mb-2 flex-wrap">
+                    {latestPlay.athletesInvolved.slice(0, 3).map((athlete, idx) => (
+                      athlete.headshot && (
+                        <div key={idx} className="flex items-center gap-1">
+                          <img
+                            src={athlete.headshot}
+                            alt={athlete.displayName}
+                            className="w-8 h-8 rounded-full border-2 border-[#00ffe7]/30"
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-[#e0e7ef] text-xs font-semibold">{athlete.shortName}</span>
+                            <span className="text-[#b0b7bf] text-[10px]">{athlete.position}</span>
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                )}
+                
+                <p className="text-[#e0e7ef] text-xs">
+                  {latestPlay.text}
+                </p>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Minimalistic Score List - Vertical table format - Always show when there are selected players */}
         {selectedPlayers.length > 0 && (
           <div className="bg-[#181a23]/50 rounded-lg p-3 mb-4 border border-[#00ffe7]/20">
@@ -716,7 +777,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                       <img
                         src={headshotUrl}
                         alt={player.displayName}
-                        className="w-6 h-6 rounded-full border border-[#00ffe7]/50 flex-shrink-0"
+                        className="w-7 h-6 rounded-full border border-[#00ffe7]/50 flex-shrink-0"
                       />
                     )}
                     {teamLogo && (
@@ -766,13 +827,19 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                   <button
                     onClick={handleLockIn}
                     disabled={newPicks.filter(p => p).length === 0 || isLockingIn}
-                    className={`py-2 px-4 flex items-center justify-center gap-2 min-w-[120px] h-[60px] transition-opacity duration-300 ${
+                    className={`py-2 px-4 flex items-center justify-center gap-2 min-w-[120px] h-[60px] transition-opacity duration-300 rounded font-bold ${
                       isViewTransitioning ? 'opacity-0' : 'opacity-100'
                     } ${
                       newPicks.filter(p => p).length > 0 && !isLockingIn
-                        ? 'btn-pink'
-                        : 'bg-gray-700/20 border-2 border-gray-600 text-gray-500 cursor-not-allowed rounded'
+                        ? ''
+                        : 'bg-gray-700/20 border-2 border-gray-600 text-gray-500 cursor-not-allowed'
                     }`}
+                    style={newPicks.filter(p => p).length > 0 && !isLockingIn ? {
+                      background: `linear-gradient(135deg, #${homeTeamInfo.color || '00ffe7'} 0%, #${awayTeamInfo.color || 'faafe8'} 100%)`,
+                      border: '2px solid rgba(255, 255, 255, 0.3)',
+                      color: 'white',
+                      boxShadow: `0 0 20px rgba(${parseInt(homeTeamInfo.color?.slice(0,2) || '00', 16)}, ${parseInt(homeTeamInfo.color?.slice(2,4) || 'ff', 16)}, ${parseInt(homeTeamInfo.color?.slice(4,6) || 'e7', 16)}, 0.5)`
+                    } : {}}
                   >
                     {isLockingIn ? (
                       <>
@@ -821,7 +888,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                             key={`empty-current-${idx}`}
                             className="bg-[#181a23]/50 rounded-lg p-4 border border-dashed border-[#00ffe7]/20 flex items-center gap-4 h-[72px]"
                           >
-                            <div className="w-6 h-6 rounded-full bg-[#00ffe7]/20 text-[#00ffe7] font-bold text-xs flex items-center justify-center flex-shrink-0">
+                            <div className="w-7 h-6 rounded-full bg-[#00ffe7]/20 text-[#00ffe7] font-bold text-xs flex items-center justify-center flex-shrink-0">
                               {idx + 1}
                             </div>
                             <div className="text-[#b0b7bf] text-sm">Empty Slot</div>
@@ -844,7 +911,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                             marginBottom: '8px'
                           }}
                         >
-                          <div className="w-6 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
+                          <div className="w-7 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
                             {idx + 1}
                           </div>
                           {headshotUrl ? (
@@ -866,11 +933,15 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                             <FaUsers className="text-[#00ffe7] text-sm" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-white font-bold text-sm whitespace-nowrap overflow-hidden text-ellipsis">{player.shortName}</div>
+                            <div className="text-white font-bold text-sm whitespace-nowrap overflow-hidden text-ellipsis">{player.displayName}</div>
                             <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis">
                               {typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}
                             </div>
                           </div>
+                          {(() => {
+                            const teamLogo = player.team?.logo || (player.team?.logos && player.team.logos.length > 0 ? player.team.logos[0].href : null);
+                            return teamLogo ? <img src={teamLogo} alt="" className="w-6 h-6 flex-shrink-0" /> : null;
+                          })()}
                           
                           {/* Score - Show when not actively picking players */}
                           {(isLocked || !isRosterOpen) && showStats && (
@@ -1031,7 +1102,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                     : 'bg-[#181a23] border-[#faafe8]/30 text-gray-400 hover:border-[#faafe8]/50'
                 }`}
               >
-                {homeTeamLogo && <img src={homeTeamLogo} alt="" className="w-6 h-6" />}
+                {homeTeamLogo && <img src={homeTeamLogo} alt="" className="w-7 h-6" />}
                 {homeTeamInfo.name}
               </button>
               <button
@@ -1042,7 +1113,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                     : 'bg-[#181a23] border-[</h4>#00ffe7]/30 text-gray-400 hover:border-[#00ffe7]/50'
                 }`}
               >
-                {awayTeamLogo && <img src={awayTeamLogo} alt="" className="w-6 h-6" />}
+                {awayTeamLogo && <img src={awayTeamLogo} alt="" className="w-7 h-6" />}
                 {awayTeamInfo.name}
               </button>
             </div>
@@ -1050,7 +1121,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
             {/* Player List */}
             <div className="bg-[#181a23]/90 rounded-b-lg border-2 border-t-0 border-[#00ffe7]/30 p-4">
               <h4 className="text-[#00ffe7] font-bold mb-4 flex items-center gap-2">
-                {currentTeamLogo && <img src={currentTeamLogo} alt="" className="w-6 h-6" />}
+                {currentTeamLogo && <img src={currentTeamLogo} alt="" className="w-7 h-6" />}
                 {currentTeamInfo.name} Roster
               </h4>
               

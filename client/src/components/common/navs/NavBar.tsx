@@ -31,7 +31,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
   // Preset configurations
   const presetConfig = {
     scoreboard: ['info', 'pick', 'plays', 'odds', 'headtohead'],
-    summary: ['info', 'player', 'headtohead', 'team', 'plays', 'prediction'],
+    summary: ['info', 'player', 'team', 'plays', 'prediction'],
     team: ['info', 'schedule', 'news'], // Team page shows back, info, schedule, news
     player: ['info', 'schedule', 'news'], // Player page shows back, overview, game log, news
   };

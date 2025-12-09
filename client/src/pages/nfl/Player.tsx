@@ -171,7 +171,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
   const athlete = bio?.athlete;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a] pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a]">
       <div className="max-w-7xl mx-auto py-8 px-4">
 
         {/* Player Header */}

@@ -1,18 +1,6 @@
 import React from 'react';
 import PlayerListItem from './PlayerListItem';
-
-interface Athlete {
-  id: string;
-  displayName: string;
-  shortName: string;
-  position: {
-    abbreviation: string;
-  };
-  headshot?: {
-    href: string;
-  } | string;
-  jersey?: string;
-}
+import type { Athlete } from '@/types/espn/athlete';
 
 interface PlayerRosterListProps {
   title: string;

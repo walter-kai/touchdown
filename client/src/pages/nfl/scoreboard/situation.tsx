@@ -158,7 +158,7 @@ const Situation: React.FC<SituationProps> = ({
               style={{ left: `${10 + (situation.lastPlay.end.yardLine * 0.8)}%` }}
             >
               <div className="relative group">
-                <div className="w-16 h-16 rounded-full bg-yellow-400/30 flex items-center justify-center border-4 border-yellow-400 shadow-2xl shadow-yellow-400/50">
+                <div className="w-20 h-16 rounded-full bg-yellow-400/30 flex items-center justify-center border-4 border-yellow-400 shadow-2xl shadow-yellow-400/50">
                   <img
                     src={situation.lastPlay.athletesInvolved[0].headshot}
                     alt={situation.lastPlay.athletesInvolved[0].displayName}

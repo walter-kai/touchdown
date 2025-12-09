@@ -577,7 +577,7 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
                       <img 
                         src={awayTeam.team.logo} 
                         alt={awayTeam.team.abbreviation}
-                        className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 object-contain opacity-60"
+                        className="w-7 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 object-contain opacity-60"
                       />
                     </div>
                     
@@ -586,7 +586,7 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
                       <img 
                         src={homeTeam.team.logo} 
                         alt={homeTeam.team.abbreviation}
-                        className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 object-contain opacity-60"
+                        className="w-7 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 object-contain opacity-60"
                       />
                     </div>
                     
@@ -716,7 +716,7 @@ const GameCard: React.FC<GameCardProps> = ({ event }) => {
                           <img 
                             src={athlete.headshot} 
                             alt={athlete.displayName}
-                            className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
+                            className="w-7 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = 'none';
                             }}

@@ -1,4 +1,6 @@
 // --- ROOT INTERFACE ---
+import type { Athlete } from './athlete';
+
 export interface Root {
   news: News;
   pinnedCount: number;
@@ -312,19 +314,6 @@ interface LeaderDetails {
   athlete: Athlete;
   team: { id: string };
   value: number;
-}
-
-export interface Athlete {
-  displayName: string;
-  headshot: string;
-  jersey: string;
-  fullName: string;
-  active: boolean;
-  links: Link[];
-  id: string;
-  position: { abbreviation: string };
-  team: { id: string };
-  shortName: string;
 }
 
 export interface Competitor {

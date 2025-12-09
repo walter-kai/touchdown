@@ -1,5 +1,7 @@
 // ESPN Game Summary Types
 
+import type { Athlete } from './athlete';
+
 export interface Summary {
   boxscore: Boxscore;
   format: Format;
@@ -83,18 +85,6 @@ export interface PlayerStatisticCategory {
 export interface AthleteStats {
   athlete: Athlete;
   stats: string[];
-}
-
-export interface Athlete {
-  id: string;
-  uid: string;
-  guid: string;
-  firstName: string;
-  lastName: string;
-  displayName: string;
-  links: Link[];
-  headshot: Headshot;
-  jersey: string;
 }
 
 export interface Link {
