@@ -753,7 +753,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
         setSelectedPlayers(swappedPicks);
         setNewPicks([]);
         setIsLocked(true);
-        // Keep roster open - no longer closing it
+        setIsRosterOpen(false); // Close roster to trigger grid shrinking
       }, 1200);
       
       // Step 2: Very shortly after lock (1250ms), end animation state to allow widening animation
@@ -809,7 +809,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 {/* Divider */}
                 <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
                 
-                <div className="flex items-center justify-between my-2 pr-2 pb-3 border-b border-[#00ffe7]/10">
+                <div className="flex items-center justify-between my-2 pr-2 pb-3 border-b h-20 border-[#00ffe7]/10">
                 <div>
                     <h4 className={`font-bold text-3xl uppercase tracking-wide transition-all duration-500 ${
                       isLocked ? 'text-[#4169e1]' : 'text-yellow-500'
@@ -819,13 +819,11 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 </div>
                 
                 {/* Lock In Button or Total Score */}
-                {!isLocked ? (
+                {!isLocked && isRosterOpen ? (
                   <button
                   onClick={handleLockIn}
                   disabled={newPicks.filter(p => p).length === 0 || isLockingIn}
                   className={`btn-pink py-2 px-4 flex items-center justify-center gap-2 min-w-[120px] h-[50px] transition-opacity duration-300 rounded font-bold ${
-                    isViewTransitioning ? 'opacity-0' : 'opacity-100'
-                  } ${
                     newPicks.filter(p => p).length === 0 || isLockingIn
                     ? 'opacity-50 cursor-not-allowed'
                     : ''
@@ -858,7 +856,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 <div 
                   className="transition-all duration-800 ease-in-out"
                   style={{
-                    width: !isLocked || isViewTransitioning || isAnimating ? 'calc(50% - 0.5rem)' : '100%'
+                    width: (isRosterOpen && !isLocked) || isViewTransitioning || isAnimating ? 'calc(50% - 0.5rem)' : '100%'
                   }}>
                   <div className="text-[#b0b7bf] text-xs mb-2 font-bold h-[20px] flex items-center">
                     {isLocked ? (
@@ -906,9 +904,6 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                           }`}
                           style={{
                             marginBottom: '8px',
-                            width: isExpanded ? '100%' : '100%',
-                            transform: isExpanded ? 'scaleX(1.5)' : 'scaleX(1)',
-                            transformOrigin: 'left center',
                             zIndex: isExpanded ? 10 : 1,
                           }}
                         >
@@ -947,16 +942,16 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                           <div className="flex-1 min-w-0 relative z-10">
                             <div className={`text-white font-bold text-sm transition-all duration-300 ${
                               isExpanded ? 'whitespace-normal' : 'whitespace-nowrap overflow-hidden text-ellipsis'
-                            }`} style={{ transform: isExpanded ? 'scaleX(0.67)' : 'scaleX(1)', transformOrigin: 'left center' }}>
+                            }`}>
                               {isExpanded ? player.fullName || player.displayName : player.displayName}
                             </div>
-                            <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis" style={{ transform: isExpanded ? 'scaleX(0.67)' : 'scaleX(1)', transformOrigin: 'left center' }}>
+                            <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis">
                               {typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}
                             </div>
                           </div>
                           
-                          {/* Score - Always show when expanded or when locked with stats */}
-                          {(isExpanded || (isLocked && showStats)) && (
+                          {/* Score - Show when expanded, or when locked/roster closed with stats */}
+                          {(isExpanded || ((isLocked || !isRosterOpen) && showStats)) && (
                             <div 
                               className={`text-center transition-all duration-300 relative z-10 ${
                                 isExpanded || showStats ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
@@ -964,7 +959,6 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                               style={{ 
                                 transitionDelay: isExpanded ? '0ms' : `${idx * 100}ms`,
                                 transformOrigin: 'center',
-                                transform: isExpanded ? 'scaleX(0.67)' : 'scaleX(1)',
                               }}
                             >
                               <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
@@ -978,13 +972,12 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 </div>
 
 
-                {/* New Picks Column - Always show when not locked */}
-                {!isLocked && (
+                {/* New Picks Column - Show when roster is open and not locked */}
+                {!isLocked && isRosterOpen && (
                   <div 
                     className="transition-all duration-800 ease-in-out"
                     style={{
                       width: 'calc(50% - 0.5rem)',
-                      opacity: isViewTransitioning ? 0 : 1
                     }}
                   >
                   <div className="text-[#faafe8] text-xs mb-2 font-bold h-[20px] flex items-center">NEW</div>
@@ -1002,6 +995,28 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 )}
               </div>
             </div>
+
+            {/* Pick Button - Only show when not locked */}
+            {!isLocked && (
+              <div className="pb-6">
+                <button
+                  onClick={() => {
+                    if (!isRosterOpen && isExpanded) {
+                      // Open roster - trigger both width change and fade together
+                      setIsRosterOpen(true);
+                    } else {
+                      // Toggle roster state
+                      setIsRosterOpen(!isRosterOpen);
+                    }
+                  }}
+                  className={`w-full p-4 flex items-center justify-center gap-3 ${
+                    isRosterOpen ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] rounded' : 'btn-standard'
+                  }`}>
+                  <FaHandPointer className="text-xl" />
+                  <span>{isRosterOpen ? 'Close' : 'Pick Players'}</span>
+                </button>
+              </div>
+            )}
 
             {/* Countdown Timer Panel - Only show when locked */}
             {isLocked && (
@@ -1029,18 +1044,18 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 </div>
               </div>
             )}
-            {/* Team Selector & Roster - Always show when not locked */}
-            {!isLocked && (
+            {/* Team Selector & Roster - Show when roster is open and not locked */}
+            {!isLocked && isRosterOpen && (
               <div className="animate-fade-in">
               <>
             {/* Team Selector */}
             <div className="flex gap-0">
               <button
                 onClick={() => setActiveTeam('home')}
-                className={`flex-1 py-3 rounded-t-lg font-bold flex items-center justify-center gap-2 transition-all border-2 ${
+                className={`flex-1 py-3 rounded-t-lg font-bold flex items-center justify-center gap-2 transition-all border ${
                   activeTeam === 'home'
-                    ? 'bg-[#faafe8]/20 border-[#faafe8] text-[#faafe8]'
-                    : 'bg-[#181a23] border-[#faafe8]/30 text-gray-400 hover:border-[#faafe8]/50'
+                    ? 'bg-[#faafe8]/20 border-[#faafe8]/50 text-[#faafe8]'
+                    : 'bg-[#181a23] border-[#faafe8]/20 text-gray-400 hover:border-[#faafe8]/30'
                 }`}
               >
                 {homeTeamLogo && <img src={homeTeamLogo} alt="" className="w-7 h-6" />}
@@ -1048,10 +1063,10 @@ const YourPicks: React.FC<PlayerPickProps> = ({
               </button>
               <button
                 onClick={() => setActiveTeam('away')}
-                className={`flex-1 py-3 rounded-t-lg font-bold flex items-center justify-center gap-2 transition-all border-2 ${
+                className={`flex-1 py-3 rounded-t-lg font-bold flex items-center justify-center gap-2 transition-all border ${
                   activeTeam === 'away'
-                    ? 'bg-[#00ffe7]/20 border-[#00ffe7] text-[#00ffe7]'
-                    : 'bg-[#181a23] border-[</h4>#00ffe7]/30 text-gray-400 hover:border-[#00ffe7]/50'
+                    ? 'bg-[#00ffe7]/20 border-[#00ffe7]/50 text-[#00ffe7]'
+                    : 'bg-[#181a23] border-[#00ffe7]/20 text-gray-400 hover:border-[#00ffe7]/30'
                 }`}
               >
                 {awayTeamLogo && <img src={awayTeamLogo} alt="" className="w-7 h-6" />}
@@ -1060,7 +1075,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
             </div>
 
             {/* Player List */}
-            <div className="bg-[#181a23]/90 rounded-b-lg border-2 border-t-0 border-[#00ffe7]/30 p-4">
+            <div className="bg-[#181a23]/90 rounded-b-lg border border-t-0 border-[#00ffe7]/20 p-4">
               <h4 className="text-[#00ffe7] font-bold mb-4 flex items-center gap-2">
                 {currentTeamLogo && <img src={currentTeamLogo} alt="" className="w-7 h-6" />}
                 {currentTeamInfo.name} Roster
@@ -1087,10 +1102,10 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                           disabled={isDuplicate}
                           className={`w-full p-2 rounded-lg flex items-center gap-2 transition-all text-left ${
                             isDuplicate
-                              ? 'bg-gray-700/20 border-2 border-gray-600 opacity-50 cursor-not-allowed'
+                              ? 'bg-gray-700/20 border border-gray-600/50 opacity-50 cursor-not-allowed'
                               : isInNew
-                              ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7]'
-                              : 'bg-[#23263a]/50 border-2 border-transparent hover:border-[#00ffe7]/30 cursor-pointer'
+                              ? 'bg-[#00ffe7]/20 border border-[#00ffe7]/60'
+                              : 'bg-[#23263a]/50 border border-transparent hover:border-[#00ffe7]/30 cursor-pointer'
                           }`}
                         >
                           {headshotUrl ? (
@@ -1144,10 +1159,10 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                           disabled={isDuplicate}
                           className={`w-full p-2 rounded-lg flex items-center gap-2 transition-all text-left ${
                             isDuplicate
-                              ? 'bg-gray-700/20 border-2 border-gray-600 opacity-50 cursor-not-allowed'
+                              ? 'bg-gray-700/20 border border-gray-600/50 opacity-50 cursor-not-allowed'
                               : isInNew
-                              ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7]'
-                              : 'bg-[#23263a]/50 border-2 border-transparent hover:border-[#00ffe7]/30 cursor-pointer'
+                              ? 'bg-[#00ffe7]/20 border border-[#00ffe7]/60'
+                              : 'bg-[#23263a]/50 border border-transparent hover:border-[#00ffe7]/30 cursor-pointer'
                           }`}
                         >
                           {headshotUrl ? (
