@@ -5,7 +5,7 @@ import HeadToHead from '@/components/nfl/HeadToHead';
 import ProbChart from '@/components/nfl/ProbabilityChart';
 import PlayerPick from '@/pages/nfl/scoreboard/PlayerPick';
 import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
-import { usePicks } from '@/providers/PicksContext';
+import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
 import type { Event } from '@/types/espn/scoreboard';
 
 interface ScoreboardViewProps {
@@ -53,7 +53,6 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [isPickExpanded, setIsPickExpanded] = useState(true); // Default to true so picker is visible
   const [gameCountdown, setGameCountdown] = useState<number>(0);
-  const { getPicksWithHeadshots, isLocked, getCooldownTime } = usePicks();
   
   const competition = event.competitions[0];
   const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
@@ -337,72 +336,19 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                             );
                           })()}
 
-                          {/* My Picks Display with Headshots and Swap Button */}
-                          {(() => {
-                            if (!homeTeam?.id || !awayTeam?.id) return null;
-                            
-                            const picks = getPicksWithHeadshots(homeTeam.id, awayTeam.id);
-                            if (!picks || picks.players.length === 0) return null;
-
-                            const locked = isLocked(homeTeam.id, awayTeam.id);
-                            const cooldownTime = getCooldownTime(homeTeam.id, awayTeam.id);
-                            
-                            // Calculate scores from playLog
-                            const playerScores: Record<string, number> = {};
-                            picks.players.forEach((player) => {
-                              playerScores[player.id] = 0;
-                            });
-                            playLog.forEach((play) => {
-                              if (play.athletesInvolved) {
-                                play.athletesInvolved.forEach((athlete) => {
-                                  if (playerScores.hasOwnProperty(athlete.id)) {
-                                    playerScores[athlete.id] += 1;
-                                  }
-                                });
-                              }
-                            });
-                            
-                            return (
-                              <div className="mt-4 bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-3 border border-[#00ffe7]/30">
-                                <div className="flex items-center justify-between mb-3">
-                                  <span className="text-[#00ffe7] font-bold text-xs">MY PICKS</span>
-                                  {picks.totalScore > 0 && (
-                                    <span className="text-[#faafe8] font-bold text-xs">{picks.totalScore} pts</span>
-                                  )}
-                                </div>
-                                <div className="flex gap-2 mb-3">
-                                  {picks.players.map((player) => (
-                                    <div key={player.id} className="flex-1 flex flex-col items-center bg-black/30 rounded p-2">
-                                      <img
-                                        src={player.headshot}
-                                        alt={player.displayName}
-                                        className="w-12 h-12 rounded-full border-2 border-[#00ffe7]/30 mb-1"
-                                      />
-                                      <div className="text-white text-xs font-bold text-center truncate w-full">{player.shortName || player.displayName}</div>
-                                      <div className="text-[#b0b7bf] text-[10px]">{player.position.abbreviation}</div>
-                                      <div className="mt-2 bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] font-bold text-lg rounded px-3 py-1">
-                                        {playerScores[player.id] || 0}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                                {locked ? (
-                                  <div className="text-center py-2 bg-black/30 rounded">
-                                    <span className="text-[#faafe8] text-xs font-bold">
-                                      🔒 Locked - {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => onTabChange('pick')}
-                                    className="btn-pink w-full py-2 font-bold text-xs rounded"
-                                  >
-                                    SWAP NOW
-                                  </button>
-                                )}
-                              </div>
-                            );
-                          })()}
+                          {/* Top Picks - All Players Who Scored */}
+                          {homeTeam?.id && awayTeam?.id && (
+                            <div className="mt-4">
+                              <TopPicks
+                                homeTeamId={homeTeam.id}
+                                awayTeamId={awayTeam.id}
+                                playLog={playLog}
+                                getTeamLogo={getTeamLogo}
+                                homeTeam={homeTeam}
+                                awayTeam={awayTeam}
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

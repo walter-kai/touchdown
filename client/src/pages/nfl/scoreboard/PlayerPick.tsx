@@ -8,8 +8,6 @@ import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
 import Situation from './situation';
-import PlayerAvatar from '../PlayerPick/PlayerAvatar';
-import PlayerRosterList from '../PlayerPick/PlayerRosterList';
 import type { Athlete } from '@/types/espn/athlete';
 
 // Multi-backend configuration for both desktop and mobile
@@ -137,7 +135,7 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
   return (
     <div
       ref={(node) => drag(drop(node))}
-      className={`bg-[#181a23]/90 rounded-lg p-3 border border-[#faafe8]/30 flex items-center gap-3 h-[72px] transition-all duration-1000 ${
+      className={`relative overflow-hidden bg-[#181a23]/90 rounded-lg p-3 border border-[#faafe8]/30 flex items-center gap-3 h-[72px] transition-all duration-1000 ${
         isDragging ? 'opacity-100' : isAnimating ? '' : 'hover:border-[#faafe8]'
       }`}
       style={{ 
@@ -148,11 +146,25 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
         })
       }}
     >
+      {/* Large team logo background */}
+      {teamLogo && (
+        <img 
+          src={teamLogo} 
+          alt="" 
+          className="absolute right-[10%] top-1/2 -translate-y-1/2 opacity-10 pointer-events-none"
+          style={{
+            width: '120px',
+            height: '120px',
+            objectFit: 'contain'
+          }}
+        />
+      )}
+
       {headshotUrl ? (
         <img
           src={headshotUrl}
           alt={player.displayName}
-          className="w-12 h-12 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0"
+          className="w-12 h-12 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0 relative z-10"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).style.display = 'none';
             const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -161,18 +173,15 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
         />
       ) : null}
       <div 
-        className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0"
+        className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0 relative z-10"
         style={{ display: headshotUrl ? 'none' : 'flex' }}
       >
         <FaUsers className="text-[#faafe8] text-sm" />
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 relative z-10">
         <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
         <div className="text-[#faafe8] text-xs">{typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}</div>
       </div>
-      {teamLogo && (
-        <img src={teamLogo} alt="" className="w-6 h-6 flex-shrink-0" />
-      )}
     </div>
   );
 };
@@ -245,6 +254,7 @@ const MyPreview = () => {
   
   const { item, style } = preview;
   const headshotUrl = typeof item.player.headshot === 'string' ? item.player.headshot : item.player.headshot?.href;
+  const teamLogo = item.player.team?.logo || (item.player.team?.logos && item.player.team.logos.length > 0 ? item.player.team.logos[0].href : null);
   
   return (
     <div 
@@ -259,22 +269,32 @@ const MyPreview = () => {
       }} 
       className="cursor-grabbing"
     >
-      <div className="bg-[#181a23] rounded-lg p-3 border-2 border-[#faafe8] flex items-center gap-2 shadow-2xl shadow-[#faafe8]/50" style={{ minHeight: '58px', minWidth: '200px' }}>
-        <div className="w-5 h-5 rounded-full bg-[#faafe8] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
-          {item.index + 1}
-        </div>
+      <div className="relative overflow-hidden bg-[#181a23] rounded-lg p-3 border-2 border-[#faafe8] flex items-center gap-2 shadow-2xl shadow-[#faafe8]/50" style={{ minHeight: '58px', minWidth: '200px' }}>
+        {/* Large team logo background */}
+        {teamLogo && (
+          <img 
+            src={teamLogo} 
+            alt="" 
+            className="absolute right-[10%] top-1/2 -translate-y-1/2 opacity-10 pointer-events-none"
+            style={{
+              width: '80px',
+              height: '80px',
+              objectFit: 'contain'
+            }}
+          />
+        )}
         {headshotUrl ? (
           <img
             src={headshotUrl}
             alt={item.player.displayName}
-            className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0"
+            className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0 relative z-10"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0 relative z-10">
             <FaUsers className="text-[#faafe8] text-sm" />
           </div>
         )}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 relative z-10">
           <div className="text-white font-bold text-xs truncate">{item.player.shortName}</div>
           <div className="text-[#faafe8] text-[10px]">{typeof item.player.position === 'string' ? item.player.position : item.player.position?.abbreviation}</div>
         </div>
@@ -780,19 +800,19 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
         {/* Selection Interface - Always show when expanded OR when locked */}
         {(isExpanded || isLocked) && (
-          <div className="space-y-0">
+          <div className="space-y-2">
 
 
             {/* Current vs New Picks Display */}
-            <div className="my-6 bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-2 border border-[#00ffe7]/30">
-              <div className="flex items-center justify-between mb-4 px-2">
+            <div className="bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-2 border border-[#00ffe7]/30">
+                <div className="flex items-center justify-between my-2 px-2">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
-                    isLocked 
-                      ? 'bg-[#4169e1]/20 border-[#4169e1] shadow-[0_0_10px_#4169e1]' 
-                      : 'bg-yellow-500/20 border-yellow-500'
+                  isLocked 
+                    ? 'bg-[#4169e1]/20 border-[#4169e1] shadow-[0_0_10px_#4169e1]' 
+                    : 'bg-yellow-500/20 border-yellow-500'
                   }`}>
-                    {isLocked ? <FaLock className="text-[#4169e1] text-sm" /> : <FaCrosshairs className="text-yellow-500 text-sm" />}
+                  {isLocked ? <FaLock className="text-[#4169e1] text-sm" /> : <FaCrosshairs className="text-yellow-500 text-sm" />}
                   </div>
                   <div>
                     <h4 className="text-white font-bold text-xl transition-all duration-500">
@@ -804,43 +824,37 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                 {/* Lock In Button or Total Score */}
                 {!isLocked && isRosterOpen ? (
                   <button
-                    onClick={handleLockIn}
-                    disabled={newPicks.filter(p => p).length === 0 || isLockingIn}
-                    className={`py-2 px-4 flex items-center justify-center gap-2 min-w-[120px] h-[60px] transition-opacity duration-300 rounded font-bold ${
-                      isViewTransitioning ? 'opacity-0' : 'opacity-100'
-                    } ${
-                      newPicks.filter(p => p).length > 0 && !isLockingIn
-                        ? ''
-                        : 'bg-gray-700/20 border-2 border-gray-600 text-gray-500 cursor-not-allowed'
-                    }`}
-                    style={newPicks.filter(p => p).length > 0 && !isLockingIn ? {
-                      background: `linear-gradient(135deg, #${homeTeamInfo.color || '00ffe7'} 0%, #${awayTeamInfo.color || 'faafe8'} 100%)`,
-                      border: '2px solid rgba(255, 255, 255, 0.3)',
-                      color: 'white',
-                      boxShadow: `0 0 20px rgba(${parseInt(homeTeamInfo.color?.slice(0,2) || '00', 16)}, ${parseInt(homeTeamInfo.color?.slice(2,4) || 'ff', 16)}, ${parseInt(homeTeamInfo.color?.slice(4,6) || 'e7', 16)}, 0.5)`
-                    } : {}}
+                  onClick={handleLockIn}
+                  disabled={newPicks.filter(p => p).length === 0 || isLockingIn}
+                  className={`btn-pink py-2 px-4 flex items-center justify-center gap-2 min-w-[120px] h-[50px] transition-opacity duration-300 rounded font-bold ${
+                    isViewTransitioning ? 'opacity-0' : 'opacity-100'
+                  } ${
+                    newPicks.filter(p => p).length === 0 || isLockingIn
+                    ? 'opacity-50 cursor-not-allowed'
+                    : ''
+                  }`}
                   >
-                    {isLockingIn ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Locking...</span>
-                      </>
-                    ) : (
-                      <>
-                        <FaUnlock />
-                        Lock In {newPicks.filter(p => p).length > 0 ? `(${newPicks.filter(p => p).length})` : ''}
-                      </>
-                    )}
+                  {isLockingIn ? (
+                    <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Locking...</span>
+                    </>
+                  ) : (
+                    <>
+                    <FaUnlock />
+                    Lock In {newPicks.filter(p => p).length > 0 ? `(${newPicks.filter(p => p).length})` : ''}
+                    </>
+                  )}
                   </button>
                 ) : (
                   <div className={`text-right transition-all duration-500 min-w-[120px] h-[60px] flex flex-col justify-center ${
-                    isLocked ? 'opacity-100' : 'opacity-0'
+                  isLocked ? 'opacity-100' : 'opacity-0'
                   }`}>
-                    <div className="text-[#00ffe7] text-3xl font-bold leading-tight">{totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0)}</div>
-                    <div className="text-[#b0b7bf] text-xs">Total pts</div>
+                  <div className="text-[#00ffe7] text-3xl font-bold leading-tight">{totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0)}</div>
+                  <div className="text-[#b0b7bf] text-xs">Total pts</div>
                   </div>
                 )}
-              </div>
+                </div>
 
               <div className="relative flex gap-4">
                 {/* Current Picks Column */}
@@ -885,7 +899,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                         <div
                           key={player.id}
                           className={`relative overflow-hidden bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] transition-all duration-800 ${
-                            isBeingReplaced ? 'opacity-30' : 'opacity-100'
+                            isBeingReplaced ? 'opacity-0' : 'opacity-100'
                           }`}
                           style={{
                             marginBottom: '8px'
