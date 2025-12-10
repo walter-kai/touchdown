@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock } from 'react-icons/fa';
-import Prediction from '@/components/nfl/Prediction';
+import PredictionChart from '@/components/nfl/PredictionChart';
 import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
 import GameLeaders from '@/pages/nfl/summary/GameLeaders';
 import SelectedAthletes from '@/components/nfl/SelectedAthletes';
@@ -119,7 +119,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             style={{ width: '500%' }}
           >
             {/* Info Section */}
-            <div className="w-full flex-shrink-0 space-y-6 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 space-y-6 py-4 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
               {/* Box Score */}
               <div className="mb-6">
                 {/* Boxscore Component */}
@@ -566,7 +566,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             {/* Predictions Section */}
             <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
               {homeTeam && awayTeam && (
-                <Prediction
+                <PredictionChart
                   gameId={gameId}
                   competitionId={competition.id}
                   homeTeamInfo={{

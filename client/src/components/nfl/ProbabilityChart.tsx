@@ -28,7 +28,7 @@ interface ProbabilityProps {
   awayTeamInfo: { name: string; logo: string; color: string };
 }
 
-const Probability: React.FC<ProbabilityProps> = ({ gameId, competitionId, gameStatus, homeTeamInfo, awayTeamInfo }) => {
+const ProbabilityChart: React.FC<ProbabilityProps> = ({ gameId, competitionId, gameStatus, homeTeamInfo, awayTeamInfo }) => {
   const [data, setData] = useState<ProbabilityData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -364,4 +364,4 @@ const Probability: React.FC<ProbabilityProps> = ({ gameId, competitionId, gameSt
   );
 };
 
-export default Probability;
+export default ProbabilityChart;

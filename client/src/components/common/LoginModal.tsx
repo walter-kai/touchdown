@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../providers/AuthContext";
-import { userApi } from "../../utils/userApi";
-import { User } from "../../types/User";
+
+import { User } from "@/types/User";
 import StatusPopup from './StatusPopup';
 
 interface LoginModalProps {

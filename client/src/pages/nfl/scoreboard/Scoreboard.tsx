@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaFootballBall, FaChartBar, FaClock, FaPauseCircle } from 'react-icons/fa';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import ProbChart from '@/components/nfl/ProbabilityChart';
-import PlayerPick from '@/pages/nfl/scoreboard/PlayerPick';
+import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
 import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
 import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
+import FootballField from '@/components/nfl/FootballField';
+import GameLeaders from '@/pages/nfl/summary/GameLeaders';
 import type { Event } from '@/types/espn/scoreboard';
 
 interface ScoreboardViewProps {
@@ -64,7 +66,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   const getTabIndex = (tab: string) => {
     const scoreboardTabs = isGameUpcoming
       ? ['info', 'odds', 'headtohead']
-      : ['info', 'player', 'pick', 'plays', 'odds', 'headtohead'];
+      : ['info', 'player', 'plays', 'odds', 'headtohead'];
     return scoreboardTabs.indexOf(tab);
   };
 
@@ -73,7 +75,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
     if (carouselRef.current) {
       const index = getTabIndex(activeTab);
       if (index !== -1) {
-        const totalSlides = isGameUpcoming ? 3 : 6;
+        const totalSlides = isGameUpcoming ? 3 : 5;
         const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -119,12 +121,12 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
           <div
             ref={carouselRef}
             className="flex transition-transform duration-500 ease-in-out"
-            style={{ width: isGameUpcoming ? '300%' : '600%' }}
+            style={{ width: isGameUpcoming ? '300%' : '500%' }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 space-y-6 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 py-4 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
               {/* Box Score */}
-              <div className=" mb-6">
+              <div className="">
                 {/* Boxscore Component */}
                 <Boxscore 
                   homeTeam={homeTeam}
@@ -138,119 +140,18 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
               {/* Live Game Situation */}
               {competition.situation && competition.status.type.state === 'in' && (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {/* Football Field Visualization */}
                   {competition.situation.lastPlay && (
                     <div className="">
                       {/* Field Visualization */}
-                      <div className="border-t border-[#00ffe7]/10 pt-6 mb-6">
-                          {/* Football Field */}
-                          <div className="relative w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg overflow-hidden" style={{ height: '200px' }}>
-                            {/* End zones - 10% each */}
-                            <div className="absolute left-0 top-0 bottom-0 w-[10%] bg-blue-900/40 flex items-center justify-center">
-                              <img src={getTeamLogo(awayTeam?.team)} alt="" className="w-12 h-12 opacity-60" />
-                            </div>
-                            <div className="absolute right-0 top-0 bottom-0 w-[10%] bg-red-900/40 flex items-center justify-center">
-                              <img src={getTeamLogo(homeTeam?.team)} alt="" className="w-12 h-12 opacity-60" />
-                            </div>
-
-                            {/* Playing field - 80% between end zones */}
-                            {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((fieldPercent) => {
-                              const actualPosition = 10 + (fieldPercent * 0.8);
-                              const yardNumber = fieldPercent <= 50 ? fieldPercent : 100 - fieldPercent;
-                              
-                              return (
-                                <div
-                                  key={fieldPercent}
-                                  className="absolute top-0 bottom-0 border-l border-white/20"
-                                  style={{ left: `${actualPosition}%` }}
-                                >
-                                  {fieldPercent % 10 === 0 && (
-                                    <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 text-white/40 text-xs font-bold">
-                                      {yardNumber}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-
-                            {/* 50 yard line highlight */}
-                            <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-yellow-400/30" />
-
-                            {/* Start position */}
-                            {competition.situation.lastPlay.start && (
-                              <div
-                                className="absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                                style={{ left: `${10 + (competition.situation.lastPlay.start.yardLine * 0.8)}%` }}
-                              >
-                                <div className="w-3 h-3 rounded-full bg-yellow-400 border-2 border-white shadow-lg" />
-                              </div>
-                            )}
-
-                            {/* End position with player headshot */}
-                            {competition.situation.lastPlay.end && competition.situation.lastPlay.athletesInvolved && competition.situation.lastPlay.athletesInvolved.length > 0 && (
-                              <div
-                                className="absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10"
-                                style={{ left: `${10 + (competition.situation.lastPlay.end.yardLine * 0.8)}%` }}
-                              >
-                                <div className="relative group">
-                                  <div className="w-20 h-16 rounded-full bg-yellow-400/30 flex items-center justify-center border-4 border-yellow-400 shadow-2xl shadow-yellow-400/50">
-                                    <img
-                                      src={competition.situation.lastPlay.athletesInvolved[0].headshot}
-                                      alt={competition.situation.lastPlay.athletesInvolved[0].displayName}
-                                      className="w-14 h-14 rounded-full object-cover z-1"
-                                      onError={(e) => {
-                                        e.currentTarget.style.display = 'none';
-                                        const parent = e.currentTarget.parentElement;
-                                        if (parent) {
-                                          const fallback = document.createElement('div');
-                                          fallback.className = 'flex items-center justify-center';
-                                          fallback.innerHTML = '<span class="text-[#00ffe7] font-bold text-xs">⬇️</span>';
-                                          parent.appendChild(fallback);
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                  {/* Player name tooltip */}
-                                  <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-[#23263a] border border-[#00ffe7]/50 rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                    <p className="text-[#00ffe7] text-xs font-bold">{competition.situation.lastPlay.athletesInvolved[0].displayName}</p>
-                                    <p className="text-[#b0b7bf] text-xs">{competition.situation.lastPlay.athletesInvolved[0].position}</p>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Arrow showing play direction */}
-                            {competition.situation.lastPlay.start && competition.situation.lastPlay.end && (
-                              <svg
-                                className="absolute top-1/2 left-0 w-full h-full pointer-events-none z-0"
-                                style={{ transform: 'translateY(-50%)' }}
-                              >
-                                <defs>
-                                  <marker
-                                    id="arrowhead"
-                                    markerWidth="8"
-                                    markerHeight="6"
-                                    refX="8"
-                                    refY="2"
-                                    orient="auto"
-                                  >
-                                    <polygon points="0 0, 8 2, 0 4" fill="#00ffe7" />
-                                  </marker>
-                                </defs>
-                                <line
-                                  x1={`${10 + (competition.situation.lastPlay.start.yardLine * 0.8)}%`}
-                                  y1="50%"
-                                  x2={`${10 + (competition.situation.lastPlay.end.yardLine * 0.8)}%`}
-                                  y2="50%"
-                                  stroke="#00ffe7"
-                                  strokeWidth="3"
-                                  markerEnd="url(#arrowhead)"
-                                  opacity="0.7"
-                                />
-                              </svg>
-                            )}
-                          </div>
+                      <div className="pt-2">
+                          <FootballField
+                            homeTeam={homeTeam}
+                            awayTeam={awayTeam}
+                            lastPlay={competition.situation.lastPlay}
+                            getTeamLogo={getTeamLogo}
+                          />
 
                           {/* Timeouts */}
                           <div className="flex justify-between items-center pt-4">
@@ -336,6 +237,15 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                             );
                           })()}
 
+                          {/* Game Leaders */}
+                          <div className="mt-4">
+                            {/* <GameLeaders
+                              summary={event.competitions[0].summary || null}
+                              homeTeamId={event.competitions[0].competitors.find(c => c.homeAway === 'home')?.id}
+                              awayTeamId={event.competitions[0].competitors.find(c => c.homeAway === 'away')?.id}
+                            /> */}
+                          </div>
+
                           {/* Top Picks - All Players Who Scored */}
                           {homeTeam?.id && awayTeam?.id && (
                             <div className="mt-4">
@@ -346,6 +256,34 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                                 getTeamLogo={getTeamLogo}
                                 homeTeam={homeTeam}
                                 awayTeam={awayTeam}
+                              />
+                            </div>
+                          )}
+
+                          {/* Your Picks Section */}
+                          {homeTeam?.id && awayTeam?.id && (
+                            <div className="mt-4">
+                              <YourPicks
+                                gameId={event.id}
+                                homeTeamId={homeTeam.id}
+                                awayTeamId={awayTeam.id}
+                                homeTeamInfo={{
+                                  name: homeTeam.team.displayName,
+                                  logo: getTeamLogo(homeTeam),
+                                  color: homeTeam.team.color || '00ffe7'
+                                }}
+                                awayTeamInfo={{
+                                  name: awayTeam.team.displayName,
+                                  logo: getTeamLogo(awayTeam),
+                                  color: awayTeam.team.color || 'faafe8'
+                                }}
+                                isExpanded={isPickExpanded}
+                                onToggle={() => setIsPickExpanded(!isPickExpanded)}
+                                playLog={playLog}
+                                situation={competition.situation}
+                                homeTeam={homeTeam}
+                                awayTeam={awayTeam}
+                                getTeamLogo={getTeamLogo}
                               />
                             </div>
                           )}
@@ -461,7 +399,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
             {/* Player Section */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
                 <div className="space-y-4">
                   <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                     <FaTrophy />
@@ -524,39 +462,9 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
               </div>
             )}
 
-            {/* Pick Section */}
-            {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '16.666%' }}>
-                {homeTeam && awayTeam && (
-                  <PlayerPick
-                    gameId={event.id}
-                    homeTeamId={homeTeam.id}
-                    awayTeamId={awayTeam.id}
-                    homeTeamInfo={{
-                      name: homeTeam.team.displayName,
-                      logo: getTeamLogo(homeTeam),
-                      color: homeTeam.team.color || '00ffe7'
-                    }}
-                    awayTeamInfo={{
-                      name: awayTeam.team.displayName,
-                      logo: getTeamLogo(awayTeam),
-                      color: awayTeam.team.color || 'faafe8'
-                    }}
-                    isExpanded={isPickExpanded}
-                    onToggle={() => setIsPickExpanded(!isPickExpanded)}
-                    playLog={playLog}
-                    situation={competition.situation}
-                    homeTeam={homeTeam}
-                    awayTeam={awayTeam}
-                    getTeamLogo={getTeamLogo}
-                  />
-                )}
-              </div>
-            )}
-
             {/* Plays Section */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
                     <FaFootballBall />
@@ -671,7 +579,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             )}
 
             {/* Odds Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
               <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                 <FaChartBar />
                 Betting Odds
@@ -696,7 +604,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}

@@ -33,7 +33,7 @@ interface PredictionProps {
   awayTeamInfo: { name: string; logo: string; color: string };
 }
 
-const Prediction: React.FC<PredictionProps> = ({ gameId, competitionId, homeTeamInfo, awayTeamInfo }) => {
+const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, homeTeamInfo, awayTeamInfo }) => {
   const [data, setData] = useState<PredictionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -217,4 +217,4 @@ const Prediction: React.FC<PredictionProps> = ({ gameId, competitionId, homeTeam
   );
 };
 
-export default Prediction;
+export default PredictionChart;

@@ -16,7 +16,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
   // All available navigation items
   const allNavItems = [
     // { id: 'back', label: 'Scoreboard', icon: <FaArrowLeft />, action: () => navigate('/nfl') },
-    { id: 'info', label: preset === 'player' ? 'Overview' : 'Info', icon: <FaInfoCircle /> },
+    { id: 'info', label: preset === 'player' ? 'Overview' : preset === 'scoreboard' ? 'Pick' : 'Info', icon: <FaInfoCircle /> },
     { id: 'player', label: 'Players', icon: <FaTrophy /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
     { id: 'headtohead', label: 'Head to Head', icon: <FaExchangeAlt /> },
@@ -30,15 +30,15 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
 
   // Preset configurations
   const presetConfig = {
-    scoreboard: ['info', 'pick', 'plays', 'odds', 'headtohead'],
+    scoreboard: ['info', 'plays', 'odds', 'headtohead'],
     summary: ['info', 'player', 'team', 'plays', 'prediction'],
     team: ['info', 'schedule', 'news'], // Team page shows back, info, schedule, news
     player: ['info', 'schedule', 'news'], // Player page shows back, overview, game log, news
   };
 
-  // For upcoming games, hide 'player', 'pick', and 'plays' tabs regardless of preset
+  // For upcoming games, hide 'player' and 'plays' tabs regardless of preset
   const isUpcomingGame = gameStatus === 'pre';
-  const tabsToHide = isUpcomingGame ? ['player', 'pick', 'plays'] : [];
+  const tabsToHide = isUpcomingGame ? ['player', 'plays'] : [];
   
   console.log('MainNavBar - gameStatus:', gameStatus, 'preset:', preset, 'isUpcomingGame:', isUpcomingGame, 'tabsToHide:', tabsToHide);
 
