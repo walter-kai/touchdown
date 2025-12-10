@@ -8,8 +8,8 @@ import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
 import Situation from './situation';
-import PlayerAvatar from '../../../components/nfl/pick/PlayerAvatar';
-import PlayerRosterList from '../../../components/nfl/pick/PlayerRosterList';
+import PlayerAvatar from '../PlayerPick/PlayerAvatar';
+import PlayerRosterList from '../PlayerPick/PlayerRosterList';
 import type { Athlete } from '@/types/espn/athlete';
 
 // Multi-backend configuration for both desktop and mobile
@@ -774,56 +774,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
       {/* Content */}
       <div className="">
-        {/* Latest Play Display */}
-        {playLog.length > 0 && (() => {
-          const latestPlay = playLog[0];
-          const team = latestPlay.possession === homeTeam?.id ? homeTeam : awayTeam;
-          const isHome = team?.id === homeTeam?.id;
 
-          return (
-            <div className="mb-4">
-              <div className="text-[#b0b7bf] text-xs mb-2 flex items-center gap-2">
-                <FaFootballBall className="text-[#00ffe7]" />
-                Latest Play
-              </div>
-              <div className={`bg-gradient-to-r ${isHome ? 'from-[#faafe8]/10' : 'from-[#00ffe7]/10'} rounded-lg p-3 border-l-2 ${isHome ? 'border-[#faafe8]' : 'border-[#00ffe7]'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  {team && getTeamLogo && (
-                    <img src={getTeamLogo(team.team)} alt="" className="w-5 h-5" />
-                  )}
-                  <span className={`text-xs font-bold ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
-                    Q{latestPlay.quarter} {latestPlay.clock}
-                  </span>
-                </div>
-                
-                {/* Player headshots */}
-                {latestPlay.athletesInvolved && latestPlay.athletesInvolved.length > 0 && (
-                  <div className="flex gap-2 mb-2 flex-wrap">
-                    {latestPlay.athletesInvolved.slice(0, 3).map((athlete, idx) => (
-                      athlete.headshot && (
-                        <div key={idx} className="flex items-center gap-1">
-                          <img
-                            src={athlete.headshot}
-                            alt={athlete.displayName}
-                            className="w-8 h-8 rounded-full border-2 border-[#00ffe7]/30"
-                          />
-                          <div className="flex flex-col">
-                            <span className="text-[#e0e7ef] text-xs font-semibold">{athlete.shortName}</span>
-                            <span className="text-[#b0b7bf] text-[10px]">{athlete.position}</span>
-                          </div>
-                        </div>
-                      )
-                    ))}
-                  </div>
-                )}
-                
-                <p className="text-[#e0e7ef] text-xs">
-                  {latestPlay.text}
-                </p>
-              </div>
-            </div>
-          );
-        })()}
 
 
 
@@ -833,8 +784,8 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
 
             {/* Current vs New Picks Display */}
-            <div className="my-6 bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-6 border border-[#00ffe7]/30">
-              <div className="flex items-center justify-between mb-4">
+            <div className="my-6 bg-gradient-to-r from-[#00ffe7]/10 to-[#faafe8]/10 rounded-lg p-2 border border-[#00ffe7]/30">
+              <div className="flex items-center justify-between mb-4 px-2">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
                     isLocked 
@@ -844,7 +795,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                     {isLocked ? <FaLock className="text-[#4169e1] text-sm" /> : <FaCrosshairs className="text-yellow-500 text-sm" />}
                   </div>
                   <div>
-                    <h4 className="text-white font-bold text-lg transition-all duration-500">
+                    <h4 className="text-white font-bold text-xl transition-all duration-500">
                       {isLocked ? 'Selected Picks' : 'Your Picks'}
                     </h4>
                   </div>

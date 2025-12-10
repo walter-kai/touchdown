@@ -1,13 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../providers/AuthContext';
-import { FaExclamationCircle } from 'react-icons/fa';
+import { FaExclamationCircle, FaChevronDown, FaSignOutAlt, FaUser } from 'react-icons/fa';
 
 const GoogleLoginButton: React.FC = () => {
   const { login, isAuthenticated, user, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showDropdown]);
 
   // Auto-hide tooltip after 5 seconds when error is set
   useEffect(() => {
@@ -162,24 +178,65 @@ const GoogleLoginButton: React.FC = () => {
 
   if (isAuthenticated && user) {
     return (
-      <div className="flex items-center ">
-        {user.photoUrl && (
-          <img src={user.photoUrl} alt={user.displayName || user.username || 'User'} className="w-8 h-8 rounded-full border border-[#00ffe7]/50 mr-2" />
-        )}
-        <div className="text-sm">
-          <div className="text-white font-medium">Logged in as {user.displayName || user.username || user.email}</div>
-          {user.email && <div className="text-gray-400">{user.email}</div>}
-        </div>
+      <div className="relative" ref={dropdownRef}>
+        {/* User Profile Picture Button */}
         <button
-          onClick={() => {
-            setIsLoading(true);
-            logout();
-            setIsLoading(false);
-          }}
-          className="ml-2 px-5 py-2 rounded-md bg-red-600/80 hover:bg-red-600 text-white"
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          Log out
+          {user.photoUrl ? (
+            <img 
+              src={user.photoUrl} 
+              alt={user.displayName || user.username || 'User'} 
+              className="w-9 h-9 rounded-full border-2 border-[#00ffe7]/50 hover:border-[#00ffe7] transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)]" 
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-full border-2 border-[#00ffe7]/50 hover:border-[#00ffe7] transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)] bg-[#181a23] flex items-center justify-center">
+              <FaUser className="text-[#00ffe7] text-sm" />
+            </div>
+          )}
+          <FaChevronDown className={`text-[#00ffe7] text-xs transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} />
         </button>
+
+        {/* Dropdown Menu - Opens inward from the right */}
+        {showDropdown && (
+          <div className="absolute right-0 top-full mt-2 min-w-24 bg-[#0b0e17] border border-[#00ffe7]/30 rounded-lg shadow-[0_0_20px_rgba(0,255,231,0.2)] overflow-hidden z-50 animate-fade-in">
+            {/* User Info Section */}
+            <div className="p-4 border-b border-[#00ffe7]/20 bg-gradient-to-r from-[#00ffe7]/5 to-transparent">
+              <div className="flex items-center gap-3">
+                 
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-white truncate">
+                    {user.displayName || user.username || 'User'}
+                  </div>
+                  {user.email && (
+                    <div className="text-xs text-gray-400 truncate">{user.email}</div>
+                  )}
+                </div>
+              </div>
+              <div className="mt-2 text-[10px] text-[#00ffe7] font-medium">
+                Logged in as {user.displayName || user.username || user.email}
+              </div>
+            </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={() => {
+                setIsLoading(true);
+                setShowDropdown(false);
+                logout();
+                setIsLoading(false);
+              }}
+              disabled={isLoading}
+              className="w-full p-3 flex items-center gap-3 text-left hover:bg-red-600/10 transition-colors group disabled:opacity-50"
+            >
+              <FaSignOutAlt className="text-red-500 group-hover:text-red-400" />
+              <span className="text-sm text-red-500 group-hover:text-red-400 font-medium">
+                {isLoading ? 'Logging out...' : 'Log out'}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
     );
   }

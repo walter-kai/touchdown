@@ -6,10 +6,10 @@ import { HTML5Backend, getEmptyImage } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
-import PlayerAvatar from './pick/PlayerAvatar';
-import ScoreDisplay from './pick/ScoreDisplay';
-import TeamSelector from './pick/TeamSelector';
-import PlayerRosterList from './pick/PlayerRosterList';
+import PlayerAvatar from './PlayerAvatar';
+import ScoreDisplay from './ScoreDisplay';
+import TeamSelector from './TeamSelector';
+import PlayerRosterList from './PlayerRosterList';
 import type { Athlete } from '@/types/espn/athlete';
 
 // Multi-backend configuration for both desktop and mobile
@@ -56,6 +56,112 @@ const ItemTypes = {
   PLAYER: 'player',
 };
 
+// Reusable Pick Number Badge
+interface PickNumberBadgeProps {
+  index: number;
+  variant?: 'cyan' | 'pink' | 'cyan-ghost';
+  size?: 'small' | 'medium' | 'large';
+}
+
+const PickNumberBadge: React.FC<PickNumberBadgeProps> = ({ index, variant = 'cyan', size = 'medium' }) => {
+  const sizeClasses = {
+    small: 'w-4 h-4 text-[10px]',
+    medium: 'w-5 h-5 text-xs',
+    large: 'w-7 h-6 text-xs'
+  };
+
+  const variantClasses = {
+    'cyan': 'bg-[#00ffe7] text-black',
+    'pink': 'bg-[#faafe8] text-black',
+    'cyan-ghost': 'bg-[#00ffe7]/20 text-[#00ffe7]'
+  };
+
+  return (
+    <div className={`rounded-full font-bold flex items-center justify-center flex-shrink-0 ${
+      sizeClasses[size]
+    } ${
+      variantClasses[variant]
+    }`}>
+      {index + 1}
+    </div>
+  );
+};
+
+// Reusable Player Card Content
+interface PlayerCardContentProps {
+  player: Athlete;
+  headshotUrl?: string;
+  showScore?: boolean;
+  score?: number;
+  showStats?: boolean;
+  index?: number;
+  avatarSize?: 'small' | 'medium' | 'large';
+  borderColor?: string;
+  textColor?: string;
+  scoreColor?: string;
+  showPickNumber?: boolean;
+  pickNumberVariant?: 'cyan' | 'pink' | 'cyan-ghost';
+  teamLogo?: string;
+}
+
+const PlayerCardContent: React.FC<PlayerCardContentProps> = ({
+  player,
+  headshotUrl,
+  showScore = false,
+  score = 0,
+  showStats = false,
+  index,
+  avatarSize = 'large',
+  borderColor = 'border-[#00ffe7]/50',
+  textColor = 'text-[#00ffe7]',
+  scoreColor = 'text-[#00ffe7]',
+  showPickNumber = true,
+  pickNumberVariant = 'cyan',
+  teamLogo
+}) => {
+  return (
+    <>
+      {showPickNumber && index !== undefined && (
+        <PickNumberBadge index={index} variant={pickNumberVariant} size={avatarSize === 'small' ? 'small' : avatarSize === 'medium' ? 'medium' : 'large'} />
+      )}
+      <PlayerAvatar 
+        headshotUrl={headshotUrl} 
+        displayName={player.displayName} 
+        size={avatarSize}
+        borderColor={borderColor}
+      />
+      {teamLogo && (
+        <img src={teamLogo} alt="" className="w-4 h-4 flex-shrink-0" />
+      )}
+      <div className="flex-1 min-w-0">
+        <div className={`text-white font-bold ${
+          avatarSize === 'small' ? 'text-[10px]' : 'text-sm'
+        } ${avatarSize === 'small' ? 'truncate block' : 'whitespace-nowrap overflow-hidden text-ellipsis'}`}>
+          {player.shortName}
+        </div>
+        <div className={`${textColor} ${
+          avatarSize === 'small' ? 'text-[9px]' : 'text-xs'
+        } ${avatarSize === 'small' ? '' : 'whitespace-nowrap overflow-hidden text-ellipsis'}`}>
+          {player.position.abbreviation}{player.jersey && ` • #${player.jersey}`}
+        </div>
+      </div>
+      {showScore && showStats && (
+        <ScoreDisplay 
+          score={score} 
+          size="medium" 
+          showStats={showStats} 
+          index={index || 0}
+        />
+      )}
+      {showScore && !showStats && avatarSize === 'small' && (
+        <div className={`${scoreColor} text-[10px] font-bold w-10 text-right flex-shrink-0`}>
+          {score} pts
+        </div>
+      )}
+    </>
+  );
+};
+
 interface DraggablePlayerCardProps {
   player: Athlete;
   index: number;
@@ -99,16 +205,13 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
         })
       }}
     >
-      <PlayerAvatar 
-        headshotUrl={headshotUrl} 
-        displayName={player.displayName} 
-        size="large"
+      <PlayerCardContent 
+        player={player}
+        headshotUrl={headshotUrl}
+        showPickNumber={false}
         borderColor="border-[#faafe8]/50"
+        textColor="text-[#faafe8]"
       />
-      <div className="flex-1 min-w-0">
-        <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
-        <div className="text-[#faafe8] text-xs">{player.position.abbreviation}{player.jersey && ` • #${player.jersey}`}</div>
-      </div>
     </div>
   );
 };
@@ -196,19 +299,15 @@ const MyPreview = () => {
       className="cursor-grabbing"
     >
       <div className="bg-[#181a23] rounded-lg p-3 border-2 border-[#faafe8] flex items-center gap-2 shadow-2xl shadow-[#faafe8]/50" style={{ minHeight: '58px', minWidth: '200px' }}>
-        <div className="w-5 h-5 rounded-full bg-[#faafe8] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
-          {item.index + 1}
-        </div>
-        <PlayerAvatar 
-          headshotUrl={headshotUrl} 
-          displayName={item.player.displayName} 
-          size="medium"
+        <PlayerCardContent 
+          player={item.player}
+          headshotUrl={headshotUrl}
+          index={item.index}
+          pickNumberVariant="pink"
+          avatarSize="medium"
           borderColor="border-[#faafe8]/50"
+          textColor="text-[#faafe8]"
         />
-        <div className="flex-1 min-w-0">
-          <div className="text-white font-bold text-xs truncate">{item.player.shortName}</div>
-          <div className="text-[#faafe8] text-[10px]">{item.player.position.abbreviation}</div>
-        </div>
       </div>
     </div>
   );
@@ -538,33 +637,20 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
             <div className="space-y-1">
               {selectedPlayers.map((player, idx) => {
                 const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
-                // Find team info
                 const isHome = homeRoster.some(p => p.id === player.id);
                 const teamLogo = isHome ? homeTeamLogo : awayTeamLogo;
                 
                 return (
                   <div key={player.id} className="flex items-center gap-2 bg-black/30 rounded p-1.5">
-                    <div className="w-4 h-4 rounded-full bg-[#00ffe7] text-black text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                      {idx + 1}
-                    </div>
-                    <PlayerAvatar 
-                      headshotUrl={headshotUrl} 
-                      displayName={player.displayName} 
-                      size="small"
-                      borderColor="border-[#00ffe7]/50"
+                    <PlayerCardContent 
+                      player={player}
+                      headshotUrl={headshotUrl}
+                      index={idx}
+                      avatarSize="small"
+                      teamLogo={teamLogo}
+                      showScore={true}
+                      score={currentSetScores[player.id] || 0}
                     />
-                    {teamLogo && (
-                      <img src={teamLogo} alt="" className="w-4 h-4 flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <span className="text-white text-[10px] font-bold truncate block">{player.shortName}</span>
-                    </div>
-                    <div className="text-[#b0b7bf] text-[9px] w-8 text-center flex-shrink-0">
-                      {player.position.abbreviation}
-                    </div>
-                    <div className="text-[#00ffe7] text-[10px] font-bold w-10 text-right flex-shrink-0">
-                      {currentSetScores[player.id] || 0} pts
-                    </div>
                   </div>
                 );
               })}
@@ -638,9 +724,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                               key={`empty-current-${idx}`}
                               className="bg-[#181a23]/50 rounded-lg p-4 border border-dashed border-[#00ffe7]/20 flex items-center gap-4 h-[72px]"
                             >
-                              <div className="w-7 h-6 rounded-full bg-[#00ffe7]/20 text-[#00ffe7] font-bold text-xs flex items-center justify-center flex-shrink-0">
-                                {idx + 1}
-                              </div>
+                              <PickNumberBadge index={idx} variant="cyan-ghost" size="large" />
                               <div className="text-[#b0b7bf] text-sm">Empty Slot</div>
                             </div>
                           );
@@ -648,7 +732,6 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
                         const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
                         const playerScore = currentSetScores[player.id] || 0;
-                        // Check if THIS specific pick is being replaced by checking if there's a new pick at this index
                         const isBeingReplaced = isAnimating && newPicks[idx] && newPicks[idx].id !== player.id;
                         
                         return (
@@ -665,31 +748,14 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
                                 : 'opacity 1000ms ease-in-out, width 800ms ease-in-out'
                             }}
                           >
-                            <div className="w-7 h-6 rounded-full bg-[#00ffe7] text-black font-bold text-xs flex items-center justify-center flex-shrink-0">
-                              {idx + 1}
-                            </div>
-                            <PlayerAvatar 
-                              headshotUrl={headshotUrl} 
-                              displayName={player.displayName} 
-                              size="large"
-                              borderColor="border-[#00ffe7]/50"
+                            <PlayerCardContent 
+                              player={player}
+                              headshotUrl={headshotUrl}
+                              index={idx}
+                              showScore={(isLocked || !isRosterOpen) && showStats}
+                              score={playerScore}
+                              showStats={showStats}
                             />
-                            <div className="flex-1 min-w-0">
-                              <div className="text-white font-bold text-sm whitespace-nowrap overflow-hidden text-ellipsis">{player.shortName}</div>
-                              <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis">
-                                {player.position.abbreviation}{player.jersey && ` • #${player.jersey}`}
-                              </div>
-                            </div>
-                            
-                            {/* Score - Show when not actively picking players */}
-                            {(isLocked || !isRosterOpen) && showStats && (
-                              <ScoreDisplay 
-                                score={playerScore} 
-                                size="medium" 
-                                showStats={showStats} 
-                                index={idx}
-                              />
-                            )}
                           </div>
                         );
                       })}

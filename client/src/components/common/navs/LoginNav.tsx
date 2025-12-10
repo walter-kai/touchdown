@@ -19,9 +19,9 @@ const LoginNav: React.FC = () => {
 							alt="Drive"
 							className="h-8 w-8 rounded-sm shadow-[0_0_12px_rgba(0,255,231,0.25)]"
 						/>
-						<div className="flex flex-col leading-tight">
+						<div className="flex  leading-tight">
 							<span className="text-[#e0e7ef] font-semibold tracking-wide">NFL Drive</span>
-							<span className="text-xs text-[#00ffe7]">v1.1</span>
+							<span className="ml-2 text-xs text-[#00ffe7]">v1.1</span>
 						</div>
 					</button>
 
