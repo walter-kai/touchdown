@@ -107,125 +107,121 @@ const TopPicks: React.FC<TopPicksProps> = ({
     <div className="space-y-4">
       {/* Divider */}
     <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>  
-      <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#00ffe7]/10">
-        <h3 className="text-[#00ffe7] font-bold text-3xl uppercase tracking-wide">Top Picks</h3>
-        {userTotalScore > 0 && (
-          <div className="bg-gradient-to-r from-[#00ffe7]/20 to-[#faafe8]/20 border border-[#00ffe7]/50 rounded-lg px-4 py-2">
-            <span className="text-[#b0b7bf] text-xs">YOUR TOTAL</span>
-            <span className="text-[#00ffe7] font-bold text-2xl ml-3">{userTotalScore}</span>
-            <span className="text-[#b0b7bf] text-xs ml-1">pts</span>
+      <div className='mx-2'>
+          <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#00ffe7]/10 min-h-[66px]">
+            <h3 className="text-[#00ffe7] font-bold text-2xl uppercase tracking-wide">Top Picks</h3>
+            {userTotalScore > 0 && (
+              <div className="bg-gradient-to-r from-[#00ffe7]/20 to-[#faafe8]/20 border border-[#00ffe7]/50 rounded-lg px-4 py-2">
+                <span className="text-[#b0b7bf] text-xs">YOUR TOTAL</span>
+                <span className="text-[#00ffe7] font-bold text-2xl ml-3">{userTotalScore}</span>
+                <span className="text-[#b0b7bf] text-xs ml-1">pts</span>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-
-      <div className="space-y-3">
-        {topPicks.map((player, index) => {
-          const team = player.teamId === homeTeam?.id ? homeTeam : awayTeam;
-          const teamColor = team?.team?.color || '00ffe7';
-          const isHome = player.teamId === homeTeam?.id;
+          <div className="space-y-3">
+            {topPicks.map((player, index) => {
+              const team = player.teamId === homeTeam?.id ? homeTeam : awayTeam;
+              const teamColor = team?.team?.color || '00ffe7';
+              const isHome = player.teamId === homeTeam?.id;
           
-          return (
-            <div
-              key={player.id}
-              className={`
-                relative overflow-hidden rounded-lg border-2 transition-all
-                ${player.isUserPick 
-                  ? 'bg-[#181a23]/90 border-[#00ffe7] shadow-lg shadow-[#00ffe7]/20' 
-                  : 'bg-[#181a23]/90 border-[#00ffe7]/10 hover:border-[#00ffe7]/30'
-                }
-              `}
-            >
-              {/* Large team logo background */}
-              <img 
-                src={getTeamLogo(team)} 
-                alt="" 
-                className="absolute right-[10%] top-1/2 -translate-y-1/2 opacity-10 pointer-events-none"
-                style={{
-                  width: '120px',
-                  height: '120px',
-                  objectFit: 'contain'
-                }}
-              />
-
-              <div className="p-4 flex items-center gap-4 relative z-10">
-                {/* Rank */}
-                <div className={`
-                  flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
-                  ${index === 0 ? 'bg-yellow-500/20 text-yellow-400 border-2 border-yellow-400' :
-                    index === 1 ? 'bg-gray-400/20 text-gray-300 border-2 border-gray-300' :
-                    index === 2 ? 'bg-orange-600/20 text-orange-400 border-2 border-orange-400' :
-                    'bg-[#00ffe7]/10 text-[#00ffe7] border border-[#00ffe7]/30'}
-                `}>
-                  {index + 1}
-                </div>
-
-                {/* Player Image */}
-                <div className="flex-shrink-0">
+              return (
+                <div
+                  key={player.id}
+                  className={`
+                    relative overflow-hidden rounded-lg border-2 transition-all
+                    ${player.isUserPick
+                      ? 'bg-[#181a23]/90 border-[#00ffe7] shadow-lg shadow-[#00ffe7]/20'
+                      : 'bg-[#181a23]/90 border-[#00ffe7]/10 hover:border-[#00ffe7]/30'
+                    }
+                  `}
+                >
+                  {/* Large team logo background */}
                   <img
-                    src={player.headshot}
-                    alt={player.displayName}
-                    className={`
-                      w-16 h-16 rounded-full border-2 object-cover
-                      ${player.isUserPick ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
-                    `}
-                    onError={(e) => {
-                      e.currentTarget.src = `https://via.placeholder.com/64?text=${player.shortName}`;
+                    src={getTeamLogo(team?.team)}
+                    alt=""
+                    className="absolute right-[10%] top-1/2 -translate-y-1/2 opacity-10 pointer-events-none"
+                    style={{
+                      width: '120px',
+                      height: '120px',
+                      objectFit: 'contain'
                     }}
                   />
-                </div>
-
-                {/* Player Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className={`font-bold text-lg truncate ${player.isUserPick ? 'text-[#00ffe7]' : 'text-white'}`}>
-                      {player.shortName || player.displayName}
-                    </h4>
-                    {player.isUserPick && (
-                      <span className="bg-[#00ffe7] text-black text-xs font-bold px-2 py-0.5 rounded">
-                        YOUR PICK
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="text-[#b0b7bf]">
-                      {player.position} • #{player.jersey}
-                    </span>
-                    <div className="flex items-center gap-1">
+                  <div className="p-4 flex items-center gap-4 relative z-10">
+                    {/* Rank */}
+                    <div className={`
+                      flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
+                      ${index === 0 ? 'bg-yellow-500/20 text-yellow-400 border-2 border-yellow-400' :
+                        index === 1 ? 'bg-gray-400/20 text-gray-300 border-2 border-gray-300' :
+                        index === 2 ? 'bg-orange-600/20 text-orange-400 border-2 border-orange-400' :
+                        'bg-[#00ffe7]/10 text-[#00ffe7] border border-[#00ffe7]/30'}
+                    `}>
+                      {index + 1}
+                    </div>
+                    {/* Player Image */}
+                    <div className="flex-shrink-0">
                       <img
-                        src={getTeamLogo(team)}
-                        alt=""
-                        className="w-4 h-4"
+                        src={player.headshot}
+                        alt={player.displayName}
+                        className={`
+                          w-16 h-16 rounded-full border-2 object-cover
+                          ${player.isUserPick ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
+                        `}
+                        onError={(e) => {
+                          e.currentTarget.src = `https://via.placeholder.com/64?text=${player.shortName}`;
+                        }}
                       />
-                      <span className="text-[#b0b7bf] text-xs">
-                        {team?.team?.displayName}
-                      </span>
+                    </div>
+                    {/* Player Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className={`font-bold text-lg truncate ${player.isUserPick ? 'text-[#00ffe7]' : 'text-white'}`}>
+                          {player.shortName || player.displayName}
+                        </h4>
+                        {player.isUserPick && (
+                          <span className="bg-[#00ffe7] text-black text-xs font-bold px-2 py-0.5 rounded">
+                            YOUR PICK
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="text-[#b0b7bf]">
+                          {player.position} • #{player.jersey}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <img
+                            src={getTeamLogo(team)}
+                            alt=""
+                            className="w-4 h-4"
+                          />
+                          <span className="text-[#b0b7bf] text-xs">
+                            {team?.team?.displayName}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Score */}
+                    <div className="flex-shrink-0 text-right">
+                      <div className={`
+                        text-3xl font-bold
+                        ${player.isUserPick ? 'text-[#00ffe7]' : 'text-white'}
+                      `}>
+                        {player.score}
+                      </div>
+                      <div className="text-[#b0b7bf] text-xs">
+                        {player.score === 1 ? 'pt' : 'pts'}
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Score */}
-                <div className="flex-shrink-0 text-right">
-                  <div className={`
-                    text-3xl font-bold
-                    ${player.isUserPick ? 'text-[#00ffe7]' : 'text-white'}
-                  `}>
-                    {player.score}
-                  </div>
-                  <div className="text-[#b0b7bf] text-xs">
-                    {player.score === 1 ? 'pt' : 'pts'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Legend */}
-      <div className="mt-6 p-3 bg-[#1a1d2e]/30 rounded-lg border border-[#00ffe7]/10">
-        <p className="text-[#b0b7bf] text-xs text-center">
-          Players highlighted in <span className="text-[#00ffe7]">cyan</span> are your selected picks
-        </p>
+              );
+            })}
+          </div>
+          {/* Legend */}
+          <div className="mt-6 p-3 bg-[#1a1d2e]/30 rounded-lg border border-[#00ffe7]/10">
+            <p className="text-[#b0b7bf] text-xs text-center">
+              Players highlighted in <span className="text-[#00ffe7]">cyan</span> are your selected picks
+            </p>
+          </div>
       </div>
     </div>
   );

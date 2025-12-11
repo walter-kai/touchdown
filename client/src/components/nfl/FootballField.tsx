@@ -134,12 +134,12 @@ const FootballField: React.FC<FootballFieldProps> = ({
             <marker
               id="arrowhead"
               markerWidth="10"
-              markerHeight="8"
-              refX="10"
-              refY="4"
+              markerHeight="10"
+              refX="9"
+              refY="5"
               orient="auto"
             >
-              <polygon points="0 0, 10 4, 0 8" fill="#00ffe7" />
+              <polygon points="0 0, 10 5, 0 10" fill="#00ffe7" />
             </marker>
           </defs>
           <line

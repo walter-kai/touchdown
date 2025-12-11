@@ -142,7 +142,7 @@ const App: React.FC = () => {
       <div className="relative z-10 flex flex-col min-h-screen">
         
         {/* Main content area that grows to fill space */}
-        <div className="flex-1 relative mx-2 pt-14">
+        <div className="flex-1 relative mx-0 pt-14">
           <TransitionGroup component={null}>
             <CSSTransition
               key={location.pathname}

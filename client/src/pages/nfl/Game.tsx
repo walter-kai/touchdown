@@ -383,15 +383,19 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
     setCountdown(0); // Trigger immediate refresh
   };
 
-  if (error || !event) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a] flex items-center justify-center pb-20">
         <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-8 text-center max-w-md">
           <p className="text-red-400 font-bold mb-2 text-lg">Error loading game</p>
-          <p className="text-[#e0e7ef]">{error || 'Game not found'}</p>
+          <p className="text-[#e0e7ef]">{error}</p>
         </div>
       </div>
     );
+  }
+
+  if (!event) {
+    return null; // Loading state, don't show error
   }
 
   // Helper function to get logo URL - handles both scoreboard (logo string) and summary (logos array of TeamLogo)

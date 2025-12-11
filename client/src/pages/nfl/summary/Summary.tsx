@@ -5,6 +5,7 @@ import PredictionChart from '@/components/nfl/PredictionChart';
 import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
 import GameLeaders from '@/pages/nfl/summary/GameLeaders';
 import SelectedAthletes from '@/components/nfl/SelectedAthletes';
+import VenueInfo from '@/components/VenueInfo';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
 
@@ -109,8 +110,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   }, [activeTab]);
 
   return (
-    <div className="pb-24">
-      <div className="max-w-7xl mx-auto py-8 px-4">
+    <div className="">
+      <div className="max-w-7xl mx-auto">
         {/* Carousel Container */}
         <div className="overflow-hidden relative">
           <div
@@ -119,7 +120,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             style={{ width: '500%' }}
           >
             {/* Info Section */}
-            <div className="w-full flex-shrink-0 space-y-6 py-4 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 space-y-6 py-4 overflow-y-auto" style={{ width: '20%' }}>
               {/* Box Score */}
               <div className="mb-6">
                 {/* Boxscore Component */}
@@ -201,77 +202,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 awayTeamId={awayTeam?.id}
               />
 
-              {/* Venue & Game Information */}
-              <div className="overflow-hidden">
-                {/* Venue image if available from summary */}
-                {summary?.gameInfo?.venue?.images && summary.gameInfo.venue.images.length > 0 && (
-                  <div className="relative h-24 overflow-hidden mb-4">
-                    <img 
-                      src={summary.gameInfo.venue.images[0].href}
-                      alt="Venue"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#181a23]" />
-                    <div className="absolute bottom-2 left-4">
-                      <h4 className="text-[#00ffe7] font-bold text-sm flex items-center gap-1">
-                        <FaFootballBall className="text-xs" />
-                        {summary.gameInfo.venue.fullName || competition.venue?.fullName}
-                      </h4>
-                      <p className="text-[#e0e7ef] text-xs">
-                        {summary.gameInfo.venue.address?.city || competition.venue?.address?.city}, {summary.gameInfo.venue.address?.state || competition.venue?.address?.state}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {competition.venue && (
-                  <div className="p-4">
-                    {!summary?.gameInfo?.venue?.images?.length && (
-                      <div className="mb-3">
-                        <h4 className="text-[#00ffe7] font-bold text-sm flex items-center gap-1 mb-1">
-                          <FaFootballBall className="text-xs" />
-                          {competition.venue.fullName}
-                        </h4>
-                        {competition.venue.address && (
-                          <p className="text-[#e0e7ef] text-xs">
-                            {competition.venue.address.city}, {competition.venue.address.state}
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Game Info Grid */}
-                    <div className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1 text-xs">
-                        {summary?.gameInfo?.attendance && (
-                          <>
-                            <span className="text-[#b0b7bf]">Attendance:</span>
-                            <span className="text-[#e0e7ef] font-semibold">{summary.gameInfo.attendance.toLocaleString()}</span>
-                          </>
-                        )}
-                        {!summary?.gameInfo?.attendance && competition.attendance && (
-                          <>
-                            <span className="text-[#b0b7bf]">Attendance:</span>
-                            <span className="text-[#e0e7ef] font-semibold">{competition.attendance.toLocaleString()}</span>
-                          </>
-                        )}
-                        {competition.broadcasts && competition.broadcasts.length > 0 && (
-                          <>
-                            <span className="text-[#b0b7bf]">Network:</span>
-                            <span className="text-[#e0e7ef] font-semibold">{competition.broadcasts[0].names?.[0] || competition.broadcasts[0].market}</span>
-                          </>
-                        )}
-                        {competition.notes && competition.notes.length > 0 && (
-                          <>
-                            <span className="text-[#b0b7bf]">Notes:</span>
-                            <span className="text-[#e0e7ef] font-semibold">{competition.notes[0].headline}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Venue Information */}
+              {/* <VenueInfo competition={competition} summary={summary} /> */}
             </div>
 
             {/* Player Statistics Section */}

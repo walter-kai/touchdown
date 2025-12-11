@@ -66,7 +66,7 @@ const Boxscore: React.FC<BoxscoreProps> = ({
 
         {/* Game Status */}
         <div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#00ffe7]/20">
-          <p className="text-[#b0b7bf] text-xs mb-1">Status</p>
+          <p className="text-[#b0b7bf] text-xs mb-1">{competition.status.type.state === 'pre' ? 'Starts In' : 'Status'}</p>
           {competition.status.type.state === 'in' ? (
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
@@ -77,11 +77,8 @@ const Boxscore: React.FC<BoxscoreProps> = ({
             <span className="text-[#b0b7bf] font-bold text-lg">FINAL</span>
           ) : (
             <div>
-              <span className="text-[#00ffe7] font-bold text-sm block">STARTS IN</span>
-              <span className="text-[#e0e7ef] font-bold">
+              <span className="text-[#e0e7ef] font-bold text-lg">
                 {(() => {
-                  if (gameCountdown <= 0) return 'Soon';
-                  
                   const days = Math.floor(gameCountdown / (1000 * 60 * 60 * 24));
                   const hours = Math.floor((gameCountdown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                   const minutes = Math.floor((gameCountdown % (1000 * 60 * 60)) / (1000 * 60));
