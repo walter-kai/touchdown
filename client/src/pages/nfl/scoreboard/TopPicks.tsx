@@ -216,12 +216,6 @@ const TopPicks: React.FC<TopPicksProps> = ({
               );
             })}
           </div>
-          {/* Legend */}
-          <div className="mt-6 p-3 bg-[#1a1d2e]/30 rounded-lg border border-[#00ffe7]/10">
-            <p className="text-[#b0b7bf] text-xs text-center">
-              Players highlighted in <span className="text-[#00ffe7]">cyan</span> are your selected picks
-            </p>
-          </div>
       </div>
     </div>
   );

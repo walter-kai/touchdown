@@ -8,6 +8,7 @@ import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
 import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
 import FootballField from '@/components/nfl/FootballField';
 import GameLeaders from '@/pages/nfl/summary/GameLeaders';
+import PlayLog from '@/components/nfl/PlayLog';
 import type { Event } from '@/types/espn/scoreboard';
 
 interface ScoreboardViewProps {
@@ -66,7 +67,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   const getTabIndex = (tab: string) => {
     const scoreboardTabs = isGameUpcoming
       ? ['info', 'odds', 'headtohead']
-      : ['info', 'pick', 'player', 'plays', 'odds', 'headtohead'];
+      : ['info', 'pick', 'player', 'odds', 'headtohead'];
     return scoreboardTabs.indexOf(tab);
   };
 
@@ -75,7 +76,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
     if (carouselRef.current) {
       const index = getTabIndex(activeTab);
       if (index !== -1) {
-        const totalSlides = isGameUpcoming ? 3 : 6;
+        const totalSlides = isGameUpcoming ? 3 : 5;
         const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -121,10 +122,10 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
           <div
             ref={carouselRef}
             className="flex transition-transform duration-500 ease-in-out"
-            style={{ width: isGameUpcoming ? '300%' : '600%' }}
+            style={{ width: isGameUpcoming ? '300%' : '500%' }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 py-4 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 py-4 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
 
               <div className='mx-2'>
                 {/* Box Score */}
@@ -188,51 +189,18 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                                   </div>
                                 </div>
                               </div>
-                              {/* Latest Play */}
-                              {playLog.length > 0 && (() => {
-                                const latestPlay = playLog[0];
-                                const team = latestPlay.possession === homeTeam?.id ? homeTeam : awayTeam;
-                                const isHome = team?.id === homeTeam?.id;
-                                return (
-                                  <div className="mt-4">
-                                    <div className="text-[#b0b7bf] text-xs mb-2 flex items-center gap-2">
-                                      <FaFootballBall className="text-[#00ffe7]" />
-                                      Latest Play
-                                    </div>
-                                    <div className={`bg-gradient-to-r ${isHome ? 'from-[#faafe8]/10' : 'from-[#00ffe7]/10'} rounded-lg p-3 border-l-2 ${isHome ? 'border-[#faafe8]' : 'border-[#00ffe7]'}`}>
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <img src={getTeamLogo(team?.team)} alt="" className="w-5 h-5" />
-                                        <span className={`text-xs font-bold ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
-                                          Q{latestPlay.quarter} {latestPlay.clock}
-                                        </span>
-                                      </div>
-                                      {/* Player headshots */}
-                                      {latestPlay.athletesInvolved && latestPlay.athletesInvolved.length > 0 && (
-                                        <div className="flex gap-2 mb-2">
-                                          {latestPlay.athletesInvolved.slice(0, 3).map((athlete, idx) => (
-                                            athlete.headshot && (
-                                              <div key={idx} className="flex items-center gap-1">
-                                                <img
-                                                  src={athlete.headshot}
-                                                  alt={athlete.displayName}
-                                                  className="w-8 h-8 rounded-full border-2 border-[#00ffe7]/30"
-                                                />
-                                                <div className="flex flex-col">
-                                                  <span className="text-[#e0e7ef] text-xs font-semibold">{athlete.shortName}</span>
-                                                  <span className="text-[#b0b7bf] text-[10px]">{athlete.position}</span>
-                                                </div>
-                                              </div>
-                                            )
-                                          ))}
-                                        </div>
-                                      )}
-                                      <p className="text-[#e0e7ef] text-xs">
-                                        {latestPlay.text}
-                                      </p>
-                                    </div>
-                                  </div>
-                                );
-                              })()}
+
+                              {/* Play Log */}
+                              <div className="mt-4">
+                                <PlayLog
+                                  playLog={playLog}
+                                  homeTeam={homeTeam}
+                                  awayTeam={awayTeam}
+                                  getTeamLogo={getTeamLogo}
+                                  title="Play Log"
+                                  showTitle={true}
+                                />
+                              </div>
                             </div>
                             {/* Game Leaders */}
                             <div className="mt-4">
@@ -306,7 +274,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
             {/* Pick Section - Top Picks & Your Picks */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-4 overflow-y-auto min-h-screen" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
                 {/* Top Picks - All Players Who Scored */}
                 {homeTeam?.id && awayTeam?.id && (
                   <div className="">
@@ -352,7 +320,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
             {/* Player Section */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '16.666%' }}>
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
                 <div className="space-y-4">
                   <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                     <FaTrophy />
@@ -415,124 +383,8 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
               </div>
             )}
 
-            {/* Plays Section */}
-            {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '16.666%' }}>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
-                    <FaFootballBall />
-                    Play Log
-                  </h3>
-                  {playLog.length > 0 && (
-                    <span className="text-[#b0b7bf] text-xs">
-                      {playLog.length} {playLog.length === 1 ? 'play' : 'plays'}
-                    </span>
-                  )}
-                </div>
-
-                {playLog.length > 0 ? (
-                  <div className="space-y-4">
-                    {(() => {
-                      // Group plays by possession with better logic
-                      const groupedPlays: Array<{
-                        possession: string | undefined;
-                        team: any;
-                        plays: typeof playLog;
-                      }> = [];
-                      
-                      playLog.forEach((play, idx) => {
-                        const team = play.possession === homeTeam?.id ? homeTeam : awayTeam;
-                        const lastGroup = groupedPlays[groupedPlays.length - 1];
-                        
-                        // Group if same possession OR if both are undefined/null (same team)
-                        const isSamePossession = lastGroup && (
-                          (lastGroup.possession === play.possession && play.possession !== undefined) ||
-                          (lastGroup.team?.id === team?.id && (!lastGroup.possession || !play.possession))
-                        );
-                        
-                        if (isSamePossession) {
-                          lastGroup.plays.push(play);
-                        } else {
-                          groupedPlays.push({
-                            possession: play.possession,
-                            team,
-                            plays: [play]
-                          });
-                        }
-                      });
-
-                      return groupedPlays.map((group, groupIdx) => {
-                        const isHome = group.team?.id === homeTeam?.id;
-                        const borderColor = isHome ? 'border-[#faafe8]' : 'border-[#00ffe7]';
-                        const bgGradient = isHome ? 'from-[#faafe8]/10' : 'from-[#00ffe7]/10';
-                        const textColor = isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]';
-
-                        return (
-                          <div
-                            key={`possession-${groupIdx}`}
-                            className={`p-3 bg-gradient-to-r ${bgGradient} border-l-4 ${borderColor} rounded-lg`}
-                          >
-                            {/* Possession Header - shown once per group */}
-                            <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
-                              <div className="flex items-center gap-2">
-                                {group.team && (
-                                  <img
-                                    src={getTeamLogo(group.team.team)}
-                                    alt={group.team.team.displayName}
-                                    className="w-8 h-7"
-                                  />
-                                )}
-                                <span className={`${textColor} text-sm font-bold`}>
-                                  {group.team?.team.displayName || 'Unknown'}
-                                </span>
-                              </div>
-                              <span className="text-[#b0b7bf] text-xs">
-                                {group.plays.length} {group.plays.length === 1 ? 'play' : 'plays'}
-                              </span>
-                            </div>
-
-                            {/* Plays in this possession */}
-                            <div className="space-y-2">
-                              {group.plays.map((play, playIdx) => {
-                                const primaryAthlete = play.athletesInvolved && play.athletesInvolved.length > 0 ? play.athletesInvolved[0] : null;
-                                const headshotUrl = primaryAthlete?.headshot;
-
-                                return (
-                                  <div key={`play-${groupIdx}-${playIdx}`} className="flex items-start gap-2 py-1">
-                                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                                      {headshotUrl && (
-                                        <img
-                                          src={headshotUrl}
-                                          alt={primaryAthlete.displayName}
-                                          className="w-9 h-8 rounded-full object-cover border-2 border-white/30 flex-shrink-0"
-                                        />
-                                      )}
-                                      <div className="min-w-0 flex-1">
-                                        <div className="flex items-baseline gap-2 mb-1">
-                                          <span className={`${textColor} text-[10px] font-bold`}>
-                                            Q{play.quarter} - {play.clock}
-                                          </span>
-                                        </div>
-                                        <p className="text-[#e0e7ef] text-sm leading-snug">{play.text}</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                ) : (
-                  <p className="text-[#b0b7bf] text-center py-8">No plays recorded yet.</p>
-                )}
-              </div>
-            )}
-
             {/* Odds Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
               <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                 <FaChartBar />
                 Betting Odds
@@ -557,7 +409,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}

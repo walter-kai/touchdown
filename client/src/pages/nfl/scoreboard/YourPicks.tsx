@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus, FaCrosshairs, FaHandPointer, FaListUl } from 'react-icons/fa';
+import PlayLog from '@/components/nfl/PlayLog';
 import LoadingFootball from '../../../components/common/LoadingFootball';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend, getEmptyImage } from 'react-dnd-html5-backend';
@@ -337,6 +338,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
   const [isLockingIn, setIsLockingIn] = useState(false);
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
   const [showGameLog, setShowGameLog] = useState(false);
+  const [allPlayerScores, setAllPlayerScores] = useState<Record<string, number>>({});
 
   // Load saved state from localStorage and backend
   useEffect(() => {
@@ -481,6 +483,32 @@ const YourPicks: React.FC<PlayerPickProps> = ({
 
     setCurrentSetScores(scores);
   }, [playLog, selectedPlayers, homeTeamId, awayTeamId]);
+
+  // Calculate scores for all roster players
+  useEffect(() => {
+    if (homeRoster.length === 0 && awayRoster.length === 0) {
+      return;
+    }
+
+    const allPlayers = [...homeRoster, ...awayRoster];
+    const scores: Record<string, number> = {};
+
+    allPlayers.forEach(player => {
+      scores[player.id] = 0;
+      
+      playLog.forEach(play => {
+        if (play.athletesInvolved) {
+          play.athletesInvolved.forEach(athlete => {
+            if (athlete.id === player.id) {
+              scores[player.id]++;
+            }
+          });
+        }
+      });
+    });
+
+    setAllPlayerScores(scores);
+  }, [playLog, homeRoster, awayRoster]);
 
   // Cooldown timer
   useEffect(() => {
@@ -852,7 +880,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
               )}
             </div>
 
-            <div className="relative flex gap-4 mx-2">
+            <div className="relative flex gap-2 mx-2">
               {/* Current Picks Column */}
               <div 
                 className="transition-all duration-800 ease-in-out"
@@ -1000,44 +1028,27 @@ const YourPicks: React.FC<PlayerPickProps> = ({
             {/* Pick Button - Only show when not locked */}
             {!isLocked && (
               <div className="pb-2 mx-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => {
-                      if (!isRosterOpen && isExpanded) {
-                        setIsRosterOpen(true);
-                        setShowGameLog(false);
-                      } else if (isRosterOpen && showGameLog) {
-                        setShowGameLog(false);
-                      } else {
-                        setIsRosterOpen(!isRosterOpen);
-                        setShowGameLog(false);
-                      }
-                    }}
-                    className={`p-4 flex items-center justify-center gap-3 transition-all ${
-                      isRosterOpen && !showGameLog ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] rounded' : 'btn-standard'
-                    }`}>
-                    <FaHandPointer className="text-xl" />
-                    <span>{isRosterOpen && !showGameLog ? 'Close' : 'Pick Players'}</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (!isRosterOpen) {
-                        setIsRosterOpen(true);
-                        setShowGameLog(true);
-                      } else if (isRosterOpen && !showGameLog) {
-                        setShowGameLog(true);
-                      } else {
-                        setIsRosterOpen(false);
-                        setShowGameLog(false);
-                      }
-                    }}
-                    className={`p-4 flex items-center justify-center gap-3 transition-all ${
-                      isRosterOpen && showGameLog ? 'bg-[#faafe8]/20 border-2 border-[#faafe8] text-[#faafe8] rounded' : 'btn-standard'
-                    }`}>
-                    <FaListUl className="text-xl" />
-                    <span>{isRosterOpen && showGameLog ? 'Close' : 'Game Log'}</span>
-                  </button>
-                </div>
+                <button
+                  onClick={(e) => {
+                    const currentScrollY = window.scrollY;
+                    if (!isRosterOpen && isExpanded) {
+                      // Open roster - trigger both width change and fade together
+                      setIsRosterOpen(true);
+                    } else {
+                      // Toggle roster state
+                      setIsRosterOpen(!isRosterOpen);
+                    }
+                    // Prevent scroll jump by maintaining scroll position
+                    requestAnimationFrame(() => {
+                      window.scrollTo(0, currentScrollY);
+                    });
+                  }}
+                  className={`w-full p-4 flex items-center justify-center gap-3 ${
+                    isRosterOpen ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] rounded' : 'btn-standard'
+                  }`}>
+                  <FaHandPointer className="text-xl" />
+                  <span>{isRosterOpen ? 'Close' : 'Pick Players'}</span>
+                </button>
               </div>
             )}
 
@@ -1069,17 +1080,12 @@ const YourPicks: React.FC<PlayerPickProps> = ({
             )}
             {/* Team Selector & Roster - Show when roster is open and not locked */}
             {!isLocked && isRosterOpen && (
-              <div className="relative">
-              {/* Roster View */}
-              <div className={`transition-opacity duration-300 ${
-                showGameLog ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'
-              }`}>
-              <>
+              <div className="animate-fade-in">
             {/* Team Selector */}
-            <div className="flex gap-0 mx-2">
+            <div className="flex mx-2">
               <button
                 onClick={() => setActiveTeam('home')}
-                className={`flex-1 py-3 rounded-tl-lg font-bold flex items-center justify-center gap-2 transition-all border ${
+                className={`flex-1 py-3 rounded-tl-[5px] font-bold flex items-center justify-center gap-2 transition-all border ${
                   activeTeam === 'home'
                     ? 'bg-[#faafe8]/20 border-[#faafe8]/50 text-[#faafe8]'
                     : 'bg-[#181a23] border-[#faafe8]/20 text-gray-400 hover:border-[#faafe8]/30'
@@ -1102,14 +1108,11 @@ const YourPicks: React.FC<PlayerPickProps> = ({
             </div>
 
             {/* Player List */}
-            <div className="bg-[#181a23]/90 rounded-b-lg border border-t-0 border-[#00ffe7]/20 px-2 py-4 mx-2">
-              <h4 className="text-[#00ffe7] font-bold mb-4 flex items-center gap-2">
-                {currentTeamLogo && <img src={currentTeamLogo} alt="" className="w-7 h-6" />}
-                {currentTeamInfo.name} Roster
-              </h4>
+            <div className="bg-[#181a23]/90 rounded-b-lg py-4 mx-2">
+
               
               {/* Split into Offense and Defense columns */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 {/* Offense Column */}
                 <div>
                   <h5 className="text-[#faafe8] font-bold text-sm mb-2">OFFENSE</h5>
@@ -1117,7 +1120,8 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                     {currentRoster.filter(player => {
                       const pos = typeof player.position === 'string' ? player.position : player.position?.abbreviation;
                       return ['QB', 'RB', 'WR', 'TE', 'FB', 'OL', 'OT', 'OG', 'C'].includes(pos);
-                    }).map((player) => {
+                    }).sort((a, b) => (allPlayerScores[b.id] || 0) - (allPlayerScores[a.id] || 0)).map((player) => {
+                      const playerScore = allPlayerScores[player.id] || 0;
                       const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
                       const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
                       const isDuplicate = isInCurrent && !isInNew;
@@ -1159,8 +1163,14 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                               {typeof player.position === 'string' ? player.position : player.position?.abbreviation} {player.jersey && `• #${player.jersey}`}
                             </div>
                           </div>
-                          {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs" />}
-                          {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs" />}
+                          {playerScore > 0 && (
+                            <div className="text-right flex-shrink-0">
+                              <div className="text-[#00ffe7] font-bold text-sm">{playerScore}</div>
+                              <div className="text-[#b0b7bf] text-[9px]">pts</div>
+                            </div>
+                          )}
+                          {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs ml-2" />}
+                          {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs ml-2" />}
                         </button>
                       );
                     })}
@@ -1174,7 +1184,8 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                     {currentRoster.filter(player => {
                       const pos = typeof player.position === 'string' ? player.position : player.position?.abbreviation;
                       return ['DE', 'DT', 'LB', 'CB', 'S', 'DB', 'DL', 'SAF', 'MLB', 'OLB'].includes(pos);
-                    }).map((player) => {
+                    }).sort((a, b) => (allPlayerScores[b.id] || 0) - (allPlayerScores[a.id] || 0)).map((player) => {
+                      const playerScore = allPlayerScores[player.id] || 0;
                       const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
                       const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
                       const isDuplicate = isInCurrent && !isInNew;
@@ -1216,8 +1227,14 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                               {typeof player.position === 'string' ? player.position : player.position?.abbreviation} {player.jersey && `• #${player.jersey}`}
                             </div>
                           </div>
-                          {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs" />}
-                          {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs" />}
+                          {playerScore > 0 && (
+                            <div className="text-right flex-shrink-0">
+                              <div className="text-[#00ffe7] font-bold text-sm">{playerScore}</div>
+                              <div className="text-[#b0b7bf] text-[9px]">pts</div>
+                            </div>
+                          )}
+                          {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs ml-2" />}
+                          {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs ml-2" />}
                         </button>
                       );
                     })}
@@ -1225,74 +1242,11 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 </div>
               </div>
             </div>
-        </>
-        </div>
-
-        {/* Game Log View */}
-        <div className={`transition-opacity duration-300 ${
-          !showGameLog ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'
-        }`}>
-          <div className="mx-2 bg-[#181a23]/90 rounded-lg border border-[#faafe8]/20 p-4">
-            <h4 className="text-[#faafe8] font-bold mb-4 flex items-center gap-2">
-              <FaListUl />
-              Game Log
-            </h4>
-            <div className="space-y-2 max-h-[600px] overflow-y-auto">
-              {playLog.length === 0 ? (
-                <div className="text-[#b0b7bf] text-center py-8">
-                  No plays recorded yet
-                </div>
-              ) : (
-                playLog.map((play, idx) => {
-                  const teamColor = play.possession === homeTeam?.id ? '#faafe8' : play.possession === awayTeam?.id ? '#00ffe7' : '#b0b7bf';
-                  const teamName = play.possession === homeTeam?.id ? homeTeam?.team.abbreviation : play.possession === awayTeam?.id ? awayTeam?.team.abbreviation : '';
-                  
-                  return (
-                    <div key={idx} className="bg-[#23263a]/50 rounded-lg p-3 border border-[#faafe8]/10 hover:border-[#faafe8]/30 transition-all">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="flex items-center gap-2">
-                          {teamName && (
-                            <span className="font-bold text-xs px-2 py-1 rounded" style={{ backgroundColor: `${teamColor}20`, color: teamColor }}>
-                              {teamName}
-                            </span>
-                          )}
-                          <span className="text-[#b0b7bf] text-xs">
-                            Q{play.quarter} • {play.clock}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-white text-sm leading-relaxed">{play.text}</p>
-                      {play.athletesInvolved && play.athletesInvolved.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {play.athletesInvolved.map((athlete, aIdx) => {
-                            const isSelected = selectedPlayers.some(p => p.id === athlete.id);
-                            return (
-                              <div key={aIdx} className={`flex items-center gap-2 px-2 py-1 rounded text-xs ${
-                                isSelected ? 'bg-[#00ffe7]/20 border border-[#00ffe7]/50 text-[#00ffe7]' : 'bg-[#23263a] text-[#b0b7bf]'
-                              }`}>
-                                {athlete.headshot && (
-                                  <img src={athlete.headshot} alt={athlete.shortName} className="w-4 h-4 rounded-full" />
-                                )}
-                                <span>{athlete.shortName}</span>
-                                <span className="opacity-60">{athlete.position}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </div>
         </div>
         )}
           </div>
         )}
-    
-    </div>
+      </div>
     </DndProvider>
   );
 };
