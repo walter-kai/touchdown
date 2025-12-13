@@ -1,31 +1,28 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall, FaUserAlt } from 'react-icons/fa';
-import { useAuth } from '@/providers/AuthContext';
+import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall } from 'react-icons/fa';
 
 interface GameNavBarProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks') => void;
-  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks') => void; // Called when button is clicked
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick') => void;
+  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick') => void; // Called when button is clicked
   preset?: 'scoreboard' | 'summary' | 'team' | 'player'; // Determines which buttons to show
   gameStatus?: 'pre' | 'in' | 'post'; // Game status to conditionally show tabs
 }
 
 const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabClick, preset = 'scoreboard', gameStatus }) => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
 
   // All available navigation items
   const allNavItems = [
     // { id: 'back', label: 'Scoreboard', icon: <FaArrowLeft />, action: () => navigate('/nfl') },
-    { id: 'info', label: preset === 'player' ? 'Overview' : 'Info', icon: <FaInfoCircle /> },
+    { id: 'info', label: preset === 'player' ? 'Overview' : preset === 'scoreboard' ? 'Pick' : 'Info', icon: <FaInfoCircle /> },
     { id: 'player', label: 'Players', icon: <FaTrophy /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
     { id: 'headtohead', label: 'Head to Head', icon: <FaExchangeAlt /> },
     { id: 'plays', label: 'Plays', icon: <FaFootballBall /> },
     { id: 'odds', label: 'Odds', icon: <FaChartLine /> },
-    { id: 'pick', label: 'Top Picks', icon: <FaTrophy /> },
-    { id: 'yourpicks', label: 'Your Picks', icon: <FaUserAlt />, requiresAuth: true },
+    { id: 'pick', label: 'Pick', icon: <FaTrophy /> },
     { id: 'prediction', label: 'Predictions', icon: <FaPercentage /> },
     { id: 'schedule', label: preset === 'player' ? 'Game Log' : 'Schedule', icon: <FaCalendar /> },
     { id: 'news', label: 'News', icon: <FaNewspaper /> },
@@ -33,22 +30,23 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
 
   // Preset configurations
   const presetConfig = {
-    scoreboard: ['info', 'pick', 'yourpicks', 'odds', 'headtohead'],
-    summary: ['info', 'player', 'team', 'prediction'],
+    scoreboard: ['info', 'pick', 'odds', 'headtohead'],
+    summary: ['info', 'player', 'team', 'plays', 'prediction'],
     team: ['info', 'schedule', 'news'], // Team page shows back, info, schedule, news
     player: ['info', 'schedule', 'news'], // Player page shows back, overview, game log, news
   };
 
-  // For upcoming games, only show info and pick
+  // For upcoming games, hide 'player' and 'pick' tabs regardless of preset
   const isUpcomingGame = gameStatus === 'pre';
-  const tabsToShow = isUpcomingGame && preset === 'scoreboard' ? ['info', 'pick'] : null;
+  const tabsToHide = isUpcomingGame ? ['player', 'pick'] : [];
+  
+  console.log('MainNavBar - gameStatus:', gameStatus, 'preset:', preset, 'isUpcomingGame:', isUpcomingGame, 'tabsToHide:', tabsToHide);
 
   // Filter nav items based on preset and maintain the order from presetConfig
-  const tabList = tabsToShow || presetConfig[preset];
-  const navItems = tabList
+  const navItems = presetConfig[preset]
+    .filter(id => !tabsToHide.includes(id))
     .map(id => allNavItems.find(item => item.id === id))
-    .filter((item): item is NonNullable<typeof item> => item !== undefined)
-    .filter(item => !item.requiresAuth || isAuthenticated); // Hide auth-required tabs when not logged in
+    .filter((item): item is NonNullable<typeof item> => item !== undefined);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#181a23] border-t border-[#00ffe7]/30 shadow-[0_-2px_24px_0_#00ffe7/20] backdrop-blur-md">

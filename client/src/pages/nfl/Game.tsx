@@ -13,8 +13,8 @@ import type { Summary } from '@/types/espn/summary';
 const FIRESTORE_API = '/api/playbyplay';
 
 interface NFLGameProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick') => void;
   onPresetChange: (preset: 'scoreboard' | 'summary') => void;
   onGameStatusChange?: (status: 'pre' | 'in' | 'post') => void;
   onRegisterTabClick?: (callback: (tab: string) => void) => void;
@@ -144,130 +144,240 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
     }
   }, [event, onGameStatusChange]);
 
-  // Shared fetch logic
-  const fetchGameData = async (isInitialLoad: boolean = false) => {
-    if (!gameId) return;
+  useEffect(() => {
+    const fetchGameData = async () => {
+      if (!gameId) return;
 
-    try {
-      if (isInitialLoad) {
-        showLoading('Loading game details...');
-      } else {
-        setIsRefreshing(true);
-      }
-      setError(null);
+      try {
+        if (!event) {
+          showLoading('Loading game details...');
+        } else {
+          setIsRefreshing(true);
+        }
+        setError(null);
 
-      let game: Event | undefined;
-      let gameStatus: string | undefined;
-      let usedSummaryApi = false;
+        let game: Event | undefined;
+        let gameStatus: string | undefined;
+        let usedSummaryApi = false;
 
-      // Fetch from scoreboard or test file
-      if (gameId === 'test') {
-        const response = await axios.get<ScoreboardResponse>('/scoreboard.json');
-        game = response.data.events?.[0];
-        gameStatus = game?.competitions[0].status.type.state;
-      } else {
-        const scoreboardResponse = await axios.get<ScoreboardResponse>(
-          `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`
-        );
-        game = scoreboardResponse.data.events?.find(e => e.id === gameId);
-        gameStatus = game?.competitions[0].status.type.state;
-        
-        // Use summary API only for post-game or if game not found
-        if (!game || gameStatus === 'post') {
-          try {
-            const summaryResponse = await axios.get<Summary>(
-              `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
-            );
-            setSummary(summaryResponse.data);
-            usedSummaryApi = true;
-            
-            if (!game && summaryResponse.data.header) {
-              game = summaryResponse.data.header as unknown as Event;
-            }
-          } catch (summaryErr) {
-            console.error('Error fetching summary data:', summaryErr);
-            if (!game && isInitialLoad) {
-              setError('Game not found');
-              hideLoading();
-              setIsRefreshing(false);
-              return;
+        // Check if gameId is "test" - use local JSON file
+        if (gameId === 'test') {
+          const response = await axios.get<ScoreboardResponse>('/scoreboard.json');
+          game = response.data.events?.[0];
+          gameStatus = game?.competitions[0].status.type.state;
+        } else {
+          // Try to find game in current week's scoreboard first
+          const scoreboardResponse = await axios.get<ScoreboardResponse>(
+            `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`
+          );
+          game = scoreboardResponse.data.events?.find(e => e.id === gameId);
+          gameStatus = game?.competitions[0].status.type.state;
+          
+          // Fetch summary API if:
+          // 1. Game not found in scoreboard (past/future games), OR
+          // 2. Game is not live (pre/post game)
+          if (!game || gameStatus !== 'in') {
+            try {
+              const summaryResponse = await axios.get<Summary>(
+                `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
+              );
+              console.log('Summary data fetched:', summaryResponse.data);
+              console.log('Drives in summary:', summaryResponse.data.drives);
+              setSummary(summaryResponse.data);
+              usedSummaryApi = true;
+              
+              // If game wasn't found in scoreboard, extract it from summary
+              if (!game && summaryResponse.data.header) {
+                game = summaryResponse.data.header as unknown as Event;
+              }
+            } catch (summaryErr) {
+              console.error('Error fetching summary data:', summaryErr);
+              if (!game) {
+                // If we have no game data at all, show error
+                setError('Game not found');
+                hideLoading();
+                setIsRefreshing(false);
+                return;
+              }
+              // Otherwise continue without summary data
             }
           }
         }
-      }
-      
-      if (!game) {
-        setError('Game data not available');
+        
+        if (!game) {
+          setError('Game data not available');
+          hideLoading();
+          setIsRefreshing(false);
+          return;
+        }
+        
+        // Check if last play has changed and update timestamp
+        if (game.competitions[0].situation?.lastPlay) {
+          const currentPlayText = game.competitions[0].situation.lastPlay.text;
+          const previousPlayText = event?.competitions[0].situation?.lastPlay?.text;
+          
+          // Only add if it's a new play AND not already in playLog (merge with historical plays)
+          if (currentPlayText !== previousPlayText) {
+            setPlayLog(prev => {
+              // Check for duplicates based on text, quarter, and similar timestamp
+              const isDuplicate = prev.some(p => 
+                p.text === currentPlayText && 
+                p.quarter === game.competitions[0].status.period &&
+                p.clock === game.competitions[0].status.displayClock
+              );
+              
+              if (!isDuplicate) {
+                const possession = game.competitions[0].situation?.possession;
+                const newPlay = {
+                  text: currentPlayText,
+                  quarter: game.competitions[0].status.period,
+                  clock: game.competitions[0].status.displayClock,
+                  timestamp: new Date(),
+                  yardage: game.competitions[0].situation?.lastPlay?.statYardage,
+                  possession: typeof possession,
+                  athletesInvolved: game.competitions[0].situation?.lastPlay?.athletesInvolved
+                };
+                console.log('➕ New play from ESPN merged with historical plays:', currentPlayText.substring(0, 50));
+                // Add to front of array (most recent first)
+                return [newPlay, ...prev];
+              }
+              return prev;
+            });
+          }
+        }
+        
+        // Set nav preset based on which API provided the data
+        const preset = usedSummaryApi ? 'summary' : 'scoreboard';
+        setNavPreset(preset);
+        onPresetChange(preset);
+        setEvent(game);
+        setLastUpdated(new Date());
+        setCountdown(30); // Reset countdown
         hideLoading();
         setIsRefreshing(false);
-        return;
+      } catch (err) {
+        console.error('Error fetching game data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load game data');
+        hideLoading();
+        setIsRefreshing(false);
       }
-      
-      // Add new plays to log
-      if (game.competitions[0].situation?.lastPlay) {
-        const currentPlayText = game.competitions[0].situation.lastPlay.text;
-        const previousPlayText = event?.competitions[0].situation?.lastPlay?.text;
-        
-        if (currentPlayText !== previousPlayText) {
-          setPlayLog(prev => {
-            const isDuplicate = prev.some(p => 
-              p.text === currentPlayText && 
-              p.quarter === game.competitions[0].status.period &&
-              p.clock === game.competitions[0].status.displayClock
-            );
-            
-            if (!isDuplicate) {
-              const newPlay = {
-                text: currentPlayText,
-                quarter: game.competitions[0].status.period,
-                clock: game.competitions[0].status.displayClock,
-                timestamp: new Date(),
-                yardage: game.competitions[0].situation?.lastPlay?.statYardage,
-                possession: typeof game.competitions[0].situation?.possession,
-                athletesInvolved: game.competitions[0].situation?.lastPlay?.athletesInvolved
-              };
-              return [newPlay, ...prev];
-            }
-            return prev;
-          });
-        }
-      }
-      
-      const preset = usedSummaryApi ? 'summary' : 'scoreboard';
-      setNavPreset(preset);
-      onPresetChange(preset);
-      setEvent(game);
-      setLastUpdated(new Date());
-      setCountdown(30);
-      hideLoading();
-      setIsRefreshing(false);
-    } catch (err) {
-      console.error('Error fetching game data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load game data');
-      hideLoading();
-      setIsRefreshing(false);
-    }
-  };
+    };
 
-  // Initial load
-  useEffect(() => {
-    fetchGameData(true);
+    fetchGameData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId]);
+  }, [gameId]); // Only re-run when gameId changes
 
-  // Auto-refresh countdown
+  // Countdown timer effect for auto-refresh (only for live games)
   useEffect(() => {
-    if (!event || navPreset === 'summary') return;
+    if (!event) return; // Don't start countdown until initial load
+    
+    // Only auto-refresh if using scoreboard API (live games)
+    if (navPreset === 'summary') return; // Don't refresh final games
     
     if (countdown <= 0) {
-      fetchGameData(false);
+      // Trigger a new fetch by updating a dependency
+      const fetchGameData = async () => {
+        if (!gameId) return;
+
+        try {
+          setIsRefreshing(true);
+          setError(null);
+
+          let game: Event | undefined;
+          let gameStatus: string | undefined;
+          let usedSummaryApi = false;
+
+          if (gameId === 'test') {
+            const response = await axios.get<ScoreboardResponse>('/scoreboard.json');
+            game = response.data.events?.[0];
+            gameStatus = game?.competitions[0].status.type.state;
+          } else {
+            const scoreboardResponse = await axios.get<ScoreboardResponse>(
+              `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`
+            );
+            game = scoreboardResponse.data.events?.find(e => e.id === gameId);
+            gameStatus = game?.competitions[0].status.type.state;
+          }
+          
+          if (!game || gameStatus !== 'in') {
+            try {
+              const summaryResponse = await axios.get<Summary>(
+                `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
+              );
+              setSummary(summaryResponse.data);
+              usedSummaryApi = true;
+              
+              if (!game && summaryResponse.data.header) {
+                game = summaryResponse.data.header as unknown as Event;
+              }
+            } catch (summaryErr) {
+              console.error('Error fetching summary data:', summaryErr);
+            }
+          }
+          
+          if (game) {
+            // Check if last play has changed and update timestamp
+            if (game.competitions[0].situation?.lastPlay) {
+              const currentPlayText = game.competitions[0].situation.lastPlay.text;
+              const previousPlayText = event?.competitions[0].situation?.lastPlay?.text;
+              
+              // Only add if it's a new play AND not already in playLog (merge with historical plays)
+              if (currentPlayText !== previousPlayText) {
+                setPlayLog(prev => {
+                  // Check for duplicates based on text, quarter, and similar timestamp
+                  const isDuplicate = prev.some(p => 
+                    p.text === currentPlayText && 
+                    p.quarter === game.competitions[0].status.period &&
+                    p.clock === game.competitions[0].status.displayClock
+                  );
+                  
+                  if (!isDuplicate) {
+                    const possession = game.competitions[0].situation?.possession;
+                    const newPlay = {
+                      text: currentPlayText,
+                      quarter: game.competitions[0].status.period,
+                      clock: game.competitions[0].status.displayClock,
+                      timestamp: new Date(),
+                      yardage: game.competitions[0].situation?.lastPlay?.statYardage,
+                      possession: typeof possession,
+                      athletesInvolved: game.competitions[0].situation?.lastPlay?.athletesInvolved
+                    };
+                    console.log('➕ New play from ESPN auto-refresh merged with historical plays');
+                    // Add to front of array (most recent first)
+                    return [newPlay, ...prev];
+                  }
+                  return prev;
+                });
+              }
+            }
+            
+            const preset = usedSummaryApi ? 'summary' : 'scoreboard';
+            setNavPreset(preset);
+            onPresetChange(preset);
+            setEvent(game);
+            setLastUpdated(new Date());
+          }
+          
+          setCountdown(30);
+          setIsRefreshing(false);
+        } catch (err) {
+          console.error('Error refreshing game data:', err);
+          setIsRefreshing(false);
+          setCountdown(30);
+        }
+      };
+
+      fetchGameData();
       return;
     }
 
-    const timer = setInterval(() => setCountdown((prev) => prev - 1), 1000);
+    const timer = setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countdown, gameId, navPreset]);
+  }, [countdown, gameId, navPreset]); // Removed event and playLog from dependencies
 
   const handleManualRefresh = () => {
     setCountdown(0); // Trigger immediate refresh

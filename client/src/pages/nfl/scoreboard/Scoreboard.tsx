@@ -1,10 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTrophy, FaFootballBall, FaChartBar, FaClock, FaPauseCircle, FaPercentage } from 'react-icons/fa';
-import { useAuth } from '@/providers/AuthContext';
+import { FaTrophy, FaFootballBall, FaChartBar, FaClock, FaPauseCircle } from 'react-icons/fa';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import ProbChart from '@/components/nfl/ProbabilityChart';
-import PredictionChart from '@/components/nfl/PredictionChart';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
 import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
 import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
@@ -15,8 +13,8 @@ import type { Event } from '@/types/espn/scoreboard';
 
 interface ScoreboardViewProps {
   event: Event;
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick') => void;
   getTeamLogo: (team: any) => string;
   playLog: Array<{
     text: string;
@@ -54,7 +52,6 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   onManualRefresh
 }) => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
   const carouselRef = useRef<HTMLDivElement>(null);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [isPickExpanded, setIsPickExpanded] = useState(true); // Default to true so picker is visible
@@ -69,10 +66,8 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   // Get tab index for carousel position
   const getTabIndex = (tab: string) => {
     const scoreboardTabs = isGameUpcoming
-      ? ['info', 'pick']
-      : isAuthenticated
-        ? ['info', 'pick', 'yourpicks', 'odds', 'headtohead']
-        : ['info', 'pick', 'odds', 'headtohead'];
+      ? ['info', 'odds', 'headtohead']
+      : ['info', 'pick', 'player', 'odds', 'headtohead'];
     return scoreboardTabs.indexOf(tab);
   };
 
@@ -81,13 +76,13 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
     if (carouselRef.current) {
       const index = getTabIndex(activeTab);
       if (index !== -1) {
-        const totalSlides = isGameUpcoming ? 2 : (isAuthenticated ? 5 : 4);
+        const totalSlides = isGameUpcoming ? 3 : 5;
         const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [activeTab, isGameUpcoming, isAuthenticated]);
+  }, [activeTab, isGameUpcoming]);
 
   // Rotate sentences for latest play display
   useEffect(() => {
@@ -127,10 +122,10 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
           <div
             ref={carouselRef}
             className="flex transition-transform duration-500 ease-in-out"
-            style={{ width: isGameUpcoming ? '200%' : (isAuthenticated ? '500%' : '400%') }}
+            style={{ width: isGameUpcoming ? '300%' : '500%' }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 py-4 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '50%' : (isAuthenticated ? '20%' : '25%') }}>
+            <div className="w-full flex-shrink-0 py-4 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
 
               <div className='mx-2'>
                 {/* Box Score */}
@@ -274,52 +269,12 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                   </div>
                 )}
 
-              {/* Pre-game Predictions & Head-to-Head Preview */}
-              {isGameUpcoming && homeTeam && awayTeam && (
-                <div className="mt-6 space-y-6">
-                  {/* Predictions Section */}
-                  <div className="mx-2">
-                    <h3 className="text-[#00ffe7] font-bold text-xl mb-4 flex items-center gap-2">
-                      <FaPercentage />
-                      AI Predictions
-                    </h3>
-                    <PredictionChart
-                      gameId={event.id}
-                      competitionId={competition.id}
-                      homeTeamInfo={{
-                        name: homeTeam.team.displayName,
-                        logo: getTeamLogo(homeTeam),
-                        color: homeTeam.team.color || '00ffe7'
-                      }}
-                      awayTeamInfo={{
-                        name: awayTeam.team.displayName,
-                        logo: getTeamLogo(awayTeam),
-                        color: awayTeam.team.color || 'faafe8'
-                      }}
-                    />
-                  </div>
-
-                  {/* Head-to-Head Preview */}
-                  <div className="mx-2">
-                    <h3 className="text-[#00ffe7] font-bold text-xl mb-4 flex items-center gap-2">
-                      <FaTrophy />
-                      Team Leaders
-                    </h3>
-                    <HeadToHead
-                      homeTeamId={homeTeam.id}
-                      awayTeamId={awayTeam.id}
-                      homeTeamName={homeTeam.team.displayName}
-                      awayTeamName={awayTeam.team.displayName}
-                    />
-                  </div>
-                </div>
-              )}
-
               {/* End of Info Section  */}
             </div>
 
-            {/* Top Picks Section */}
-            <div className="w-full flex-shrink-0 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '50%' : (isAuthenticated ? '20%' : '25%') }}>
+            {/* Pick Section - Top Picks & Your Picks */}
+            {!isGameUpcoming && (
+              <div className="w-full flex-shrink-0 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
                 {/* Top Picks - All Players Who Scored */}
                 {homeTeam?.id && awayTeam?.id && (
                   <div className="">
@@ -333,13 +288,9 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                     />
                   </div>
                 )}
-              </div>
-
-            {/* Your Picks Section - Only show when authenticated and not upcoming */}
-            {!isGameUpcoming && isAuthenticated && (
-              <div className="w-full flex-shrink-0 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
+                {/* Your Picks Section */}
                 {homeTeam?.id && awayTeam?.id && (
-                  <div className="">
+                  <div className="mt-4">
                     <YourPicks
                       gameId={event.id}
                       homeTeamId={homeTeam.id}
@@ -367,38 +318,98 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
               </div>
             )}
 
-            {/* Odds Section - Only for non-upcoming games */}
+            {/* Player Section */}
             {!isGameUpcoming && (
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isAuthenticated ? '20%' : '25%' }}>
-                <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
-                  <FaChartBar />
-                  Betting Odds
-                </h3>
+              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
                 <div className="space-y-4">
-                  {homeTeam && awayTeam && (
-                    <ProbChart
-                      gameId={event.id}
-                      competitionId={competition.id}
-                      gameStatus={competition.status.type.state}
-                      homeTeamInfo={{
-                        name: homeTeam.team.displayName,
-                        logo: getTeamLogo(homeTeam),
-                        color: homeTeam.team.color || '00ffe7'
-                      }}
-                      awayTeamInfo={{
-                        name: awayTeam.team.displayName,
-                        logo: getTeamLogo(awayTeam),
-                        color: awayTeam.team.color || 'faafe8'
-                      }}
-                    />
+                  <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                    <FaTrophy />
+                    Leaders
+                  </h3>
+                  {competition.leaders && competition.leaders.length > 0 ? (
+                    <div className="space-y-6">
+                      {competition.leaders.map((category, categoryIdx) => (
+                        <div key={`${category.name}-${categoryIdx}`} className="border-b border-[#00ffe7]/10 pb-6 last:border-b-0">
+                          <h4 className="text-[#b0b7bf] text-sm font-semibold mb-4">
+                            {category.displayName}
+                          </h4>
+                          <div className="space-y-3">
+                            {category.leaders.map((leader, leaderIdx) => {
+                              const headshot = leader.athlete.headshot;
+                              const headshotUrl = typeof headshot === 'string' ? headshot : headshot?.href;
+                              return (
+                                <button
+                                  key={`${leader.athlete.id}-${leaderIdx}`}
+                                  onClick={() => navigate(`/nfl/player/${leader.athlete.id}`)}
+                                  className="w-full text-left hover:bg-[#00ffe7]/5 rounded-lg p-2 transition-all group cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {headshotUrl ? (
+                                      <img
+                                        src={headshotUrl}
+                                        alt={leader.athlete.displayName}
+                                        className="w-10 h-10 rounded-full group-hover:scale-110 transition-transform object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-10 h-10 rounded-full bg-[#23263a] flex items-center justify-center group-hover:scale-110 transition-transform border-2 border-[#00ffe7]/30">
+                                        <FaFootballBall className="text-[#00ffe7] text-sm" />
+                                      </div>
+                                    )}
+                                    <div className="flex-1">
+                                      <p className="text-[#e0e7ef] font-bold text-sm group-hover:text-[#00ffe7] transition-colors">
+                                        {leader.athlete.displayName}
+                                      </p>
+                                      <p className="text-[#b0b7bf] text-xs">
+                                        {leader.athlete.position?.abbreviation || ''}
+                                      </p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-[#00ffe7] font-bold text-lg">
+                                        {leader.displayValue}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[#b0b7bf] text-center py-8">No player leaders available at this time.</p>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Head to Head Section - Only for non-upcoming games */}
-            {!isGameUpcoming && (
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isAuthenticated ? '20%' : '25%' }}>
+            {/* Odds Section */}
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
+              <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
+                <FaChartBar />
+                Betting Odds
+              </h3>
+              {homeTeam && awayTeam && (
+                <ProbChart
+                  gameId={event.id}
+                  competitionId={competition.id}
+                  gameStatus={competition.status.type.state}
+                  homeTeamInfo={{
+                    name: homeTeam.team.displayName,
+                    logo: getTeamLogo(homeTeam),
+                    color: homeTeam.team.color || '00ffe7'
+                  }}
+                  awayTeamInfo={{
+                    name: awayTeam.team.displayName,
+                    logo: getTeamLogo(awayTeam),
+                    color: awayTeam.team.color || 'faafe8'
+                  }}
+                />
+              )}
+            </div>
+
+            {/* Head to Head Section */}
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}
@@ -408,8 +419,6 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                 />
               )}
             </div>
-            )}
-
           </div>
         </div>
       </div>
