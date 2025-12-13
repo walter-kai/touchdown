@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTrophy, FaFootballBall, FaChartBar, FaClock, FaPauseCircle } from 'react-icons/fa';
+import { FaTrophy, FaFootballBall, FaChartBar, FaClock, FaPauseCircle, FaPercentage } from 'react-icons/fa';
 import { useAuth } from '@/providers/AuthContext';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import ProbChart from '@/components/nfl/ProbabilityChart';
+import PredictionChart from '@/components/nfl/PredictionChart';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
 import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
 import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
@@ -14,8 +15,8 @@ import type { Event } from '@/types/espn/scoreboard';
 
 interface ScoreboardViewProps {
   event: Event;
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks') => void;
   getTeamLogo: (team: any) => string;
   playLog: Array<{
     text: string;
@@ -68,7 +69,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   // Get tab index for carousel position
   const getTabIndex = (tab: string) => {
     const scoreboardTabs = isGameUpcoming
-      ? ['info', 'odds', 'headtohead']
+      ? ['info', 'pick']
       : isAuthenticated
         ? ['info', 'pick', 'yourpicks', 'odds', 'headtohead']
         : ['info', 'pick', 'odds', 'headtohead'];
@@ -80,7 +81,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
     if (carouselRef.current) {
       const index = getTabIndex(activeTab);
       if (index !== -1) {
-        const totalSlides = isGameUpcoming ? 3 : (isAuthenticated ? 5 : 4);
+        const totalSlides = isGameUpcoming ? 2 : (isAuthenticated ? 5 : 4);
         const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -126,10 +127,10 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
           <div
             ref={carouselRef}
             className="flex transition-transform duration-500 ease-in-out"
-            style={{ width: isGameUpcoming ? '300%' : (isAuthenticated ? '500%' : '400%') }}
+            style={{ width: isGameUpcoming ? '200%' : (isAuthenticated ? '500%' : '400%') }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 py-4 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : (isAuthenticated ? '20%' : '25%') }}>
+            <div className="w-full flex-shrink-0 py-4 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '50%' : (isAuthenticated ? '20%' : '25%') }}>
 
               <div className='mx-2'>
                 {/* Box Score */}
@@ -273,12 +274,52 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                   </div>
                 )}
 
+              {/* Pre-game Predictions & Head-to-Head Preview */}
+              {isGameUpcoming && homeTeam && awayTeam && (
+                <div className="mt-6 space-y-6">
+                  {/* Predictions Section */}
+                  <div className="mx-2">
+                    <h3 className="text-[#00ffe7] font-bold text-xl mb-4 flex items-center gap-2">
+                      <FaPercentage />
+                      AI Predictions
+                    </h3>
+                    <PredictionChart
+                      gameId={event.id}
+                      competitionId={competition.id}
+                      homeTeamInfo={{
+                        name: homeTeam.team.displayName,
+                        logo: getTeamLogo(homeTeam),
+                        color: homeTeam.team.color || '00ffe7'
+                      }}
+                      awayTeamInfo={{
+                        name: awayTeam.team.displayName,
+                        logo: getTeamLogo(awayTeam),
+                        color: awayTeam.team.color || 'faafe8'
+                      }}
+                    />
+                  </div>
+
+                  {/* Head-to-Head Preview */}
+                  <div className="mx-2">
+                    <h3 className="text-[#00ffe7] font-bold text-xl mb-4 flex items-center gap-2">
+                      <FaTrophy />
+                      Team Leaders
+                    </h3>
+                    <HeadToHead
+                      homeTeamId={homeTeam.id}
+                      awayTeamId={awayTeam.id}
+                      homeTeamName={homeTeam.team.displayName}
+                      awayTeamName={awayTeam.team.displayName}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* End of Info Section  */}
             </div>
 
             {/* Top Picks Section */}
-            {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 overflow-y-auto min-h-screen" style={{ width: isAuthenticated ? '20%' : '25%' }}>
+            <div className="w-full flex-shrink-0 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '50%' : (isAuthenticated ? '20%' : '25%') }}>
                 {/* Top Picks - All Players Who Scored */}
                 {homeTeam?.id && awayTeam?.id && (
                   <div className="">
@@ -293,9 +334,8 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                   </div>
                 )}
               </div>
-            )}
 
-            {/* Your Picks Section - Only show when authenticated */}
+            {/* Your Picks Section - Only show when authenticated and not upcoming */}
             {!isGameUpcoming && isAuthenticated && (
               <div className="w-full flex-shrink-0 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
                 {homeTeam?.id && awayTeam?.id && (
@@ -327,9 +367,9 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
               </div>
             )}
 
-            {/* Odds Section - Now in this position */}
+            {/* Odds Section - Only for non-upcoming games */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isAuthenticated ? '20%' : '25%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isAuthenticated ? '20%' : '25%' }}>
                 <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                   <FaChartBar />
                   Betting Odds
@@ -356,8 +396,9 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
               </div>
             )}
 
-            {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : (isAuthenticated ? '20%' : '25%') }}>
+            {/* Head to Head Section - Only for non-upcoming games */}
+            {!isGameUpcoming && (
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isAuthenticated ? '20%' : '25%' }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}
@@ -367,6 +408,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                 />
               )}
             </div>
+            )}
 
           </div>
         </div>
