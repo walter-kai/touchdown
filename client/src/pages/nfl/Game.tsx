@@ -13,8 +13,8 @@ import type { Summary } from '@/types/espn/summary';
 const FIRESTORE_API = '/api/playbyplay';
 
 interface NFLGameProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news') => void;
   onPresetChange: (preset: 'scoreboard' | 'summary') => void;
   onGameStatusChange?: (status: 'pre' | 'in' | 'post') => void;
   onRegisterTabClick?: (callback: (tab: string) => void) => void;

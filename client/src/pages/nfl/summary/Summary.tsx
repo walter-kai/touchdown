@@ -1,19 +1,21 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock } from 'react-icons/fa';
+import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock, FaLock, FaCheckCircle, FaBolt, FaChartLine, FaUsers } from 'react-icons/fa';
 import PredictionChart from '@/components/nfl/PredictionChart';
 import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
 import GameLeaders from '@/pages/nfl/summary/GameLeaders';
 import SelectedAthletes from '@/components/nfl/SelectedAthletes';
 import VenueInfo from '@/components/VenueInfo';
+import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
+import { useAuth } from '@/providers/AuthContext';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
 
 interface SummaryViewProps {
   event: Event;
   summary: Summary | null;
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news') => void;
   getTeamLogo: (team: any) => string;
   playLog: Array<{
     text: string;
@@ -46,8 +48,10 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   gameId
 }) => {
   const navigate = useNavigate();
+  const { isAuthenticated, triggerLoginModal } = useAuth();
   const carouselRef = useRef<HTMLDivElement>(null);
   const [timeUntilGame, setTimeUntilGame] = useState<string>('');
+  const [isPickExpanded, setIsPickExpanded] = useState(true);
 
   const competition = event.competitions[0];
   const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
@@ -93,7 +97,9 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
   // Get tab index for carousel position
   const getTabIndex = (tab: string) => {
-    const summaryTabs = ['info', 'player', 'team', 'plays', 'prediction'];
+    const summaryTabs = isPreGame
+      ? ['info', 'player', 'team', 'pick', 'prediction']
+      : ['info', 'player', 'team', 'plays', 'pick', 'prediction'];
     return summaryTabs.indexOf(tab);
   };
 
@@ -102,12 +108,13 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     if (carouselRef.current) {
       const index = getTabIndex(activeTab);
       if (index !== -1) {
-        const slidePercentage = 100 / 5;
+        const totalSlides = isPreGame ? 5 : 6;
+        const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [activeTab]);
+  }, [activeTab, isPreGame]);
 
   return (
     <div className="">
@@ -117,10 +124,10 @@ const SummaryView: React.FC<SummaryViewProps> = ({
           <div
             ref={carouselRef}
             className="flex transition-transform duration-500 ease-in-out"
-            style={{ width: '500%' }}
+            style={{ width: isPreGame ? '500%' : '600%' }}
           >
             {/* Info Section */}
-            <div className="w-full flex-shrink-0 space-y-6 py-4 overflow-y-auto" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 space-y-6 py-4 overflow-y-auto" style={{ width: isPreGame ? '20%' : '16.666%' }}>
               {/* Box Score */}
               <div className="mb-6">
                 {/* Boxscore Component */}
@@ -207,7 +214,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             </div>
 
             {/* Player Statistics Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isPreGame ? '20%' : '16.666%' }}>
               <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                 <FaTrophy />
                 Player Statistics
@@ -311,7 +318,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             </div>
 
             {/* Team Stats Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isPreGame ? '20%' : '16.666%' }}>
               <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                 <FaChartBar />
                 Team Statistics
@@ -376,7 +383,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             </div>
 
             {/* Plays Section - Drive by Drive */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
+            {!isPreGame && (
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '16.666%' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
                   <FaFootballBall />
@@ -495,7 +503,127 @@ const SummaryView: React.FC<SummaryViewProps> = ({
               )}
             </div>
 
-            {/* Predictions Section */}
+            )}
+
+            {/* Pick Section - Your Picks */}
+            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
+              {!isAuthenticated ? (
+                // Login Prompt - Advertisement Style
+                <div className="min-h-screen flex items-center justify-center p-4">
+                  <div className="max-w-2xl w-full">
+                    {/* Hero Section */}
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#00ffe7]/20 via-[#1a1d2e] to-[#faafe8]/20 border-2 border-[#00ffe7]/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-8 sm:p-12">
+                      {/* Animated background elements */}
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-[#00ffe7]/10 rounded-full blur-3xl animate-pulse"></div>
+                      <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#faafe8]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+                      
+                      <div className="relative z-10">
+                        {/* Lock Icon */}
+                        <div className="flex justify-center mb-6">
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-[#00ffe7] blur-xl opacity-50 animate-pulse"></div>
+                            <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-[#00ffe7] to-[#faafe8] flex items-center justify-center shadow-lg">
+                              <FaLock className="text-[#1a1d2e] text-3xl" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Headline */}
+                        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-[#00ffe7] via-[#e0e7ef] to-[#faafe8] bg-clip-text text-transparent">
+                          Unlock Your Picks
+                        </h2>
+                        <p className="text-[#b0b7bf] text-center text-lg mb-8">
+                          Join the game and start making your predictions!
+                        </p>
+
+                        {/* Features Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                          <div className="flex items-start gap-3 p-4 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
+                            <div className="w-10 h-10 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
+                              <FaCheckCircle className="text-[#00ffe7] text-xl" />
+                            </div>
+                            <div>
+                              <h3 className="text-[#e0e7ef] font-bold mb-1">Track Your Picks</h3>
+                              <p className="text-[#b0b7bf] text-sm">Follow your predictions in real-time as games unfold</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3 p-4 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
+                            <div className="w-10 h-10 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
+                              <FaBolt className="text-[#faafe8] text-xl" />
+                            </div>
+                            <div>
+                              <h3 className="text-[#e0e7ef] font-bold mb-1">Live Updates</h3>
+                              <p className="text-[#b0b7bf] text-sm">Get instant notifications when your players score</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3 p-4 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
+                            <div className="w-10 h-10 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
+                              <FaChartLine className="text-[#00ffe7] text-xl" />
+                            </div>
+                            <div>
+                              <h3 className="text-[#e0e7ef] font-bold mb-1">Performance Stats</h3>
+                              <p className="text-[#b0b7bf] text-sm">See how accurate your predictions are over time</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3 p-4 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
+                            <div className="w-10 h-10 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
+                              <FaUsers className="text-[#faafe8] text-xl" />
+                            </div>
+                            <div>
+                              <h3 className="text-[#e0e7ef] font-bold mb-1">Compete & Compare</h3>
+                              <p className="text-[#b0b7bf] text-sm">See top picks and compete with other fans</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* CTA Button */}
+                        <button
+                          onClick={() => triggerLoginModal()}
+                          className="w-full py-4 px-8 rounded-xl bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-[#1a1d2e] font-bold text-lg shadow-[0_0_20px_rgba(0,255,231,0.5)] hover:shadow-[0_0_30px_rgba(0,255,231,0.7)] transform hover:scale-105 transition-all duration-200"
+                        >
+                          Sign In to Start Picking
+                        </button>
+
+                        <p className="text-[#b0b7bf] text-center text-sm mt-4">
+                          Free to join • No credit card required
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Authenticated - Show YourPicks component
+                homeTeam?.id && awayTeam?.id && (
+                  <YourPicks
+                    gameId={event.id}
+                    homeTeamId={homeTeam.id}
+                    awayTeamId={awayTeam.id}
+                    homeTeamInfo={{
+                      name: homeTeam.team.displayName,
+                      logo: getTeamLogo(homeTeam),
+                      color: homeTeam.team.color || '00ffe7'
+                    }}
+                    awayTeamInfo={{
+                      name: awayTeam.team.displayName,
+                      logo: getTeamLogo(awayTeam),
+                      color: awayTeam.team.color || 'faafe8'
+                    }}
+                    isExpanded={isPickExpanded}
+                    onToggle={() => setIsPickExpanded(!isPickExpanded)}
+                    playLog={playLog}
+                    situation={competition.situation}
+                    homeTeam={homeTeam}
+                    awayTeam={awayTeam}
+                    getTeamLogo={getTeamLogo}
+                  />
+                )
+              )}
+            </div>
+
+            {/* Prediction Section */}
             <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
               {homeTeam && awayTeam && (
                 <PredictionChart

@@ -31,14 +31,14 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
   // Preset configurations
   const presetConfig = {
     scoreboard: ['info', 'pick', 'odds', 'headtohead'],
-    summary: ['info', 'player', 'team', 'plays', 'prediction'],
+    summary: ['info', 'player', 'team', 'plays', 'pick', 'prediction'],
     team: ['info', 'schedule', 'news'], // Team page shows back, info, schedule, news
     player: ['info', 'schedule', 'news'], // Player page shows back, overview, game log, news
   };
 
-  // For upcoming games, hide 'player' and 'pick' tabs regardless of preset
+  // For upcoming games, hide 'player', 'pick', and 'plays' tabs regardless of preset
   const isUpcomingGame = gameStatus === 'pre';
-  const tabsToHide = isUpcomingGame ? ['player', 'pick'] : [];
+  const tabsToHide = isUpcomingGame ? ['player', 'pick', 'plays'] : [];
   
   console.log('MainNavBar - gameStatus:', gameStatus, 'preset:', preset, 'isUpcomingGame:', isUpcomingGame, 'tabsToHide:', tabsToHide);
 
