@@ -2,6 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock, FaLock, FaCheckCircle, FaBolt, FaChartLine, FaUsers } from 'react-icons/fa';
 import PredictionChart from '@/components/nfl/PredictionChart';
+import PlayLog from '@/components/nfl/PlayLog';
+import axios from 'axios';
 import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
 import GameLeaders from '@/pages/nfl/summary/GameLeaders';
 import SelectedAthletes from '@/components/nfl/SelectedAthletes';
@@ -52,12 +54,184 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   const carouselRef = useRef<HTMLDivElement>(null);
   const [timeUntilGame, setTimeUntilGame] = useState<string>('');
   const [isPickExpanded, setIsPickExpanded] = useState(true);
+  const [apiPlayLog, setApiPlayLog] = useState<Array<{
+    text: string;
+    quarter: number;
+    clock: string;
+    yardage?: number;
+    timestamp: Date;
+    possession?: string;
+    athletesInvolved?: Array<{
+      id: string;
+      fullName: string;
+      displayName: string;
+      shortName: string;
+      headshot: string;
+      jersey: string;
+      position: string;
+      team: { id: string };
+    }>;
+  }>>([]);
 
   const competition = event.competitions[0];
   const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
   const awayTeam = competition.competitors.find(c => c.homeAway === 'away');
   const gameStatus = competition.status.type.state;
   const isPreGame = gameStatus === 'pre';
+  // Build a quick player headshot lookup from boxscore players
+  const headshotByAthleteId = React.useMemo(() => {
+    const map = new Map<string, string>();
+    const players = summary?.boxscore?.players || [];
+    players.forEach(teamData => {
+      teamData.statistics.forEach(cat => {
+        cat.athletes.forEach(a => {
+          const hs = (a.athlete as any)?.headshot;
+          const url = typeof hs === 'string' ? hs : hs?.href;
+          if (a.athlete.id && url) {
+            map.set(a.athlete.id, url);
+          }
+        });
+      });
+    });
+    return map;
+  }, [summary?.boxscore?.players]);
+  
+  // Fetch authoritative play-by-play from backend API and normalize
+  useEffect(() => {
+    const fetchPlayByPlay = async () => {
+      try {
+        const res = await axios.get(`/api/playbyplay/${event.id}`);
+        const data = res.data;
+        const normalized: Array<{
+          text: string;
+          quarter: number;
+          clock: string;
+          yardage?: number;
+          timestamp: Date;
+          possession?: string;
+          athletesInvolved?: Array<{
+            id: string;
+            fullName: string;
+            displayName: string;
+            shortName: string;
+            headshot: string;
+            jersey: string;
+            position: string;
+            team: { id: string };
+          }>;
+        }> = [];
+
+        if (data?.drives?.previous?.length) {
+          data.drives.previous.forEach((drive: any) => {
+            drive.plays?.forEach((p: any) => {
+              const possessionTeamId = p.start?.team?.id || drive.team?.id;
+              normalized.push({
+                text: p.text,
+                quarter: p.period?.number || 0,
+                clock: p.clock?.displayValue || '',
+                yardage: typeof p.statYardage === 'number' ? p.statYardage : undefined,
+                timestamp: new Date(p.wallclock || competition.date),
+                possession: possessionTeamId,
+                athletesInvolved: (p.athletesInvolved || []).map((a: any) => ({
+                  id: a.athlete?.id || a.id,
+                  fullName: a.athlete?.displayName || a.fullName || a.displayName,
+                  displayName: a.athlete?.displayName || a.displayName,
+                  shortName: a.athlete?.shortName || a.shortName || a.displayName,
+                  headshot:
+                    a.athlete?.headshot?.href || a.headshot || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : '') || '',
+                  jersey: a.athlete?.jersey || a.jersey || '',
+                  position: a.athlete?.position?.abbreviation || a.position || '',
+                  team: { id: a.athlete?.team?.id || (p.start?.team?.id) || possessionTeamId },
+                })),
+              });
+            });
+          });
+        } else if (Array.isArray(data?.plays)) {
+          data.plays.forEach((p: any) => {
+            normalized.push({
+              text: p.text,
+              quarter: p.period?.number || p.quarter || 0,
+              clock: p.clock?.displayValue || p.clock || '',
+              yardage: typeof p.statYardage === 'number' ? p.statYardage : p.yardage,
+              timestamp: new Date(p.wallclock || competition.date),
+              possession: p.start?.team?.id || p.possession,
+              athletesInvolved: (p.athletesInvolved || []).map((a: any) => ({
+                id: a.athlete?.id || a.id,
+                fullName: a.athlete?.displayName || a.fullName || a.displayName,
+                displayName: a.athlete?.displayName || a.displayName,
+                shortName: a.athlete?.shortName || a.shortName || a.displayName,
+                headshot:
+                  a.athlete?.headshot?.href || a.headshot || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : '') || '',
+                jersey: a.athlete?.jersey || a.jersey || '',
+                position: a.athlete?.position?.abbreviation || a.position || '',
+                team: { id: a.athlete?.team?.id || (p.start?.team?.id) || p.teamId || '' },
+              })),
+            });
+          });
+        }
+
+        setApiPlayLog(normalized);
+      } catch (err) {
+        console.warn('Failed to fetch play-by-play from backend:', err);
+      }
+    };
+    fetchPlayByPlay();
+  }, [event.id, competition.date, headshotByAthleteId]);
+  // Build a unified play log: use drives for completed games, else use provided playLog
+  const effectivePlayLog = React.useMemo(() => {
+    const state = competition.status.type.state;
+    if (apiPlayLog.length > 0) {
+      return apiPlayLog;
+    }
+    if (state === 'post' && summary?.drives?.previous && summary.drives.previous.length > 0) {
+      const plays: Array<{
+        text: string;
+        quarter: number;
+        clock: string;
+        yardage?: number;
+        timestamp: Date;
+        possession?: string;
+        athletesInvolved?: Array<{
+          id: string;
+          fullName: string;
+          displayName: string;
+          shortName: string;
+          headshot: string;
+          jersey: string;
+          position: string;
+          team: { id: string };
+        }>;
+      }> = [];
+
+      summary.drives.previous.forEach((drive) => {
+        drive.plays.forEach((p: any) => {
+          const possessionTeamId = p.start?.team?.id || drive.team?.id;
+          plays.push({
+            text: p.text,
+            quarter: p.period?.number || 0,
+            clock: p.clock?.displayValue || '',
+            yardage: typeof p.statYardage === 'number' ? p.statYardage : undefined,
+            timestamp: new Date(p.wallclock || competition.date),
+            possession: possessionTeamId,
+            athletesInvolved: (p.athletesInvolved || [])
+              .map((a: any) => ({
+                id: a.athlete?.id || a.id,
+                fullName: a.athlete?.displayName || a.fullName || a.displayName,
+                displayName: a.athlete?.displayName || a.displayName,
+                shortName: a.athlete?.shortName || a.shortName || a.displayName,
+                headshot: a.athlete?.headshot?.href || a.headshot || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : '') || '',
+                jersey: a.athlete?.jersey || a.jersey || '',
+                position: a.athlete?.position?.abbreviation || a.position || '',
+                team: { id: a.athlete?.team?.id || (p.start?.team?.id) || possessionTeamId },
+              }))
+          });
+        });
+      });
+
+      return plays;
+    }
+    return playLog;
+  }, [competition.status.type.state, summary?.drives, playLog, competition.date, apiPlayLog]);
 
   // Countdown timer for pre-game
   useEffect(() => {
@@ -198,8 +372,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
               {/* Team Statistics - Moved to Info Page */}
               <div className="mt-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <FaChartBar className="text-[#00ffe7] text-xl" />
+                <div className="flex items-center mb-6">
                   <h1>Team Statistics</h1>
                 </div>
 
@@ -263,8 +436,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
               {/* Predictions - Moved to Info Page */}
               <div className="pt-4 pb-12">
-                <div className="flex items-center gap-2 mb-4">
-                  <FaChartLine className="text-[#00ffe7] text-xl" />
+                <div className="flex items-center mb-4">
                   <h1>Game Prediction</h1>
                 </div>
                 {homeTeam && awayTeam && (
@@ -289,8 +461,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             {/* Player Statistics Section */}
             {!isPreGame && (
             <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '25%' }}>
-              <div className="flex items-center gap-2 mb-6">
-                <FaTrophy className="text-[#00ffe7] text-xl" />
+              <div className="flex items-center mb-6">
                 <h1>Player Statistics</h1>
               </div>
 
@@ -396,10 +567,9 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             {!isPreGame && (
             <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '25%' }}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
-                  <FaFootballBall />
-                  Plays
-                </h3>
+                <div className="flex items-center">
+                  <h1>Plays</h1>
+                </div>
                 {playLog.length > 0 && (
                   <span className="text-[#b0b7bf] text-xs">
                     {playLog.length} {playLog.length === 1 ? 'play' : 'plays'} recorded
@@ -407,110 +577,19 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 )}
               </div>
 
-              {playLog.length > 0 ? (
-                <div className="relative">
-                  <div className="space-y-6">
-                    {(() => {
-                      // Group consecutive plays by possession
-                      const possessions: Array<{ possession?: string; plays: typeof playLog }> = [];
-                      for (let i = 0; i < playLog.length; i++) {
-                        const p = playLog[i];
-                        const last = possessions[possessions.length - 1];
-
-                        // If play has no possession, use the last known possession
-                        const currentPossession = p.possession || last?.possession;
-
-                        if (!last || last.possession !== currentPossession) {
-                          possessions.push({ possession: currentPossession, plays: [p] as any });
-                        } else {
-                          last.plays.push(p as any);
-                        }
-                      }
-
-                      return possessions.map((group, groupIdx) => {
-                        const team = group.possession === homeTeam?.id ? homeTeam : awayTeam;
-                        const isHome = team?.id === homeTeam?.id;
-                        const bgClass = isHome ? 'from-[#faafe8]/10 border-l-4 border-[#faafe8]' : 'from-[#00ffe7]/10 border-l-4 border-[#00ffe7]';
-
-                        return (
-                          <div key={`pos-${groupIdx}`} className={`bg-gradient-to-r ${bgClass} rounded-lg py-4 mb-4`}>
-                            <div className="flex items-center justify-between mb-3 px-4">
-                              <div className="flex items-center gap-2">
-                                {team && (
-                                  <img src={getTeamLogo(team.team)} alt="" className="w-8 h-8" />
-                                )}
-                                <span className={`font-bold text-sm ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
-                                  {team?.team.abbreviation} Possession
-                                </span>
-                              </div>
-                              <div className="text-xs text-gray-400">{group.plays.length} {group.plays.length === 1 ? 'play' : 'plays'}</div>
-                            </div>
-
-                            <div className="space-y-4 px-4">
-                              {group.plays.map((play, idx) => {
-                                const isLatest = groupIdx === 0 && idx === 0;
-
-                                return (
-                                  <div key={`${groupIdx}-${idx}`} className={`relative flex items-start gap-4 ${isLatest ? 'animate-[slide-in-play_0.5s_ease-out]' : ''}`}>
-                                    <div className="relative flex flex-col items-center flex-shrink-0" style={{ width: '48px' }}>
-                                      <div className={`w-4 h-4 rounded-full border-2 ${isLatest ? 'bg-[#00ffe7] border-[#00ffe7] animate-[pulse-dot_2s_ease-in-out_infinite]' : 'bg-[#23263a] border-[#00ffe7]/40'
-                                        } z-10`}></div>
-                                      <div className="text-center mt-1">
-                                        <p className={`text-[10px] font-bold ${isLatest ? 'text-[#00ffe7]' : 'text-[#b0b7bf]'}`}>Q{play.quarter}</p>
-                                        <p className={`text-[9px] font-mono ${isLatest ? 'text-[#00ffe7]' : 'text-[#b0b7bf]'}`}>{play.clock}</p>
-                                      </div>
-                                    </div>
-
-                                    <div className={`flex-1 pb-4 ${isLatest ? 'bg-[#00ffe7]/5 -ml-2 pl-2 pr-2 rounded-lg' : ''}`}>
-                                      <p className={`text-sm ${isLatest ? 'text-[#e0e7ef] font-medium' : 'text-[#b0b7bf]'}`}>
-                                        {play.text}
-                                      </p>
-
-                                      {play.yardage !== undefined && (
-                                        <div className="flex items-center gap-2 mt-2">
-                                          <span className="text-[#b0b7bf] text-xs">Yards:</span>
-                                          <span className={`font-bold text-sm ${play.yardage > 0 ? 'text-green-400' : play.yardage < 0 ? 'text-red-400' : 'text-gray-400'
-                                            }`}>{play.yardage > 0 ? '+' : ''}{play.yardage}</span>
-                                        </div>
-                                      )}
-
-                                      {play.athletesInvolved && play.athletesInvolved.length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5 mt-2">
-                                          {play.athletesInvolved.slice(0, 3).map((athlete) => (
-                                            <div key={athlete.id} className="flex items-center gap-1 bg-[#1a1d2e]/30 rounded-full px-1.5 py-0.5">
-                                              <img src={athlete.headshot} alt="" className="w-8 h-6 rounded-full" onError={(e) => e.currentTarget.style.display = 'none'} />
-                                              <span className="text-gray-300 text-xs">{athlete.shortName}</span>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      });
-                    })()}
-
-                    {/* End of Game Marker */}
-                    <div className="relative flex items-start gap-4">
-                      <div className="relative flex flex-col items-center flex-shrink-0" style={{ width: '48px' }}>
-                        <div className="w-4 h-4 rounded-full bg-[#faafe8] border-2 border-[#faafe8] shadow-[0_0_8px_rgba(250,175,232,0.6)] z-10"></div>
-                        <p className="text-[10px] font-bold text-[#faafe8] mt-1">END</p>
-                      </div>
-                      <div className="flex-1 pb-2">
-                        <p className="text-sm text-[#b0b7bf] italic">
-                          {competition.status.type.state === 'in' ? 'Game In Progress' : 'Game Complete'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+              {/* Always use the PlayLog component for consistency */}
+              <div className="relative">
+                <div className="space-y-6">
+                  <PlayLog
+                    playLog={effectivePlayLog}
+                    homeTeam={homeTeam as any}
+                    awayTeam={awayTeam as any}
+                    getTeamLogo={getTeamLogo}
+                    title="Plays"
+                    showTitle={false}
+                  />
                 </div>
-              ) : (
-                <p className="text-[#b0b7bf] text-center text-sm py-4">No plays recorded yet. Plays will appear here as the game progresses.</p>
-              )}
+              </div>
             </div>
 
             )}

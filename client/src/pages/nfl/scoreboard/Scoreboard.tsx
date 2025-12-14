@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTrophy, FaFootballBall, FaChartBar, FaClock, FaPauseCircle } from 'react-icons/fa';
+import { FaFootballBall, FaClock, FaPauseCircle } from 'react-icons/fa';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import ProbChart from '@/components/nfl/ProbabilityChart';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
@@ -322,10 +322,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             {!isGameUpcoming && (
               <div className="w-full flex-shrink-0 pt-2 pb-8" style={{ width: '20%' }}>
                 <div className="space-y-4">
-                  <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
-                    <FaTrophy />
-                    Leaders
-                  </h3>
+                  <h3 className="text-[#00ffe7] font-bold text-2xl mb-6">Leaders</h3>
                   {competition.leaders && competition.leaders.length > 0 ? (
                     <div className="space-y-6">
                       {competition.leaders.map((category, categoryIdx) => (
@@ -385,10 +382,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
             {/* Odds Section */}
             <div className="w-full flex-shrink-0 pt-2 pb-8" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
-              <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
-                <FaChartBar />
-                Betting Odds
-              </h3>
+              <h3 className="text-[#00ffe7] font-bold text-2xl mb-6">Betting Odds</h3>
               {homeTeam && awayTeam && (
                 <ProbChart
                   gameId={event.id}

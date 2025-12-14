@@ -144,6 +144,71 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
     }
   }, [event, onGameStatusChange]);
 
+  // Shared helper to merge latest play from ESPN situation into playLog without duplicates
+  const mergeLatestPlay = (currentEvent: Event | undefined, previousEvent: Event | null) => {
+    if (!currentEvent?.competitions?.[0]?.situation?.lastPlay) return;
+    const comp = currentEvent.competitions[0];
+    if (!comp.situation?.lastPlay) return;
+    const currentPlayText = comp.situation.lastPlay.text;
+    const previousPlayText = previousEvent?.competitions?.[0]?.situation?.lastPlay?.text;
+
+    if (currentPlayText !== previousPlayText) {
+      setPlayLog(prev => {
+        const isDuplicate = prev.some(p =>
+          p.text === currentPlayText &&
+          p.quarter === comp.status.period &&
+          p.clock === comp.status.displayClock
+        );
+
+        if (!isDuplicate) {
+          const possession = comp.situation?.possession;
+          const newPlay = {
+            text: currentPlayText,
+            quarter: comp.status.period,
+            clock: comp.status.displayClock,
+            timestamp: new Date(),
+            yardage: comp.situation?.lastPlay?.statYardage,
+            possession: typeof possession,
+            athletesInvolved: comp.situation?.lastPlay?.athletesInvolved
+          };
+          return [newPlay, ...prev];
+        }
+        return prev;
+      });
+    }
+  };
+
+  // Unified fetch: resolves test vs live scoreboard and optional summary fallback
+  const getGameData = async (gid: string): Promise<{ game?: Event; usedSummaryApi: boolean }> => {
+    let game: Event | undefined;
+    let usedSummaryApi = false;
+    if (gid === 'test') {
+      const response = await axios.get<ScoreboardResponse>('/scoreboard.json');
+      game = response.data.events?.[0];
+    } else {
+      const scoreboardResponse = await axios.get<ScoreboardResponse>(
+        'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
+      );
+      game = scoreboardResponse.data.events?.find(e => e.id === gid);
+      const gameStatus = game?.competitions[0].status.type.state;
+      if (!game || gameStatus !== 'in') {
+        try {
+          const summaryResponse = await axios.get<Summary>(
+            `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gid}`
+          );
+          setSummary(summaryResponse.data);
+          usedSummaryApi = true;
+          if (!game && summaryResponse.data.header) {
+            game = summaryResponse.data.header as unknown as Event;
+          }
+        } catch (summaryErr) {
+          console.error('Error fetching summary data:', summaryErr);
+        }
+      }
+    }
+    return { game, usedSummaryApi };
+  };
+
   useEffect(() => {
     const fetchGameData = async () => {
       if (!gameId) return;
@@ -156,53 +221,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
         }
         setError(null);
 
-        let game: Event | undefined;
-        let gameStatus: string | undefined;
-        let usedSummaryApi = false;
-
-        // Check if gameId is "test" - use local JSON file
-        if (gameId === 'test') {
-          const response = await axios.get<ScoreboardResponse>('/scoreboard.json');
-          game = response.data.events?.[0];
-          gameStatus = game?.competitions[0].status.type.state;
-        } else {
-          // Try to find game in current week's scoreboard first
-          const scoreboardResponse = await axios.get<ScoreboardResponse>(
-            `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`
-          );
-          game = scoreboardResponse.data.events?.find(e => e.id === gameId);
-          gameStatus = game?.competitions[0].status.type.state;
-          
-          // Fetch summary API if:
-          // 1. Game not found in scoreboard (past/future games), OR
-          // 2. Game is not live (pre/post game)
-          if (!game || gameStatus !== 'in') {
-            try {
-              const summaryResponse = await axios.get<Summary>(
-                `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
-              );
-              console.log('Summary data fetched:', summaryResponse.data);
-              console.log('Drives in summary:', summaryResponse.data.drives);
-              setSummary(summaryResponse.data);
-              usedSummaryApi = true;
-              
-              // If game wasn't found in scoreboard, extract it from summary
-              if (!game && summaryResponse.data.header) {
-                game = summaryResponse.data.header as unknown as Event;
-              }
-            } catch (summaryErr) {
-              console.error('Error fetching summary data:', summaryErr);
-              if (!game) {
-                // If we have no game data at all, show error
-                setError('Game not found');
-                hideLoading();
-                setIsRefreshing(false);
-                return;
-              }
-              // Otherwise continue without summary data
-            }
-          }
-        }
+        const { game, usedSummaryApi } = await getGameData(gameId);
         
         if (!game) {
           setError('Game data not available');
@@ -211,40 +230,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
           return;
         }
         
-        // Check if last play has changed and update timestamp
-        if (game.competitions[0].situation?.lastPlay) {
-          const currentPlayText = game.competitions[0].situation.lastPlay.text;
-          const previousPlayText = event?.competitions[0].situation?.lastPlay?.text;
-          
-          // Only add if it's a new play AND not already in playLog (merge with historical plays)
-          if (currentPlayText !== previousPlayText) {
-            setPlayLog(prev => {
-              // Check for duplicates based on text, quarter, and similar timestamp
-              const isDuplicate = prev.some(p => 
-                p.text === currentPlayText && 
-                p.quarter === game.competitions[0].status.period &&
-                p.clock === game.competitions[0].status.displayClock
-              );
-              
-              if (!isDuplicate) {
-                const possession = game.competitions[0].situation?.possession;
-                const newPlay = {
-                  text: currentPlayText,
-                  quarter: game.competitions[0].status.period,
-                  clock: game.competitions[0].status.displayClock,
-                  timestamp: new Date(),
-                  yardage: game.competitions[0].situation?.lastPlay?.statYardage,
-                  possession: typeof possession,
-                  athletesInvolved: game.competitions[0].situation?.lastPlay?.athletesInvolved
-                };
-                console.log('➕ New play from ESPN merged with historical plays:', currentPlayText.substring(0, 50));
-                // Add to front of array (most recent first)
-                return [newPlay, ...prev];
-              }
-              return prev;
-            });
-          }
-        }
+        mergeLatestPlay(game, event);
         
         // Set nav preset based on which API provided the data
         const preset = usedSummaryApi ? 'summary' : 'scoreboard';
@@ -283,73 +269,10 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
           setIsRefreshing(true);
           setError(null);
 
-          let game: Event | undefined;
-          let gameStatus: string | undefined;
-          let usedSummaryApi = false;
-
-          if (gameId === 'test') {
-            const response = await axios.get<ScoreboardResponse>('/scoreboard.json');
-            game = response.data.events?.[0];
-            gameStatus = game?.competitions[0].status.type.state;
-          } else {
-            const scoreboardResponse = await axios.get<ScoreboardResponse>(
-              `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`
-            );
-            game = scoreboardResponse.data.events?.find(e => e.id === gameId);
-            gameStatus = game?.competitions[0].status.type.state;
-          }
-          
-          if (!game || gameStatus !== 'in') {
-            try {
-              const summaryResponse = await axios.get<Summary>(
-                `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`
-              );
-              setSummary(summaryResponse.data);
-              usedSummaryApi = true;
-              
-              if (!game && summaryResponse.data.header) {
-                game = summaryResponse.data.header as unknown as Event;
-              }
-            } catch (summaryErr) {
-              console.error('Error fetching summary data:', summaryErr);
-            }
-          }
+          const { game, usedSummaryApi } = await getGameData(gameId);
           
           if (game) {
-            // Check if last play has changed and update timestamp
-            if (game.competitions[0].situation?.lastPlay) {
-              const currentPlayText = game.competitions[0].situation.lastPlay.text;
-              const previousPlayText = event?.competitions[0].situation?.lastPlay?.text;
-              
-              // Only add if it's a new play AND not already in playLog (merge with historical plays)
-              if (currentPlayText !== previousPlayText) {
-                setPlayLog(prev => {
-                  // Check for duplicates based on text, quarter, and similar timestamp
-                  const isDuplicate = prev.some(p => 
-                    p.text === currentPlayText && 
-                    p.quarter === game.competitions[0].status.period &&
-                    p.clock === game.competitions[0].status.displayClock
-                  );
-                  
-                  if (!isDuplicate) {
-                    const possession = game.competitions[0].situation?.possession;
-                    const newPlay = {
-                      text: currentPlayText,
-                      quarter: game.competitions[0].status.period,
-                      clock: game.competitions[0].status.displayClock,
-                      timestamp: new Date(),
-                      yardage: game.competitions[0].situation?.lastPlay?.statYardage,
-                      possession: typeof possession,
-                      athletesInvolved: game.competitions[0].situation?.lastPlay?.athletesInvolved
-                    };
-                    console.log('➕ New play from ESPN auto-refresh merged with historical plays');
-                    // Add to front of array (most recent first)
-                    return [newPlay, ...prev];
-                  }
-                  return prev;
-                });
-              }
-            }
+            mergeLatestPlay(game, event);
             
             const preset = usedSummaryApi ? 'summary' : 'scoreboard';
             setNavPreset(preset);
