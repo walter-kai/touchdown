@@ -339,6 +339,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
   const [showGameLog, setShowGameLog] = useState(false);
   const [allPlayerScores, setAllPlayerScores] = useState<Record<string, number>>({});
+  const rosterSelectorRef = React.useRef<HTMLDivElement>(null);
 
   // Load saved state from localStorage and backend
   useEffect(() => {
@@ -1114,18 +1115,29 @@ const YourPicks: React.FC<PlayerPickProps> = ({
               <div className="pb-2 mx-2">
                 <button
                   onClick={(e) => {
-                  const currentScrollY = window.scrollY;
                   if (!isRosterOpen && isExpanded) {
                     // Open roster - trigger both width change and fade together
                     setIsRosterOpen(true);
+                    // Scroll to roster selector after a brief delay for animation
+                    setTimeout(() => {
+                      rosterSelectorRef.current?.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                      });
+                    }, 150);
                   } else {
                     // Toggle roster state
                     setIsRosterOpen(!isRosterOpen);
+                    if (!isRosterOpen) {
+                      // Scroll to roster selector when opening
+                      setTimeout(() => {
+                        rosterSelectorRef.current?.scrollIntoView({ 
+                          behavior: 'smooth', 
+                          block: 'start' 
+                        });
+                      }, 150);
+                    }
                   }
-                  // Prevent scroll jump by maintaining scroll position
-                  requestAnimationFrame(() => {
-                    window.scrollTo(0, currentScrollY);
-                  });
                   }}
                   className={`w-full p-4 flex items-center justify-center gap-3 transition-all ${
                   isRosterOpen 
@@ -1168,7 +1180,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
             {!isLocked && isRosterOpen && (
               <div className="animate-fade-in">
             {/* Team Selector */}
-            <div className="flex mx-2">
+            <div ref={rosterSelectorRef} className="flex mx-2">
                 <button
                 onClick={() => setActiveTeam('home')}
                 className={`flex-1 py-3 rounded-tl-[5px] font-bold flex items-center justify-center gap-2 transition-all border ${
