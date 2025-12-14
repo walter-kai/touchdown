@@ -167,6 +167,13 @@ const NFLScoreboard: React.FC = () => {
 	
   {/* Week Navigation */}
 		<div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#faafe8]/30 mb-6">
+          {lastUpdated && (
+        // <div className="bg-[#181a23]/50 rounded-lg p-3 border border-[#faafe8]/20 mb-6">
+          <p className="text-sm text-gray-400 text-center mb-2">
+            Last updated: {lastUpdated.toLocaleTimeString()} • Auto-refresh in {countdown}s
+          </p>
+        // </div>
+      )}
 			<div className="flex items-center justify-between gap-4">
 				<button
 					onClick={handlePreviousWeek}
@@ -177,7 +184,7 @@ const NFLScoreboard: React.FC = () => {
 					Last
 				</button>
 				
-				<h1 className="w-full text-center pt-2">
+				<h1 className="w-full text-center pt-2 mx-2">
 					Week {selectedWeek || weekNumber || '...'}
 				</h1>
 				
@@ -190,13 +197,7 @@ const NFLScoreboard: React.FC = () => {
 					<FaChevronRight />
 				</button>
 			</div>
-      {lastUpdated && (
-        // <div className="bg-[#181a23]/50 rounded-lg p-3 border border-[#faafe8]/20 mb-6">
-          <p className="pt-4 text-sm text-gray-400 text-center">
-            Last updated: {lastUpdated.toLocaleTimeString()} • Auto-refresh in {countdown}s
-          </p>
-        // </div>
-      )}
+
 		</div>
 
 
@@ -248,7 +249,7 @@ const NFLScoreboard: React.FC = () => {
 			{/* Live Games */}
 			{liveGames.length > 0 && (
 			<div>
-				<h1 className="flex items-center gap-2">
+				<h1 className="flex items-center gap-2 mx-2">
 				Live Now ({liveGames.length})
 				</h1>
 				<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 px-2">

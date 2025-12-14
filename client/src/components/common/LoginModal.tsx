@@ -240,7 +240,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                             <span>CITIZEN NAME</span>
                             <span>
                             {username.length < 3 && (
-                              <span className="text-xs text-orange-400">
+                              <span className="text-xs text-amber-400">
                               Minimum 3 characters
                               </span>
                             )}

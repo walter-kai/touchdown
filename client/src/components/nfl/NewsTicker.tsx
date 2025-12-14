@@ -8,13 +8,18 @@ interface NewsTickerProps {
 
 const NewsTicker: React.FC<NewsTickerProps> = ({ news }) => {
   const [currentNewsIndex, setCurrentNewsIndex] = useState<number>(0);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   // News ticker auto-scroll effect
   useEffect(() => {
     if (news.length <= 1) return;
 
     const ticker = setInterval(() => {
-      setCurrentNewsIndex((prev) => (prev + 1) % news.length);
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentNewsIndex((prev) => (prev + 1) % news.length);
+        setIsAnimating(false);
+      }, 300); // Wait for fade out before changing
     }, 5000); // Change article every 5 seconds
 
     return () => clearInterval(ticker);
@@ -24,17 +29,17 @@ const NewsTicker: React.FC<NewsTickerProps> = ({ news }) => {
 
   return (
     <div className="mb-6">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mx-2">
         <h1>Latest News</h1>
         <span className="text-gray-400 text-sm ml-auto">
           {currentNewsIndex + 1} / {Math.min(news.length, 6)}
         </span>
       </div>
       
-      <div className="mx-2 bg-[#181a23] rounded-xl border border-[#faafe8]/30 shadow-[0_0_20px_rgba(250,175,232,0.15)] overflow-hidden h-[125px]">
+      <div className="mx-2 bg-[#181a23] rounded-xl border border-[#faafe8]/30 shadow-[0_0_20px_rgba(250,175,232,0.15)] overflow-hidden h-[100px]">
         <div className="flex items-stretch h-full">
           {/* Article Image */}
-          <div className="w-[100px] flex-shrink-0 relative overflow-hidden">
+          <div className={`w-[100px] flex-shrink-0 relative overflow-hidden transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
             {news[currentNewsIndex].images && news[currentNewsIndex].images.length > 0 ? (
               <>
                 <img
@@ -53,13 +58,13 @@ const NewsTicker: React.FC<NewsTickerProps> = ({ news }) => {
           </div>
 
           {/* Article Content */}
-          <div className="flex-1 p-1 flex flex-col justify-center min-w-0">
-            <h5 className="text-white font-bold line-clamp-2">
+          <div className={`flex-1 p-1 flex flex-col justify-center min-w-0 ${isAnimating ? 'opacity-0' : 'animate-slide-in-right opacity-100'}`}>
+            <h5 className="text-white text-sm font-bold line-clamp-2">
               {news[currentNewsIndex].headline}
             </h5>
             
             {news[currentNewsIndex].description && (
-              <p className="text-gray-300 text-base sm:text-xs line-clamp-3">
+              <p className="text-gray-300 text-xs sm:text-xs line-clamp-4">
                 {news[currentNewsIndex].description}
               </p>
             )}
@@ -72,7 +77,13 @@ const NewsTicker: React.FC<NewsTickerProps> = ({ news }) => {
         {news.slice(0, 6).map((_, idx) => (
           <button
             key={idx}
-            onClick={() => setCurrentNewsIndex(idx)}
+            onClick={() => {
+              setIsAnimating(true);
+              setTimeout(() => {
+                setCurrentNewsIndex(idx);
+                setIsAnimating(false);
+              }, 300);
+            }}
             className={`h-1.5 rounded-full transition-all duration-300 ${
               idx === currentNewsIndex 
                 ? 'w-8 bg-[#faafe8]' 

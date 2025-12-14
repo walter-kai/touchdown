@@ -1028,26 +1028,26 @@ const YourPicks: React.FC<PlayerPickProps> = ({
               <div className="pb-2 mx-2">
                 <button
                   onClick={(e) => {
-                    const currentScrollY = window.scrollY;
-                    if (!isRosterOpen && isExpanded) {
-                      // Open roster - trigger both width change and fade together
-                      setIsRosterOpen(true);
-                    } else {
-                      // Toggle roster state
-                      setIsRosterOpen(!isRosterOpen);
-                    }
-                    // Prevent scroll jump by maintaining scroll position
-                    requestAnimationFrame(() => {
-                      window.scrollTo(0, currentScrollY);
-                    });
-                    }}
-                    className={`w-full p-4 flex items-center justify-center gap-3 transition-all ${
-                    isRosterOpen 
-                      ? 'bg-gradient-to-r from-[#faafe8]/10 to-[#faafe8]/5 border-2 border-[#faafe8]/30 text-[#faafe8] hover:border-[#faafe8]/50' 
-                      : 'btn-standard'
-                    }`}>
-                    <FaHandPointer className="text-xl" />
-                    <span>{isRosterOpen ? 'Close' : 'Pick Players'}</span>
+                  const currentScrollY = window.scrollY;
+                  if (!isRosterOpen && isExpanded) {
+                    // Open roster - trigger both width change and fade together
+                    setIsRosterOpen(true);
+                  } else {
+                    // Toggle roster state
+                    setIsRosterOpen(!isRosterOpen);
+                  }
+                  // Prevent scroll jump by maintaining scroll position
+                  requestAnimationFrame(() => {
+                    window.scrollTo(0, currentScrollY);
+                  });
+                  }}
+                  className={`w-full p-4 flex items-center justify-center gap-3 transition-all ${
+                  isRosterOpen 
+                    ? 'bg-gradient-to-r from-[#faafe8]/10 to-[#faafe8]/5 border-2 border-[#faafe8]/30 text-[#faafe8] hover:border-[#faafe8]/50' 
+                    : 'btn-green'
+                  }`}>
+                  <FaHandPointer className="text-xl" />
+                  <span>{isRosterOpen ? 'Close' : 'Pick Players'}</span>
                 </button>
               </div>
             )}
