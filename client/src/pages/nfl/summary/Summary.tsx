@@ -4,7 +4,7 @@ import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock, FaLock, F
 import PredictionChart from '@/components/nfl/PredictionChart';
 import PlayLog from '@/components/nfl/PlayLog';
 import axios from 'axios';
-import Boxscore from '@/pages/nfl/scoreboard/Info';
+import Info from '@/pages/nfl/scoreboard/Info';
 import GameLeaders from '@/pages/nfl/summary/GameLeaders';
 import SelectedAthletes from '@/components/nfl/SelectedAthletes';
 import VenueInfo from '@/components/VenueInfo';
@@ -54,6 +54,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   const { isAuthenticated, triggerLoginModal } = useAuth();
   const carouselRef = useRef<HTMLDivElement>(null);
   const [timeUntilGame, setTimeUntilGame] = useState<string>('');
+  const [gameCountdown, setGameCountdown] = useState<number>(0);
   const [isPickExpanded, setIsPickExpanded] = useState(true);
   const [apiPlayLog, setApiPlayLog] = useState<Array<{
     text: string;
@@ -243,6 +244,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
       const gameTime = new Date(competition.date).getTime();
       const distance = gameTime - now;
 
+      setGameCountdown(Math.max(0, distance));
+
       if (distance < 0) {
         setTimeUntilGame('Starting soon');
         return;
@@ -303,173 +306,16 @@ const SummaryView: React.FC<SummaryViewProps> = ({
           >
             {/* Info Section */}
             <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: isPreGame ? '50%' : '25%' }}>
-              {/* Box Score */}
-              <div className="mb-6">
-                {/* Boxscore Component */}
-                <Boxscore 
-                  homeTeam={homeTeam}
-                  awayTeam={awayTeam}
-                  competition={competition}
-                  getTeamLogo={getTeamLogo}
-                  gameDate={competition.date}
-                />
-              </div>
-
-              {/* Line Scores */}
-              {(homeTeam?.linescores || awayTeam?.linescores) && (
-                <div className="p-2 mb-6">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-[#00ffe7]/20">
-                          <th className="text-left text-[#b0b7bf] font-semibold py-2">Team</th>
-                          {[1, 2, 3, 4].map(q => (
-                            <th key={q} className="text-center text-[#b0b7bf] font-semibold py-2">Q{q}</th>
-                          ))}
-                          {(homeTeam?.linescores?.length ?? 0) > 4 && (
-                            <th className="text-center text-[#b0b7bf] font-semibold py-2">OT</th>
-                          )}
-                          <th className="text-center text-[#b0b7bf] font-semibold py-2">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b border-[#00ffe7]/10">
-                          <td className="py-3">
-                            <div className="flex items-center gap-2">
-                              <img src={getTeamLogo(awayTeam?.team)} alt={awayTeam?.team.abbreviation} className="w-7 h-6" />
-                              <span className="text-[#e0e7ef] font-bold">{awayTeam?.team.abbreviation}</span>
-                            </div>
-                          </td>
-                          {awayTeam?.linescores?.map((score, idx) => (
-                            <td key={idx} className="text-center text-[#e0e7ef] py-3">{score.displayValue}</td>
-                          ))}
-                          <td className="text-center text-[#00ffe7] font-bold py-3">{awayTeam?.score}</td>
-                        </tr>
-                        <tr>
-                          <td className="py-3">
-                            <div className="flex items-center gap-2">
-                              <img src={getTeamLogo(homeTeam?.team)} alt={homeTeam?.team.abbreviation} className="w-7 h-6" />
-                              <span className="text-[#e0e7ef] font-bold">{homeTeam?.team.abbreviation}</span>
-                            </div>
-                          </td>
-                          {homeTeam?.linescores?.map((score, idx) => (
-                            <td key={idx} className="text-center text-[#e0e7ef] py-3">{score.displayValue}</td>
-                          ))}
-                          <td className="text-center text-[#faafe8] font-bold py-3">{homeTeam?.score}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-
-              {/* Head-to-Head Leaders - Condensed */}
-              <GameLeaders 
+              <Info
+                homeTeam={homeTeam}
+                awayTeam={awayTeam}
+                competition={competition}
+                getTeamLogo={getTeamLogo}
+                gameCountdown={gameCountdown}
+                playLog={effectivePlayLog}
                 summary={summary}
-                homeTeamId={homeTeam?.id}
-                awayTeamId={awayTeam?.id}
+                gameId={gameId}
               />
-
-              {/* Team Statistics - Moved to Info Page */}
-              <div className="mt-6">
-                {/* Divider */}
-                <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
-                <div className="mx-2">
-                  <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
-                    <h1>Team Statistics</h1>
-                  </div>
-
-                  {summary?.boxscore?.teams && summary.boxscore.teams.length === 2 ? (
-                  <div className="space-y-4">
-                    {/* Team Headers */}
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                      <div className="flex items-center justify-center">
-                        <img
-                          src={getTeamLogo(summary.boxscore.teams.find(t => t.homeAway === 'away')?.team)}
-                          alt={summary.boxscore.teams.find(t => t.homeAway === 'away')?.team.displayName}
-                          className="w-12 h-12"
-                        />
-                      </div>
-                      <div className="flex items-center justify-center">
-                        <p className="text-[#b0b7bf] text-sm font-semibold">Stat</p>
-                      </div>
-                      <div className="flex items-center justify-center">
-                        <img
-                          src={getTeamLogo(summary.boxscore.teams.find(t => t.homeAway === 'home')?.team)}
-                          alt={summary.boxscore.teams.find(t => t.homeAway === 'home')?.team.displayName}
-                          className="w-12 h-12"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Stats Comparison */}
-                    {summary.boxscore.teams[0].statistics.map((_, statIdx) => {
-                      const awayTeamData = summary.boxscore.teams.find(t => t.homeAway === 'away');
-                      const homeTeamData = summary.boxscore.teams.find(t => t.homeAway === 'home');
-                      const awayStat = awayTeamData?.statistics[statIdx];
-                      const homeStat = homeTeamData?.statistics[statIdx];
-
-                      if (!awayStat || !homeStat) return null;
-
-                      return (
-                        <div key={`stat-${statIdx}`} className="grid grid-cols-3 gap-4 items-center bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
-                          <div className="text-center">
-                            <p className="text-[#00ffe7] font-bold text-lg">
-                              {awayStat.displayValue}
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-[#b0b7bf] text-sm font-semibold">
-                              {awayStat.label}
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-[#00ffe7] font-bold text-lg">
-                              {homeStat.displayValue}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-[#b0b7bf] text-center py-8">Team statistics will be available after the game.</p>
-                )}
-                </div>
-              </div>
-
-              {/* Predictions - Moved to Info Page */}
-              <div className="pt-4 pb-12">
-                {/* Divider */}
-                <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
-                <div className="mx-2">
-                  <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
-                    <h1>Game Prediction</h1>
-                  </div>
-                </div>
-                <div className="mx-2">
-                  {homeTeam && awayTeam && (
-                    <PredictionChart
-                      gameId={gameId}
-                      competitionId={competition.id}
-                      homeTeamInfo={{
-                        name: homeTeam.team.displayName,
-                        logo: getTeamLogo(homeTeam),
-                        color: homeTeam.team.color || '00ffe7'
-                      }}
-                      awayTeamInfo={{
-                        name: awayTeam.team.displayName,
-                        logo: getTeamLogo(awayTeam),
-                        color: awayTeam.team.color || 'faafe8'
-                      }}
-                      getTeamLogo={getTeamLogo}
-                      homeTeam={homeTeam.team}
-                      awayTeam={awayTeam.team}
-                    />
-                  )}
-                </div>
-              </div>
             </div>
 
             {/* Player Statistics Section */}
@@ -486,7 +332,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
               <div className="mx-2">
                 {summary?.boxscore?.players && summary.boxscore.players.length > 0 ? (
                   <div className="space-y-8">
-                  {summary.boxscore.players.map((teamData, teamIdx) => (
+                  {summary.boxscore.players.map((teamData: any, teamIdx: number) => ( 
+
                     <div key={`team-${teamIdx}`} className="space-y-4">
                       {/* Team Header */}
                       <div className="flex items-center gap-3 mb-4">
@@ -499,7 +346,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                       </div>
 
                       {/* Statistics Categories */}
-                      {teamData.statistics.map((category, catIdx) => (
+                      {teamData.statistics.map((category: any, catIdx: number) => (
                         <div key={`${teamData.team.id}-${category.name}-${catIdx}`} className="bg-[#23263a]/50 rounded-lg p-2 sm:p-4 border border-[#00ffe7]/10">
                           <h5 className="text-[#b0b7bf] font-semibold text-xs sm:text-sm mb-2">{category.text}</h5>
 
@@ -509,7 +356,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                               <thead>
                                 <tr className="border-b border-[#00ffe7]/10">
                                   <th className="text-left py-2 px-1 sm:px-2 text-[#b0b7bf] font-semibold">Player</th>
-                                  {category.labels.map((label, labelIdx) => (
+                                  {category.labels.map((label: any, labelIdx: number) => (
                                     <th key={`label-${labelIdx}`} className="text-center py-2 px-1 sm:px-2 text-[#b0b7bf] font-semibold whitespace-nowrap">
                                       {label}
                                     </th>
@@ -517,7 +364,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                                 </tr>
                               </thead>
                               <tbody>
-                                {category.athletes.map((athleteData, athleteIdx) => (
+                                {category.athletes.map((athleteData: any, athleteIdx: number) => (
                                   <tr
                                     key={`${athleteData.athlete.id}-${athleteIdx}`}
                                     className="border-b border-[#00ffe7]/5 hover:bg-[#00ffe7]/5 transition-colors cursor-pointer"
@@ -550,7 +397,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                                         </div>
                                       </div>
                                     </td>
-                                    {athleteData.stats.map((stat, statIdx) => (
+                                    {athleteData.stats.map((stat: any, statIdx: number) => (
                                       <td key={`stat-${statIdx}`} className="text-center py-2 px-1 sm:px-2 text-[#e0e7ef] text-xs sm:text-sm">
                                         {stat}
                                       </td>
@@ -561,7 +408,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                                 {category.totals && category.totals.length > 0 && (
                                   <tr className="border-t-2 border-[#00ffe7]/20 font-bold bg-[#00ffe7]/5">
                                     <td className="py-2 px-1 sm:px-2 text-[#00ffe7] text-xs sm:text-sm">Total</td>
-                                    {category.totals.map((total, totalIdx) => (
+                                    {category.totals.map((total: any, totalIdx: number) => (
                                       <td key={`total-${totalIdx}`} className="text-center py-2 px-1 sm:px-2 text-[#00ffe7] text-xs sm:text-sm">
                                         {total}
                                       </td>

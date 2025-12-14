@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus, FaCrosshairs, FaHandPointer } from 'react-icons/fa';
+import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus, FaCrosshairs, FaHandPointer, FaBolt, FaChartLine } from 'react-icons/fa';
 import LoadingFootball from '../../../components/common/LoadingFootball';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend, getEmptyImage } from 'react-dnd-html5-backend';
@@ -8,6 +8,9 @@ import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
 import FootballField from '@/components/nfl/FootballField';
+import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
+import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
+import { useAuth } from '@/providers/AuthContext';
 import type { Athlete } from '@/types/espn/athlete';
 
 // Multi-backend configuration for both desktop and mobile
@@ -787,411 +790,129 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     return <LoadingFootball message="Loading players..." />;
   }
 
-  return (
-    <DndProvider backend={MultiBackend} options={HTML5toTouch}>
-      <MyPreview />
-      <div>
+  const { isAuthenticated, triggerLoginModal } = useAuth();
 
-
-      {/* Content */}
-      <div className="">
-
-
-
-
-        {/* Selection Interface - Always show when expanded OR when locked */}
-        {(isExpanded || isLocked) && (
-          <div className="space-y-2">
-
-
-            {/* Current vs New Picks Display */}
-            <div className="">
-                {/* Divider */}
-                <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
-                
-                <div className="flex items-center justify-between my-2 px-2 pb-3 border-b border-[#00ffe7]/10">
-                <div>
-                    <h4 className={`font-bold text-3xl uppercase tracking-wide transition-all duration-500 ${
-                      isLocked ? 'text-[#4169e1]' : 'text-yellow-500'
-                    }`}>
-                      {isLocked ? 'Selected Picks' : 'Your Picks'}
-                    </h4>
-                </div>
-                
-                {/* Lock In Button or Total Score */}
-                {!isLocked ? (
-                  <button
-                  onClick={handleLockIn}
-                  disabled={newPicks.filter(p => p).length === 0 || isLockingIn}
-                  className={`btn-pink py-2 px-4 flex items-center justify-center gap-2 min-w-[120px] h-[50px] transition-opacity duration-300 rounded font-bold ${
-                    isViewTransitioning ? 'opacity-0' : 'opacity-100'
-                  } ${
-                    newPicks.filter(p => p).length === 0 || isLockingIn
-                    ? 'opacity-50 cursor-not-allowed'
-                    : ''
-                  }`}
-                  >
-                  {isLockingIn ? (
-                    <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Locking...</span>
-                    </>
-                  ) : (
-                    <>
-                    <FaUnlock />
-                    Lock In {newPicks.filter(p => p).length > 0 ? `(${newPicks.filter(p => p).length})` : ''}
-                    </>
-                  )}
-                  </button>
-                ) : (
-                  <div className={`text-right transition-all duration-500 min-w-[120px] h-[60px] flex flex-col justify-center ${
-                  isLocked ? 'opacity-100' : 'opacity-0'
-                  }`}>
-                  <div className="text-[#00ffe7] text-3xl font-bold leading-tight">{totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0)}</div>
-                  <div className="text-[#b0b7bf] text-xs">Total pts</div>
-                  </div>
-                )}
-                </div>
-
-              <div className="relative flex gap-4">
-                {/* Current Picks Column */}
-                <div 
-                  className="transition-all duration-800 ease-in-out"
-                  style={{
-                    width: !isLocked || isViewTransitioning || isAnimating ? 'calc(50% - 0.5rem)' : '100%'
-                  }}>
-                  <div className="text-[#b0b7bf] text-xs mb-2 font-bold h-[20px] flex items-center">
-                    {isLocked ? (
-                      <div className="flex items-center gap-2">
-                        🔒 Locked
-                      </div>
-                    ) : (
-                      'CURRENT'
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    {[...Array(5)].map((_, idx) => {
-                      const player = selectedPlayers[idx];
-                      if (!player) {
-                        return (
-                          <div
-                            key={`empty-current-${idx}`}
-                            className="bg-[#181a23]/50 rounded-lg p-4 border border-dashed border-[#00ffe7]/20 flex items-center gap-4 h-[72px]"
-                          >
-                            <div className="w-7 h-6 rounded-full bg-[#00ffe7]/20 text-[#00ffe7] font-bold text-xs flex items-center justify-center flex-shrink-0">
-                              {idx + 1}
-                            </div>
-                            <div className="text-[#b0b7bf] text-sm">Empty Slot</div>
-                          </div>
-                        );
-                      }
-
-                      const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
-                      const playerScore = currentSetScores[player.id] || 0;
-                      const teamLogo = player.team?.logo || (player.team?.logos && player.team.logos.length > 0 ? player.team.logos[0].href : null);
-                      // Check if THIS specific pick is being replaced by checking if there's a new pick at this index
-                      const isBeingReplaced = isAnimating && newPicks[idx] && newPicks[idx].id !== player.id;
-                      const isExpanded = expandedCardIndex === idx;
-                      
-                      return (
-                        <div
-                          key={player.id}
-                          onMouseDown={() => setExpandedCardIndex(idx)}
-                          onMouseUp={() => setExpandedCardIndex(null)}
-                          onMouseLeave={() => setExpandedCardIndex(null)}
-                          onTouchStart={() => setExpandedCardIndex(idx)}
-                          onTouchEnd={() => setExpandedCardIndex(null)}
-                          className={`relative overflow-hidden bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] transition-all duration-300 cursor-pointer hover:border-[#00ffe7]/60 ${
-                            isBeingReplaced ? 'opacity-0' : 'opacity-100'
-                          }`}
-                          style={{
-                            marginBottom: '8px',
-                            width: isExpanded ? '100%' : '100%',
-                            transform: isExpanded ? 'scaleX(1.5)' : 'scaleX(1)',
-                            transformOrigin: 'left center',
-                            zIndex: isExpanded ? 10 : 1,
-                          }}
-                        >
-                          {/* Large team logo background */}
-                          {teamLogo && (
-                            <img 
-                              src={teamLogo} 
-                              alt="" 
-                              className="absolute right-[10%] top-1/2 -translate-y-1/2 opacity-10 pointer-events-none"
-                              style={{
-                                width: '120px',
-                                height: '120px',
-                                objectFit: 'contain'
-                              }}
-                            />
-                          )}
-
-                          {headshotUrl ? (
-                            <img
-                              src={headshotUrl}
-                              alt={player.displayName}
-                              className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0 relative z-10"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                                if (fallback) fallback.style.display = 'flex';
-                              }}
-                            />
-                          ) : null}
-                          <div 
-                            className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0 relative z-10"
-                            style={{ display: headshotUrl ? 'none' : 'flex' }}
-                          >
-                            <FaUsers className="text-[#00ffe7] text-sm" />
-                          </div>
-                          <div className="flex-1 min-w-0 relative z-10">
-                            <div className={`text-white font-bold text-sm transition-all duration-300 ${
-                              isExpanded ? 'whitespace-normal' : 'whitespace-nowrap overflow-hidden text-ellipsis'
-                            }`} style={{ transform: isExpanded ? 'scaleX(0.67)' : 'scaleX(1)', transformOrigin: 'left center' }}>
-                              {isExpanded ? player.fullName || player.displayName : player.displayName}
-                            </div>
-                            <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis" style={{ transform: isExpanded ? 'scaleX(0.67)' : 'scaleX(1)', transformOrigin: 'left center' }}>
-                              {typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}
-                            </div>
-                          </div>
-                          
-                          {/* Score - Always show when expanded or when locked with stats */}
-                          {(isExpanded || (isLocked && showStats)) && (
-                            <div 
-                              className={`text-center transition-all duration-300 relative z-10 ${
-                                isExpanded || showStats ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
-                              }`}
-                              style={{ 
-                                transitionDelay: isExpanded ? '0ms' : `${idx * 100}ms`,
-                                transformOrigin: 'center',
-                                transform: isExpanded ? 'scaleX(0.67)' : 'scaleX(1)',
-                              }}
-                            >
-                              <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
-                              <div className="text-[#b0b7bf] text-[10px]">PTS</div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-
-                {/* New Picks Column - Always show when not locked */}
-                {!isLocked && (
-                  <div 
-                    className="transition-all duration-800 ease-in-out"
-                    style={{
-                      width: 'calc(50% - 0.5rem)',
-                      opacity: isViewTransitioning ? 0 : 1
-                    }}
-                  >
-                  <div className="text-[#faafe8] text-xs mb-2 font-bold h-[20px] flex items-center">NEW</div>
-                  <div className="space-y-2">
-                    {[...Array(5)].map((_, idx) => {
-                      const player = newPicks[idx];
-                      if (player) {
-                        return <DraggablePlayerCard key={player.id} player={player} index={idx} movePlayer={movePlayer} isAnimating={isAnimating} />;
-                      } else {
-                        return <EmptySlot key={`empty-${idx}`} index={idx} movePlayer={movePlayer} isActive={activeSlot === idx} onSlotClick={(slotIndex) => setActiveSlot(activeSlot === slotIndex ? null : slotIndex)} />;
-                      }
-                    })}
-                  </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Countdown Timer Panel - Only show when locked */}
-            {isLocked && (
-              <div className={`space-y-4 transition-all duration-700 ${
-                showStats ? 'opacity-100' : 'opacity-0'
-              }`}>
-                <div className="bg-gradient-to-r from-[#00ffe7]/5 to-[#faafe8]/5 rounded-lg p-4 border border-[#00ffe7]/20">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#00ffe7]/20 border-2 border-[#00ffe7] flex items-center justify-center">
-                        <FaLock className="text-[#00ffe7] text-sm" />
-                      </div>
-                      <div>
-                        <div className="text-white font-bold text-sm">Picks Locked</div>
-                        <div className="text-[#b0b7bf] text-xs">Next selection available in</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaClock className="text-[#00ffe7] text-xl" />
-                      <div className="text-[#00ffe7] text-3xl font-bold font-mono">
-                        {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
-                      </div>
-                    </div>
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center px-6">
+        <div className="max-w-md w-full">
+          {/* Hero Section */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#00ffe7]/20 via-[#1a1d2e] to-[#faafe8]/20 border-2 border-[#00ffe7]/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-6 sm:p-8">
+            {/* Animated background elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#00ffe7]/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#faafe8]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+            
+            <div className="relative z-10">
+              {/* Lock Icon */}
+              <div className="flex justify-center mb-4">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-[#00ffe7] blur-xl opacity-50 animate-pulse"></div>
+                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#00ffe7] to-[#faafe8] flex items-center justify-center shadow-lg">
+                    <FaLock className="text-[#1a1d2e] text-2xl" />
                   </div>
                 </div>
               </div>
-            )}
-            {/* Team Selector & Roster - Always show when not locked */}
-            {!isLocked && (
-              <div className="animate-fade-in">
-              <>
-            {/* Team Selector */}
-            <div className="flex gap-0">
+
+              {/* Headline */}
+              <h1>Unlock Your Picks</h1>
+              <p className="text-[#b0b7bf] text-center text-base mb-6">
+                Join the game and start making your predictions!
+              </p>
+
+              {/* Features Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
+                  <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
+                    <FaCheckCircle className="text-[#00ffe7] text-base" />
+                  </div>
+                  <div>
+                    <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Track Your Picks</h3>
+                    <p className="text-[#b0b7bf] text-xs">Follow predictions in real-time</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
+                  <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
+                    <FaBolt className="text-[#faafe8] text-base" />
+                  </div>
+                  <div>
+                    <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Live Updates</h3>
+                    <p className="text-[#b0b7bf] text-xs">Instant player scoring alerts</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
+                  <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
+                    <FaChartLine className="text-[#00ffe7] text-base" />
+                  </div>
+                  <div>
+                    <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Performance Stats</h3>
+                    <p className="text-[#b0b7bf] text-xs">Track prediction accuracy</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
+                  <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
+                    <FaUsers className="text-[#faafe8] text-base" />
+                  </div>
+                  <div>
+                    <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Compete & Compare</h3>
+                    <p className="text-[#b0b7bf] text-xs">See top picks and compete</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Button */}
               <button
-                onClick={() => setActiveTeam('home')}
-                className={`flex-1 py-3 rounded-t-lg font-bold flex items-center justify-center gap-2 transition-all border-2 ${
-                  activeTeam === 'home'
-                    ? 'bg-[#faafe8]/20 border-[#faafe8] text-[#faafe8]'
-                    : 'bg-[#181a23] border-[#faafe8]/30 text-gray-400 hover:border-[#faafe8]/50'
-                }`}
+                onClick={() => triggerLoginModal()}
+                className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-[#1a1d2e] font-bold text-base shadow-[0_0_20px_rgba(0,255,231,0.5)] hover:shadow-[0_0_30px_rgba(0,255,231,0.7)] transform hover:scale-105 transition-all duration-200"
               >
-                {homeTeamLogo && <img src={homeTeamLogo} alt="" className="w-7 h-6" />}
-                {homeTeamInfo.name}
+                Sign In to Start Picking
               </button>
-              <button
-                onClick={() => setActiveTeam('away')}
-                className={`flex-1 py-3 rounded-t-lg font-bold flex items-center justify-center gap-2 transition-all border-2 ${
-                  activeTeam === 'away'
-                    ? 'bg-[#00ffe7]/20 border-[#00ffe7] text-[#00ffe7]'
-                    : 'bg-[#181a23] border-[</h4>#00ffe7]/30 text-gray-400 hover:border-[#00ffe7]/50'
-                }`}
-              >
-                {awayTeamLogo && <img src={awayTeamLogo} alt="" className="w-7 h-6" />}
-                {awayTeamInfo.name}
-              </button>
-            </div>
 
-            {/* Player List */}
-            <div className="bg-[#181a23]/90 rounded-b-lg border-2 border-t-0 border-[#00ffe7]/30 p-4">
-              <h4 className="text-[#00ffe7] font-bold mb-4 flex items-center gap-2">
-                {currentTeamLogo && <img src={currentTeamLogo} alt="" className="w-7 h-6" />}
-                {currentTeamInfo.name} Roster
-              </h4>
-              
-              {/* Split into Offense and Defense columns */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Offense Column */}
-                <div>
-                  <h5 className="text-[#faafe8] font-bold text-sm mb-2">OFFENSE</h5>
-                  <div className="space-y-2">
-                    {currentRoster.filter(player => {
-                      const pos = typeof player.position === 'string' ? player.position : player.position?.abbreviation;
-                      return ['QB', 'RB', 'WR', 'TE', 'FB', 'OL', 'OT', 'OG', 'C'].includes(pos);
-                    }).map((player) => {
-                      const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
-                      const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
-                      const isDuplicate = isInCurrent && !isInNew;
-                      const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
-                      return (
-                        <button
-                          key={player.id}
-                          onClick={() => handlePlayerSelect(player)}
-                          disabled={isDuplicate}
-                          className={`w-full p-2 rounded-lg flex items-center gap-2 transition-all text-left ${
-                            isDuplicate
-                              ? 'bg-gray-700/20 border-2 border-gray-600 opacity-50 cursor-not-allowed'
-                              : isInNew
-                              ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7]'
-                              : 'bg-[#23263a]/50 border-2 border-transparent hover:border-[#00ffe7]/30 cursor-pointer'
-                          }`}
-                        >
-                          {headshotUrl ? (
-                            <img
-                              src={headshotUrl}
-                              alt={player.displayName}
-                              className="w-8 h-8 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                                if (fallback) fallback.style.display = 'flex';
-                              }}
-                            />
-                          ) : null}
-                          <div 
-                            className="w-8 h-8 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
-                            style={{ display: headshotUrl ? 'none' : 'flex' }}
-                          >
-                            <FaUsers className="text-[#00ffe7] text-xs" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
-                            <div className="text-gray-400 text-[10px]">
-                              {typeof player.position === 'string' ? player.position : player.position?.abbreviation} {player.jersey && `• #${player.jersey}`}
-                            </div>
-                          </div>
-                          {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs" />}
-                          {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Defense Column */}
-                <div>
-                  <h5 className="text-[#faafe8] font-bold text-sm mb-2">DEFENSE</h5>
-                  <div className="space-y-2">
-                    {currentRoster.filter(player => {
-                      const pos = typeof player.position === 'string' ? player.position : player.position?.abbreviation;
-                      return ['DE', 'DT', 'LB', 'CB', 'S', 'DB', 'DL', 'SAF', 'MLB', 'OLB'].includes(pos);
-                    }).map((player) => {
-                      const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
-                      const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
-                      const isDuplicate = isInCurrent && !isInNew;
-                      const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
-                      return (
-                        <button
-                          key={player.id}
-                          onClick={() => handlePlayerSelect(player)}
-                          disabled={isDuplicate}
-                          className={`w-full p-2 rounded-lg flex items-center gap-2 transition-all text-left ${
-                            isDuplicate
-                              ? 'bg-gray-700/20 border-2 border-gray-600 opacity-50 cursor-not-allowed'
-                              : isInNew
-                              ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7]'
-                              : 'bg-[#23263a]/50 border-2 border-transparent hover:border-[#00ffe7]/30 cursor-pointer'
-                          }`}
-                        >
-                          {headshotUrl ? (
-                            <img
-                              src={headshotUrl}
-                              alt={player.displayName}
-                              className="w-8 h-8 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                                if (fallback) fallback.style.display = 'flex';
-                              }}
-                            />
-                          ) : null}
-                          <div 
-                            className="w-8 h-8 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
-                            style={{ display: headshotUrl ? 'none' : 'flex' }}
-                          >
-                            <FaUsers className="text-[#00ffe7] text-xs" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
-                            <div className="text-gray-400 text-[10px]">
-                              {typeof player.position === 'string' ? player.position : player.position?.abbreviation} {player.jersey && `• #${player.jersey}`}
-                            </div>
-                          </div>
-                          {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs" />}
-                          {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+              <p className="text-[#b0b7bf] text-center text-xs mt-3">
+                Free to join • No credit card required
+              </p>
             </div>
-        </>
-        </div>
-        )}
           </div>
-        )}
+        </div>
       </div>
-    </div>
-    </DndProvider>
+    );
+  }
+
+  return (
+    <>
+      {/* Top Picks - All Players Who Scored */}
+      <TopPicks
+        gameId={gameId}
+        homeTeamId={homeTeamId}
+        awayTeamId={awayTeamId}
+        playLog={playLog}
+        getTeamLogo={getTeamLogo!}
+        homeTeam={homeTeam!}
+        awayTeam={awayTeam!}
+      />
+      
+      {/* Your Picks Section */}
+      <div className="mt-4">
+        <YourPicks
+          gameId={gameId}
+          homeTeamId={homeTeamId}
+          awayTeamId={awayTeamId}
+          homeTeamInfo={homeTeamInfo}
+          awayTeamInfo={awayTeamInfo}
+          isExpanded={isExpanded}
+          onToggle={onToggle}
+          playLog={playLog}
+          situation={situation}
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          getTeamLogo={getTeamLogo}
+        />
+      </div>
+    </>
   );
 };
+
 
 export default PlayerPick;

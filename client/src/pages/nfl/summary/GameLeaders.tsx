@@ -5,7 +5,7 @@ import { GiPodium } from "react-icons/gi";
 import type { Summary } from '@/types/espn/summary';
 
 interface HeadToHeadProps {
-  summary: Summary | null;
+  summary?: Summary | null;
   homeTeamId?: string;
   awayTeamId?: string;
 }

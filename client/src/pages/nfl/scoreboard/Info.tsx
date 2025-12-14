@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
 import FootballField from '@/components/nfl/FootballField';
 import PlayLog from '@/components/nfl/PlayLog';
+import GameLeaders from '@/pages/nfl/summary/GameLeaders';
+import PredictionChart from '@/components/nfl/PredictionChart';
+import type { Summary } from '@/types/espn/summary';
 
 interface InfoProps {
   homeTeam: any;
@@ -10,6 +13,8 @@ interface InfoProps {
   competition: any;
   getTeamLogo: (team: any) => string;
   gameCountdown?: number;
+  summary?: Summary | null;
+  gameId?: string;
   playLog: Array<{
     text: string;
     quarter: number;
@@ -36,6 +41,8 @@ const Info: React.FC<InfoProps> = ({
   competition,
   getTeamLogo,
   gameCountdown = 0,
+  summary,
+  gameId,
   playLog,
 }) => {
   const navigate = useNavigate();
@@ -339,6 +346,113 @@ const Info: React.FC<InfoProps> = ({
             )}
         </div>
       )}
+
+      {/* Head-to-Head Leaders - Condensed */}
+      <GameLeaders 
+        summary={summary}
+        homeTeamId={homeTeam?.id}
+        awayTeamId={awayTeam?.id}
+      />
+
+      {/* Team Statistics */}
+      <div className="mt-6">
+        {/* Divider */}
+        <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+        <div className="mx-2">
+          <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
+            <h1>Team Statistics</h1>
+          </div>
+
+          {summary?.boxscore?.teams && summary.boxscore.teams.length === 2 ? (
+          <div className="space-y-4">
+            {/* Team Headers */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="flex items-center justify-center">
+                <img
+                  src={getTeamLogo(summary.boxscore.teams.find((t: any) => t.homeAway === 'away')?.team)}
+                  alt={summary.boxscore.teams.find((t: any) => t.homeAway === 'away')?.team.displayName}
+                  className="w-12 h-12"
+                />
+              </div>
+              <div className="flex items-center justify-center">
+                <p className="text-[#b0b7bf] text-sm font-semibold">Stat</p>
+              </div>
+              <div className="flex items-center justify-center">
+                <img
+                  src={getTeamLogo(summary.boxscore.teams.find((t: any) => t.homeAway === 'home')?.team)}
+                  alt={summary.boxscore.teams.find((t: any) => t.homeAway === 'home')?.team.displayName}
+                  className="w-12 h-12"
+                />
+              </div>
+            </div>
+
+            {/* Stats Comparison */}
+            {summary.boxscore.teams[0].statistics.map((_: any, statIdx: number) => {
+              const awayTeamData = summary.boxscore.teams.find((t: any) => t.homeAway === 'away');
+              const homeTeamData = summary.boxscore.teams.find((t: any) => t.homeAway === 'home');
+              const awayStat = awayTeamData?.statistics[statIdx];
+              const homeStat = homeTeamData?.statistics[statIdx];
+
+              if (!awayStat || !homeStat) return null;
+
+              return (
+                <div key={`stat-${statIdx}`} className="grid grid-cols-3 gap-4 items-center bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
+                  <div className="text-center">
+                    <p className="text-[#00ffe7] font-bold text-lg">
+                      {awayStat.displayValue}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[#b0b7bf] text-sm font-semibold">
+                      {awayStat.label}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[#00ffe7] font-bold text-lg">
+                      {homeStat.displayValue}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-[#b0b7bf] text-center py-8">Team statistics will be available after the game.</p>
+        )}
+        </div>
+      </div>
+
+      {/* Predictions */}
+      <div className="pt-4 pb-12">
+        {/* Divider */}
+        <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+        <div className="mx-2">
+          <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
+            <h1>Game Prediction</h1>
+          </div>
+        </div>
+        <div className="mx-2">
+          {homeTeam && awayTeam && gameId && (
+            <PredictionChart
+              gameId={gameId}
+              competitionId={competition.id}
+              homeTeamInfo={{
+                name: homeTeam.team.displayName,
+                logo: getTeamLogo(homeTeam),
+                color: homeTeam.team.color || '00ffe7'
+              }}
+              awayTeamInfo={{
+                name: awayTeam.team.displayName,
+                logo: getTeamLogo(awayTeam),
+                color: awayTeam.team.color || 'faafe8'
+              }}
+              getTeamLogo={getTeamLogo}
+              homeTeam={homeTeam.team}
+              awayTeam={awayTeam.team}
+            />
+          )}
+        </div>
+      </div>
     </>
   );
 };

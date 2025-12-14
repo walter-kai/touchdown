@@ -366,8 +366,9 @@ const YourPicks: React.FC<PlayerPickProps> = ({
               setShowStats(true);
               
               // Calculate remaining cooldown time from backend timestamp
+              let lockedAt = null;
               if (latestPick.timestamp) {
-                const lockedAt = latestPick.timestamp._seconds 
+                lockedAt = latestPick.timestamp._seconds 
                   ? latestPick.timestamp._seconds * 1000 
                   : new Date(latestPick.timestamp).getTime();
                 const elapsed = Date.now() - lockedAt;
@@ -383,7 +384,18 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 }
               }
               
-              return; // Skip localStorage if we got backend data
+              // CRITICAL: Save backend data to localStorage so scoring calculation can find lock times
+              const backendState = {
+                players: latestPick.players,
+                lockedAt: lockedAt,
+                totalScore: latestPick.totalScore || 0,
+                playerLockTimes: latestPick.playerLockTimes || {},
+                playerHistory: latestPick.playerHistory || {}
+              };
+              localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(backendState));
+              console.log('💾 Saved backend picks to localStorage:', backendState);
+              
+              return; // Skip localStorage fallback if we got backend data
             }
           }
         }
@@ -429,58 +441,132 @@ const YourPicks: React.FC<PlayerPickProps> = ({
       return;
     }
 
+    console.log('🔄 YourPicks: Calculating scores...');
+    console.log('📊 Selected players:', selectedPlayers.map(p => `${p.displayName} (${p.id})`));
+    console.log('📝 Total plays in log:', playLog.length);
+    
+    // Debug first play timestamp format
+    if (playLog.length > 0 && playLog[0].timestamp) {
+      const firstPlay = playLog[0];
+      console.log('🕐 First play timestamp type:', typeof firstPlay.timestamp);
+      console.log('🕐 First play timestamp value:', firstPlay.timestamp);
+      console.log('🕐 First play timestamp instanceof Date:', firstPlay.timestamp instanceof Date);
+      if (firstPlay.timestamp instanceof Date) {
+        console.log('🕐 First play Date.getTime():', firstPlay.timestamp.getTime());
+      } else {
+        console.log('🕐 First play new Date().getTime():', new Date(firstPlay.timestamp as any).getTime());
+      }
+    }
+
     const scores: Record<string, number> = {};
     
     // Get player history from localStorage (tracks when players were active)
-    const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+    const storageKey = `playerPick_${homeTeamId}_${awayTeamId}`;
+    console.log('🔑 Looking for localStorage key:', storageKey);
+    console.log('🏠 Home team ID:', homeTeamId);
+    console.log('✈️ Away team ID:', awayTeamId);
+    
+    const savedState = localStorage.getItem(storageKey);
+    console.log('💾 Raw savedState exists:', !!savedState);
+    console.log('💾 Raw savedState length:', savedState?.length);
+    if (savedState) {
+      console.log('💾 Raw savedState preview:', savedState.substring(0, 200));
+    }
+    
     let playerHistory: Record<string, Array<{ start: number; end?: number }>> = {};
     let currentPlayerLockTimes: Record<string, number> = {};
+    let globalLockedAt: number | null = null;
     
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
+        console.log('💾 Parsed state keys:', Object.keys(parsed));
+        console.log('💾 Parsed state full:', parsed);
         playerHistory = parsed.playerHistory || {};
         currentPlayerLockTimes = parsed.playerLockTimes || {};
+        globalLockedAt = parsed.lockedAt || null;
+        console.log('💾 Player history from localStorage:', playerHistory);
+        console.log('💾 Current lock times:', currentPlayerLockTimes);
+        console.log('💾 Global lockedAt:', globalLockedAt, globalLockedAt ? new Date(globalLockedAt).toISOString() : 'null');
       } catch (e) {
-        console.error('Error parsing player history:', e);
+        console.error('❌ Error parsing player history:', e);
       }
+    } else {
+      console.warn('⚠️ No saved state found in localStorage');
     }
 
     selectedPlayers.forEach(player => {
       scores[player.id] = 0;
       
       // Get all time periods this player was active
-      const activePeriods = playerHistory[player.id] || [];
+      let activePeriods = playerHistory[player.id] || [];
       
       // Add current active period if player is currently locked
       if (currentPlayerLockTimes[player.id]) {
         activePeriods.push({ start: currentPlayerLockTimes[player.id] });
       }
       
-      playLog.forEach(play => {
-        const playTimestamp = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
-        
-        // Check if play occurred during any of the player's active periods
-        const playDuringActivePeriod = activePeriods.some(period => {
-          const afterStart = playTimestamp >= period.start;
-          const beforeEnd = !period.end || playTimestamp <= period.end;
-          return afterStart && beforeEnd;
-        });
-        
-        if (!playDuringActivePeriod) {
-          return; // Skip this play - player wasn't active
-        }
-
+      // Fallback: If no specific player lock time, use the global lockedAt from saved state
+      if (activePeriods.length === 0 && globalLockedAt) {
+        activePeriods = [{ start: globalLockedAt }];
+        console.log(`📌 Using global lockedAt for ${player.displayName}: ${new Date(globalLockedAt).toISOString()}`);
+      }
+      
+      console.log(`🔍 ${player.displayName} (${player.id}) active periods:`, activePeriods.map(p => ({
+        start: new Date(p.start).toISOString(),
+        end: p.end ? new Date(p.end).toISOString() : 'ongoing'
+      })));
+      
+      let playsInvolved = 0;
+      let playsSkipped = 0;
+      let playsCounted = 0;
+      
+      playLog.forEach((play, playIndex) => {
         if (play.athletesInvolved) {
-          play.athletesInvolved.forEach(athlete => {
-            if (athlete.id === player.id) {
-              scores[player.id]++;
+          const isInvolved = play.athletesInvolved.some(a => a.id === player.id);
+          if (isInvolved) {
+            playsInvolved++;
+            
+            // If still no active periods defined, skip (shouldn't happen per user)
+            if (activePeriods.length === 0) {
+              playsSkipped++;
+              console.warn(`⚠️ No active periods for ${player.displayName} - skipping play`);
+              return;
             }
-          });
+            
+            const playTimestamp = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
+            
+            // Debug first few plays
+            if (playIndex < 3) {
+              console.log(`📍 Play ${playIndex}: ${play.text.substring(0, 50)}...`);
+              console.log(`  ⏰ Play time: ${new Date(playTimestamp).toISOString()} (${playTimestamp})`);
+              console.log(`  🔒 Lock time: ${new Date(activePeriods[0].start).toISOString()} (${activePeriods[0].start})`);
+              console.log(`  ⏱️ Time diff: ${(playTimestamp - activePeriods[0].start) / 1000} seconds`);
+            }
+            
+            // Check if play occurred during any of the player's active periods
+            const playDuringActivePeriod = activePeriods.some(period => {
+              const afterStart = playTimestamp >= period.start;
+              const beforeEnd = !period.end || playTimestamp <= period.end;
+              return afterStart && beforeEnd;
+            });
+            
+            if (playDuringActivePeriod) {
+              scores[player.id]++;
+              playsCounted++;
+            } else {
+              playsSkipped++;
+            }
+          }
         }
       });
+      
+      console.log(`✅ ${player.displayName}: ${scores[player.id]} pts (involved in ${playsInvolved} plays, ${playsCounted} counted, ${playsSkipped} skipped by time filter)`);
+
     });
 
+    console.log('📊 Final YourPicks scores:', scores);
+    console.log('🕐 Current time:', new Date().toISOString(), `(${Date.now()})`);
     setCurrentSetScores(scores);
   }, [playLog, selectedPlayers, homeTeamId, awayTeamId]);
 
