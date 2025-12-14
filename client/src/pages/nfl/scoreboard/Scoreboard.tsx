@@ -118,14 +118,14 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
     <div className="pb-24">
       <div className="max-w-7xl mx-auto">
         {/* Carousel Container */}
-        <div className="overflow-hidden relative">
+        <div className="overflow-hidden relative pt-12 max-h-[calc(100vh-200px)]">
           <div
             ref={carouselRef}
-            className="flex transition-transform duration-500 ease-in-out"
+            className="flex transition-transform duration-500 ease-in-out h-full"
             style={{ width: '400%' }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 py-4" style={{ width: '25%' }}>
+            <div className="w-full flex-shrink-0" style={{ width: '25%' }}>
 
               <div className='mx-2'>
                 {/* Box Score */}
@@ -187,80 +187,80 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                 </div>
               )}
              
-                {/* Live Game Situation */}
-                {competition.situation && competition.status.type.state === 'in' && (
-                  <div className="space-y-4">
-                    {/* Football Field Visualization */}
-                    {competition.situation.lastPlay && (
-                      <div className="">
-                        {/* Field Visualization */}
-                        <div className="pt-2 ">
-                            <div className='mx-2'>
-                              <FootballField
-                                homeTeam={homeTeam}
-                                awayTeam={awayTeam}
-                                lastPlay={competition.situation.lastPlay}
-                                getTeamLogo={getTeamLogo}
-                              />
-                              {/* Timeouts */}
-                              <div className="flex justify-between items-center pt-4">
-                                <div className="text-center">
-                                  <p className="text-[#b0b7bf] text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
-                                  <div className="flex gap-1 justify-center">
-                                    {[...Array(3)].map((_, i) => (
-                                      <div
-                                        key={i}
-                                        className={`w-3 h-3 rounded-full ${
-                                          i < ((competition.situation?.awayTimeouts ?? 3))
-                                            ? 'bg-[#00ffe7]'
-                                            : 'bg-gray-600'
-                                        }`}
-                                      />
-                                    ))}
-                                  </div>
-                                </div>
-                                <div className="text-center">
-                                  <p className="text-[#b0b7bf] text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
-                                  <div className="flex gap-1 justify-center">
-                                    {[...Array(3)].map((_, i) => (
-                                      <div
-                                        key={i}
-                                        className={`w-3 h-3 rounded-full ${
-                                          i < ((competition.situation?.homeTimeouts ?? 3))
-                                            ? 'bg-[#faafe8]'
-                                            : 'bg-gray-600'
-                                        }`}
-                                      />
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Play Log */}
-                              <div className="mt-4">
-                                <PlayLog
-                                  playLog={playLog}
-                                  homeTeam={homeTeam}
-                                  awayTeam={awayTeam}
-                                  getTeamLogo={getTeamLogo}
-                                  title="Play Log"
-                                  showTitle={true}
-                                />
+              {/* Live Game Situation */}
+              {competition.situation && competition.status.type.state === 'in' && (
+                <div className="space-y-4">
+                  {/* Football Field Visualization */}
+                  {competition.situation.lastPlay && (
+                    <div className="">
+                      {/* Field Visualization */}
+                      <div className="pt-2 ">
+                        <div className='mx-2'>
+                          <FootballField
+                            homeTeam={homeTeam}
+                            awayTeam={awayTeam}
+                            lastPlay={competition.situation.lastPlay}
+                            getTeamLogo={getTeamLogo}
+                          />
+                          {/* Timeouts */}
+                          <div className="flex justify-between items-center pt-4">
+                            <div className="text-center">
+                              <p className="text-[#b0b7bf] text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
+                              <div className="flex gap-1 justify-center">
+                                {[...Array(3)].map((_, i) => (
+                                  <div
+                                    key={i}
+                                    className={`w-3 h-3 rounded-full ${
+                                      i < ((competition.situation?.awayTimeouts ?? 3))
+                                        ? 'bg-[#00ffe7]'
+                                        : 'bg-gray-600'
+                                    }`}
+                                  />
+                                ))}
                               </div>
                             </div>
-                            {/* Game Leaders */}
-                            <div className="mt-4">
-                              {/* <GameLeaders
-                                summary={event.competitions[0].summary || null}
-                                homeTeamId={event.competitions[0].competitors.find(c => c.homeAway === 'home')?.id}
-                                awayTeamId={event.competitions[0].competitors.find(c => c.homeAway === 'away')?.id}
-                              /> */}
+                            <div className="text-center">
+                              <p className="text-[#b0b7bf] text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
+                              <div className="flex gap-1 justify-center">
+                                {[...Array(3)].map((_, i) => (
+                                  <div
+                                    key={i}
+                                    className={`w-3 h-3 rounded-full ${
+                                      i < ((competition.situation?.homeTimeouts ?? 3))
+                                        ? 'bg-[#faafe8]'
+                                        : 'bg-gray-600'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
                             </div>
                           </div>
+
+                          {/* Play Log */}
+                          <div className="mt-4">
+                            <PlayLog
+                              playLog={playLog}
+                              homeTeam={homeTeam}
+                              awayTeam={awayTeam}
+                              getTeamLogo={getTeamLogo}
+                              title="Play Log"
+                              showTitle={true}
+                            />
+                          </div>
                         </div>
-                      )}
+                        {/* Game Leaders */}
+                        <div className="mt-4">
+                          {/* <GameLeaders
+                            summary={event.competitions[0].summary || null}
+                            homeTeamId={event.competitions[0].competitors.find(c => c.homeAway === 'home')?.id}
+                            awayTeamId={event.competitions[0].competitors.find(c => c.homeAway === 'away')?.id}
+                          /> */}
+                        </div>
+                      </div>
                     </div>
                   )}
+                </div>
+              )}
  
               {/* Pre-game or Post-game Info */}
               {competition.status.type.state !== 'in' && (
@@ -312,30 +312,15 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                         </div>
                       </div>
                     )}
-                  </div>
-                )}
+                </div>
+              )}
 
               {/* End of Info Section  */}
             </div>
 
             {/* Pick Section - Top Picks & Your Picks */}
             <div className="w-full flex-shrink-0" style={{ width: '25%' }}>
-                {/* Top Picks - All Players Who Scored */}
-                {homeTeam?.id && awayTeam?.id && (
-                  <div className="">
-                    <TopPicks
-                      homeTeamId={homeTeam.id}
-                      awayTeamId={awayTeam.id}
-                      playLog={playLog}
-                      getTeamLogo={getTeamLogo}
-                      homeTeam={homeTeam}
-                      awayTeam={awayTeam}
-                    />
-                  </div>
-                )}
-                {/* Your Picks Section */}
-                <div className="mt-4">
-                  {!isAuthenticated ? (
+                {!isAuthenticated ? (
                     // Login Prompt - Advertisement Style
                     <div className="flex items-center justify-center px-6">
                       <div className="max-w-md w-full">
@@ -423,37 +408,55 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                       </div>
                     </div>
                   ) : (
-                    // Authenticated - Show YourPicks component
-                    homeTeam?.id && awayTeam?.id && (
-                      <YourPicks
-                        gameId={event.id}
-                        homeTeamId={homeTeam.id}
-                        awayTeamId={awayTeam.id}
-                        homeTeamInfo={{
-                          name: homeTeam.team.displayName,
-                          logo: getTeamLogo(homeTeam),
-                          color: homeTeam.team.color || '00ffe7'
-                        }}
-                        awayTeamInfo={{
-                          name: awayTeam.team.displayName,
-                          logo: getTeamLogo(awayTeam),
-                          color: awayTeam.team.color || 'faafe8'
-                        }}
-                        isExpanded={isPickExpanded}
-                        onToggle={() => setIsPickExpanded(!isPickExpanded)}
-                        playLog={playLog}
-                        situation={competition.situation}
-                        homeTeam={homeTeam}
-                        awayTeam={awayTeam}
-                        getTeamLogo={getTeamLogo}
-                      />
-                    )
+                    // Authenticated - Show Top Picks & Your Picks
+                    <>
+                      {/* Top Picks - All Players Who Scored */}
+                      {homeTeam?.id && awayTeam?.id && (
+                        <div className="">
+                          <TopPicks
+                            homeTeamId={homeTeam.id}
+                            awayTeamId={awayTeam.id}
+                            playLog={playLog}
+                            getTeamLogo={getTeamLogo}
+                            homeTeam={homeTeam}
+                            awayTeam={awayTeam}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Your Picks Section */}
+                      <div className="mt-4">
+                        {homeTeam?.id && awayTeam?.id && (
+                          <YourPicks
+                            gameId={event.id}
+                            homeTeamId={homeTeam.id}
+                            awayTeamId={awayTeam.id}
+                            homeTeamInfo={{
+                              name: homeTeam.team.displayName,
+                              logo: getTeamLogo(homeTeam),
+                              color: homeTeam.team.color || '00ffe7'
+                            }}
+                            awayTeamInfo={{
+                              name: awayTeam.team.displayName,
+                              logo: getTeamLogo(awayTeam),
+                              color: awayTeam.team.color || 'faafe8'
+                            }}
+                            isExpanded={isPickExpanded}
+                            onToggle={() => setIsPickExpanded(!isPickExpanded)}
+                            playLog={playLog}
+                            situation={competition.situation}
+                            homeTeam={homeTeam}
+                            awayTeam={awayTeam}
+                            getTeamLogo={getTeamLogo}
+                          />
+                        )}
+                      </div>
+                    </>
                   )}
-                </div>
             </div>
 
             {/* Odds Section */}
-            <div className="w-full flex-shrink-0 pt-2 pb-8" style={{ width: '25%' }}>
+            <div className="w-full flex-shrink-0" style={{ width: '25%' }}>
               {/* Divider */}
               <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
               <div className="mx-2">
@@ -483,7 +486,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 pt-2 pb-8" style={{ width: '25%' }}>
+            <div className="w-full flex-shrink-0" style={{ width: '25%' }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}
