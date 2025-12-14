@@ -372,11 +372,14 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
               {/* Team Statistics - Moved to Info Page */}
               <div className="mt-6">
-                <div className="flex items-center mb-6">
-                  <h1>Team Statistics</h1>
-                </div>
+                {/* Divider */}
+                <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+                <div className="mx-2">
+                  <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
+                    <h1>Team Statistics</h1>
+                  </div>
 
-                {summary?.boxscore?.teams && summary.boxscore.teams.length === 2 ? (
+                  {summary?.boxscore?.teams && summary.boxscore.teams.length === 2 ? (
                   <div className="space-y-4">
                     {/* Team Headers */}
                     <div className="grid grid-cols-3 gap-4 mb-6">
@@ -432,41 +435,56 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 ) : (
                   <p className="text-[#b0b7bf] text-center py-8">Team statistics will be available after the game.</p>
                 )}
+                </div>
               </div>
 
               {/* Predictions - Moved to Info Page */}
               <div className="pt-4 pb-12">
-                <div className="flex items-center mb-4">
-                  <h1>Game Prediction</h1>
+                {/* Divider */}
+                <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+                <div className="mx-2">
+                  <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
+                    <h1>Game Prediction</h1>
+                  </div>
                 </div>
-                {homeTeam && awayTeam && (
-                  <PredictionChart
-                    gameId={gameId}
-                    competitionId={competition.id}
-                    homeTeamInfo={{
-                      name: homeTeam.team.displayName,
-                      logo: getTeamLogo(homeTeam),
-                      color: homeTeam.team.color || '00ffe7'
-                    }}
-                    awayTeamInfo={{
-                      name: awayTeam.team.displayName,
-                      logo: getTeamLogo(awayTeam),
-                      color: awayTeam.team.color || 'faafe8'
-                    }}
-                  />
-                )}
+                <div className="mx-2">
+                  {homeTeam && awayTeam && (
+                    <PredictionChart
+                      gameId={gameId}
+                      competitionId={competition.id}
+                      homeTeamInfo={{
+                        name: homeTeam.team.displayName,
+                        logo: getTeamLogo(homeTeam),
+                        color: homeTeam.team.color || '00ffe7'
+                      }}
+                      awayTeamInfo={{
+                        name: awayTeam.team.displayName,
+                        logo: getTeamLogo(awayTeam),
+                        color: awayTeam.team.color || 'faafe8'
+                      }}
+                      getTeamLogo={getTeamLogo}
+                      homeTeam={homeTeam.team}
+                      awayTeam={awayTeam.team}
+                    />
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Player Statistics Section */}
             {!isPreGame && (
             <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '25%' }}>
-              <div className="flex items-center mb-6">
-                <h1>Player Statistics</h1>
+              {/* Divider */}
+              <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+              <div className="mx-2">
+                <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
+                  <h1>Player Statistics</h1>
+                </div>
               </div>
 
-              {summary?.boxscore?.players && summary.boxscore.players.length > 0 ? (
-                <div className="space-y-8">
+              <div className="mx-2">
+                {summary?.boxscore?.players && summary.boxscore.players.length > 0 ? (
+                  <div className="space-y-8">
                   {summary.boxscore.players.map((teamData, teamIdx) => (
                     <div key={`team-${teamIdx}`} className="space-y-4">
                       {/* Team Header */}
@@ -555,39 +573,44 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                         </div>
                       ))}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-[#b0b7bf] text-center py-8">Player statistics will be available after the game.</p>
-              )}
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[#b0b7bf] text-center py-8">Player statistics will be available after the game.</p>
+                )}
+              </div>
             </div>
             )}
 
             {/* Plays Section - Drive by Drive */}
             {!isPreGame && (
             <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '25%' }}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
+              {/* Divider */}
+              <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+              <div className="mx-2">
+                <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#00ffe7]/10">
                   <h1>Plays</h1>
+                  {playLog.length > 0 && (
+                    <span className="text-[#b0b7bf] text-xs">
+                      {playLog.length} {playLog.length === 1 ? 'play' : 'plays'} recorded
+                    </span>
+                  )}
                 </div>
-                {playLog.length > 0 && (
-                  <span className="text-[#b0b7bf] text-xs">
-                    {playLog.length} {playLog.length === 1 ? 'play' : 'plays'} recorded
-                  </span>
-                )}
               </div>
 
               {/* Always use the PlayLog component for consistency */}
-              <div className="relative">
-                <div className="space-y-6">
-                  <PlayLog
-                    playLog={effectivePlayLog}
-                    homeTeam={homeTeam as any}
-                    awayTeam={awayTeam as any}
-                    getTeamLogo={getTeamLogo}
-                    title="Plays"
-                    showTitle={false}
-                  />
+              <div className="mx-2">
+                <div className="relative">
+                  <div className="space-y-6">
+                    <PlayLog
+                      playLog={effectivePlayLog}
+                      homeTeam={homeTeam as any}
+                      awayTeam={awayTeam as any}
+                      getTeamLogo={getTeamLogo}
+                      title="Plays"
+                      showTitle={false}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

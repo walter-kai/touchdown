@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaFootballBall } from "react-icons/fa";
 import axios from "axios";
@@ -18,20 +18,38 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
   awayTeamName,
 }) => {
   const navigate = useNavigate();
+  const fetchedKeyRef = useRef<string | null>(null);
   const [homeTeamLeaders, setHomeTeamLeaders] = useState<Leader[]>([]);
   const [awayTeamLeaders, setAwayTeamLeaders] = useState<Leader[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const key = `${homeTeamId}-${awayTeamId}`;
+    if (!homeTeamId || !awayTeamId) {
+      setLoading(false);
+      return;
+    }
+    // Prevent duplicate fetches on re-render/StrictMode
+    if (fetchedKeyRef.current === key) return;
+    fetchedKeyRef.current = key;
+
+    const abortController = new AbortController();
+
     const fetchLeaders = async () => {
       try {
         setLoading(true);
         setError(null);
 
         const [homeResponse, awayResponse] = await Promise.all([
-          axios.get(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${homeTeamId}`),
-          axios.get(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${awayTeamId}`)
+          axios.get(
+            `https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${homeTeamId}`,
+            { signal: abortController.signal }
+          ),
+          axios.get(
+            `https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${awayTeamId}`,
+            { signal: abortController.signal }
+          )
         ]);
 
         const homeLeaders = homeResponse.data.team?.nextEvent?.[0]?.competitions?.[0]?.competitors?.find(
@@ -45,6 +63,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
         setHomeTeamLeaders(homeLeaders);
         setAwayTeamLeaders(awayLeaders);
       } catch (err) {
+        if ((err as any)?.name === 'CanceledError') return;
         console.error('Failed to fetch team leaders:', err);
         setError('Failed to load team leaders data');
       } finally {
@@ -53,6 +72,10 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
     };
 
     fetchLeaders();
+
+    return () => {
+      abortController.abort();
+    };
   }, [homeTeamId, awayTeamId]);
 
   if (loading) {
@@ -73,10 +96,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
   
   return (
     <div>
-      <h3 className="text-[#00ffe7] font-bold text-lg mb-4 flex items-center gap-2">
-        <FaFootballBall className="text-[#00ffe7]" />
-        Head-to-Head Leaders
-      </h3>
+      <h3 className="text-[#00ffe7] font-bold text-lg mb-4">Head-to-Head Leaders</h3>
       
       <div className="space-y-3">
         {homeTeamLeaders.map((homeLeader: Leader, idx: number) => {
@@ -188,4 +208,4 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
   );
 };
 
-export default HeadToHead;
+export default React.memo(HeadToHead);

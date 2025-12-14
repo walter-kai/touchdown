@@ -85,6 +85,11 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
       }
 
       try {
+        // In test mode, skip backend play-by-play API call
+        if (gameId === 'test') {
+          setPlaysLoaded(true);
+          return;
+        }
         showLoading('Loading play history...');
         console.log(`Loading previous plays for game ${gameId} from backend API...`);
         
@@ -183,8 +188,12 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
     let game: Event | undefined;
     let usedSummaryApi = false;
     if (gid === 'test') {
-      const response = await axios.get<ScoreboardResponse>('/scoreboard.json');
-      game = response.data.events?.[0];
+      const response = await axios.get('/scoreboard copy 2.json');
+      // Support both ESPN scoreboard schema and a wrapped copy (content.sbData.events)
+      const topLevelEvents = (response.data as any)?.events;
+      const wrappedEvents = (response.data as any)?.content?.sbData?.events;
+      const events = Array.isArray(topLevelEvents) ? topLevelEvents : Array.isArray(wrappedEvents) ? wrappedEvents : [];
+      game = events?.[0] as Event | undefined;
     } else {
       const scoreboardResponse = await axios.get<ScoreboardResponse>(
         'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'

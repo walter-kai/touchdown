@@ -25,12 +25,17 @@ const GameLeaders: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamI
   }
 
   return (
-    <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <h1>Game Leaders</h1>
+    <div>
+      {/* Divider */}
+      <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+      <div className="mx-2">
+        <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
+          <h1>Game Leaders</h1>
+        </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="mx-2">
+        <div className="space-y-3">
         {homeTeamGroup.leaders.map((category, catIdx) => {
           const otherCategory = awayTeamGroup.leaders.find(c => c.name === category.name);
           
@@ -108,6 +113,7 @@ const GameLeaders: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamI
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );

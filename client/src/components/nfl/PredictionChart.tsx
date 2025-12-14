@@ -31,9 +31,12 @@ interface PredictionProps {
   competitionId: string;
   homeTeamInfo: { name: string; logo: string; color: string };
   awayTeamInfo: { name: string; logo: string; color: string };
+  getTeamLogo: (team: any) => string;
+  homeTeam: any;
+  awayTeam: any;
 }
 
-const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, homeTeamInfo, awayTeamInfo }) => {
+const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, homeTeamInfo, awayTeamInfo, getTeamLogo, homeTeam, awayTeam }) => {
   const [data, setData] = useState<PredictionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +99,7 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
   const awayPredPtDiff = getStatValue(data.awayTeam.statistics, "teamPredPtDiff");
 
   return (
-    <div className="bg-[#181a23]/95 rounded-xl border border-[#00ffe7]/30 p-4 sm:p-6 shadow-[0_0_16px_rgba(0,255,231,0.2)]">
+    <div className="bg-[#181a23]/95 rounded-xl py-4 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div className="flex items-center gap-2">
@@ -109,12 +112,12 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <img src={awayTeamInfo.logo} alt={awayTeamInfo.name} className="w-8 h-8 object-contain" />
+            <img src={getTeamLogo(awayTeam)} alt={awayTeamInfo.name} className="w-8 h-8 object-contain" />
             <span className="text-sm font-semibold text-[#e0e7ef]">{awayTeamInfo.name}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-[#e0e7ef]">{homeTeamInfo.name}</span>
-            <img src={homeTeamInfo.logo} alt={homeTeamInfo.name} className="w-8 h-8 object-contain" />
+            <img src={getTeamLogo(homeTeam)} alt={homeTeamInfo.name} className="w-8 h-8 object-contain" />
           </div>
         </div>
 
