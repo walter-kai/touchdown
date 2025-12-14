@@ -109,7 +109,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
     <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>  
       <div className='mx-2'>
           <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#00ffe7]/10 min-h-[66px]">
-            <h3 className="text-[#00ffe7] font-bold text-2xl uppercase tracking-wide">Top Picks</h3>
+            <h1 className="text-center">Top Picks</h1>
             {userTotalScore > 0 && (
               <div className="bg-gradient-to-r from-[#00ffe7]/20 to-[#faafe8]/20 border border-[#00ffe7]/50 rounded-lg px-4 py-2">
                 <span className="text-[#b0b7bf] text-xs">YOUR TOTAL</span>

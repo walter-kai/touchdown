@@ -840,11 +840,9 @@ const YourPicks: React.FC<PlayerPickProps> = ({
             
             <div className="flex items-center justify-between py-2 pr-2 border-b border-[#00ffe7]/10 mx-2 min-h-[76px]">
               <div>
-                  <h4 className={`font-bold text-2xl uppercase tracking-wide transition-all duration-500 ${
-                    isLocked ? 'text-[#4169e1]' : 'text-yellow-500'
-                  }`}>
+                  <h1 className="transition-all duration-500">
                     {isLocked ? 'Selected Picks' : 'Your Picks'}
-                  </h4>
+                  </h1>
               </div>
               
               {/* Lock In Button or Total Score */}

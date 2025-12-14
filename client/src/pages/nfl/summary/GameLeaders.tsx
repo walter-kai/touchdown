@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaExchangeAlt, FaFootballBall } from 'react-icons/fa';
+import { FaFootballBall } from 'react-icons/fa';
+import { GiPodium } from "react-icons/gi";
 import type { Summary } from '@/types/espn/summary';
 
 interface HeadToHeadProps {
@@ -25,10 +26,9 @@ const GameLeaders: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamI
 
   return (
     <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-4">
-      <h3 className="text-[#00ffe7] font-bold text-lg mb-4 flex items-center gap-2">
-        <FaExchangeAlt />
-        Game Leaders
-      </h3>
+      <div className="flex items-center gap-2 mb-4">
+        <h1>Game Leaders</h1>
+      </div>
 
       <div className="space-y-3">
         {homeTeamGroup.leaders.map((category, catIdx) => {

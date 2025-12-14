@@ -98,8 +98,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   // Get tab index for carousel position
   const getTabIndex = (tab: string) => {
     const summaryTabs = isPreGame
-      ? ['info', 'player', 'team', 'pick', 'prediction']
-      : ['info', 'player', 'team', 'plays', 'pick', 'prediction'];
+      ? ['info', 'pick']
+      : ['info', 'player', 'plays', 'pick'];
     return summaryTabs.indexOf(tab);
   };
 
@@ -108,7 +108,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     if (carouselRef.current) {
       const index = getTabIndex(activeTab);
       if (index !== -1) {
-        const totalSlides = isPreGame ? 5 : 6;
+        const totalSlides = isPreGame ? 2 : 4;
         const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -124,10 +124,10 @@ const SummaryView: React.FC<SummaryViewProps> = ({
           <div
             ref={carouselRef}
             className="flex transition-transform duration-500 ease-in-out"
-            style={{ width: isPreGame ? '500%' : '600%' }}
+            style={{ width: isPreGame ? '200%' : '400%' }}
           >
             {/* Info Section */}
-            <div className="w-full flex-shrink-0 space-y-6 py-4 overflow-y-auto" style={{ width: isPreGame ? '20%' : '16.666%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: isPreGame ? '50%' : '25%' }}>
               {/* Box Score */}
               <div className="mb-6">
                 {/* Boxscore Component */}
@@ -188,19 +188,6 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 </div>
               )}
 
-              {/* User's Selected Picks */}
-              {homeTeam && awayTeam && (
-                <div className="mb-6">
-                  <SelectedAthletes
-                    gameId={gameId}
-                    homeTeamId={homeTeam.id}
-                    awayTeamId={awayTeam.id}
-                    homeTeamLogo={getTeamLogo(homeTeam.team)}
-                    awayTeamLogo={getTeamLogo(awayTeam.team)}
-                    playLog={playLog}
-                  />
-                </div>
-              )}
 
               {/* Head-to-Head Leaders - Condensed */}
               <GameLeaders 
@@ -209,16 +196,103 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 awayTeamId={awayTeam?.id}
               />
 
-              {/* Venue Information */}
-              {/* <VenueInfo competition={competition} summary={summary} /> */}
+              {/* Team Statistics - Moved to Info Page */}
+              <div className="mt-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <FaChartBar className="text-[#00ffe7] text-xl" />
+                  <h1>Team Statistics</h1>
+                </div>
+
+                {summary?.boxscore?.teams && summary.boxscore.teams.length === 2 ? (
+                  <div className="space-y-4">
+                    {/* Team Headers */}
+                    <div className="grid grid-cols-3 gap-4 mb-6">
+                      <div className="flex items-center justify-center">
+                        <img
+                          src={getTeamLogo(summary.boxscore.teams.find(t => t.homeAway === 'away')?.team)}
+                          alt={summary.boxscore.teams.find(t => t.homeAway === 'away')?.team.displayName}
+                          className="w-12 h-12"
+                        />
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <p className="text-[#b0b7bf] text-sm font-semibold">Stat</p>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <img
+                          src={getTeamLogo(summary.boxscore.teams.find(t => t.homeAway === 'home')?.team)}
+                          alt={summary.boxscore.teams.find(t => t.homeAway === 'home')?.team.displayName}
+                          className="w-12 h-12"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Stats Comparison */}
+                    {summary.boxscore.teams[0].statistics.map((_, statIdx) => {
+                      const awayTeamData = summary.boxscore.teams.find(t => t.homeAway === 'away');
+                      const homeTeamData = summary.boxscore.teams.find(t => t.homeAway === 'home');
+                      const awayStat = awayTeamData?.statistics[statIdx];
+                      const homeStat = homeTeamData?.statistics[statIdx];
+
+                      if (!awayStat || !homeStat) return null;
+
+                      return (
+                        <div key={`stat-${statIdx}`} className="grid grid-cols-3 gap-4 items-center bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
+                          <div className="text-center">
+                            <p className="text-[#00ffe7] font-bold text-lg">
+                              {awayStat.displayValue}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[#b0b7bf] text-sm font-semibold">
+                              {awayStat.label}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[#00ffe7] font-bold text-lg">
+                              {homeStat.displayValue}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-[#b0b7bf] text-center py-8">Team statistics will be available after the game.</p>
+                )}
+              </div>
+
+              {/* Predictions - Moved to Info Page */}
+              <div className="pt-4 pb-12">
+                <div className="flex items-center gap-2 mb-4">
+                  <FaChartLine className="text-[#00ffe7] text-xl" />
+                  <h1>Game Prediction</h1>
+                </div>
+                {homeTeam && awayTeam && (
+                  <PredictionChart
+                    gameId={gameId}
+                    competitionId={competition.id}
+                    homeTeamInfo={{
+                      name: homeTeam.team.displayName,
+                      logo: getTeamLogo(homeTeam),
+                      color: homeTeam.team.color || '00ffe7'
+                    }}
+                    awayTeamInfo={{
+                      name: awayTeam.team.displayName,
+                      logo: getTeamLogo(awayTeam),
+                      color: awayTeam.team.color || 'faafe8'
+                    }}
+                  />
+                )}
+              </div>
             </div>
 
             {/* Player Statistics Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isPreGame ? '20%' : '16.666%' }}>
-              <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
-                <FaTrophy />
-                Player Statistics
-              </h3>
+            {!isPreGame && (
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '25%' }}>
+              <div className="flex items-center gap-2 mb-6">
+                <FaTrophy className="text-[#00ffe7] text-xl" />
+                <h1>Player Statistics</h1>
+              </div>
 
               {summary?.boxscore?.players && summary.boxscore.players.length > 0 ? (
                 <div className="space-y-8">
@@ -316,75 +390,11 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 <p className="text-[#b0b7bf] text-center py-8">Player statistics will be available after the game.</p>
               )}
             </div>
-
-            {/* Team Stats Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isPreGame ? '20%' : '16.666%' }}>
-              <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
-                <FaChartBar />
-                Team Statistics
-              </h3>
-
-              {summary?.boxscore?.teams && summary.boxscore.teams.length === 2 ? (
-                <div className="space-y-4">
-                  {/* Team Headers */}
-                  <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className="flex items-center justify-center">
-                      <img
-                        src={getTeamLogo(summary.boxscore.teams.find(t => t.homeAway === 'away')?.team)}
-                        alt={summary.boxscore.teams.find(t => t.homeAway === 'away')?.team.displayName}
-                        className="w-12 h-12"
-                      />
-                    </div>
-                    <div className="flex items-center justify-center">
-                      <p className="text-[#b0b7bf] text-sm font-semibold">Stat</p>
-                    </div>
-                    <div className="flex items-center justify-center">
-                      <img
-                        src={getTeamLogo(summary.boxscore.teams.find(t => t.homeAway === 'home')?.team)}
-                        alt={summary.boxscore.teams.find(t => t.homeAway === 'home')?.team.displayName}
-                        className="w-12 h-12"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Stats Comparison */}
-                  {summary.boxscore.teams[0].statistics.map((_, statIdx) => {
-                    const awayTeamData = summary.boxscore.teams.find(t => t.homeAway === 'away');
-                    const homeTeamData = summary.boxscore.teams.find(t => t.homeAway === 'home');
-                    const awayStat = awayTeamData?.statistics[statIdx];
-                    const homeStat = homeTeamData?.statistics[statIdx];
-
-                    if (!awayStat || !homeStat) return null;
-
-                    return (
-                      <div key={`stat-${statIdx}`} className="grid grid-cols-3 gap-4 items-center bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
-                        <div className="text-center">
-                          <p className="text-[#00ffe7] font-bold text-lg">
-                            {awayStat.displayValue}
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[#b0b7bf] text-sm font-semibold">
-                            {awayStat.label}
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[#00ffe7] font-bold text-lg">
-                            {homeStat.displayValue}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-[#b0b7bf] text-center py-8">Team statistics will be available after the game.</p>
-              )}
-            </div>
+            )}
 
             {/* Plays Section - Drive by Drive */}
             {!isPreGame && (
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '16.666%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '25%' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-[#00ffe7] font-bold text-2xl flex items-center gap-2">
                   <FaFootballBall />
@@ -506,75 +516,75 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             )}
 
             {/* Pick Section - Your Picks */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0  overflow-hidden" style={{ width: isPreGame ? '50%' : '25%' }}>
               {!isAuthenticated ? (
                 // Login Prompt - Advertisement Style
-                <div className="min-h-screen flex items-center justify-center p-4">
-                  <div className="max-w-2xl w-full">
+                <div className="h-[calc(100%-64px)] flex items-center justify-center px-6">
+                  <div className="max-w-md w-full">
                     {/* Hero Section */}
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#00ffe7]/20 via-[#1a1d2e] to-[#faafe8]/20 border-2 border-[#00ffe7]/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-8 sm:p-12">
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#00ffe7]/20 via-[#1a1d2e] to-[#faafe8]/20 border-2 border-[#00ffe7]/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-6 sm:p-8">
                       {/* Animated background elements */}
                       <div className="absolute top-0 right-0 w-64 h-64 bg-[#00ffe7]/10 rounded-full blur-3xl animate-pulse"></div>
                       <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#faafe8]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
                       
                       <div className="relative z-10">
                         {/* Lock Icon */}
-                        <div className="flex justify-center mb-6">
+                        <div className="flex justify-center mb-4">
                           <div className="relative">
                             <div className="absolute inset-0 bg-[#00ffe7] blur-xl opacity-50 animate-pulse"></div>
-                            <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-[#00ffe7] to-[#faafe8] flex items-center justify-center shadow-lg">
-                              <FaLock className="text-[#1a1d2e] text-3xl" />
+                            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#00ffe7] to-[#faafe8] flex items-center justify-center shadow-lg">
+                              <FaLock className="text-[#1a1d2e] text-2xl" />
                             </div>
                           </div>
                         </div>
 
                         {/* Headline */}
-                        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-[#00ffe7] via-[#e0e7ef] to-[#faafe8] bg-clip-text text-transparent">
+                        <h1>
                           Unlock Your Picks
-                        </h2>
-                        <p className="text-[#b0b7bf] text-center text-lg mb-8">
+                        </h1>
+                        <p className="text-[#b0b7bf] text-center text-base mb-6">
                           Join the game and start making your predictions!
                         </p>
 
                         {/* Features Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                          <div className="flex items-start gap-3 p-4 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
-                            <div className="w-10 h-10 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
-                              <FaCheckCircle className="text-[#00ffe7] text-xl" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
+                            <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
+                              <FaCheckCircle className="text-[#00ffe7] text-base" />
                             </div>
                             <div>
-                              <h3 className="text-[#e0e7ef] font-bold mb-1">Track Your Picks</h3>
-                              <p className="text-[#b0b7bf] text-sm">Follow your predictions in real-time as games unfold</p>
+                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Track Your Picks</h3>
+                              <p className="text-[#b0b7bf] text-xs">Follow predictions in real-time</p>
                             </div>
                           </div>
 
-                          <div className="flex items-start gap-3 p-4 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
-                            <div className="w-10 h-10 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
-                              <FaBolt className="text-[#faafe8] text-xl" />
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
+                            <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
+                              <FaBolt className="text-[#faafe8] text-base" />
                             </div>
                             <div>
-                              <h3 className="text-[#e0e7ef] font-bold mb-1">Live Updates</h3>
-                              <p className="text-[#b0b7bf] text-sm">Get instant notifications when your players score</p>
+                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Live Updates</h3>
+                              <p className="text-[#b0b7bf] text-xs">Instant player scoring alerts</p>
                             </div>
                           </div>
 
-                          <div className="flex items-start gap-3 p-4 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
-                            <div className="w-10 h-10 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
-                              <FaChartLine className="text-[#00ffe7] text-xl" />
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
+                            <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
+                              <FaChartLine className="text-[#00ffe7] text-base" />
                             </div>
                             <div>
-                              <h3 className="text-[#e0e7ef] font-bold mb-1">Performance Stats</h3>
-                              <p className="text-[#b0b7bf] text-sm">See how accurate your predictions are over time</p>
+                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Performance Stats</h3>
+                              <p className="text-[#b0b7bf] text-xs">Track prediction accuracy</p>
                             </div>
                           </div>
 
-                          <div className="flex items-start gap-3 p-4 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
-                            <div className="w-10 h-10 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
-                              <FaUsers className="text-[#faafe8] text-xl" />
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
+                            <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
+                              <FaUsers className="text-[#faafe8] text-base" />
                             </div>
                             <div>
-                              <h3 className="text-[#e0e7ef] font-bold mb-1">Compete & Compare</h3>
-                              <p className="text-[#b0b7bf] text-sm">See top picks and compete with other fans</p>
+                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Compete & Compare</h3>
+                              <p className="text-[#b0b7bf] text-xs">See top picks and compete</p>
                             </div>
                           </div>
                         </div>
@@ -582,12 +592,12 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                         {/* CTA Button */}
                         <button
                           onClick={() => triggerLoginModal()}
-                          className="w-full py-4 px-8 rounded-xl bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-[#1a1d2e] font-bold text-lg shadow-[0_0_20px_rgba(0,255,231,0.5)] hover:shadow-[0_0_30px_rgba(0,255,231,0.7)] transform hover:scale-105 transition-all duration-200"
+                          className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-[#1a1d2e] font-bold text-base shadow-[0_0_20px_rgba(0,255,231,0.5)] hover:shadow-[0_0_30px_rgba(0,255,231,0.7)] transform hover:scale-105 transition-all duration-200"
                         >
                           Sign In to Start Picking
                         </button>
 
-                        <p className="text-[#b0b7bf] text-center text-sm mt-4">
+                        <p className="text-[#b0b7bf] text-center text-xs mt-3">
                           Free to join • No credit card required
                         </p>
                       </div>
@@ -620,26 +630,6 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                     getTeamLogo={getTeamLogo}
                   />
                 )
-              )}
-            </div>
-
-            {/* Prediction Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
-              {homeTeam && awayTeam && (
-                <PredictionChart
-                  gameId={gameId}
-                  competitionId={competition.id}
-                  homeTeamInfo={{
-                    name: homeTeam.team.displayName,
-                    logo: getTeamLogo(homeTeam),
-                    color: homeTeam.team.color || '00ffe7'
-                  }}
-                  awayTeamInfo={{
-                    name: awayTeam.team.displayName,
-                    logo: getTeamLogo(awayTeam),
-                    color: awayTeam.team.color || 'faafe8'
-                  }}
-                />
               )}
             </div>
           </div>

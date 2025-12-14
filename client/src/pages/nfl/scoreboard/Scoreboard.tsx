@@ -125,7 +125,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             style={{ width: isGameUpcoming ? '300%' : '500%' }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 py-4 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
+            <div className="w-full flex-shrink-0 py-4" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
 
               <div className='mx-2'>
                 {/* Box Score */}
@@ -274,7 +274,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
             {/* Pick Section - Top Picks & Your Picks */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
+              <div className="w-full flex-shrink-0" style={{ width: '20%' }}>
                 {/* Top Picks - All Players Who Scored */}
                 {homeTeam?.id && awayTeam?.id && (
                   <div className="">
@@ -320,7 +320,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
             {/* Player Section */}
             {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: '20%' }}>
+              <div className="w-full flex-shrink-0 pt-2 pb-8" style={{ width: '20%' }}>
                 <div className="space-y-4">
                   <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                     <FaTrophy />
@@ -384,7 +384,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             )}
 
             {/* Odds Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
+            <div className="w-full flex-shrink-0 pt-2 pb-8" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
               <h3 className="text-[#00ffe7] font-bold text-2xl mb-6 flex items-center gap-2">
                 <FaChartBar />
                 Betting Odds
@@ -409,7 +409,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 py-6 overflow-y-auto min-h-screen" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
+            <div className="w-full flex-shrink-0 pt-2 pb-8" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}

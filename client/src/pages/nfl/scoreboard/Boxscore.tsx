@@ -139,7 +139,7 @@ const Boxscore: React.FC<BoxscoreProps> = ({
             <img
               src={getTeamLogo(awayTeam?.team)}
               alt={awayTeam?.team?.displayName}
-              className="w-20 h-16 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
+              className="w-20 h-20 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
             />
             <h2 className="text-[#e0e7ef] font-bold text-sm md:text-base text-center px-2 group-hover:text-[#00ffe7] transition-colors">
               {awayTeam?.team?.displayName}
@@ -162,7 +162,7 @@ const Boxscore: React.FC<BoxscoreProps> = ({
             <img
               src={getTeamLogo(homeTeam?.team)}
               alt={homeTeam?.team?.displayName}
-              className="w-20 h-16 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
+              className="w-20 h-20 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
             />
             <h2 className="text-[#e0e7ef] font-bold text-sm md:text-base text-center px-2 group-hover:text-[#00ffe7] transition-colors">
               {homeTeam?.team?.displayName}

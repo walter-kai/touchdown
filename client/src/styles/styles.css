@@ -28,11 +28,21 @@ code {
 }
 
 h1 {
-  @apply tracking-widest text-4xl text-center font-bold text-[#00ffe7]
+  @apply text-center font-bold tracking-wide text-3xl sm:text-4xl mb-4;
+  background: linear-gradient(90deg, #00ffe7, #e0e7ef, #faafe8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 6px rgba(0, 255, 231, 0.4);
 }
 
 h2 {
-  @apply text-3xl text-center font-bold text-[#00ffe7]
+  @apply text-center font-bold tracking-wide text-2xl sm:text-3xl mb-3;
+  background: linear-gradient(90deg, #00ffe7, #e0e7ef, #faafe8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 5px rgba(0, 255, 231, 0.35);
 }
 
 h3 {
@@ -83,7 +93,7 @@ a:hover {
 
 .page-scroll {
   @apply w-full h-screen flex justify-center custom-scrollbar;
-  overflow-y: auto;
+  
 }
 
 .page-inner {
