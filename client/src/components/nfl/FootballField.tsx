@@ -133,13 +133,13 @@ const FootballField: React.FC<FootballFieldProps> = ({
           <defs>
             <marker
               id="arrowhead"
-              markerWidth="10"
-              markerHeight="10"
-              refX="9"
-              refY="5"
+              markerWidth="8"
+              markerHeight="8"
+              refX="6"
+              refY="3"
               orient="auto"
             >
-              <polygon points="0 0, 10 5, 0 10" fill="#00ffe7" />
+              <polygon points="0 0, 6 3, 0 6" fill="#00ffe7" />
             </marker>
           </defs>
           <line
@@ -148,9 +148,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
             x2={`${10 + (lastPlay.end.yardLine * 0.8)}%`}
             y2="50%"
             stroke="#00ffe7"
-            strokeWidth="3"
+            strokeWidth="2"
             markerEnd="url(#arrowhead)"
-            opacity="0.8"
+            opacity="0.9"
           />
         </svg>
       )}

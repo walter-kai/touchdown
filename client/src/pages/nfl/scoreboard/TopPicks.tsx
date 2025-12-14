@@ -118,7 +118,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
               </div>
             )}
           </div>
-          <div className="space-y-3">
+          <div className="border border-[#00ffe7]/20 bg-[#181a23]/50">
             {topPicks.map((player, index) => {
               const team = player.teamId === homeTeam?.id ? homeTeam : awayTeam;
               const teamColor = team?.team?.color || '00ffe7';
@@ -128,42 +128,32 @@ const TopPicks: React.FC<TopPicksProps> = ({
                 <div
                   key={player.id}
                   className={`
-                    relative overflow-hidden rounded-lg border-2 transition-all
+                    relative border-b border-[#00ffe7]/10 last:border-b-0 transition-all
                     ${player.isUserPick
-                      ? 'bg-[#181a23]/90 border-[#00ffe7] shadow-lg shadow-[#00ffe7]/20'
-                      : 'bg-[#181a23]/90 border-[#00ffe7]/10 hover:border-[#00ffe7]/30'
+                      ? 'bg-[#00ffe7]/5'
+                      : 'hover:bg-[#00ffe7]/5'
                     }
                   `}
                 >
-                  {/* Large team logo background */}
-                  <img
-                    src={getTeamLogo(team?.team)}
-                    alt=""
-                    className="absolute right-[10%] top-1/2 -translate-y-1/2 opacity-10 pointer-events-none"
-                    style={{
-                      width: '120px',
-                      height: '120px',
-                      objectFit: 'contain'
-                    }}
-                  />
-                  <div className="p-4 flex items-center gap-4 relative z-10">
-                    {/* Rank */}
+                  <div className="py-2 pr-3 flex items-center gap-3 relative">
+                    {/* Rank Badge - Small, absolute top-left */}
                     <div className={`
-                      flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
-                      ${index === 0 ? 'bg-yellow-500/20 text-yellow-400 border-2 border-yellow-400' :
-                        index === 1 ? 'bg-gray-400/20 text-gray-300 border-2 border-gray-300' :
-                        index === 2 ? 'bg-orange-600/20 text-orange-400 border-2 border-orange-400' :
-                        'bg-[#00ffe7]/10 text-[#00ffe7] border border-[#00ffe7]/30'}
+                      absolute top-2 left-2 z-20 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs
+                      ${index === 0 ? 'bg-yellow-500 text-black' :
+                        index === 1 ? 'bg-gray-400 text-black' :
+                        index === 2 ? 'bg-orange-600 text-white' :
+                        'bg-[#00ffe7]/80 text-black'}
                     `}>
                       {index + 1}
                     </div>
+                    
                     {/* Player Image */}
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 ml-3">
                       <img
                         src={player.headshot}
                         alt={player.displayName}
                         className={`
-                          w-16 h-16 rounded-full border-2 object-cover
+                          w-14 h-14 rounded-full border-2 object-cover
                           ${player.isUserPick ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
                         `}
                         onError={(e) => {
@@ -171,19 +161,20 @@ const TopPicks: React.FC<TopPicksProps> = ({
                         }}
                       />
                     </div>
+                    
                     {/* Player Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className={`font-bold text-lg truncate ${player.isUserPick ? 'text-[#00ffe7]' : 'text-white'}`}>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h4 className={`font-bold text-base truncate ${player.isUserPick ? 'text-[#00ffe7]' : 'text-white'}`}>
                           {player.shortName || player.displayName}
                         </h4>
                         {player.isUserPick && (
-                          <span className="bg-[#00ffe7] text-black text-xs font-bold px-2 py-0.5 rounded">
-                            YOUR PICK
+                          <span className="bg-[#00ffe7] text-black text-[10px] font-bold px-1.5 py-0.5 rounded">
+                            YOURS
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-sm">
+                      <div className="flex items-center gap-2 text-xs">
                         <span className="text-[#b0b7bf]">
                           {player.position} • #{player.jersey}
                         </span>
@@ -191,24 +182,22 @@ const TopPicks: React.FC<TopPicksProps> = ({
                           <img
                             src={getTeamLogo(team)}
                             alt=""
-                            className="w-4 h-4"
+                            className="w-3 h-3"
                           />
-                          <span className="text-[#b0b7bf] text-xs">
-                            {team?.team?.displayName}
+                          <span className="text-[#b0b7bf] text-[10px]">
+                            {team?.team?.abbreviation}
                           </span>
                         </div>
                       </div>
                     </div>
+                    
                     {/* Score */}
-                    <div className="flex-shrink-0 text-right">
+                    <div className="flex-shrink-0 text-right pr-2">
                       <div className={`
-                        text-3xl font-bold
+                        text-2xl font-bold
                         ${player.isUserPick ? 'text-[#00ffe7]' : 'text-white'}
                       `}>
                         {player.score}
-                      </div>
-                      <div className="text-[#b0b7bf] text-xs">
-                        {player.score === 1 ? 'pt' : 'pts'}
                       </div>
                     </div>
                   </div>
