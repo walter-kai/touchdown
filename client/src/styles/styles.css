@@ -28,7 +28,7 @@ code {
 }
 
 h1 {
-  @apply text-center font-bold tracking-wide text-3xl sm:text-4xl mb-4;
+  @apply font-bold tracking-wide text-3xl mb-4;
   background: linear-gradient(90deg, #00ffe7, #e0e7ef, #faafe8);
   -webkit-background-clip: text;
   background-clip: text;
@@ -37,7 +37,7 @@ h1 {
 }
 
 h2 {
-  @apply text-center font-bold tracking-wide text-2xl sm:text-3xl mb-3;
+  @apply text-center font-bold tracking-wide text-2xl mb-3;
   background: linear-gradient(90deg, #00ffe7, #e0e7ef, #faafe8);
   -webkit-background-clip: text;
   background-clip: text;

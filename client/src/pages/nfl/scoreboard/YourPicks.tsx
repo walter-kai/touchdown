@@ -840,7 +840,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
             
             <div className="flex items-center justify-between py-2 pr-2 border-b border-[#00ffe7]/10 mx-2 min-h-[76px]">
               <div>
-                  <h1 className="transition-all duration-500">
+                  <h1>
                     {isLocked ? 'Selected Picks' : 'Your Picks'}
                   </h1>
               </div>

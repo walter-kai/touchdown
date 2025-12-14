@@ -198,7 +198,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
 
             {/* Player Info */}
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-5xl font-bold text-[#00ffe7] mb-2 drop-shadow-[0_0_8px_#00ffe7]">
+              <h1>
                 {athlete?.displayName || `Player #${playerId}`}
               </h1>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-4">

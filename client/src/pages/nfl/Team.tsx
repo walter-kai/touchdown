@@ -4,7 +4,7 @@ import { FaFootballBall, FaArrowLeft, FaHome, FaRoad, FaTrophy, FaUsers, FaChart
 import axios from "axios";
 import type { TeamApiResponse, TeamRecord, NextEvent, Competitor, Leader } from "@/types/espn/team";
 import type { NewsResponse, NewsArticle } from '@/types/espn/news';
-import NewsCard from '@/components/nfl/NewsCard';
+import NewsTicker from '@/components/nfl/NewsTicker';
 
 interface ProjectionData {
   chanceToWinThisWeek: number;
@@ -311,7 +311,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
             {/* Team Info */}
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-5xl font-bold text-[#00ffe7] mb-2 drop-shadow-[0_0_8px_#00ffe7]">
+              <h1>
                 {team.displayName}
               </h1>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-4">
@@ -932,11 +932,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                 <p className="text-[#e0e7ef] text-xl">Loading team news...</p>
               </div>
             ) : news.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {news.map((article) => (
-                  <NewsCard key={article.id} article={article} />
-                ))}
-              </div>
+              <NewsTicker news={news} />
             ) : (
               <div className="bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-12 text-center">
                 <FaNewspaper className="text-6xl text-[#faafe8] mx-auto mb-4 opacity-50" />

@@ -50,7 +50,7 @@ const telegramCards = [
 
 const TelegramCard: React.FC = () => (
 	<div className="flex flex-col items-center justify-center px-4 py-16 bg-black/50">
-		<h1 className="text-5xl font-bold text-[#00ffe7] mb-8 text-center drop-shadow-[0_0_16px_#00ffe7] flex items-center justify-center gap-3">
+		<h1>
 			<FaTelegramPlane className="text-[#0088cc] text-5xl" />
 			Dexter City on Telegram
 		</h1>

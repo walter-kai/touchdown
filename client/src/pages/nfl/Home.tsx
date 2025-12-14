@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaFootballBall, FaPlay, FaNewspaper, FaCalendar, FaChevronLeft, FaChevronRight, FaTrophy, FaMapMarkerAlt } from "react-icons/fa";
 import axios from "axios";
 import LoadingFootball from '../../components/common/LoadingFootball';
+import NewsTicker from '../../components/nfl/NewsTicker';
 import type {
   Event,
   TeamOnBye,
@@ -10,7 +11,6 @@ import type {
   Competitor
 } from '@/types/espn/scoreboard';
 import type { NewsArticle } from '@/types/espn/news';
-import NewsCard from '@/components/nfl/NewsCard';
 
 // Removed AuthDebug banner per design request
 
@@ -163,37 +163,43 @@ const NFLScoreboard: React.FC = () => {
 
   return (
   <>
-  <div className="max-w-7xl mx-auto px-4 py-8">
+  <div className="max-w-7xl mx-auto py-2">
 	
   {/* Week Navigation */}
-		<div className="flex items-center justify-center gap-4 mb-4">
-			<button
-				onClick={handlePreviousWeek}
-				disabled={!selectedWeek || selectedWeek <= 1}
-				className="p-3 bg-[#23263a] border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-			>
-				<FaChevronLeft />
-			</button>
-			
-			<div className="text-2xl font-bold text-white">
-				Week {selectedWeek || weekNumber || '...'}
+		<div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#faafe8]/30 mb-6">
+			<div className="flex items-center justify-between gap-4">
+				<button
+					onClick={handlePreviousWeek}
+					disabled={!selectedWeek || selectedWeek <= 1}
+					className="btn-purple flex items-center gap-2 h-12 w-48"
+				>
+					<FaChevronLeft />
+					Last
+				</button>
+				
+				<h1 className="w-full text-center pt-2">
+					Week {selectedWeek || weekNumber || '...'}
+				</h1>
+				
+				<button
+					onClick={handleNextWeek}
+					disabled={!selectedWeek || selectedWeek >= 18}
+					className="btn-purple flex items-center gap-2 h-12 w-48"
+				>
+					Next
+					<FaChevronRight />
+				</button>
 			</div>
-			
-			<button
-				onClick={handleNextWeek}
-				disabled={!selectedWeek || selectedWeek >= 18}
-				className="p-3 bg-[#23263a] border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-			>
-				<FaChevronRight />
-			</button>
+      {lastUpdated && (
+        // <div className="bg-[#181a23]/50 rounded-lg p-3 border border-[#faafe8]/20 mb-6">
+          <p className="pt-4 text-sm text-gray-400 text-center">
+            Last updated: {lastUpdated.toLocaleTimeString()} • Auto-refresh in {countdown}s
+          </p>
+        // </div>
+      )}
 		</div>
 
-		{lastUpdated && (
-			<div className="text-sm text-gray-400">
-				Last updated: {lastUpdated.toLocaleTimeString()} • Auto-refresh in {countdown}s
-			</div>
-		)}
-	</div>
+
   {/* Teams on Bye - Ticker Banner */}
   {byeTeams.length > 0 && (
     <div className="mb-6 bg-[#181a23]/90 rounded-lg border border-[#faafe8]/30 overflow-hidden">
@@ -217,6 +223,9 @@ const NFLScoreboard: React.FC = () => {
     </div>
   )}
 
+  {/* News Ticker - Moved to Top */}
+  <NewsTicker news={news} />
+
   {/* Loading State */}
 	{initialLoading && games.length === 0 && <LoadingFootball message="Loading NFL scores..." />}
 
@@ -239,13 +248,12 @@ const NFLScoreboard: React.FC = () => {
 			{/* Live Games */}
 			{liveGames.length > 0 && (
 			<div>
-				<h2 className="text-2xl font-bold text-[#00ffe7] mb-4 flex items-center gap-2">
-				<FaPlay className="animate-pulse" />
+				<h1 className="flex items-center gap-2">
 				Live Now ({liveGames.length})
-				</h2>
-				<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+				</h1>
+				<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 px-2">
 				{liveGames.map((game) => (
-					<GameSummaryCard key={game.id} game={game} navigate={navigate} />
+					<GameGridCard key={game.id} game={game} navigate={navigate} />
 				))}
 				</div>
 			</div>
@@ -254,13 +262,13 @@ const NFLScoreboard: React.FC = () => {
       {/* Upcoming Games */}
 			{upcomingGames.length > 0 && (
 			<div>
-				<h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
+				<h1 className="flex items-center gap-2">
 				<FaCalendar />
 				Upcoming ({upcomingGames.length})
-				</h2>
-				<div className={`grid gap-4 ${upcomingGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
+				</h1>
+				<div className={`px-2 grid gap-4 ${upcomingGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
 				{upcomingGames.map((game) => (
-					<GameSummaryCard key={game.id} game={game} navigate={navigate} />
+					<GameGridCard key={game.id} game={game} navigate={navigate} />
 				))}
 				</div>
 			</div>
@@ -269,13 +277,13 @@ const NFLScoreboard: React.FC = () => {
 			{/* Completed Games */}
 			{completedGames.length > 0 && (
 			<div>
-				<h2 className="text-2xl font-bold text-gray-400 mb-4 flex items-center gap-2">
+				<h1 className="flex items-center gap-2">
 				<FaTrophy />
 				Final ({completedGames.length})
-				</h2>
-				<div className={`grid gap-4 ${completedGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
+				</h1>
+				<div className={`px-2 grid gap-4 ${completedGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
 				{completedGames.map((game) => (
-					<GameSummaryCard key={game.id} game={game} navigate={navigate} />
+					<GameGridCard key={game.id} game={game} navigate={navigate} />
 				))}
 				</div>
 			</div>
@@ -293,32 +301,18 @@ const NFLScoreboard: React.FC = () => {
 		</div>
 	)}
 
-  {/* News Section - Moved to Bottom */}
-	{news.length > 0 && (
-		<div className="mt-12">
-			<h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
-				<FaNewspaper />
-				Latest News
-			</h2>
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-				{news.slice(0, 6).map((article, idx) => (
-					<NewsCard key={idx} article={article} />
-				))}
-			</div>
-		</div>
-	)}
-  
+  </div>
   </>
   );
 };
 
-// Game Summary Card Component
-interface GameSummaryCardProps {
+// Game Grid Card Component
+interface GameGridCardProps {
   game: Event;
   navigate: (path: string) => void;
 }
 
-const GameSummaryCard: React.FC<GameSummaryCardProps> = ({ game, navigate }) => {
+const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
   const competition = game.competitions[0];
   const awayTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'away');
   const homeTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'home');
