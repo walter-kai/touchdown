@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaFootballBall, FaClock, FaPauseCircle } from 'react-icons/fa';
+import { FaFootballBall, FaClock, FaPauseCircle, FaLock, FaCheckCircle, FaBolt, FaChartLine, FaUsers } from 'react-icons/fa';
+import { useAuth } from '@/providers/AuthContext';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import ProbChart from '@/components/nfl/ProbabilityChart';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
@@ -52,6 +53,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   onManualRefresh
 }) => {
   const navigate = useNavigate();
+  const { isAuthenticated, triggerLoginModal } = useAuth();
   const carouselRef = useRef<HTMLDivElement>(null);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [isPickExpanded, setIsPickExpanded] = useState(true); // Default to true so picker is visible
@@ -65,9 +67,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
   // Get tab index for carousel position
   const getTabIndex = (tab: string) => {
-    const scoreboardTabs = isGameUpcoming
-      ? ['info', 'odds', 'headtohead']
-      : ['info', 'pick', 'player', 'odds', 'headtohead'];
+    const scoreboardTabs = ['info', 'pick', 'odds', 'headtohead'];
     return scoreboardTabs.indexOf(tab);
   };
 
@@ -76,13 +76,13 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
     if (carouselRef.current) {
       const index = getTabIndex(activeTab);
       if (index !== -1) {
-        const totalSlides = isGameUpcoming ? 3 : 5;
+        const totalSlides = 4;
         const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [activeTab, isGameUpcoming]);
+  }, [activeTab]);
 
   // Rotate sentences for latest play display
   useEffect(() => {
@@ -122,14 +122,13 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
           <div
             ref={carouselRef}
             className="flex transition-transform duration-500 ease-in-out"
-            style={{ width: isGameUpcoming ? '300%' : '500%' }}
+            style={{ width: '400%' }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 py-4" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
+            <div className="w-full flex-shrink-0 py-4" style={{ width: '25%' }}>
 
               <div className='mx-2'>
                 {/* Box Score */}
-
                   {/* Boxscore Component */}
                   <Boxscore
                     homeTeam={homeTeam}
@@ -140,6 +139,53 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                     gameDate={competition.date}
                   />
 </div>
+              
+              {/* Leaders Section - Compact */}
+              {competition.leaders && competition.leaders.length > 0 && (
+                <div className="mt-4">
+                  {/* Divider */}
+                  <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+                  <div className="mx-2">
+                    <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
+                      <h1>Leaders</h1>
+                    </div>
+                  </div>
+                  <div className="mx-2">
+                    <div className="grid grid-cols-3 gap-3">
+                      {competition.leaders.slice(0, 3).map((category, categoryIdx) => {
+                        const leader = category.leaders?.[0];
+                        if (!leader) return null;
+                        const headshot = leader.athlete.headshot;
+                        const headshotUrl = typeof headshot === 'string' ? headshot : headshot?.href;
+                        return (
+                          <button
+                            key={`${category.name}-${categoryIdx}`}
+                            onClick={() => navigate(`/nfl/player/${leader.athlete.id}`)}
+                            className="flex flex-col items-center text-center hover:bg-[#00ffe7]/5 rounded-lg p-2 transition-all group cursor-pointer bg-[#23263a]/50 border border-[#00ffe7]/10"
+                          >
+                            {headshotUrl ? (
+                              <img
+                                src={headshotUrl}
+                                alt={leader.athlete.displayName}
+                                className="w-16 h-16 rounded-full group-hover:scale-110 transition-transform object-cover mb-2"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 rounded-full bg-[#23263a] flex items-center justify-center group-hover:scale-110 transition-transform border-2 border-[#00ffe7]/30 mb-2">
+                                <FaFootballBall className="text-[#00ffe7]" />
+                              </div>
+                            )}
+                            <p className="text-[#e0e7ef] font-bold text-sm group-hover:text-[#00ffe7] transition-colors truncate w-full">
+                              {leader.athlete.shortName || leader.athlete.displayName}
+                            </p>
+                            <p className="text-[#b0b7bf] text-xs mb-1">{category.shortDisplayName || category.displayName}</p>
+                            <p className="text-[#00ffe7] font-bold text-lg">{leader.displayValue}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
              
                 {/* Live Game Situation */}
                 {competition.situation && competition.status.type.state === 'in' && (
@@ -273,8 +319,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Pick Section - Top Picks & Your Picks */}
-            {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0" style={{ width: '25%' }}>
                 {/* Top Picks - All Players Who Scored */}
                 {homeTeam?.id && awayTeam?.id && (
                   <div className="">
@@ -289,102 +334,136 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                   </div>
                 )}
                 {/* Your Picks Section */}
-                {homeTeam?.id && awayTeam?.id && (
-                  <div className="mt-4">
-                    <YourPicks
-                      gameId={event.id}
-                      homeTeamId={homeTeam.id}
-                      awayTeamId={awayTeam.id}
-                      homeTeamInfo={{
-                        name: homeTeam.team.displayName,
-                        logo: getTeamLogo(homeTeam),
-                        color: homeTeam.team.color || '00ffe7'
-                      }}
-                      awayTeamInfo={{
-                        name: awayTeam.team.displayName,
-                        logo: getTeamLogo(awayTeam),
-                        color: awayTeam.team.color || 'faafe8'
-                      }}
-                      isExpanded={isPickExpanded}
-                      onToggle={() => setIsPickExpanded(!isPickExpanded)}
-                      playLog={playLog}
-                      situation={competition.situation}
-                      homeTeam={homeTeam}
-                      awayTeam={awayTeam}
-                      getTeamLogo={getTeamLogo}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
+                <div className="mt-4">
+                  {!isAuthenticated ? (
+                    // Login Prompt - Advertisement Style
+                    <div className="flex items-center justify-center px-6">
+                      <div className="max-w-md w-full">
+                        {/* Hero Section */}
+                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#00ffe7]/20 via-[#1a1d2e] to-[#faafe8]/20 border-2 border-[#00ffe7]/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-6 sm:p-8">
+                          {/* Animated background elements */}
+                          <div className="absolute top-0 right-0 w-64 h-64 bg-[#00ffe7]/10 rounded-full blur-3xl animate-pulse"></div>
+                          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#faafe8]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+                          
+                          <div className="relative z-10">
+                            {/* Lock Icon */}
+                            <div className="flex justify-center mb-4">
+                              <div className="relative">
+                                <div className="absolute inset-0 bg-[#00ffe7] blur-xl opacity-50 animate-pulse"></div>
+                                <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#00ffe7] to-[#faafe8] flex items-center justify-center shadow-lg">
+                                  <FaLock className="text-[#1a1d2e] text-2xl" />
+                                </div>
+                              </div>
+                            </div>
 
-            {/* Player Section */}
-            {!isGameUpcoming && (
-              <div className="w-full flex-shrink-0 pt-2 pb-8" style={{ width: '20%' }}>
-                <div className="space-y-4">
-                  <h3 className="text-[#00ffe7] font-bold text-2xl mb-6">Leaders</h3>
-                  {competition.leaders && competition.leaders.length > 0 ? (
-                    <div className="space-y-6">
-                      {competition.leaders.map((category, categoryIdx) => (
-                        <div key={`${category.name}-${categoryIdx}`} className="border-b border-[#00ffe7]/10 pb-6 last:border-b-0">
-                          <h4 className="text-[#b0b7bf] text-sm font-semibold mb-4">
-                            {category.displayName}
-                          </h4>
-                          <div className="space-y-3">
-                            {category.leaders.map((leader, leaderIdx) => {
-                              const headshot = leader.athlete.headshot;
-                              const headshotUrl = typeof headshot === 'string' ? headshot : headshot?.href;
-                              return (
-                                <button
-                                  key={`${leader.athlete.id}-${leaderIdx}`}
-                                  onClick={() => navigate(`/nfl/player/${leader.athlete.id}`)}
-                                  className="w-full text-left hover:bg-[#00ffe7]/5 rounded-lg p-2 transition-all group cursor-pointer"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    {headshotUrl ? (
-                                      <img
-                                        src={headshotUrl}
-                                        alt={leader.athlete.displayName}
-                                        className="w-10 h-10 rounded-full group-hover:scale-110 transition-transform object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-10 h-10 rounded-full bg-[#23263a] flex items-center justify-center group-hover:scale-110 transition-transform border-2 border-[#00ffe7]/30">
-                                        <FaFootballBall className="text-[#00ffe7] text-sm" />
-                                      </div>
-                                    )}
-                                    <div className="flex-1">
-                                      <p className="text-[#e0e7ef] font-bold text-sm group-hover:text-[#00ffe7] transition-colors">
-                                        {leader.athlete.displayName}
-                                      </p>
-                                      <p className="text-[#b0b7bf] text-xs">
-                                        {leader.athlete.position?.abbreviation || ''}
-                                      </p>
-                                    </div>
-                                    <div className="text-right">
-                                      <p className="text-[#00ffe7] font-bold text-lg">
-                                        {leader.displayValue}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </button>
-                              );
-                            })}
+                            {/* Headline */}
+                            <h1>
+                              Unlock Your Picks
+                            </h1>
+                            <p className="text-[#b0b7bf] text-center text-base mb-6">
+                              Join the game and start making your predictions!
+                            </p>
+
+                            {/* Features Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                              <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
+                                <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
+                                  <FaCheckCircle className="text-[#00ffe7] text-base" />
+                                </div>
+                                <div>
+                                  <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Track Your Picks</h3>
+                                  <p className="text-[#b0b7bf] text-xs">Follow predictions in real-time</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
+                                <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
+                                  <FaBolt className="text-[#faafe8] text-base" />
+                                </div>
+                                <div>
+                                  <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Live Updates</h3>
+                                  <p className="text-[#b0b7bf] text-xs">Instant player scoring alerts</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
+                                <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
+                                  <FaChartLine className="text-[#00ffe7] text-base" />
+                                </div>
+                                <div>
+                                  <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Performance Stats</h3>
+                                  <p className="text-[#b0b7bf] text-xs">Track prediction accuracy</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
+                                <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
+                                  <FaUsers className="text-[#faafe8] text-base" />
+                                </div>
+                                <div>
+                                  <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Compete & Compare</h3>
+                                  <p className="text-[#b0b7bf] text-xs">See top picks and compete</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* CTA Button */}
+                            <button
+                              onClick={() => triggerLoginModal()}
+                              className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-[#1a1d2e] font-bold text-base shadow-[0_0_20px_rgba(0,255,231,0.5)] hover:shadow-[0_0_30px_rgba(0,255,231,0.7)] transform hover:scale-105 transition-all duration-200"
+                            >
+                              Sign In to Start Picking
+                            </button>
+
+                            <p className="text-[#b0b7bf] text-center text-xs mt-3">
+                              Free to join • No credit card required
+                            </p>
                           </div>
                         </div>
-                      ))}
+                      </div>
                     </div>
                   ) : (
-                    <p className="text-[#b0b7bf] text-center py-8">No player leaders available at this time.</p>
+                    // Authenticated - Show YourPicks component
+                    homeTeam?.id && awayTeam?.id && (
+                      <YourPicks
+                        gameId={event.id}
+                        homeTeamId={homeTeam.id}
+                        awayTeamId={awayTeam.id}
+                        homeTeamInfo={{
+                          name: homeTeam.team.displayName,
+                          logo: getTeamLogo(homeTeam),
+                          color: homeTeam.team.color || '00ffe7'
+                        }}
+                        awayTeamInfo={{
+                          name: awayTeam.team.displayName,
+                          logo: getTeamLogo(awayTeam),
+                          color: awayTeam.team.color || 'faafe8'
+                        }}
+                        isExpanded={isPickExpanded}
+                        onToggle={() => setIsPickExpanded(!isPickExpanded)}
+                        playLog={playLog}
+                        situation={competition.situation}
+                        homeTeam={homeTeam}
+                        awayTeam={awayTeam}
+                        getTeamLogo={getTeamLogo}
+                      />
+                    )
                   )}
                 </div>
-              </div>
-            )}
+            </div>
 
             {/* Odds Section */}
-            <div className="w-full flex-shrink-0 pt-2 pb-8" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
-              <h3 className="text-[#00ffe7] font-bold text-2xl mb-6">Betting Odds</h3>
-              {homeTeam && awayTeam && (
-                <ProbChart
+            <div className="w-full flex-shrink-0 pt-2 pb-8" style={{ width: '25%' }}>
+              {/* Divider */}
+              <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+              <div className="mx-2">
+                <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
+                  <h1>Odds</h1>
+                </div>
+              </div>
+              <div className="mx-2">
+                {homeTeam && awayTeam && (
+                  <ProbChart
                   gameId={event.id}
                   competitionId={competition.id}
                   gameStatus={competition.status.type.state}
@@ -399,11 +478,12 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                     color: awayTeam.team.color || 'faafe8'
                   }}
                 />
-              )}
+                )}
+              </div>
             </div>
 
             {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 pt-2 pb-8" style={{ width: isGameUpcoming ? '33.333%' : '20%' }}>
+            <div className="w-full flex-shrink-0 pt-2 pb-8" style={{ width: '25%' }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}

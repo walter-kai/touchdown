@@ -1040,12 +1040,14 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                     requestAnimationFrame(() => {
                       window.scrollTo(0, currentScrollY);
                     });
-                  }}
-                  className={`w-full p-4 flex items-center justify-center gap-3 ${
-                    isRosterOpen ? 'bg-[#00ffe7]/20 border-2 border-[#00ffe7] text-[#00ffe7] rounded' : 'btn-standard'
-                  }`}>
-                  <FaHandPointer className="text-xl" />
-                  <span>{isRosterOpen ? 'Close' : 'Pick Players'}</span>
+                    }}
+                    className={`w-full p-4 flex items-center justify-center gap-3 transition-all ${
+                    isRosterOpen 
+                      ? 'bg-gradient-to-r from-[#faafe8]/10 to-[#faafe8]/5 border-2 border-[#faafe8]/30 text-[#faafe8] hover:border-[#faafe8]/50' 
+                      : 'btn-standard'
+                    }`}>
+                    <FaHandPointer className="text-xl" />
+                    <span>{isRosterOpen ? 'Close' : 'Pick Players'}</span>
                 </button>
               </div>
             )}
@@ -1081,20 +1083,20 @@ const YourPicks: React.FC<PlayerPickProps> = ({
               <div className="animate-fade-in">
             {/* Team Selector */}
             <div className="flex mx-2">
-              <button
+                <button
                 onClick={() => setActiveTeam('home')}
                 className={`flex-1 py-3 rounded-tl-[5px] font-bold flex items-center justify-center gap-2 transition-all border ${
                   activeTeam === 'home'
-                    ? 'bg-[#faafe8]/20 border-[#faafe8]/50 text-[#faafe8]'
-                    : 'bg-[#181a23] border-[#faafe8]/20 text-gray-400 hover:border-[#faafe8]/30'
+                  ? 'bg-[#00ffe7]/20 border-[#00ffe7]/50 text-[#00ffe7]'
+                  : 'bg-[#181a23] border-[#00ffe7]/20 text-gray-400 hover:border-[#00ffe7]/30'
                 }`}
-              >
+                >
                 {homeTeamLogo && <img src={homeTeamLogo} alt="" className="w-7 h-6" />}
                 {homeTeamInfo.name}
-              </button>
+                </button>
               <button
                 onClick={() => setActiveTeam('away')}
-                className={`flex-1 py-3 rounded-tr-lg font-bold flex items-center justify-center gap-2 transition-all border ${
+                className={`flex-1 py-3 rounded-tr-[5px] font-bold flex items-center justify-center gap-2 transition-all border ${
                   activeTeam === 'away'
                     ? 'bg-[#00ffe7]/20 border-[#00ffe7]/50 text-[#00ffe7]'
                     : 'bg-[#181a23] border-[#00ffe7]/20 text-gray-400 hover:border-[#00ffe7]/30'
