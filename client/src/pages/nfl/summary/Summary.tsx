@@ -4,11 +4,12 @@ import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock, FaLock, F
 import PredictionChart from '@/components/nfl/PredictionChart';
 import PlayLog from '@/components/nfl/PlayLog';
 import axios from 'axios';
-import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
+import Boxscore from '@/pages/nfl/scoreboard/Info';
 import GameLeaders from '@/pages/nfl/summary/GameLeaders';
 import SelectedAthletes from '@/components/nfl/SelectedAthletes';
 import VenueInfo from '@/components/VenueInfo';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
+import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
 import { useAuth } from '@/providers/AuthContext';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
@@ -707,30 +708,42 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                   </div>
                 </div>
               ) : (
-                // Authenticated - Show YourPicks component
+                // Authenticated - Show TopPicks for completed games, YourPicks for others
                 homeTeam?.id && awayTeam?.id && (
-                  <YourPicks
-                    gameId={event.id}
-                    homeTeamId={homeTeam.id}
-                    awayTeamId={awayTeam.id}
-                    homeTeamInfo={{
-                      name: homeTeam.team.displayName,
-                      logo: getTeamLogo(homeTeam),
-                      color: homeTeam.team.color || '00ffe7'
-                    }}
-                    awayTeamInfo={{
-                      name: awayTeam.team.displayName,
-                      logo: getTeamLogo(awayTeam),
-                      color: awayTeam.team.color || 'faafe8'
-                    }}
-                    isExpanded={isPickExpanded}
-                    onToggle={() => setIsPickExpanded(!isPickExpanded)}
-                    playLog={playLog}
-                    situation={competition.situation}
-                    homeTeam={homeTeam}
-                    awayTeam={awayTeam}
-                    getTeamLogo={getTeamLogo}
-                  />
+                  gameStatus === 'post' ? (
+                    <TopPicks
+                      gameId={event.id}
+                      homeTeamId={homeTeam.id}
+                      awayTeamId={awayTeam.id}
+                      playLog={effectivePlayLog}
+                      getTeamLogo={getTeamLogo}
+                      homeTeam={homeTeam}
+                      awayTeam={awayTeam}
+                    />
+                  ) : (
+                    <YourPicks
+                      gameId={event.id}
+                      homeTeamId={homeTeam.id}
+                      awayTeamId={awayTeam.id}
+                      homeTeamInfo={{
+                        name: homeTeam.team.displayName,
+                        logo: getTeamLogo(homeTeam),
+                        color: homeTeam.team.color || '00ffe7'
+                      }}
+                      awayTeamInfo={{
+                        name: awayTeam.team.displayName,
+                        logo: getTeamLogo(awayTeam),
+                        color: awayTeam.team.color || 'faafe8'
+                      }}
+                      isExpanded={isPickExpanded}
+                      onToggle={() => setIsPickExpanded(!isPickExpanded)}
+                      playLog={playLog}
+                      situation={competition.situation}
+                      homeTeam={homeTeam}
+                      awayTeam={awayTeam}
+                      getTeamLogo={getTeamLogo}
+                    />
+                  )
                 )
               )}
             </div>

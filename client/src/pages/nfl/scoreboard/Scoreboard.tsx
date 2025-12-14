@@ -5,11 +5,8 @@ import { useAuth } from '@/providers/AuthContext';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import ProbChart from '@/components/nfl/ProbabilityChart';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
-import Boxscore from '@/pages/nfl/scoreboard/Boxscore';
+import Info from '@/pages/nfl/scoreboard/Info';
 import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
-import FootballField from '@/components/nfl/FootballField';
-import GameLeaders from '@/pages/nfl/summary/GameLeaders';
-import PlayLog from '@/components/nfl/PlayLog';
 import type { Event } from '@/types/espn/scoreboard';
 
 interface ScoreboardViewProps {
@@ -125,201 +122,19 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             style={{ width: '400%' }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: '25%' }}>
-
-              <div className='mx-2'>
-                {/* Box Score */}
-                  {/* Boxscore Component */}
-                  <Boxscore
-                    homeTeam={homeTeam}
-                    awayTeam={awayTeam}
-                    competition={competition}
-                    getTeamLogo={getTeamLogo}
-                    gameCountdown={gameCountdown}
-                    gameDate={competition.date}
-                  />
-</div>
-              
-              {/* Leaders Section - Compact */}
-              {competition.leaders && competition.leaders.length > 0 && (
-                <div className="mt-4">
-                  {/* Divider */}
-                  <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
-                  <div className="mx-2">
-                    <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
-                      <h1>Leaders</h1>
-                    </div>
-                  </div>
-                  <div className="mx-2">
-                    <div className="grid grid-cols-3 gap-3">
-                      {competition.leaders.slice(0, 3).map((category, categoryIdx) => {
-                        const leader = category.leaders?.[0];
-                        if (!leader) return null;
-                        const headshot = leader.athlete.headshot;
-                        const headshotUrl = typeof headshot === 'string' ? headshot : headshot?.href;
-                        return (
-                          <button
-                            key={`${category.name}-${categoryIdx}`}
-                            onClick={() => navigate(`/nfl/player/${leader.athlete.id}`)}
-                            className="flex flex-col items-center text-center hover:bg-[#00ffe7]/5 rounded-lg p-2 transition-all group cursor-pointer bg-[#23263a]/50 border border-[#00ffe7]/10"
-                          >
-                            {headshotUrl ? (
-                              <img
-                                src={headshotUrl}
-                                alt={leader.athlete.displayName}
-                                className="w-16 h-16 rounded-full group-hover:scale-110 transition-transform object-cover mb-2"
-                              />
-                            ) : (
-                              <div className="w-16 h-16 rounded-full bg-[#23263a] flex items-center justify-center group-hover:scale-110 transition-transform border-2 border-[#00ffe7]/30 mb-2">
-                                <FaFootballBall className="text-[#00ffe7]" />
-                              </div>
-                            )}
-                            <p className="text-[#e0e7ef] font-bold text-sm group-hover:text-[#00ffe7] transition-colors truncate w-full">
-                              {leader.athlete.shortName || leader.athlete.displayName}
-                            </p>
-                            <p className="text-[#b0b7bf] text-xs mb-1">{category.shortDisplayName || category.displayName}</p>
-                            <p className="text-[#00ffe7] font-bold text-lg">{leader.displayValue}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
-             
-              {/* Live Game Situation */}
-              {competition.situation && competition.status.type.state === 'in' && (
-                <div className="space-y-4">
-                  {/* Football Field Visualization */}
-                  {competition.situation.lastPlay && (
-                    <div className="">
-                      {/* Field Visualization */}
-                      <div className="pt-2 ">
-                        <div className='mx-2'>
-                          <FootballField
-                            homeTeam={homeTeam}
-                            awayTeam={awayTeam}
-                            lastPlay={competition.situation.lastPlay}
-                            getTeamLogo={getTeamLogo}
-                          />
-                          {/* Timeouts */}
-                          <div className="flex justify-between items-center pt-4">
-                            <div className="text-center">
-                              <p className="text-[#b0b7bf] text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
-                              <div className="flex gap-1 justify-center">
-                                {[...Array(3)].map((_, i) => (
-                                  <div
-                                    key={i}
-                                    className={`w-3 h-3 rounded-full ${
-                                      i < ((competition.situation?.awayTimeouts ?? 3))
-                                        ? 'bg-[#00ffe7]'
-                                        : 'bg-gray-600'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-[#b0b7bf] text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
-                              <div className="flex gap-1 justify-center">
-                                {[...Array(3)].map((_, i) => (
-                                  <div
-                                    key={i}
-                                    className={`w-3 h-3 rounded-full ${
-                                      i < ((competition.situation?.homeTimeouts ?? 3))
-                                        ? 'bg-[#faafe8]'
-                                        : 'bg-gray-600'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Play Log */}
-                          <div className="mt-4">
-                            <PlayLog
-                              playLog={playLog}
-                              homeTeam={homeTeam}
-                              awayTeam={awayTeam}
-                              getTeamLogo={getTeamLogo}
-                              title="Play Log"
-                              showTitle={true}
-                            />
-                          </div>
-                        </div>
-                        {/* Game Leaders */}
-                        <div className="mt-4">
-                          {/* <GameLeaders
-                            summary={event.competitions[0].summary || null}
-                            homeTeamId={event.competitions[0].competitors.find(c => c.homeAway === 'home')?.id}
-                            awayTeamId={event.competitions[0].competitors.find(c => c.homeAway === 'away')?.id}
-                          /> */}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
- 
-              {/* Pre-game or Post-game Info */}
-              {competition.status.type.state !== 'in' && (
-                <div className="text-center">
-                    {/* Line Scores */}
-                    {(homeTeam?.linescores || awayTeam?.linescores) && (
-                      <div className="p-2">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="border-b border-[#00ffe7]/20">
-                                <th className="text-left text-[#b0b7bf] font-semibold py-2">Team</th>
-                                {[1, 2, 3, 4].map(q => (
-                                  <th key={q} className="text-center text-[#b0b7bf] font-semibold py-2">Q{q}</th>
-                                ))}
-                                {(homeTeam?.linescores?.length ?? 0) > 4 && (
-                                  <th className="text-center text-[#b0b7bf] font-semibold py-2">OT</th>
-                                )}
-                                <th className="text-center text-[#b0b7bf] font-semibold py-2">Total</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr className="border-b border-[#00ffe7]/10">
-                                <td className="py-3">
-                                  <div className="flex items-center gap-2">
-                                    <img src={getTeamLogo(awayTeam?.team)} alt={awayTeam?.team.abbreviation} className="w-7 h-6" />
-                                    <span className="text-[#e0e7ef] font-bold">{awayTeam?.team.abbreviation}</span>
-                                  </div>
-                                </td>
-                                {awayTeam?.linescores?.map((score, idx) => (
-                                  <td key={idx} className="text-center text-[#e0e7ef] py-3">{score.displayValue}</td>
-                                ))}
-                                <td className="text-center text-[#00ffe7] font-bold py-3">{awayTeam?.score}</td>
-                              </tr>
-                              <tr>
-                                <td className="py-3">
-                                  <div className="flex items-center gap-2">
-                                    <img src={getTeamLogo(homeTeam?.team)} alt={homeTeam?.team.abbreviation} className="w-7 h-6" />
-                                    <span className="text-[#e0e7ef] font-bold">{homeTeam?.team.abbreviation}</span>
-                                  </div>
-                                </td>
-                                {homeTeam?.linescores?.map((score, idx) => (
-                                  <td key={idx} className="text-center text-[#e0e7ef] py-3">{score.displayValue}</td>
-                                ))}
-                                <td className="text-center text-[#faafe8] font-bold py-3">{homeTeam?.score}</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-                </div>
-              )}
-
-              {/* End of Info Section  */}
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '25%' }}>
+              <Info
+                homeTeam={homeTeam}
+                awayTeam={awayTeam}
+                competition={competition}
+                getTeamLogo={getTeamLogo}
+                gameCountdown={gameCountdown}
+                playLog={playLog}
+              />
             </div>
 
             {/* Pick Section - Top Picks & Your Picks */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: '25%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '25%' }}>
               {!isAuthenticated ? (
                 // Login Prompt - Advertisement Style
                 <div className="flex items-center justify-center px-6">
@@ -414,6 +229,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                   {homeTeam?.id && awayTeam?.id && (
                   <div className="">
                     <TopPicks
+                    gameId={event.id}
                     homeTeamId={homeTeam.id}
                     awayTeamId={awayTeam.id}
                     playLog={playLog}
@@ -425,7 +241,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                   )}
                   
                   {/* Your Picks Section */}
-                  <div className="mt-4">
+                  <div className="mt-4 ">
                   {homeTeam?.id && awayTeam?.id && (
                     <YourPicks
                     gameId={event.id}
@@ -486,7 +302,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: '25%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '25%' }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}

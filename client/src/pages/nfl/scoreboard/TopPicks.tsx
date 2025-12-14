@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { FaTrophy, FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import { usePicks } from '@/providers/PicksContext';
+import axios from 'axios';
 
 interface TopPicksProps {
+  gameId: string;
   homeTeamId: string;
   awayTeamId: string;
   playLog: Array<{
@@ -42,6 +43,7 @@ interface PlayerScore {
 }
 
 const TopPicks: React.FC<TopPicksProps> = ({
+  gameId,
   homeTeamId,
   awayTeamId,
   playLog,
@@ -49,13 +51,31 @@ const TopPicks: React.FC<TopPicksProps> = ({
   homeTeam,
   awayTeam,
 }) => {
-  const { getPicksWithHeadshots } = usePicks();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [userPickIds, setUserPickIds] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch user picks from API
+  useEffect(() => {
+    const fetchUserPicks = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(`/api/picks/game/${gameId}/user`);
+        const picks = response.data?.players || [];
+        setUserPickIds(new Set(picks.map((p: any) => p.athleteId)));
+      } catch (error) {
+        console.error('Failed to fetch user picks:', error);
+        setUserPickIds(new Set());
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchUserPicks();
+  }, [gameId]);
 
   // Calculate top picks from play log
   const topPicks = useMemo(() => {
-    const userPicks = getPicksWithHeadshots(homeTeamId, awayTeamId);
-    const userPickIds = new Set(userPicks?.players.map(p => p.id) || []);
 
     // Build a map of all athletes who have scored
     const athleteScores = new Map<string, PlayerScore>();
@@ -88,7 +108,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
     return Array.from(athleteScores.values())
       .filter(player => player.score > 0)
       .sort((a, b) => b.score - a.score);
-  }, [playLog, homeTeamId, awayTeamId, getPicksWithHeadshots]);
+  }, [playLog, userPickIds]);
 
   if (topPicks.length === 0) {
     return (
