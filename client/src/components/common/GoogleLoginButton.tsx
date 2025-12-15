@@ -177,6 +177,8 @@ const GoogleLoginButton: React.FC = () => {
   };
 
   if (isAuthenticated && user) {
+    const [imageError, setImageError] = useState(false);
+    
     return (
       <div className="relative" ref={dropdownRef}>
         {/* User Profile Picture Button */}
@@ -184,11 +186,12 @@ const GoogleLoginButton: React.FC = () => {
           onClick={() => setShowDropdown(!showDropdown)}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          {user.photoUrl ? (
+          {user.photoUrl && !imageError ? (
             <img 
               src={user.photoUrl} 
               alt={user.displayName || user.username || 'User'} 
-              className="w-9 h-9 rounded-full border-2 border-[#00ffe7]/50 hover:border-[#00ffe7] transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)]" 
+              className="w-9 h-9 rounded-full border-2 border-[#00ffe7]/50 hover:border-[#00ffe7] transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)]"
+              onError={() => setImageError(true)}
             />
           ) : (
             <div className="w-9 h-9 rounded-full border-2 border-[#00ffe7]/50 hover:border-[#00ffe7] transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)] bg-[#181a23] flex items-center justify-center">

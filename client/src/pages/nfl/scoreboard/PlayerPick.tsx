@@ -340,6 +340,9 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   const [isLockingIn, setIsLockingIn] = useState(false);
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
 
+  // MUST call useAuth at the top before any conditional returns (Rules of Hooks)
+  const { isAuthenticated, triggerLoginModal } = useAuth();
+
   // Load saved state from localStorage and backend
   useEffect(() => {
     const loadUserPicks = async () => {
@@ -789,8 +792,6 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   if (loading) {
     return <LoadingFootball message="Loading players..." />;
   }
-
-  const { isAuthenticated, triggerLoginModal } = useAuth();
 
   if (!isAuthenticated) {
     return (

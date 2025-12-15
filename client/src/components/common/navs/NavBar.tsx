@@ -16,7 +16,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
   // All available navigation items
   const allNavItems = [
     // { id: 'back', label: 'Scoreboard', icon: <FaArrowLeft />, action: () => navigate('/nfl') },
-    { id: 'info', label: preset === 'player' ? 'Overview' : preset === 'scoreboard' ? 'Pick' : 'Info', icon: <FaInfoCircle /> },
+    { id: 'info', label: 'Info', icon: <FaInfoCircle /> },
     { id: 'player', label: 'Players', icon: <FaTrophy /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
     { id: 'headtohead', label: 'Head to Head', icon: <FaExchangeAlt /> },
