@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaFootballBall, FaPlay, FaNewspaper, FaCalendar, FaChevronLeft, FaChevronRight, FaTrophy, FaMapMarkerAlt } from "react-icons/fa";
 import axios from "axios";
@@ -59,6 +59,17 @@ const NFLScoreboard: React.FC = () => {
     
     return `${formatDate(weekStart)}-${formatDate(weekEnd)}`;
   };
+
+  // Categorize and sort games
+  const { liveGames, completedGames, upcomingGames } = useMemo(() => {
+    const live = games.filter(game => game.status.type.state === 'in');
+    const completed = games
+      .filter(game => game.status.type.completed)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort by date descending (most recent first)
+    const upcoming = games.filter(game => game.status.type.state === 'pre');
+    
+    return { liveGames: live, completedGames: completed, upcomingGames: upcoming };
+  }, [games]);
 
   const fetchNFLData = async (isInitial = false, week?: number) => {
     try {
@@ -239,14 +250,7 @@ const NFLScoreboard: React.FC = () => {
 	)}
 
   {/* Games Grid */}
-	{!initialLoading && games.length > 0 && (() => {
-		const liveGames = games.filter(game => game.status.type.state === 'in');
-		const completedGames = games
-			.filter(game => game.status.type.completed)
-			.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort by date descending (most recent first)
-		const upcomingGames = games.filter(game => game.status.type.state === 'pre');
-		
-		return (
+	{!initialLoading && games.length > 0 && (
 		<div className="space-y-8">
 			{/* Live Games */}
 			{liveGames.length > 0 && (
@@ -293,8 +297,7 @@ const NFLScoreboard: React.FC = () => {
 			)}
 			
 		</div>
-		);
-	})()}
+	)}
 
   {/* No Games */}
 	{!initialLoading && games.length === 0 && !error && (

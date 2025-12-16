@@ -178,6 +178,9 @@ const GoogleLoginButton: React.FC = () => {
   };
 
   if (isAuthenticated && user) {
+    // Get profile picture from multiple sources
+    const profilePicture = user.photoUrl || user.googlePicture || user.providerData?.googlePicture;
+    
     return (
       <div className="relative" ref={dropdownRef}>
         {/* User Profile Picture Button */}
@@ -185,12 +188,16 @@ const GoogleLoginButton: React.FC = () => {
           onClick={() => setShowDropdown(!showDropdown)}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          {user.photoUrl && !imageError ? (
+          {profilePicture && !imageError ? (
             <img 
-              src={user.photoUrl} 
+              src={profilePicture} 
               alt={user.displayName || user.username || 'User'} 
-              className="w-9 h-9 rounded-full border-2 border-[#00ffe7]/50 hover:border-[#00ffe7] transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)]"
-              onError={() => setImageError(true)}
+              className="w-9 h-9 rounded-full border-2 border-[#00ffe7]/50 hover:border-[#00ffe7] transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)] object-cover"
+              onError={(e) => {
+                console.error('Failed to load profile picture:', profilePicture);
+                setImageError(true);
+              }}
+              referrerPolicy="no-referrer"
             />
           ) : (
             <div className="w-9 h-9 rounded-full border-2 border-[#00ffe7]/50 hover:border-[#00ffe7] transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)] bg-[#181a23] flex items-center justify-center">
@@ -202,11 +209,22 @@ const GoogleLoginButton: React.FC = () => {
 
         {/* Dropdown Menu - Opens inward from the right */}
         {showDropdown && (
-          <div className="absolute right-0 top-full mt-2 min-w-24 bg-[#0b0e17] border border-[#00ffe7]/30 rounded-lg shadow-[0_0_20px_rgba(0,255,231,0.2)] overflow-hidden z-50 animate-fade-in">
+          <div className="absolute right-0 top-full mt-2 min-w-64 bg-[#0b0e17] border border-[#00ffe7]/30 rounded-lg shadow-[0_0_20px_rgba(0,255,231,0.2)] overflow-hidden z-50 animate-fade-in">
             {/* User Info Section */}
             <div className="p-4 border-b border-[#00ffe7]/20 bg-gradient-to-r from-[#00ffe7]/5 to-transparent">
               <div className="flex items-center gap-3">
-                 
+                {profilePicture && !imageError ? (
+                  <img 
+                    src={profilePicture} 
+                    alt={user.displayName || user.username || 'User'} 
+                    className="w-10 h-10 rounded-full border-2 border-[#00ffe7]/50 object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full border-2 border-[#00ffe7]/50 bg-[#181a23] flex items-center justify-center">
+                    <FaUser className="text-[#00ffe7] text-sm" />
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-white truncate">
                     {user.displayName || user.username || 'User'}
