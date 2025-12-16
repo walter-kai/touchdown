@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock, FaLock, FaCheckCircle, FaBolt, FaChartLine, FaUsers } from 'react-icons/fa';
 import PredictionChart from '@/components/nfl/PredictionChart';
 import PlayLog from '@/components/nfl/PlayLog';
+import PointsChart from '@/components/nfl/PointsChart';
 import axios from 'axios';
 import Info from '@/pages/nfl/scoreboard/Info';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
@@ -232,6 +233,63 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     return playLog;
   }, [competition.status.type.state, summary?.drives, playLog, competition.date, apiPlayLog]);
 
+  // Extract scoring plays from play log
+  const scoringPlays = React.useMemo(() => {
+    const plays: Array<{
+      text: string;
+      quarter: number;
+      clock: string;
+      timestamp: Date;
+      homeScore?: number;
+      awayScore?: number;
+    }> = [];
+    
+    let currentHomeScore = 0;
+    let currentAwayScore = 0;
+    
+    effectivePlayLog.forEach((play) => {
+      const text = play.text.toLowerCase();
+      const isScoring = 
+        text.includes('touchdown') || 
+        text.includes('field goal') || 
+        text.includes('safety') ||
+        text.includes('extra point') ||
+        text.includes('two point') ||
+        text.includes('pat ');
+      
+      if (isScoring) {
+        // Determine which team scored based on possession
+        const isHomeTeamPlay = play.possession === homeTeam?.id;
+        
+        // Calculate points based on play text
+        let points = 0;
+        if (text.includes('touchdown')) points = 6;
+        else if (text.includes('field goal')) points = 3;
+        else if (text.includes('safety')) points = 2;
+        else if (text.includes('extra point') || text.includes('pat ')) points = 1;
+        else if (text.includes('two point')) points = 2;
+        
+        // Update scores
+        if (isHomeTeamPlay) {
+          currentHomeScore += points;
+        } else {
+          currentAwayScore += points;
+        }
+        
+        plays.push({
+          text: play.text,
+          quarter: play.quarter,
+          clock: play.clock,
+          timestamp: play.timestamp,
+          homeScore: currentHomeScore,
+          awayScore: currentAwayScore
+        });
+      }
+    });
+    
+    return plays;
+  }, [effectivePlayLog, homeTeam?.id]);
+
   // Countdown timer for pre-game
   useEffect(() => {
     if (!isPreGame) return;
@@ -274,7 +332,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   const getTabIndex = (tab: string) => {
     const summaryTabs = isPreGame
       ? ['info', 'pick']
-      : ['info', 'player', 'plays', 'pick'];
+      : ['info', 'pick', 'player', 'plays'];
     return summaryTabs.indexOf(tab);
   };
 
@@ -313,7 +371,163 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 summary={summary}
                 gameId={gameId}
               />
+              
+              {/* Points Chart - Show for all games with scoring data */}
+              {scoringPlays.length > 0 && (
+                <div className="mt-4">
+                  <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+                  <div className="mx-2">
+                    <PointsChart
+                      gameId={gameId}
+                      homeTeamInfo={{
+                        name: homeTeam?.team.displayName || '',
+                        logo: getTeamLogo(homeTeam),
+                        color: homeTeam?.team.color || '00ffe7'
+                      }}
+                      awayTeamInfo={{
+                        name: awayTeam?.team.displayName || '',
+                        logo: getTeamLogo(awayTeam),
+                        color: awayTeam?.team.color || 'faafe8'
+                      }}
+                      scoringPlays={scoringPlays}
+                      gameStatus={competition.status.type.state}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Pick Section - Your Picks (moved to 2nd position) */}
+            {!isPreGame && (
+            <div className="w-full flex-shrink-0  overflow-hidden" style={{ width: '25%' }}>
+              {!isAuthenticated ? (
+                // Login Prompt - Advertisement Style
+                <div className="h-[calc(100%-64px)] flex items-center justify-center px-6">
+                  <div className="max-w-md w-full">
+                    {/* Hero Section */}
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#00ffe7]/20 via-[#1a1d2e] to-[#faafe8]/20 border-2 border-[#00ffe7]/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-6 sm:p-8">
+                      {/* Animated background elements */}
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-[#00ffe7]/10 rounded-full blur-3xl animate-pulse"></div>
+                      <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#faafe8]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+                      
+                      <div className="relative z-10">
+                        {/* Lock Icon */}
+                        <div className="flex justify-center mb-4">
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-[#00ffe7] blur-xl opacity-50 animate-pulse"></div>
+                            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#00ffe7] to-[#faafe8] flex items-center justify-center shadow-lg">
+                              <FaLock className="text-[#1a1d2e] text-2xl" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Headline */}
+                        <h1>
+                          Unlock Your Picks
+                        </h1>
+                        <p className="text-[#b0b7bf] text-center text-base mb-6">
+                          Join the game and start making your predictions!
+                        </p>
+
+                        {/* Features Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
+                            <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
+                              <FaCheckCircle className="text-[#00ffe7] text-base" />
+                            </div>
+                            <div>
+                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Track Your Picks</h3>
+                              <p className="text-[#b0b7bf] text-xs">Follow predictions in real-time</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
+                            <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
+                              <FaBolt className="text-[#faafe8] text-base" />
+                            </div>
+                            <div>
+                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Live Updates</h3>
+                              <p className="text-[#b0b7bf] text-xs">Instant player scoring alerts</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
+                            <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
+                              <FaChartLine className="text-[#00ffe7] text-base" />
+                            </div>
+                            <div>
+                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Performance Stats</h3>
+                              <p className="text-[#b0b7bf] text-xs">Track prediction accuracy</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
+                            <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
+                              <FaUsers className="text-[#faafe8] text-base" />
+                            </div>
+                            <div>
+                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Compete & Compare</h3>
+                              <p className="text-[#b0b7bf] text-xs">See top picks and compete</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* CTA Button */}
+                        <button
+                          onClick={() => triggerLoginModal()}
+                          className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-[#1a1d2e] font-bold text-base shadow-[0_0_20px_rgba(0,255,231,0.5)] hover:shadow-[0_0_30px_rgba(0,255,231,0.7)] transform hover:scale-105 transition-all duration-200"
+                        >
+                          Sign In to Start Picking
+                        </button>
+
+                        <p className="text-[#b0b7bf] text-center text-xs mt-3">
+                          Free to join • No credit card required
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Authenticated - Show TopPicks for completed games, YourPicks for others
+                homeTeam?.id && awayTeam?.id && (
+                  gameStatus === 'post' ? (
+                    <TopPicks
+                      gameId={event.id}
+                      homeTeamId={homeTeam.id}
+                      awayTeamId={awayTeam.id}
+                      playLog={effectivePlayLog}
+                      getTeamLogo={getTeamLogo}
+                      homeTeam={homeTeam}
+                      awayTeam={awayTeam}
+                    />
+                  ) : (
+                    <YourPicks
+                      gameId={event.id}
+                      homeTeamId={homeTeam.id}
+                      awayTeamId={awayTeam.id}
+                      homeTeamInfo={{
+                        name: homeTeam.team.displayName,
+                        logo: getTeamLogo(homeTeam),
+                        color: homeTeam.team.color || '00ffe7'
+                      }}
+                      awayTeamInfo={{
+                        name: awayTeam.team.displayName,
+                        logo: getTeamLogo(awayTeam),
+                        color: awayTeam.team.color || 'faafe8'
+                      }}
+                      isExpanded={isPickExpanded}
+                      onToggle={() => setIsPickExpanded(!isPickExpanded)}
+                      playLog={playLog}
+                      situation={competition.situation}
+                      homeTeam={homeTeam}
+                      awayTeam={awayTeam}
+                      getTeamLogo={getTeamLogo}
+                    />
+                  )
+                )
+              )}
+            </div>
+            )}
 
             {/* Player Statistics Section */}
             {!isPreGame && (
@@ -461,136 +675,6 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             </div>
 
             )}
-
-            {/* Pick Section - Your Picks */}
-            <div className="w-full flex-shrink-0  overflow-hidden" style={{ width: isPreGame ? '50%' : '25%' }}>
-              {!isAuthenticated ? (
-                // Login Prompt - Advertisement Style
-                <div className="h-[calc(100%-64px)] flex items-center justify-center px-6">
-                  <div className="max-w-md w-full">
-                    {/* Hero Section */}
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#00ffe7]/20 via-[#1a1d2e] to-[#faafe8]/20 border-2 border-[#00ffe7]/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-6 sm:p-8">
-                      {/* Animated background elements */}
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-[#00ffe7]/10 rounded-full blur-3xl animate-pulse"></div>
-                      <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#faafe8]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-                      
-                      <div className="relative z-10">
-                        {/* Lock Icon */}
-                        <div className="flex justify-center mb-4">
-                          <div className="relative">
-                            <div className="absolute inset-0 bg-[#00ffe7] blur-xl opacity-50 animate-pulse"></div>
-                            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#00ffe7] to-[#faafe8] flex items-center justify-center shadow-lg">
-                              <FaLock className="text-[#1a1d2e] text-2xl" />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Headline */}
-                        <h1>
-                          Unlock Your Picks
-                        </h1>
-                        <p className="text-[#b0b7bf] text-center text-base mb-6">
-                          Join the game and start making your predictions!
-                        </p>
-
-                        {/* Features Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
-                            <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
-                              <FaCheckCircle className="text-[#00ffe7] text-base" />
-                            </div>
-                            <div>
-                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Track Your Picks</h3>
-                              <p className="text-[#b0b7bf] text-xs">Follow predictions in real-time</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
-                            <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
-                              <FaBolt className="text-[#faafe8] text-base" />
-                            </div>
-                            <div>
-                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Live Updates</h3>
-                              <p className="text-[#b0b7bf] text-xs">Instant player scoring alerts</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
-                            <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
-                              <FaChartLine className="text-[#00ffe7] text-base" />
-                            </div>
-                            <div>
-                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Performance Stats</h3>
-                              <p className="text-[#b0b7bf] text-xs">Track prediction accuracy</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
-                            <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
-                              <FaUsers className="text-[#faafe8] text-base" />
-                            </div>
-                            <div>
-                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Compete & Compare</h3>
-                              <p className="text-[#b0b7bf] text-xs">See top picks and compete</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* CTA Button */}
-                        <button
-                          onClick={() => triggerLoginModal()}
-                          className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-[#1a1d2e] font-bold text-base shadow-[0_0_20px_rgba(0,255,231,0.5)] hover:shadow-[0_0_30px_rgba(0,255,231,0.7)] transform hover:scale-105 transition-all duration-200"
-                        >
-                          Sign In to Start Picking
-                        </button>
-
-                        <p className="text-[#b0b7bf] text-center text-xs mt-3">
-                          Free to join • No credit card required
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                // Authenticated - Show TopPicks for completed games, YourPicks for others
-                homeTeam?.id && awayTeam?.id && (
-                  gameStatus === 'post' ? (
-                    <TopPicks
-                      gameId={event.id}
-                      homeTeamId={homeTeam.id}
-                      awayTeamId={awayTeam.id}
-                      playLog={effectivePlayLog}
-                      getTeamLogo={getTeamLogo}
-                      homeTeam={homeTeam}
-                      awayTeam={awayTeam}
-                    />
-                  ) : (
-                    <YourPicks
-                      gameId={event.id}
-                      homeTeamId={homeTeam.id}
-                      awayTeamId={awayTeam.id}
-                      homeTeamInfo={{
-                        name: homeTeam.team.displayName,
-                        logo: getTeamLogo(homeTeam),
-                        color: homeTeam.team.color || '00ffe7'
-                      }}
-                      awayTeamInfo={{
-                        name: awayTeam.team.displayName,
-                        logo: getTeamLogo(awayTeam),
-                        color: awayTeam.team.color || 'faafe8'
-                      }}
-                      isExpanded={isPickExpanded}
-                      onToggle={() => setIsPickExpanded(!isPickExpanded)}
-                      playLog={playLog}
-                      situation={competition.situation}
-                      homeTeam={homeTeam}
-                      awayTeam={awayTeam}
-                      getTeamLogo={getTeamLogo}
-                    />
-                  )
-                )
-              )}
-            </div>
           </div>
         </div>
       </div>

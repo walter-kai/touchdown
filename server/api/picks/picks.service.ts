@@ -8,7 +8,9 @@ type CreatePickArgs = {
   picksState?: {
     players?: any[];
     totalScore?: number;
-    lockedAt?: number | null;
+    lockedAt?: number | string | null; // Can be epoch milliseconds or ISO string
+    playerLockTimes?: Record<string, number | string>; // Can be epoch milliseconds or ISO string
+    playerHistory?: Record<string, Array<{ start: number | string; end?: number | string }>>; // Can be epoch milliseconds or ISO string
   };
   gameId?: string;
   selection?: string;
@@ -37,10 +39,17 @@ export async function createPick(args: CreatePickArgs) {
     throw new Error('No players in picksState');
   }
 
-  const timestamp = admin.firestore.Timestamp.now();
+  const timestamp = new Date().toISOString(); // Use ISO 8601 format
   const players = args.picksState.players;
 
-  // Prepare the new pick entry
+  // Convert timestamps to ISO 8601 format
+  const convertToISO = (value: number | string | null | undefined): string | null => {
+    if (!value) return null;
+    if (typeof value === 'string') return value; // Already ISO format
+    return new Date(value).toISOString(); // Convert epoch milliseconds to ISO
+  };
+
+  // Prepare the new pick entry with ISO timestamps
   const newPick = {
     players: players.map(p => {
       const playerData: any = {
@@ -58,7 +67,23 @@ export async function createPick(args: CreatePickArgs) {
       return playerData;
     }),
     totalScore: args.picksState.totalScore || 0,
-    lockedAt: args.picksState.lockedAt || null,
+    lockedAt: convertToISO(args.picksState.lockedAt),
+    playerLockTimes: args.picksState.playerLockTimes 
+      ? Object.fromEntries(
+          Object.entries(args.picksState.playerLockTimes).map(([id, time]) => [id, convertToISO(time)])
+        )
+      : {},
+    playerHistory: args.picksState.playerHistory
+      ? Object.fromEntries(
+          Object.entries(args.picksState.playerHistory).map(([id, periods]) => [
+            id,
+            periods.map(p => ({
+              start: convertToISO(p.start)!,
+              end: p.end ? convertToISO(p.end)! : undefined,
+            }))
+          ])
+        )
+      : {},
     timestamp,
   };
 

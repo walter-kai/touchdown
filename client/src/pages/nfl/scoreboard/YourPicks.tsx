@@ -523,41 +523,60 @@ const YourPicks: React.FC<PlayerPickProps> = ({
       let playsCounted = 0;
       
       playLog.forEach((play, playIndex) => {
-        if (play.athletesInvolved) {
-          const isInvolved = play.athletesInvolved.some(a => a.id === player.id);
-          if (isInvolved) {
-            playsInvolved++;
-            
-            // If still no active periods defined, skip (shouldn't happen per user)
-            if (activePeriods.length === 0) {
-              playsSkipped++;
-              console.warn(`⚠️ No active periods for ${player.displayName} - skipping play`);
-              return;
-            }
-            
-            const playTimestamp = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
-            
-            // Debug first few plays
-            if (playIndex < 3) {
-              console.log(`📍 Play ${playIndex}: ${play.text.substring(0, 50)}...`);
-              console.log(`  ⏰ Play time: ${new Date(playTimestamp).toISOString()} (${playTimestamp})`);
-              console.log(`  🔒 Lock time: ${new Date(activePeriods[0].start).toISOString()} (${activePeriods[0].start})`);
-              console.log(`  ⏱️ Time diff: ${(playTimestamp - activePeriods[0].start) / 1000} seconds`);
-            }
-            
-            // Check if play occurred during any of the player's active periods
-            const playDuringActivePeriod = activePeriods.some(period => {
-              const afterStart = playTimestamp >= period.start;
-              const beforeEnd = !period.end || playTimestamp <= period.end;
-              return afterStart && beforeEnd;
-            });
-            
-            if (playDuringActivePeriod) {
-              scores[player.id]++;
-              playsCounted++;
-            } else {
-              playsSkipped++;
-            }
+        // Check if player is involved - either by ID or by name in text
+        let isInvolved = false;
+        
+        if (play.athletesInvolved && play.athletesInvolved.length > 0) {
+          isInvolved = play.athletesInvolved.some(a => a.id === player.id);
+        } else {
+          // Fallback: Check if player name appears in play text
+          const lastName = player.displayName.split(' ').pop();
+          if (lastName && play.text) {
+            const pattern = new RegExp(`\\b[A-Z]?\\.?${lastName}\\b`, 'i');
+            isInvolved = pattern.test(play.text);
+          }
+        }
+        
+        if (isInvolved) {
+          playsInvolved++;
+          
+          // If still no active periods defined, skip (shouldn't happen per user)
+          if (activePeriods.length === 0) {
+            playsSkipped++;
+            console.warn(`⚠️ No active periods for ${player.displayName} - skipping play`);
+            return;
+          }
+          
+          // Handle Firestore Timestamp objects (_seconds) vs Date objects vs ISO strings
+          let playTimestamp: number;
+          if (play.timestamp instanceof Date) {
+            playTimestamp = play.timestamp.getTime();
+          } else if (play.timestamp && typeof play.timestamp === 'object' && '_seconds' in play.timestamp) {
+            playTimestamp = (play.timestamp as any)._seconds * 1000;
+          } else {
+            playTimestamp = new Date(play.timestamp).getTime();
+          }
+          
+          // Debug first few plays
+          if (playIndex < 3) {
+            console.log(`📍 Play ${playIndex}: ${play.text.substring(0, 50)}...`);
+            console.log(`  ⏰ Play time: ${new Date(playTimestamp).toISOString()} (${playTimestamp})`);
+            console.log(`  🔒 Lock time: ${new Date(activePeriods[0].start).toISOString()} (${activePeriods[0].start})`);
+            console.log(`  ⏱️ Time diff: ${(playTimestamp - activePeriods[0].start) / 1000} seconds`);
+          }
+          
+          // Check if play occurred during any of the player's active periods
+          const playDuringActivePeriod = activePeriods.some(period => {
+            const afterStart = playTimestamp >= period.start;
+            const beforeEnd = !period.end || playTimestamp <= period.end;
+            return afterStart && beforeEnd;
+          });
+          
+          if (playDuringActivePeriod) {
+            scores[player.id]++;
+            playsCounted++;
+          } else {
+            playsSkipped++;
           }
         }
       });

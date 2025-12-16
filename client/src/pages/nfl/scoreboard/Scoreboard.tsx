@@ -4,6 +4,7 @@ import { FaFootballBall, FaClock, FaPauseCircle, FaLock, FaCheckCircle, FaBolt, 
 import { useAuth } from '@/providers/AuthContext';
 import HeadToHead from '@/components/nfl/HeadToHead';
 import ProbChart from '@/components/nfl/ProbabilityChart';
+import PointsChart from '@/components/nfl/PointsChart';
 import PlayerPick from '@/pages/nfl/scoreboard/PlayerPick';
 import Info from '@/pages/nfl/scoreboard/Info';
 import type { Event } from '@/types/espn/scoreboard';
@@ -60,6 +61,63 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   const awayTeam = competition.competitors.find(c => c.homeAway === 'away');
   const isGameInSession = competition.status.type.state === 'in';
   const isGameUpcoming = competition.status.type.state === 'pre';
+
+  // Extract scoring plays from play log
+  const scoringPlays = React.useMemo(() => {
+    const plays: Array<{
+      text: string;
+      quarter: number;
+      clock: string;
+      timestamp: Date;
+      homeScore?: number;
+      awayScore?: number;
+    }> = [];
+    
+    let currentHomeScore = 0;
+    let currentAwayScore = 0;
+    
+    playLog.forEach((play) => {
+      const text = play.text.toLowerCase();
+      const isScoring = 
+        text.includes('touchdown') || 
+        text.includes('field goal') || 
+        text.includes('safety') ||
+        text.includes('extra point') ||
+        text.includes('two point') ||
+        text.includes('pat ');
+      
+      if (isScoring) {
+        // Determine which team scored based on possession
+        const isHomeTeamPlay = play.possession === homeTeam?.id;
+        
+        // Calculate points based on play text
+        let points = 0;
+        if (text.includes('touchdown')) points = 6;
+        else if (text.includes('field goal')) points = 3;
+        else if (text.includes('safety')) points = 2;
+        else if (text.includes('extra point') || text.includes('pat ')) points = 1;
+        else if (text.includes('two point')) points = 2;
+        
+        // Update scores
+        if (isHomeTeamPlay) {
+          currentHomeScore += points;
+        } else {
+          currentAwayScore += points;
+        }
+        
+        plays.push({
+          text: play.text,
+          quarter: play.quarter,
+          clock: play.clock,
+          timestamp: play.timestamp,
+          homeScore: currentHomeScore,
+          awayScore: currentAwayScore
+        });
+      }
+    });
+    
+    return plays;
+  }, [playLog, homeTeam?.id]);
 
   // Get tab index for carousel position
   const getTabIndex = (tab: string) => {
@@ -130,6 +188,30 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                 gameCountdown={gameCountdown}
                 playLog={playLog}
               />
+              
+              {/* Points Chart - Show for all games with scoring data */}
+              {scoringPlays.length > 0 && (
+                <div className="mt-4">
+                  <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+                  <div className="mx-2">
+                    <PointsChart
+                      gameId={event.id}
+                      homeTeamInfo={{
+                        name: homeTeam?.team.displayName || '',
+                        logo: getTeamLogo(homeTeam),
+                        color: homeTeam?.team.color || '00ffe7'
+                      }}
+                      awayTeamInfo={{
+                        name: awayTeam?.team.displayName || '',
+                        logo: getTeamLogo(awayTeam),
+                        color: awayTeam?.team.color || 'faafe8'
+                      }}
+                      scoringPlays={scoringPlays}
+                      gameStatus={competition.status.type.state}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Pick Section - Top Picks & Your Picks */}

@@ -56,6 +56,9 @@ const TopPicks: React.FC<TopPicksProps> = ({
   const [userPickIds, setUserPickIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [userPickScores, setUserPickScores] = useState<Record<string, number>>({});
+  const [playerHistory, setPlayerHistory] = useState<Record<string, Array<{ start: number; end?: number }>>>({});
+  const [playerLockTimes, setPlayerLockTimes] = useState<Record<string, number>>({});
+  const [globalLockedAt, setGlobalLockedAt] = useState<number | null>(null);
 
   // Fetch user picks from API
   useEffect(() => {
@@ -83,12 +86,63 @@ const TopPicks: React.FC<TopPicksProps> = ({
         
         // Extract players from the most recent pick submission
         let athleteIds: string[] = [];
+        
         if (response.data?.picks?.picks && response.data.picks.picks.length > 0) {
           // Get the most recent pick (last in array)
           const latestPick = response.data.picks.picks[response.data.picks.picks.length - 1];
           const players = latestPick.players || [];
-          athleteIds = players.map((p: any) => p.id);
-          console.log(`✅ Found ${players.length} user picks from latest submission:`, players.map((p: any) => `${p.displayName} (${p.id})`));
+          
+          // Extract lock time data from API response
+          const apiPlayerHistory = latestPick.playerHistory || {};
+          const apiPlayerLockTimes = latestPick.playerLockTimes || {};
+          const apiGlobalLockedAt = latestPick.lockedAt || null;
+          
+          // Collect ALL unique player IDs across ALL pick submissions
+          const allPickSubmissions = response.data.picks.picks;
+          const allPlayerIds = new Set<string>();
+          
+          allPickSubmissions.forEach((pick: any) => {
+            const pickPlayers = pick.players || [];
+            pickPlayers.forEach((p: any) => {
+              if (p.id) allPlayerIds.add(p.id);
+            });
+            
+            // Also include players from playerHistory in each pick submission
+            const pickHistory = pick.playerHistory || {};
+            Object.keys(pickHistory).forEach(playerId => {
+              allPlayerIds.add(playerId);
+            });
+          });
+          
+          athleteIds = Array.from(allPlayerIds);
+          
+          console.log(`✅ Found ${allPlayerIds.size} total unique players across ${allPickSubmissions.length} pick submissions`);
+          console.log('📚 All player IDs ever picked:', athleteIds);
+          console.log('� Lock data from API:', { apiPlayerHistory, apiPlayerLockTimes, apiGlobalLockedAt });
+          
+          // Set lock time state
+          setPlayerHistory(apiPlayerHistory);
+          setPlayerLockTimes(apiPlayerLockTimes);
+          setGlobalLockedAt(apiGlobalLockedAt);
+          
+          // Save to localStorage for consistency
+          const storageKey = `playerPick_${homeTeamId}_${awayTeamId}`;
+          // Convert athleteIds back to player objects for localStorage compatibility
+          const allPlayerObjects = athleteIds.map(id => {
+            // Try to find player data from any pick submission
+            for (const pick of allPickSubmissions) {
+              const player = (pick.players || []).find((p: any) => p.id === id);
+              if (player) return player;
+            }
+            // Fallback if player not found in current picks (was removed)
+            return { id };
+          });
+          localStorage.setItem(storageKey, JSON.stringify({
+            players: allPlayerObjects,
+            lockedAt: apiGlobalLockedAt,
+            playerLockTimes: apiPlayerLockTimes,
+            playerHistory: apiPlayerHistory
+          }));
         } else {
           console.log('⚠️ No picks found in response');
         }
@@ -99,13 +153,39 @@ const TopPicks: React.FC<TopPicksProps> = ({
       } catch (error) {
         console.error('❌ Failed to fetch user picks:', error);
         setUserPickIds(new Set());
+        
+        // Fallback to localStorage if API fails
+        const storageKey = `playerPick_${homeTeamId}_${awayTeamId}`;
+        const savedState = localStorage.getItem(storageKey);
+        if (savedState) {
+          try {
+            const parsed = JSON.parse(savedState);
+            
+            // Include currently active players
+            let athleteIds = (parsed.players || []).map((p: any) => p.id);
+            
+            // Also include ALL players from playerHistory
+            const apiPlayerHistory = parsed.playerHistory || {};
+            const historicalPlayerIds = Object.keys(apiPlayerHistory);
+            const allPlayerIds = [...new Set([...athleteIds, ...historicalPlayerIds])];
+            athleteIds = allPlayerIds;
+            
+            setUserPickIds(new Set(athleteIds));
+            setPlayerHistory(apiPlayerHistory);
+            setPlayerLockTimes(parsed.playerLockTimes || {});
+            setGlobalLockedAt(parsed.lockedAt || null);
+            console.log('✅ Loaded picks from localStorage fallback (including historical)');
+          } catch (e) {
+            console.error('❌ Failed to parse localStorage data:', e);
+          }
+        }
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchUserPicks();
-  }, [gameId]);
+  }, [gameId, homeTeamId, awayTeamId]);
 
   // Calculate time-filtered scores for user picks (same logic as YourPicks)
   useEffect(() => {
@@ -116,83 +196,101 @@ const TopPicks: React.FC<TopPicksProps> = ({
 
     console.log('🔄 TopPicks: Calculating time-filtered user scores...');
     
-    // Get lock times from localStorage
-    const storageKey = `playerPick_${homeTeamId}_${awayTeamId}`;
-    const savedState = localStorage.getItem(storageKey);
-    
-    if (!savedState) {
-      console.warn('⚠️ TopPicks: No saved state found in localStorage');
+    // If no lock data available, can't calculate time-filtered scores
+    if (!globalLockedAt && Object.keys(playerLockTimes).length === 0 && Object.keys(playerHistory).length === 0) {
+      console.warn('⚠️ TopPicks: No lock time data available from API or localStorage');
       setUserPickScores({});
       return;
     }
 
-    let playerHistory: Record<string, Array<{ start: number; end?: number }>> = {};
-    let currentPlayerLockTimes: Record<string, number> = {};
-    let globalLockedAt: number | null = null;
-
-    try {
-      const parsed = JSON.parse(savedState);
-      playerHistory = parsed.playerHistory || {};
-      currentPlayerLockTimes = parsed.playerLockTimes || {};
-      globalLockedAt = parsed.lockedAt || null;
-      console.log('💾 TopPicks: Player lock times:', currentPlayerLockTimes);
-      console.log('💾 TopPicks: Global locked at:', globalLockedAt);
-    } catch (e) {
-      console.error('❌ TopPicks: Error parsing saved state:', e);
-      setUserPickScores({});
-      return;
-    }
+    console.log('💾 TopPicks: Using lock data - Player lock times:', playerLockTimes);
+    console.log('💾 TopPicks: Global locked at:', globalLockedAt);
+    console.log('💾 TopPicks: Player history:', playerHistory);
 
     const scores: Record<string, number> = {};
+    
+    // Helper to convert any timestamp format to milliseconds
+    const toMs = (ts: any): number => {
+      if (!ts) return 0;
+      if (typeof ts === 'number') return ts;
+      if (ts._seconds) return ts._seconds * 1000;
+      if (ts instanceof Date) return ts.getTime();
+      return new Date(ts).getTime();
+    };
     
     // Calculate score for each user pick
     Array.from(userPickIds).forEach(playerId => {
       scores[playerId] = 0;
       
-      // Get all time periods this player was active
-      let activePeriods = playerHistory[playerId] || [];
+      // Get lock times for this player
+      let lockTimesMs: Array<{ start: number; end?: number }> = [];
       
-      // Add current active period if player is currently locked
-      if (currentPlayerLockTimes[playerId]) {
-        activePeriods.push({ start: currentPlayerLockTimes[playerId] });
+      // Add from playerHistory
+      if (playerHistory[playerId]) {
+        lockTimesMs = playerHistory[playerId].map(p => ({
+          start: toMs(p.start),
+          end: p.end ? toMs(p.end) : undefined
+        }));
       }
       
-      // Fallback: If no specific player lock time, use the global lockedAt
-      if (activePeriods.length === 0 && globalLockedAt) {
-        activePeriods = [{ start: globalLockedAt }];
+      // Add current lock time if exists
+      if (playerLockTimes[playerId]) {
+        lockTimesMs.push({ start: toMs(playerLockTimes[playerId]) });
       }
       
-      if (activePeriods.length === 0) {
-        console.warn(`⚠️ TopPicks: No active periods for player ${playerId}`);
+      // Fallback to global lock time
+      if (lockTimesMs.length === 0 && globalLockedAt) {
+        lockTimesMs = [{ start: toMs(globalLockedAt) }];
+      }
+      
+      if (lockTimesMs.length === 0) {
+        console.warn(`⚠️ No lock time for player ${playerId}`);
         return;
       }
       
-      // Count plays that occurred during active periods
+      // Count plays that happened AFTER the player was locked
+      let totalPlaysForPlayer = 0;
+      let playsAfterLock = 0;
+      
       playLog.forEach(play => {
-        if (play.athletesInvolved) {
-          const isInvolved = play.athletesInvolved.some(a => a.id === playerId);
-          if (isInvolved) {
-            const playTimestamp = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
-            
-            // Check if play occurred during any of the player's active periods
-            const playDuringActivePeriod = activePeriods.some(period => {
-              const afterStart = playTimestamp >= period.start;
-              const beforeEnd = !period.end || playTimestamp <= period.end;
-              return afterStart && beforeEnd;
-            });
-            
-            if (playDuringActivePeriod) {
-              scores[playerId]++;
-            }
-          }
+        if (!play.athletesInvolved || play.athletesInvolved.length === 0) return;
+        
+        const isInvolved = play.athletesInvolved.some(a => a.id === playerId);
+        if (!isInvolved) return;
+        
+        totalPlaysForPlayer++;
+        const playTime = toMs(play.timestamp);
+        
+        // Debug first play for this player
+        if (totalPlaysForPlayer === 1) {
+          console.log(`  First play for ${playerId}: ${new Date(playTime).toISOString()}, Lock times:`, lockTimesMs.map(p => ({
+            start: new Date(p.start).toISOString(),
+            end: p.end ? new Date(p.end).toISOString() : 'ongoing'
+          })));
+        }
+        
+        // Check if play is within any active period (after lock start, before lock end if exists)
+        const isInActivePeriod = lockTimesMs.some(period => {
+          const afterStart = playTime >= period.start;
+          const beforeEnd = !period.end || playTime <= period.end;
+          return afterStart && beforeEnd;
+        });
+        
+        if (isInActivePeriod) {
+          scores[playerId]++;
+          playsAfterLock++;
         }
       });
       
-      console.log(`✅ TopPicks: Player ${playerId} score: ${scores[playerId]}`);
+      if (totalPlaysForPlayer > 0) {
+        console.log(`  Player ${playerId}: ${playsAfterLock}/${totalPlaysForPlayer} plays after lock`);
+      }
+      
+      console.log(`✅ TopPicks: Player ${playerId} time-filtered score: ${scores[playerId]}`);
     });
 
     setUserPickScores(scores);
-  }, [userPickIds, playLog, homeTeamId, awayTeamId]);
+  }, [userPickIds, playLog, playerHistory, playerLockTimes, globalLockedAt]);
 
   // Calculate top picks from play log
   const topPicks = useMemo(() => {
@@ -200,11 +298,22 @@ const TopPicks: React.FC<TopPicksProps> = ({
     console.log('📊 User pick IDs:', Array.from(userPickIds));
     console.log('📝 Total plays in log:', playLog.length);
 
+    // Check if plays have athlete data
+    const playsWithAthletes = playLog.filter(p => p.athletesInvolved && p.athletesInvolved.length > 0).length;
+    console.log('📊 Plays with athlete data:', playsWithAthletes);
+    
+    // If less than 10% of plays have athlete data, the data is incomplete
+    if (playLog.length > 0 && playsWithAthletes < playLog.length * 0.1) {
+      console.warn('⚠️ Insufficient athlete data in plays. TopPicks will not be accurate.');
+      console.warn('   This game needs to be re-fetched from ESPN to populate athlete information.');
+    }
+
     // Build a map of all athletes who have scored
     const athleteScores = new Map<string, PlayerScore>();
 
     playLog.forEach((play) => {
-      if (play.athletesInvolved) {
+      // Count all plays where athletes are involved (no scoreValue filter)
+      if (play.athletesInvolved && play.athletesInvolved.length > 0) {
         play.athletesInvolved.forEach((athlete) => {
           if (!athleteScores.has(athlete.id)) {
             const isUserPick = userPickIds.has(athlete.id);
@@ -224,16 +333,42 @@ const TopPicks: React.FC<TopPicksProps> = ({
               isUserPick,
             });
           }
-          // Increment score
+          // Increment score by 1 for each play involvement
           const current = athleteScores.get(athlete.id)!;
           current.score += 1;
         });
+      } else {
+        // Fallback: Extract player names from play text
+        const playText = play.text || '';
+        
+        // Try to extract player name (format: "I.Pacheco" or "P.Mahomes")
+        const nameMatch = playText.match(/^(?:\([\w\s]+\)\s*)?([A-Z]\.[A-Z][a-z]+)/);
+        if (nameMatch) {
+          const playerName = nameMatch[1]; // e.g., "P.Mahomes"
+          const playerId = playerName; // Use name as ID since we don't have actual ID
+          
+          if (!athleteScores.has(playerId)) {
+            athleteScores.set(playerId, {
+              id: playerId,
+              fullName: playerName,
+              displayName: playerName,
+              shortName: playerName,
+              headshot: '',
+              jersey: '',
+              position: '',
+              teamId: (play as any).team || '',
+              score: 0,
+              isUserPick: false,
+            });
+          }
+          const current = athleteScores.get(playerId)!;
+          current.score += 1;
+        }
       }
     });
 
     // Convert to array and sort by score descending
     const sorted = Array.from(athleteScores.values())
-      .filter(player => player.score > 0)
       .sort((a, b) => b.score - a.score);
     
     const userPicks = sorted.filter(p => p.isUserPick);
@@ -242,23 +377,16 @@ const TopPicks: React.FC<TopPicksProps> = ({
     return sorted;
   }, [playLog, userPickIds]);
 
-  if (topPicks.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-[#b0b7bf] text-lg">No players have scored yet.</p>
-        <p className="text-[#b0b7bf] text-sm mt-2">Check back when the game starts!</p>
-      </div>
-    );
-  }
-
-  // Calculate total user score using time-filtered scores
-  const userTotalScore = Object.values(userPickScores).reduce((sum, score) => sum + score, 0);
+  // Calculate total user score from the topPicks data (not time-filtered)
+  const userTotalScore = topPicks
+    .filter(p => p.isUserPick)
+    .reduce((sum, player) => sum + player.score, 0);
 
   const displayedPicks = isExpanded ? topPicks : topPicks.slice(0, 5);
   const hasMore = topPicks.length > 5;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p">
       {/* Divider */}
       <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>  
       <div className='mx-2'>
@@ -277,8 +405,8 @@ const TopPicks: React.FC<TopPicksProps> = ({
           )}
         </div>
         <div className="border border-[#00ffe7]/20 bg-[#181a23]/50">
-          {/* Header Row - Only show when user has picks */}
-          {userTotalScore > 0 && (
+          {/* Header Row - Show when user has any picks */}
+          {userPickIds.size > 0 && (
             <div className="bg-[#00ffe7]/10 border-b-2 border-[#00ffe7]/30 py-2 flex items-center justify-end sticky top-0 z-10 pr-3">
               <div className="flex items-center" style={{ gap: '12px' }}>
                 <div className="text-[10px] text-[#00ffe7] font-bold text-center" style={{ width: '80px' }}>
@@ -324,17 +452,30 @@ const TopPicks: React.FC<TopPicksProps> = ({
                         {player.isUserPick && (
                           <div className="absolute inset-0 rounded-full bg-[#00ffe7] blur-md opacity-50 animate-pulse"></div>
                         )}
-                        <img
-                          src={player.headshot}
-                          alt={player.displayName}
+                        {player.headshot ? (
+                          <img
+                            src={player.headshot}
+                            alt={player.displayName}
+                            className={`
+                              relative w-14 h-14 rounded-full border-2 object-cover
+                              ${player.isUserPick ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
+                            `}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div 
                           className={`
-                            relative w-14 h-14 rounded-full border-2 object-cover
+                            relative w-14 h-14 rounded-full border-2 bg-[#23263a] items-center justify-center
                             ${player.isUserPick ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
                           `}
-                          onError={(e) => {
-                            e.currentTarget.src = `https://via.placeholder.com/64?text=${player.shortName}`;
-                          }}
-                        />
+                          style={{ display: player.headshot ? 'none' : 'flex' }}
+                        >
+                          <span className="text-xs font-bold text-[#00ffe7]">{player.shortName?.substring(0, 2) || 'P'}</span>
+                        </div>
                       </div>
                     </div>
                     
@@ -366,10 +507,10 @@ const TopPicks: React.FC<TopPicksProps> = ({
                     {/* Score */}
                     <div className="flex-shrink-0 text-right pr-3">
                       {player.isUserPick ? (
-                        // For user picks, show both their score and total score (without headers)
+                        // For user picks, show both their score and total score
                         <div className="flex items-center" style={{ gap: '12px' }}>
                           <div className="text-2xl font-bold text-[#00ffe7] drop-shadow-[0_0_10px_rgba(0,255,231,0.8)] text-center" style={{ width: '80px' }}>
-                            {userPickScores[player.id] || 0}
+                            {userPickScores[player.id] || player.score}
                           </div>
                           <div className="text-2xl font-bold text-white text-center" style={{ width: '80px' }}>
                             {player.score}
@@ -389,27 +530,29 @@ const TopPicks: React.FC<TopPicksProps> = ({
                 </div>
               );
             })}
-          </div>
 
           {/* Expand Button */}
           {hasMore && (
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="btn-green w-full mt-2 flex items-center justify-center gap-2"
-            >
-              {isExpanded ? (
-                <>
-                  <FaChevronUp />
-                  Show Less
-                </>
-              ) : (
-                <>
-                  <FaChevronDown />
-                  Show All ({topPicks.length})
-                </>
-              )}
-            </button>
+            <div className="border-t border-[#00ffe7]/20 p-2 pb-24">
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="btn-green w-full flex items-center justify-center gap-2"
+              >
+                {isExpanded ? (
+                  <>
+                    <FaChevronUp />
+                    Show Less
+                  </>
+                ) : (
+                  <>
+                    <FaChevronDown />
+                    Show All ({topPicks.length})
+                  </>
+                )}
+              </button>
+            </div>
           )}
+        </div>
       </div>
     </div>
   );

@@ -18,10 +18,11 @@ export const getGamePlayByPlay = async (gameId: string) => {
 
     const gameData = gameDoc.data();
     
-    // Convert Firestore timestamps to serializable format
+    // Convert Firestore timestamps to serializable format (ISO 8601)
     const plays = (gameData?.plays || []).map((play: any) => ({
       ...play,
       possession: play.possession?.id || play.possession || play.team,
+      // timestamp should already be ISO string, but handle legacy Firestore Timestamp objects
       timestamp: play.timestamp?.toDate ? play.timestamp.toDate().toISOString() : play.timestamp
     }));
     
@@ -72,12 +73,13 @@ export const saveGamePlayByPlay = async (gameId: string, plays: any[]) => {
   try {
     const gameRef = db.collection(COLLECTION_NAME).doc(gameId);
     
-    // Simplify play data - only keep essential fields
+    // Simplify play data - only keep essential fields, store timestamps in ISO 8601 format
     const simplifiedPlays = plays.map(play => ({
       text: play.text || '',
       quarter: play.quarter || 0,
       clock: play.clock || '0:00',
-      timestamp: play.timestamp || admin.firestore.Timestamp.now(),
+      // Use wallclock (ISO string) from ESPN, fallback to now in ISO format
+      timestamp: play.wallclock || (typeof play.timestamp === 'string' ? play.timestamp : new Date().toISOString()),
       team: play.team?.id || null,
       possession: play.possession?.id || play.possession || play.team?.id || null,
       type: play.type?.text || play.type?.abbreviation || '',
@@ -116,12 +118,13 @@ export const addPlayToGame = async (gameId: string, play: any) => {
   try {
     const gameRef = db.collection(COLLECTION_NAME).doc(gameId);
     
-    // Simplify play data
+    // Simplify play data, store timestamp in ISO 8601 format
     const simplifiedPlay = {
       text: play.text || '',
       quarter: play.quarter || 0,
       clock: play.clock || '0:00',
-      timestamp: play.timestamp || admin.firestore.Timestamp.now(),
+      // Use wallclock (ISO string) from ESPN, fallback to now in ISO format
+      timestamp: play.wallclock || (typeof play.timestamp === 'string' ? play.timestamp : new Date().toISOString()),
       team: play.team?.id || null,
       type: play.type?.text || play.type?.abbreviation || '',
       scoreValue: play.scoreValue || 0,

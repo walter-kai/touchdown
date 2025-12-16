@@ -112,6 +112,18 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
           // Sort by timestamp descending (most recent first)
           historicalPlays.sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime());
           
+          // Check if all plays have the same timestamp (bad data from old bug)
+          if (historicalPlays.length > 10) {
+            const firstTimestamp = historicalPlays[0].timestamp.getTime();
+            const lastTimestamp = historicalPlays[historicalPlays.length - 1].timestamp.getTime();
+            const timeDiff = Math.abs(firstTimestamp - lastTimestamp);
+            
+            if (timeDiff < 60000) { // Less than 1 minute difference = bad data
+              console.warn('⚠️ Detected bad timestamp data (all plays have same time). This game needs to be re-saved with wallclock data.');
+              console.warn('   Please re-fetch the game data from ESPN and save it again to fix timestamps.');
+            }
+          }
+          
           // Cache the data
           localStorage.setItem(cacheKey, JSON.stringify({
             plays: historicalPlays,

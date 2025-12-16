@@ -31,3 +31,35 @@ export interface User {
   isEmailVerified?: boolean;
   locale?: string;
 }
+
+export interface PlayerPick {
+  id: string;
+  displayName: string;
+  position: string;
+  jersey: string;
+  headshot?: string;
+  fullName?: string;
+  shortName?: string;
+  team?: {
+    id: string;
+    abbreviation?: string;
+    displayName?: string;
+    color?: string;
+  };
+}
+
+export interface PickSubmission {
+  players: PlayerPick[];
+  lockedAt: string; // ISO 8601 format (e.g., "2025-12-14T19:57:16.314Z")
+  playerLockTimes: Record<string, string>; // playerId -> ISO timestamp
+  playerHistory: Record<string, Array<{ start: string; end?: string }>>; // playerId -> periods with ISO timestamps
+}
+
+export interface UserPicksDocument {
+  userId: string;
+  gameId: string;
+  picks: PickSubmission[];
+  createdAt: string; // ISO 8601 format
+  updatedAt: string; // ISO 8601 format
+}
+

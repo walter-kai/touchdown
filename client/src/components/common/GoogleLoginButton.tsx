@@ -8,6 +8,7 @@ const GoogleLoginButton: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -177,8 +178,6 @@ const GoogleLoginButton: React.FC = () => {
   };
 
   if (isAuthenticated && user) {
-    const [imageError, setImageError] = useState(false);
-    
     return (
       <div className="relative" ref={dropdownRef}>
         {/* User Profile Picture Button */}

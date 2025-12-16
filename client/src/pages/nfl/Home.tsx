@@ -241,7 +241,9 @@ const NFLScoreboard: React.FC = () => {
   {/* Games Grid */}
 	{!initialLoading && games.length > 0 && (() => {
 		const liveGames = games.filter(game => game.status.type.state === 'in');
-		const completedGames = games.filter(game => game.status.type.completed);
+		const completedGames = games
+			.filter(game => game.status.type.completed)
+			.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort by date descending (most recent first)
 		const upcomingGames = games.filter(game => game.status.type.state === 'pre');
 		
 		return (
