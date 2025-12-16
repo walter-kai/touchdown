@@ -74,7 +74,7 @@ const GoogleLoginButton: React.FC = () => {
 
         if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
           console.log('[AUTH] Received postMessage:', event.data);
-          window.removeEventListener('message', messageHandler);
+          cleanupListeners();
           
           const { token, user } = event.data;
           if (token && user) {
@@ -96,9 +96,7 @@ const GoogleLoginButton: React.FC = () => {
             if (token && user) {
               login(token, user, event.data.expiresIn || 7 * 24 * 60 * 60);
               setIsLoading(false);
-              if (broadcastChannel) broadcastChannel.close();
-              window.removeEventListener('message', messageHandler);
-              window.removeEventListener('storage', storageHandler);
+              cleanupListeners();
             }
           }
         };
@@ -113,9 +111,7 @@ const GoogleLoginButton: React.FC = () => {
             console.log('[AUTH] Received storage event');
             const result = JSON.parse(event.newValue);
             if (result.type === 'GOOGLE_AUTH_SUCCESS' && result.token && result.user) {
-              window.removeEventListener('storage', storageHandler);
-              window.removeEventListener('message', messageHandler);
-              if (broadcastChannel) broadcastChannel.close();
+              cleanupListeners();
               login(result.token, result.user, result.expiresIn || 7 * 24 * 60 * 60);
               setIsLoading(false);
               // Clean up the storage flag
@@ -137,10 +133,7 @@ const GoogleLoginButton: React.FC = () => {
             console.log('[AUTH] Found auth result via polling');
             const result = JSON.parse(oauthResult);
             if (result.type === 'GOOGLE_AUTH_SUCCESS' && result.token && result.user) {
-              if (pollInterval) clearInterval(pollInterval);
-              window.removeEventListener('storage', storageHandler);
-              window.removeEventListener('message', messageHandler);
-              if (broadcastChannel) broadcastChannel.close();
+              cleanupListeners();
               login(result.token, result.user, result.expiresIn || 7 * 24 * 60 * 60);
               setIsLoading(false);
               localStorage.removeItem('dexter_oauth_result');
@@ -151,25 +144,23 @@ const GoogleLoginButton: React.FC = () => {
         }
       }, 500);
 
-      // Timeout fallback: if no response in 60 seconds, stop loading
-      timeout = setTimeout(() => {
-        if (pollInterval) clearInterval(pollInterval);
-        window.removeEventListener('message', messageHandler);
-        window.removeEventListener('storage', storageHandler);
-        if (broadcastChannel) broadcastChannel.close();
-        setIsLoading(false);
-        setError('Login timeout. Please try again.');
-        setShowTooltip(true);
-      }, 60000);
-
-      // Clean up on unmount
-      return () => {
+      // Cleanup function
+      const cleanupListeners = () => {
         if (timeout) clearTimeout(timeout);
         if (pollInterval) clearInterval(pollInterval);
         window.removeEventListener('message', messageHandler);
         window.removeEventListener('storage', storageHandler);
         if (broadcastChannel) broadcastChannel.close();
       };
+
+      // Timeout fallback: if no response in 60 seconds, stop loading
+      timeout = setTimeout(() => {
+        cleanupListeners();
+        setIsLoading(false);
+        setError('Login timeout. Please try again.');
+        setShowTooltip(true);
+      }, 60000);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
       setShowTooltip(true);
