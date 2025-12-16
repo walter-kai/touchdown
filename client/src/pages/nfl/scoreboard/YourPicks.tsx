@@ -109,9 +109,10 @@ interface DraggablePlayerCardProps {
   movePlayer: (dragIndex: number, hoverIndex: number) => void;
   isAnimating?: boolean;
   isDragging?: boolean;
+  playerScore?: number;
 }
 
-const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index, movePlayer, isAnimating }) => {
+const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index, movePlayer, isAnimating, playerScore = 0 }) => {
   const [{ isDragging }, drag] = useDrag({
     type: ItemTypes.PLAYER,
     item: { index, player },
@@ -182,6 +183,11 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
       <div className="flex-1 min-w-0 relative z-10">
         <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
         <div className="text-[#faafe8] text-xs">{typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}</div>
+      </div>
+      {/* Score */}
+      <div className="text-center relative z-10">
+        <div className="text-2xl font-bold text-[#faafe8]">{playerScore}</div>
+        <div className="text-[#b0b7bf] text-[10px]">PTS</div>
       </div>
     </div>
   );
@@ -265,8 +271,7 @@ const MyPreview = () => {
         pointerEvents: 'none',
         zIndex: 100,
         left: style.x,
-        top: style.y,
-        transform: 'translate(-50%, -50%)',
+        top: 0,
       }} 
       className="cursor-grabbing"
     >
@@ -989,22 +994,15 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                     const teamLogo = player.team?.logo || (player.team?.logos && player.team.logos.length > 0 ? player.team.logos[0].href : null);
                     // Check if THIS specific pick is being replaced by checking if there's a new pick at this index
                     const isBeingReplaced = isAnimating && newPicks[idx] && newPicks[idx].id !== player.id;
-                    const isExpanded = expandedCardIndex === idx;
                     
                     return (
                       <div
                         key={player.id}
-                        onMouseDown={() => setExpandedCardIndex(idx)}
-                        onMouseUp={() => setExpandedCardIndex(null)}
-                        onMouseLeave={() => setExpandedCardIndex(null)}
-                        onTouchStart={() => setExpandedCardIndex(idx)}
-                        onTouchEnd={() => setExpandedCardIndex(null)}
-                        className={`relative overflow-hidden bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] transition-all duration-300 cursor-pointer hover:border-[#00ffe7]/60 ${
+                        className={`relative overflow-hidden bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] transition-all duration-300 hover:border-[#00ffe7]/60 ${
                           isBeingReplaced ? 'opacity-0' : 'opacity-100'
                         }`}
                         style={{
                           marginBottom: '8px',
-                          zIndex: isExpanded ? 10 : 1,
                         }}
                       >
                         {/* Large team logo background */}
@@ -1040,31 +1038,25 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                           <FaUsers className="text-[#00ffe7] text-sm" />
                         </div>
                         <div className="flex-1 min-w-0 relative z-10">
-                          <div className={`text-white font-bold text-sm transition-all duration-300 ${
-                            isExpanded ? 'whitespace-normal' : 'whitespace-nowrap overflow-hidden text-ellipsis'
-                          }`}>
-                            {isExpanded ? player.fullName || player.displayName : player.displayName}
+                          <div className="text-white font-bold text-sm whitespace-nowrap overflow-hidden text-ellipsis">
+                            {player.displayName}
                           </div>
                           <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis">
                             {typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}
                           </div>
                         </div>
                         
-                        {/* Score - Show when expanded, or when locked/roster closed with stats */}
-                        {(isExpanded || ((isLocked || !isRosterOpen) && showStats)) && (
-                          <div 
-                            className={`text-center transition-all duration-300 relative z-10 ${
-                              isExpanded || showStats ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
-                            }`}
-                            style={{ 
-                              transitionDelay: isExpanded ? '0ms' : `${idx * 100}ms`,
-                              transformOrigin: 'center',
-                            }}
-                          >
-                            <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
-                            <div className="text-[#b0b7bf] text-[10px]">PTS</div>
-                          </div>
-                        )}
+                        {/* Score - Always show */}
+                        <div 
+                          className="text-center transition-all duration-300 relative z-10 opacity-100 scale-100"
+                          style={{ 
+                            transitionDelay: `${idx * 100}ms`,
+                            transformOrigin: 'center',
+                          }}
+                        >
+                          <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
+                          <div className="text-[#b0b7bf] text-[10px]">PTS</div>
+                        </div>
                       </div>
                     );
                   })}
@@ -1085,7 +1077,8 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                   {[...Array(5)].map((_, idx) => {
                     const player = newPicks[idx];
                     if (player) {
-                      return <DraggablePlayerCard key={player.id} player={player} index={idx} movePlayer={movePlayer} isAnimating={isAnimating} />;
+                      const playerScore = allPlayerScores[player.id] || 0;
+                      return <DraggablePlayerCard key={player.id} player={player} index={idx} movePlayer={movePlayer} isAnimating={isAnimating} playerScore={playerScore} />;
                     } else {
                       return <EmptySlot key={`empty-${idx}`} index={idx} movePlayer={movePlayer} isActive={activeSlot === idx} onSlotClick={(slotIndex) => setActiveSlot(activeSlot === slotIndex ? null : slotIndex)} />;
                     }
