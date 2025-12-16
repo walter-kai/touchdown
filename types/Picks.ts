@@ -16,13 +16,11 @@ export interface PlayerPick {
 export interface PickSubmission {
   players: PlayerPick[];
   totalScore: number;
-  lockedAt: string | null; // ISO 8601 timestamp
-  playerLockTimes: Record<string, string | null>; // playerId -> ISO 8601 timestamp
-  playerHistory: Record<string, Array<{
+  timestamp: string; // ISO 8601 timestamp - when pick was locked/submitted
+  playerHistory?: Record<string, Array<{
     start: string; // ISO 8601 timestamp
     end?: string; // ISO 8601 timestamp
   }>>;
-  timestamp: string; // ISO 8601 timestamp
 }
 
 export interface UserPicksResponse {
@@ -74,8 +72,7 @@ export interface CreatePickRequest {
       };
     }>;
     totalScore?: number;
-    lockedAt?: number | string | null;
-    playerLockTimes?: Record<string, number | string>;
+    lockedAt?: number | string | null; // Input as lockedAt, stored as timestamp in Firebase
     playerHistory?: Record<string, Array<{
       start: number | string;
       end?: number | string;

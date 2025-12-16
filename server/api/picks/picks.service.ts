@@ -9,7 +9,6 @@ type CreatePickArgs = {
     players?: any[];
     totalScore?: number;
     lockedAt?: number | string | null; // Can be epoch milliseconds or ISO string
-    playerLockTimes?: Record<string, number | string>; // Can be epoch milliseconds or ISO string
     playerHistory?: Record<string, Array<{ start: number | string; end?: number | string }>>; // Can be epoch milliseconds or ISO string
   };
   gameId?: string;
@@ -39,7 +38,6 @@ export async function createPick(args: CreatePickArgs) {
     throw new Error('No players in picksState');
   }
 
-  const timestamp = new Date().toISOString(); // Use ISO 8601 format
   const players = args.picksState.players;
 
   // Convert timestamps to ISO 8601 format
@@ -49,8 +47,11 @@ export async function createPick(args: CreatePickArgs) {
     return new Date(value).toISOString(); // Convert epoch milliseconds to ISO
   };
 
+  // Use lockedAt as the timestamp (when pick was submitted/locked)
+  const timestamp = convertToISO(args.picksState.lockedAt) || new Date().toISOString();
+
   // Prepare the new pick entry with ISO timestamps
-  const newPick = {
+  const newPick: any = {
     players: players.map(p => {
       const playerData: any = {
         id: p.id,
@@ -67,25 +68,21 @@ export async function createPick(args: CreatePickArgs) {
       return playerData;
     }),
     totalScore: args.picksState.totalScore || 0,
-    lockedAt: convertToISO(args.picksState.lockedAt),
-    playerLockTimes: args.picksState.playerLockTimes 
-      ? Object.fromEntries(
-          Object.entries(args.picksState.playerLockTimes).map(([id, time]) => [id, convertToISO(time)])
-        )
-      : {},
-    playerHistory: args.picksState.playerHistory
-      ? Object.fromEntries(
-          Object.entries(args.picksState.playerHistory).map(([id, periods]) => [
-            id,
-            periods.map(p => ({
-              start: convertToISO(p.start)!,
-              end: p.end ? convertToISO(p.end)! : undefined,
-            }))
-          ])
-        )
-      : {},
-    timestamp,
+    timestamp, // timestamp is when the pick was locked/submitted
   };
+
+  // Only add playerHistory if it exists
+  if (args.picksState.playerHistory && Object.keys(args.picksState.playerHistory).length > 0) {
+    newPick.playerHistory = Object.fromEntries(
+      Object.entries(args.picksState.playerHistory).map(([id, periods]) => [
+        id,
+        periods.map(p => ({
+          start: convertToISO(p.start)!,
+          end: p.end ? convertToISO(p.end)! : undefined,
+        }))
+      ])
+    );
+  }
 
   // Store user's picks as an array: gamePicks/{gameId}/users/{userId}
   const userPickRef = db.collection('gamePicks').doc(args.gameId).collection('users').doc(args.userId);
@@ -266,41 +263,15 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
   Array.from(currentPlayers).forEach((playerId: string) => {
     sessionScores[playerId] = 0;
     
-    // Build lock time periods for this player
-    const lockTimesMs: Array<{ start: number; end?: number }> = [];
-    
-    // Add from playerHistory
-    const playerHistory = latestPick.playerHistory as Record<string, Array<{ start: string; end?: string }>> | undefined;
-    if (playerHistory && playerHistory[playerId]) {
-      playerHistory[playerId].forEach((period: any) => {
-        lockTimesMs.push({
-          start: new Date(period.start).getTime(),
-          end: period.end ? new Date(period.end).getTime() : undefined
-        });
-      });
-    }
-    
-    // Add current lock time if exists
-    const playerLockTimes = latestPick.playerLockTimes as Record<string, string> | undefined;
-    if (playerLockTimes && playerLockTimes[playerId]) {
-      lockTimesMs.push({
-        start: new Date(playerLockTimes[playerId]).getTime()
-      });
-    }
-    
-    // Fallback to global lock time
-    if (lockTimesMs.length === 0 && latestPick.lockedAt) {
-      lockTimesMs.push({
-        start: new Date(latestPick.lockedAt).getTime()
-      });
-    }
-    
-    if (lockTimesMs.length === 0) {
-      logger.warn(`No lock time found for player ${playerId} in session score calculation`);
+    // All players in a pick submission share the same timestamp (when pick was locked)
+    if (!latestPick.timestamp) {
+      logger.warn(`No timestamp found for latest pick in session score calculation`);
       return;
     }
     
-    // Count plays that happened AFTER the player was locked
+    const lockTimeMs = new Date(latestPick.timestamp).getTime();
+    
+    // Count plays that happened AFTER the pick was locked
     playLog.forEach(play => {
       if (!play.athletesInvolved) return;
       
@@ -309,16 +280,8 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
       
       const playTime = new Date(play.timestamp).getTime();
       
-      // Check if play happened during any locked period
-      const isDuringLockedPeriod = lockTimesMs.some(period => {
-        if (period.end) {
-          return playTime >= period.start && playTime <= period.end;
-        } else {
-          return playTime >= period.start;
-        }
-      });
-      
-      if (isDuringLockedPeriod) {
+      // Check if play happened after lock time
+      if (playTime >= lockTimeMs) {
         sessionScores[playerId]++;
       }
     });
@@ -340,12 +303,12 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
     // Build all lock time periods for this player across all picks
     const allLockPeriods: Array<{ start: number; end?: number }> = [];
     
-    picks.forEach((pick: any) => {
+    picks.forEach((pick: any, pickIndex: number) => {
       // Check if this player was in this pick
       const isInPick = pick.players.some((p: any) => p.id === playerId);
       if (!isInPick) return;
       
-      // Add from playerHistory
+      // Add from playerHistory if it exists
       if (pick.playerHistory && pick.playerHistory[playerId]) {
         pick.playerHistory[playerId].forEach((period: any) => {
           allLockPeriods.push({
@@ -355,17 +318,25 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
         });
       }
       
-      // Add from playerLockTimes
-      if (pick.playerLockTimes && pick.playerLockTimes[playerId]) {
+      // Use the pick's timestamp as the lock time
+      // The end time is either:
+      // 1. The next pick's timestamp (if this player is not in the next pick)
+      // 2. undefined (if this is the latest pick or player continues in next pick)
+      if (pick.timestamp) {
+        const nextPick = picks[pickIndex + 1];
+        let endTime: number | undefined = undefined;
+        
+        if (nextPick) {
+          const isInNextPick = nextPick.players.some((p: any) => p.id === playerId);
+          if (!isInNextPick && nextPick.timestamp) {
+            // Player was dropped, use next pick's timestamp as end time
+            endTime = new Date(nextPick.timestamp).getTime();
+          }
+        }
+        
         allLockPeriods.push({
-          start: new Date(pick.playerLockTimes[playerId]).getTime()
-        });
-      }
-      
-      // Fallback to global lock time
-      if (pick.lockedAt && (!pick.playerHistory || !pick.playerHistory[playerId]) && (!pick.playerLockTimes || !pick.playerLockTimes[playerId])) {
-        allLockPeriods.push({
-          start: new Date(pick.lockedAt).getTime()
+          start: new Date(pick.timestamp).getTime(),
+          end: endTime
         });
       }
     });
