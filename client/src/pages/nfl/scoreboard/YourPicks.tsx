@@ -339,6 +339,9 @@ const YourPicks: React.FC<PlayerPickProps> = ({
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
   const [showGameLog, setShowGameLog] = useState(false);
   const [allPlayerScores, setAllPlayerScores] = useState<Record<string, number>>({});
+  const [playerHistory, setPlayerHistory] = useState<Record<string, Array<{ start: number; end?: number }>>>({});
+  const [playerLockTimes, setPlayerLockTimes] = useState<Record<string, number>>({});
+  const [globalLockedAt, setGlobalLockedAt] = useState<number | null>(null);
   const rosterSelectorRef = React.useRef<HTMLDivElement>(null);
 
   // Load saved state from localStorage and backend
@@ -396,6 +399,11 @@ const YourPicks: React.FC<PlayerPickProps> = ({
               localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(backendState));
               console.log('💾 Saved backend picks to localStorage:', backendState);
               
+              // Set lock time data in state for score calculation
+              setPlayerHistory(latestPick.playerHistory || {});
+              setPlayerLockTimes(latestPick.playerLockTimes || {});
+              setGlobalLockedAt(lockedAt);
+              
               return; // Skip localStorage fallback if we got backend data
             }
           }
@@ -416,6 +424,11 @@ const YourPicks: React.FC<PlayerPickProps> = ({
           setShowStats(true);
         }
         
+        // Set lock time data in state for score calculation
+        setPlayerHistory(parsed.playerHistory || {});
+        setPlayerLockTimes(parsed.playerLockTimes || {});
+        setGlobalLockedAt(parsed.lockedAt || null);
+        
         // Check if still in cooldown period
         if (parsed.lockedAt) {
           const elapsed = Date.now() - parsed.lockedAt;
@@ -435,7 +448,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
     loadUserPicks();
   }, [homeTeamId, awayTeamId, gameId]);
 
-  // Calculate scores for current set based on playLog
+  // Calculate scores for current set based on playLog (EXACT SAME AS TopPicks)
   useEffect(() => {
     if (selectedPlayers.length === 0) {
       setCurrentSetScores({});
@@ -446,149 +459,103 @@ const YourPicks: React.FC<PlayerPickProps> = ({
     console.log('📊 Selected players:', selectedPlayers.map(p => `${p.displayName} (${p.id})`));
     console.log('📝 Total plays in log:', playLog.length);
     
-    // Debug first play timestamp format
-    if (playLog.length > 0 && playLog[0].timestamp) {
-      const firstPlay = playLog[0];
-      console.log('🕐 First play timestamp type:', typeof firstPlay.timestamp);
-      console.log('🕐 First play timestamp value:', firstPlay.timestamp);
-      console.log('🕐 First play timestamp instanceof Date:', firstPlay.timestamp instanceof Date);
-      if (firstPlay.timestamp instanceof Date) {
-        console.log('🕐 First play Date.getTime():', firstPlay.timestamp.getTime());
-      } else {
-        console.log('🕐 First play new Date().getTime():', new Date(firstPlay.timestamp as any).getTime());
-      }
+    // If no lock data available, can't calculate time-filtered scores
+    if (!globalLockedAt && Object.keys(playerLockTimes).length === 0 && Object.keys(playerHistory).length === 0) {
+      console.warn('⚠️ YourPicks: No lock time data available from state');
+      setCurrentSetScores({});
+      return;
     }
+
+    console.log('💾 YourPicks: Using lock data - Player lock times:', playerLockTimes);
+    console.log('💾 YourPicks: Global locked at:', globalLockedAt);
+    console.log('💾 YourPicks: Player history:', playerHistory);
 
     const scores: Record<string, number> = {};
     
-    // Get player history from localStorage (tracks when players were active)
-    const storageKey = `playerPick_${homeTeamId}_${awayTeamId}`;
-    console.log('🔑 Looking for localStorage key:', storageKey);
-    console.log('🏠 Home team ID:', homeTeamId);
-    console.log('✈️ Away team ID:', awayTeamId);
+    // Helper to convert any timestamp format to milliseconds (same as TopPicks)
+    const toMs = (ts: any): number => {
+      if (!ts) return 0;
+      if (typeof ts === 'number') return ts;
+      if (ts._seconds) return ts._seconds * 1000;
+      if (ts instanceof Date) return ts.getTime();
+      return new Date(ts).getTime();
+    };
     
-    const savedState = localStorage.getItem(storageKey);
-    console.log('💾 Raw savedState exists:', !!savedState);
-    console.log('💾 Raw savedState length:', savedState?.length);
-    if (savedState) {
-      console.log('💾 Raw savedState preview:', savedState.substring(0, 200));
-    }
-    
-    let playerHistory: Record<string, Array<{ start: number; end?: number }>> = {};
-    let currentPlayerLockTimes: Record<string, number> = {};
-    let globalLockedAt: number | null = null;
-    
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState);
-        console.log('💾 Parsed state keys:', Object.keys(parsed));
-        console.log('💾 Parsed state full:', parsed);
-        playerHistory = parsed.playerHistory || {};
-        currentPlayerLockTimes = parsed.playerLockTimes || {};
-        globalLockedAt = parsed.lockedAt || null;
-        console.log('💾 Player history from localStorage:', playerHistory);
-        console.log('💾 Current lock times:', currentPlayerLockTimes);
-        console.log('💾 Global lockedAt:', globalLockedAt, globalLockedAt ? new Date(globalLockedAt).toISOString() : 'null');
-      } catch (e) {
-        console.error('❌ Error parsing player history:', e);
-      }
-    } else {
-      console.warn('⚠️ No saved state found in localStorage');
-    }
-
+    // Calculate score for each selected player (EXACT SAME AS TopPicks)
     selectedPlayers.forEach(player => {
       scores[player.id] = 0;
       
-      // Get all time periods this player was active
-      let activePeriods = playerHistory[player.id] || [];
+      // Get lock times for this player
+      let lockTimesMs: Array<{ start: number; end?: number }> = [];
       
-      // Add current active period if player is currently locked
-      if (currentPlayerLockTimes[player.id]) {
-        activePeriods.push({ start: currentPlayerLockTimes[player.id] });
+      // Add from playerHistory
+      if (playerHistory[player.id]) {
+        lockTimesMs = playerHistory[player.id].map(p => ({
+          start: toMs(p.start),
+          end: p.end ? toMs(p.end) : undefined
+        }));
       }
       
-      // Fallback: If no specific player lock time, use the global lockedAt from saved state
-      if (activePeriods.length === 0 && globalLockedAt) {
-        activePeriods = [{ start: globalLockedAt }];
-        console.log(`📌 Using global lockedAt for ${player.displayName}: ${new Date(globalLockedAt).toISOString()}`);
+      // Add current lock time if exists
+      if (playerLockTimes[player.id]) {
+        lockTimesMs.push({ start: toMs(playerLockTimes[player.id]) });
       }
       
-      console.log(`🔍 ${player.displayName} (${player.id}) active periods:`, activePeriods.map(p => ({
-        start: new Date(p.start).toISOString(),
-        end: p.end ? new Date(p.end).toISOString() : 'ongoing'
-      })));
+      // Fallback to global lock time
+      if (lockTimesMs.length === 0 && globalLockedAt) {
+        lockTimesMs = [{ start: toMs(globalLockedAt) }];
+      }
       
-      let playsInvolved = 0;
-      let playsSkipped = 0;
-      let playsCounted = 0;
+      if (lockTimesMs.length === 0) {
+        console.warn(`⚠️ No lock time for player ${player.id}`);
+        return;
+      }
       
-      playLog.forEach((play, playIndex) => {
-        // Check if player is involved - either by ID or by name in text
-        let isInvolved = false;
+      // Count plays that happened AFTER the player was locked
+      let totalPlaysForPlayer = 0;
+      let playsAfterLock = 0;
+      
+      playLog.forEach(play => {
+        if (!play.athletesInvolved || play.athletesInvolved.length === 0) return;
         
-        if (play.athletesInvolved && play.athletesInvolved.length > 0) {
-          isInvolved = play.athletesInvolved.some(a => a.id === player.id);
-        } else {
-          // Fallback: Check if player name appears in play text
-          const lastName = player.displayName.split(' ').pop();
-          if (lastName && play.text) {
-            const pattern = new RegExp(`\\b[A-Z]?\\.?${lastName}\\b`, 'i');
-            isInvolved = pattern.test(play.text);
-          }
+        const isInvolved = play.athletesInvolved.some(a => a.id === player.id);
+        if (!isInvolved) return;
+        
+        totalPlaysForPlayer++;
+        const playTime = toMs(play.timestamp);
+        
+        // Debug first play for this player
+        if (totalPlaysForPlayer === 1) {
+          console.log(`  First play for ${player.id}: ${new Date(playTime).toISOString()}, Lock times:`, lockTimesMs.map(p => ({
+            start: new Date(p.start).toISOString(),
+            end: p.end ? new Date(p.end).toISOString() : 'ongoing'
+          })));
         }
         
-        if (isInvolved) {
-          playsInvolved++;
-          
-          // If still no active periods defined, skip (shouldn't happen per user)
-          if (activePeriods.length === 0) {
-            playsSkipped++;
-            console.warn(`⚠️ No active periods for ${player.displayName} - skipping play`);
-            return;
-          }
-          
-          // Handle Firestore Timestamp objects (_seconds) vs Date objects vs ISO strings
-          let playTimestamp: number;
-          if (play.timestamp instanceof Date) {
-            playTimestamp = play.timestamp.getTime();
-          } else if (play.timestamp && typeof play.timestamp === 'object' && '_seconds' in play.timestamp) {
-            playTimestamp = (play.timestamp as any)._seconds * 1000;
-          } else {
-            playTimestamp = new Date(play.timestamp).getTime();
-          }
-          
-          // Debug first few plays
-          if (playIndex < 3) {
-            console.log(`📍 Play ${playIndex}: ${play.text.substring(0, 50)}...`);
-            console.log(`  ⏰ Play time: ${new Date(playTimestamp).toISOString()} (${playTimestamp})`);
-            console.log(`  🔒 Lock time: ${new Date(activePeriods[0].start).toISOString()} (${activePeriods[0].start})`);
-            console.log(`  ⏱️ Time diff: ${(playTimestamp - activePeriods[0].start) / 1000} seconds`);
-          }
-          
-          // Check if play occurred during any of the player's active periods
-          const playDuringActivePeriod = activePeriods.some(period => {
-            const afterStart = playTimestamp >= period.start;
-            const beforeEnd = !period.end || playTimestamp <= period.end;
-            return afterStart && beforeEnd;
-          });
-          
-          if (playDuringActivePeriod) {
-            scores[player.id]++;
-            playsCounted++;
-          } else {
-            playsSkipped++;
-          }
+        // Check if play is within any active period (after lock start, before lock end if exists)
+        const isInActivePeriod = lockTimesMs.some(period => {
+          const afterStart = playTime >= period.start;
+          const beforeEnd = !period.end || playTime <= period.end;
+          return afterStart && beforeEnd;
+        });
+        
+        if (isInActivePeriod) {
+          scores[player.id]++;
+          playsAfterLock++;
         }
       });
       
-      console.log(`✅ ${player.displayName}: ${scores[player.id]} pts (involved in ${playsInvolved} plays, ${playsCounted} counted, ${playsSkipped} skipped by time filter)`);
-
+      if (totalPlaysForPlayer > 0) {
+        console.log(`  Player ${player.id}: ${playsAfterLock}/${totalPlaysForPlayer} plays after lock`);
+      }
+      
+      console.log(`✅ YourPicks: Player ${player.displayName} (${player.id}) time-filtered score: ${scores[player.id]}`);
     });
 
     console.log('📊 Final YourPicks scores:', scores);
     console.log('🕐 Current time:', new Date().toISOString(), `(${Date.now()})`);
     setCurrentSetScores(scores);
-  }, [playLog, selectedPlayers, homeTeamId, awayTeamId]);
+  }, [playLog, selectedPlayers, playerHistory, playerLockTimes, globalLockedAt]);
 
   // Calculate scores for all roster players
   useEffect(() => {
