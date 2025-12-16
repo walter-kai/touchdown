@@ -13,8 +13,8 @@ import type { Summary } from '@/types/espn/summary';
 const FIRESTORE_API = '/api/playbyplay';
 
 interface NFLGameProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'schedule' | 'news';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'schedule' | 'news') => void;
   onPresetChange: (preset: 'scoreboard' | 'summary') => void;
   onGameStatusChange?: (status: 'pre' | 'in' | 'post') => void;
   onRegisterTabClick?: (callback: (tab: string) => void) => void;
@@ -185,7 +185,7 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
             clock: comp.status.displayClock,
             timestamp: new Date(),
             yardage: comp.situation?.lastPlay?.statYardage,
-            possession: typeof possession,
+            possession: typeof possession === 'object' && possession !== null && 'id' in possession ? (possession as any).id : possession,
             athletesInvolved: comp.situation?.lastPlay?.athletesInvolved
           };
           return [newPlay, ...prev];

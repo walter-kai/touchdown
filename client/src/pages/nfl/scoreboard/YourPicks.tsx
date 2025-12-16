@@ -962,13 +962,26 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 style={{
                   width: (isRosterOpen && !isLocked) || isViewTransitioning || isAnimating ? 'calc(50% - 0.5rem)' : '100%'
                 }}>
-                <div className="text-[#b0b7bf] text-xs mb-2 font-bold h-[20px] flex items-center">
-                  {isLocked ? (
-                    <div className="flex items-center gap-2">
-                      🔒 Locked
+                <div className="text-[#b0b7bf] text-xs mb-2 font-bold h-[20px] flex items-center justify-between">
+                  <div>
+                    {isLocked ? (
+                      <div className="flex items-center gap-2">
+                        🔒 Locked
+                      </div>
+                    ) : (
+                      'CURRENT'
+                    )}
+                  </div>
+                  {/* Show column headers when roster is closed */}
+                  {!isRosterOpen && showStats && (
+                    <div className="flex items-center gap-3 pr-3">
+                      <div className="text-[10px] text-[#faafe8] font-bold text-center" style={{ width: '50px' }}>
+                        GAME
+                      </div>
+                      <div className="text-[10px] text-[#00ffe7] font-bold text-center" style={{ width: '50px' }}>
+                        SESSION
+                      </div>
                     </div>
-                  ) : (
-                    'CURRENT'
                   )}
                 </div>
                 <div className="space-y-2">
@@ -1045,17 +1058,24 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                           </div>
                         </div>
                         
-                        {/* Score - Always show */}
-                        <div 
-                          className="text-center transition-all duration-300 relative z-10 opacity-100 scale-100"
-                          style={{ 
-                            transitionDelay: `${idx * 100}ms`,
-                            transformOrigin: 'center',
-                          }}
-                        >
-                          <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
-                          <div className="text-[#b0b7bf] text-[10px]">PTS</div>
-                        </div>
+                        {/* Score - Show differently based on roster state */}
+                        {!isRosterOpen && showStats ? (
+                          // Full view: Show both game and session scores
+                          <div className="flex items-center gap-3 relative z-10">
+                            <div className="text-center" style={{ width: '50px' }}>
+                              <div className="text-2xl font-bold text-[#faafe8]">{allPlayerScores[player.id] || 0}</div>
+                            </div>
+                            <div className="text-center" style={{ width: '50px' }}>
+                              <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
+                            </div>
+                          </div>
+                        ) : isRosterOpen ? (
+                          // Compressed view: Show only session score
+                          <div className="text-center relative z-10">
+                            <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
+                            <div className="text-[#b0b7bf] text-[10px]">PTS</div>
+                          </div>
+                        ) : null}
                       </div>
                     );
                   })}
@@ -1076,6 +1096,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                   {[...Array(5)].map((_, idx) => {
                     const player = newPicks[idx];
                     if (player) {
+                      // For NEW picks, show session score (time-filtered)
                       const playerScore = currentSetScores[player.id] || 0;
                       return <DraggablePlayerCard key={player.id} player={player} index={idx} movePlayer={movePlayer} isAnimating={isAnimating} playerScore={playerScore} />;
                     } else {

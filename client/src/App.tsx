@@ -94,14 +94,14 @@ const App: React.FC = () => {
   const nodeRef = useRef<HTMLDivElement>(null);
   
   // State for game page navigation
-  const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks'>('info');
+  const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks'>('info');
   const [navPreset, setNavPreset] = useState<'scoreboard' | 'summary'>('scoreboard');
   const [gameStatus, setGameStatus] = useState<'pre' | 'in' | 'post' | undefined>(undefined);
   
   // Ref to communicate button clicks to NFLGame
   const tabClickCallbackRef = useRef<((tab: string) => void) | null>(null);
   
-  const handleTabClick = (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks') => {
+  const handleTabClick = (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks') => {
     if (tabClickCallbackRef.current) {
       tabClickCallbackRef.current(tab);
     }

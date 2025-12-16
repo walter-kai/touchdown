@@ -120,12 +120,12 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
           }}
         >
-          <div className="w-3 h-3 rounded-full bg-yellow-400 border-2 border-white shadow-lg" />
+          <div className="w-2 h-2 rounded-full bg-yellow-400 border border-white shadow-lg" />
         </div>
       )}
 
       {/* Arrow showing play direction - positioned at 50% (middle) */}
-      {lastPlay.start && lastPlay.end && (
+      {lastPlay.start && lastPlay.end && lastPlay.start.yardLine !== lastPlay.end.yardLine && (
         <svg
           className="absolute -left-2 w-full h-full pointer-events-none -top-9"
 
