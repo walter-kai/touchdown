@@ -950,8 +950,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 <div className={`text-right transition-all duration-500 min-w-[120px] h-[60px] flex flex-col justify-center ${
                 isLocked ? 'opacity-100' : 'opacity-0'
                 }`}>
-                <div className="text-[#00ffe7] text-3xl font-bold leading-tight">{totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0)}</div>
-                <div className="text-[#b0b7bf] text-xs">Total pts</div>
+
                 </div>
               )}
             </div>
@@ -1077,7 +1076,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                   {[...Array(5)].map((_, idx) => {
                     const player = newPicks[idx];
                     if (player) {
-                      const playerScore = allPlayerScores[player.id] || 0;
+                      const playerScore = currentSetScores[player.id] || 0;
                       return <DraggablePlayerCard key={player.id} player={player} index={idx} movePlayer={movePlayer} isAnimating={isAnimating} playerScore={playerScore} />;
                     } else {
                       return <EmptySlot key={`empty-${idx}`} index={idx} movePlayer={movePlayer} isActive={activeSlot === idx} onSlotClick={(slotIndex) => setActiveSlot(activeSlot === slotIndex ? null : slotIndex)} />;

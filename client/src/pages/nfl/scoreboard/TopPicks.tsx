@@ -40,7 +40,8 @@ interface PlayerScore {
   position: string;
   teamId: string;
   score: number;
-  isUserPick: boolean;
+  isUserPick: boolean; // Has score (current or historical)
+  isCurrentPick: boolean; // Currently active pick
 }
 
 const TopPicks: React.FC<TopPicksProps> = ({
@@ -54,6 +55,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [userPickIds, setUserPickIds] = useState<Set<string>>(new Set());
+  const [currentPickIds, setCurrentPickIds] = useState<Set<string>>(new Set()); // Currently active picks only
   const [isLoading, setIsLoading] = useState(true);
   const [userPickScores, setUserPickScores] = useState<Record<string, number>>({});
   const [playerHistory, setPlayerHistory] = useState<Record<string, Array<{ start: number; end?: number }>>>({});
@@ -92,6 +94,9 @@ const TopPicks: React.FC<TopPicksProps> = ({
           const latestPick = response.data.picks.picks[response.data.picks.picks.length - 1];
           const players = latestPick.players || [];
           
+          // Extract CURRENT pick IDs from latest submission
+          const currentIds = new Set<string>(players.map((p: any) => p.id).filter(Boolean));
+          
           // Extract lock time data from API response
           const apiPlayerHistory = latestPick.playerHistory || {};
           const apiPlayerLockTimes = latestPick.playerLockTimes || {};
@@ -118,12 +123,14 @@ const TopPicks: React.FC<TopPicksProps> = ({
           
           console.log(`✅ Found ${allPlayerIds.size} total unique players across ${allPickSubmissions.length} pick submissions`);
           console.log('📚 All player IDs ever picked:', athleteIds);
+          console.log('🎯 Current active picks:', Array.from(currentIds));
           console.log('� Lock data from API:', { apiPlayerHistory, apiPlayerLockTimes, apiGlobalLockedAt });
           
           // Set lock time state
           setPlayerHistory(apiPlayerHistory);
           setPlayerLockTimes(apiPlayerLockTimes);
           setGlobalLockedAt(apiGlobalLockedAt);
+          setCurrentPickIds(currentIds);
           
           // Save to localStorage for consistency
           const storageKey = `playerPick_${homeTeamId}_${awayTeamId}`;
@@ -162,15 +169,15 @@ const TopPicks: React.FC<TopPicksProps> = ({
             const parsed = JSON.parse(savedState);
             
             // Include currently active players
-            let athleteIds = (parsed.players || []).map((p: any) => p.id);
+            let currentIds = (parsed.players || []).map((p: any) => p.id);
             
             // Also include ALL players from playerHistory
             const apiPlayerHistory = parsed.playerHistory || {};
             const historicalPlayerIds = Object.keys(apiPlayerHistory);
-            const allPlayerIds = [...new Set([...athleteIds, ...historicalPlayerIds])];
-            athleteIds = allPlayerIds;
+            const allPlayerIds = [...new Set([...currentIds, ...historicalPlayerIds])];
             
-            setUserPickIds(new Set(athleteIds));
+            setUserPickIds(new Set(allPlayerIds));
+            setCurrentPickIds(new Set(currentIds));
             setPlayerHistory(apiPlayerHistory);
             setPlayerLockTimes(parsed.playerLockTimes || {});
             setGlobalLockedAt(parsed.lockedAt || null);
@@ -316,8 +323,9 @@ const TopPicks: React.FC<TopPicksProps> = ({
       if (play.athletesInvolved && play.athletesInvolved.length > 0) {
         play.athletesInvolved.forEach((athlete) => {
           if (!athleteScores.has(athlete.id)) {
-            const isUserPick = userPickIds.has(athlete.id);
-            if (isUserPick) {
+            const isCurrentPick = currentPickIds.has(athlete.id);
+            const hasScore = userPickIds.has(athlete.id);
+            if (hasScore) {
               console.log(`⭐ Found user pick in play log: ${athlete.displayName} (ID: ${athlete.id})`);
             }
             athleteScores.set(athlete.id, {
@@ -330,7 +338,8 @@ const TopPicks: React.FC<TopPicksProps> = ({
               position: athlete.position,
               teamId: athlete.team.id,
               score: 0,
-              isUserPick,
+              isUserPick: hasScore,
+              isCurrentPick: isCurrentPick,
             });
           }
           // Increment score by 1 for each play involvement
@@ -359,6 +368,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
               teamId: (play as any).team || '',
               score: 0,
               isUserPick: false,
+              isCurrentPick: false,
             });
           }
           const current = athleteScores.get(playerId)!;
@@ -375,7 +385,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
     console.log(`✅ Total players with scores: ${sorted.length}, User picks: ${userPicks.length}`);
     
     return sorted;
-  }, [playLog, userPickIds]);
+  }, [playLog, userPickIds, currentPickIds]);
 
   // Calculate total user score from the topPicks data (not time-filtered)
   const userTotalScore = topPicks
@@ -428,7 +438,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
                   key={player.id}
                   className={`
                     relative border-b border-[#00ffe7]/10 last:border-b-0 transition-all
-                    ${player.isUserPick
+                    ${player.isCurrentPick
                       ? 'bg-gradient-to-r from-[#00ffe7]/20 via-[#00ffe7]/10 to-transparent border-l-4 border-l-[#00ffe7] shadow-[0_0_15px_rgba(0,255,231,0.3)]'
                       : 'hover:bg-[#00ffe7]/5'
                     }
@@ -448,8 +458,8 @@ const TopPicks: React.FC<TopPicksProps> = ({
                     
                     {/* Player Image */}
                     <div className="flex-shrink-0 ml-3">
-                      <div className={player.isUserPick ? 'relative' : ''}>
-                        {player.isUserPick && (
+                      <div className={player.isCurrentPick ? 'relative' : ''}>
+                        {player.isCurrentPick && (
                           <div className="absolute inset-0 rounded-full bg-[#00ffe7] blur-md opacity-50 animate-pulse"></div>
                         )}
                         {player.headshot ? (
@@ -458,7 +468,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
                             alt={player.displayName}
                             className={`
                               relative w-14 h-14 rounded-full border-2 object-cover
-                              ${player.isUserPick ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
+                              ${player.isCurrentPick ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
                             `}
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
@@ -470,7 +480,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
                         <div 
                           className={`
                             relative w-14 h-14 rounded-full border-2 bg-[#23263a] items-center justify-center
-                            ${player.isUserPick ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
+                            ${player.isCurrentPick ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
                           `}
                           style={{ display: player.headshot ? 'none' : 'flex' }}
                         >
@@ -482,13 +492,13 @@ const TopPicks: React.FC<TopPicksProps> = ({
                     {/* Player Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <h4 className={`font-bold text-base truncate ${player.isUserPick ? 'text-[#00ffe7] drop-shadow-[0_0_8px_rgba(0,255,231,0.8)]' : 'text-white'}`}>
+                        <h4 className={`font-bold text-base truncate ${player.isCurrentPick ? 'text-[#00ffe7] drop-shadow-[0_0_8px_rgba(0,255,231,0.8)]' : 'text-white'}`}>
                           {player.shortName || player.displayName}
                         </h4>
 
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className={player.isUserPick ? 'text-[#00ffe7]/80' : 'text-[#b0b7bf]'}>
+                        <span className={player.isCurrentPick ? 'text-[#00ffe7]/80' : 'text-[#b0b7bf]'}>
                           {player.position} • #{player.jersey}
                         </span>
                         <div className="flex items-center gap-1">
@@ -497,7 +507,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
                             alt=""
                             className="w-3 h-3"
                           />
-                          <span className={`text-[10px] ${player.isUserPick ? 'text-[#00ffe7]/80' : 'text-[#b0b7bf]'}`}>
+                          <span className={`text-[10px] ${player.isCurrentPick ? 'text-[#00ffe7]/80' : 'text-[#b0b7bf]'}`}>
                             {team?.team?.abbreviation}
                           </span>
                         </div>
@@ -533,7 +543,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
 
           {/* Expand Button */}
           {hasMore && (
-            <div className="border-t border-[#00ffe7]/20 p-2 pb-24">
+            <div className="border-t border-[#00ffe7]/20 p-2">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="btn-green w-full flex items-center justify-center gap-2"

@@ -6,13 +6,14 @@ import HeadToHead from '@/components/nfl/HeadToHead';
 import ProbChart from '@/components/nfl/ProbabilityChart';
 import PointsChart from '@/components/nfl/PointsChart';
 import PlayerPick from '@/pages/nfl/scoreboard/PlayerPick';
+import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
 import Info from '@/pages/nfl/scoreboard/Info';
 import type { Event } from '@/types/espn/scoreboard';
 
 interface ScoreboardViewProps {
   event: Event;
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'schedule' | 'news';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'schedule' | 'news') => void;
   getTeamLogo: (team: any) => string;
   playLog: Array<{
     text: string;
@@ -121,7 +122,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
   // Get tab index for carousel position
   const getTabIndex = (tab: string) => {
-    const scoreboardTabs = ['info', 'pick', 'odds', 'headtohead'];
+    const scoreboardTabs = ['info', 'pick', 'top', 'odds', 'headtohead'];
     return scoreboardTabs.indexOf(tab);
   };
 
@@ -130,7 +131,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
     if (carouselRef.current) {
       const index = getTabIndex(activeTab);
       if (index !== -1) {
-        const totalSlides = 4;
+        const totalSlides = 5;
         const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -176,10 +177,10 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
           <div
             ref={carouselRef}
             className="flex transition-transform duration-500 ease-in-out"
-            style={{ width: '400%' }}
+            style={{ width: '500%' }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '25%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '20%' }}>
               <Info
                 homeTeam={homeTeam}
                 awayTeam={awayTeam}
@@ -214,8 +215,8 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
               )}
             </div>
 
-            {/* Pick Section - Top Picks & Your Picks */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '25%' }}>
+            {/* Pick Section - Your Picks */}
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '20%' }}>
               {homeTeam?.id && awayTeam?.id && (
                 <PlayerPick
                   gameId={event.id}
@@ -242,8 +243,23 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
               )}
             </div>
 
+            {/* Top Section - Top Picks */}
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '20%' }}>
+              {homeTeam?.id && awayTeam?.id && (
+                <TopPicks
+                  gameId={event.id}
+                  homeTeamId={homeTeam.id}
+                  awayTeamId={awayTeam.id}
+                  playLog={playLog}
+                  getTeamLogo={getTeamLogo}
+                  homeTeam={homeTeam}
+                  awayTeam={awayTeam}
+                />
+              )}
+            </div>
+
             {/* Odds Section */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: '25%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: '20%' }}>
               {/* Divider */}
               <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
               <div className="mx-2">
@@ -273,7 +289,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '25%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '20%' }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}

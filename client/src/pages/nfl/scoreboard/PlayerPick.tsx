@@ -8,7 +8,6 @@ import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
 import FootballField from '@/components/nfl/FootballField';
-import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
 import { useAuth } from '@/providers/AuthContext';
 import type { Athlete } from '@/types/espn/athlete';
@@ -883,34 +882,21 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
   return (
     <>
-      {/* Top Picks - All Players Who Scored */}
-      <TopPicks
+      {/* Your Picks Section */}
+      <YourPicks
         gameId={gameId}
         homeTeamId={homeTeamId}
         awayTeamId={awayTeamId}
+        homeTeamInfo={homeTeamInfo}
+        awayTeamInfo={awayTeamInfo}
+        isExpanded={isExpanded}
+        onToggle={onToggle}
         playLog={playLog}
-        getTeamLogo={getTeamLogo!}
-        homeTeam={homeTeam!}
-        awayTeam={awayTeam!}
+        situation={situation}
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        getTeamLogo={getTeamLogo}
       />
-      
-      {/* Your Picks Section */}
-      <div className="mt-4">
-        <YourPicks
-          gameId={gameId}
-          homeTeamId={homeTeamId}
-          awayTeamId={awayTeamId}
-          homeTeamInfo={homeTeamInfo}
-          awayTeamInfo={awayTeamInfo}
-          isExpanded={isExpanded}
-          onToggle={onToggle}
-          playLog={playLog}
-          situation={situation}
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          getTeamLogo={getTeamLogo}
-        />
-      </div>
     </>
   );
 };
