@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import axios from 'axios';
+import { jwtStorage } from '../utils/jwtStorage';
 
 interface Player {
   id: string;
@@ -21,6 +23,13 @@ interface PicksState {
   totalScore: number;
 }
 
+interface AthleteScores {
+  gameScores: Record<string, number>; // athleteId -> game score (all plays)
+  sessionScores: Record<string, number>; // athleteId -> session score (time-filtered for current pick)
+  userScores: Record<string, number>; // athleteId -> user score (accumulated across all sessions)
+  totalScore: number; // sum of all user scores
+}
+
 interface PicksContextType {
   getPicks: (homeTeamId: string, awayTeamId: string) => PicksState | null;
   getPicksWithHeadshots: (homeTeamId: string, awayTeamId: string) => PicksState | null;
@@ -30,12 +39,18 @@ interface PicksContextType {
   isLocked: (homeTeamId: string, awayTeamId: string) => boolean;
   getCooldownTime: (homeTeamId: string, awayTeamId: string) => number;
   getPlayers: (homeTeamId: string, awayTeamId: string) => Player[];
+  // New scoring methods
+  fetchScores: (gameId: string) => Promise<AthleteScores | null>;
+  getScores: (gameId: string) => AthleteScores | null;
+  refreshScores: (gameId: string) => Promise<void>;
 }
 
 const PicksContext = createContext<PicksContextType | undefined>(undefined);
 
 export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [picksCache, setPicksCache] = useState<Record<string, PicksState>>({});
+  const [scoresCache, setScoresCache] = useState<Record<string, AthleteScores>>({});
+  const fetchingRef = React.useRef<Set<string>>(new Set());
 
   const getKey = (homeTeamId: string, awayTeamId: string) => `playerPick_${homeTeamId}_${awayTeamId}`;
 
@@ -158,6 +173,66 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return picks?.players || [];
   };
 
+  // Fetch scores from API - memoized to prevent infinite loops
+  const fetchScores = useCallback(async (gameId: string): Promise<AthleteScores | null> => {
+    // Prevent duplicate fetches
+    if (fetchingRef.current.has(gameId)) {
+      console.log(`⏳ Already fetching scores for game ${gameId}, skipping...`);
+      return null;
+    }
+
+    try {
+      fetchingRef.current.add(gameId);
+      
+      const token = jwtStorage.getToken();
+      if (!token) {
+        console.warn('No auth token, cannot fetch scores');
+        fetchingRef.current.delete(gameId);
+        return null;
+      }
+
+      console.log(`📊 Fetching scores for game ${gameId} from API...`);
+      const response = await axios.get(`/api/picks/game/${gameId}/user/scores`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data.ok) {
+        const scores: AthleteScores = {
+          gameScores: response.data.gameScores,
+          sessionScores: response.data.sessionScores,
+          userScores: response.data.userScores,
+          totalScore: response.data.totalScore
+        };
+        
+        // Cache the scores
+        setScoresCache(prev => ({ ...prev, [gameId]: scores }));
+        console.log(`✅ Scores cached for game ${gameId}:`, scores);
+        
+        fetchingRef.current.delete(gameId);
+        return scores;
+      }
+      
+      fetchingRef.current.delete(gameId);
+      return null;
+    } catch (error) {
+      console.error('Error fetching scores:', error);
+      fetchingRef.current.delete(gameId);
+      return null;
+    }
+  }, []);
+
+  // Get cached scores - memoized to prevent infinite loops
+  const getScores = useCallback((gameId: string): AthleteScores | null => {
+    return scoresCache[gameId] || null;
+  }, [scoresCache]);
+
+  // Refresh scores (force re-fetch) - memoized to prevent infinite loops
+  const refreshScores = useCallback(async (gameId: string): Promise<void> => {
+    await fetchScores(gameId);
+  }, [fetchScores]);
+
   return (
     <PicksContext.Provider value={{ 
       getPicks, 
@@ -167,7 +242,10 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       updateScore, 
       isLocked, 
       getCooldownTime,
-      getPlayers
+      getPlayers,
+      fetchScores,
+      getScores,
+      refreshScores
     }}>
       {children}
     </PicksContext.Provider>

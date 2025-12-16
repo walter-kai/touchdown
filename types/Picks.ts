@@ -91,3 +91,18 @@ export interface CreatePickResponse {
   id: string;
   collection: string;
 }
+
+export interface AthleteScores {
+  gameScores: Record<string, number>; // athleteId -> game score (all plays)
+  sessionScores: Record<string, number>; // athleteId -> session score (time-filtered for current pick)
+  userScores: Record<string, number>; // athleteId -> user score (accumulated across all sessions)
+  totalScore: number; // sum of all user scores
+}
+
+export interface ScoresResponse {
+  ok: boolean;
+  gameScores: Record<string, number>;
+  sessionScores: Record<string, number>;
+  userScores: Record<string, number>;
+  totalScore: number;
+}

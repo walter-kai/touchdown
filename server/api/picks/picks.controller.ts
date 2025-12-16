@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import catchAsync from '../../utils/catch-async';
 import ApiError from '../../utils/api-error';
-import { createPick, getUserPicksForGame, getAllPicksForGame, getLatestUserPick, getUserPickHistory } from './picks.service';
+import { createPick, getUserPicksForGame, getAllPicksForGame, getLatestUserPick, getUserPickHistory, calculateAthleteScores } from './picks.service';
+import { getGamePlayByPlay } from '../playbyplay/playbyplay.service';
 
 // POST /picks
 export const postPick = catchAsync(async (req: Request, res: Response) => {
@@ -90,4 +91,28 @@ export const getPickHistory = catchAsync(async (req: Request, res: Response) => 
   const history = await getUserPickHistory(user.email, gameId);
 
   return res.status(200).json({ ok: true, history, totalPicks: history.length });
+});
+
+// GET /picks/game/:gameId/user/scores
+export const getScores = catchAsync(async (req: Request, res: Response) => {
+  const { user } = req as any;
+  const { gameId } = req.params;
+
+  if (!user?.email) {
+    throw new ApiError(400, 'Missing user email from token');
+  }
+  if (!gameId) {
+    throw new ApiError(400, 'Missing gameId parameter');
+  }
+
+  // Get play-by-play data
+  const playByPlay = await getGamePlayByPlay(gameId);
+  
+  if (!playByPlay) {
+    throw new ApiError(404, 'Play-by-play data not found for this game');
+  }
+
+  const scores = await calculateAthleteScores(user.email, gameId, playByPlay.plays);
+
+  return res.status(200).json({ ok: true, ...scores });
 });

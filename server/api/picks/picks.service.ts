@@ -212,3 +212,196 @@ export async function getUserPickHistory(userId: string, gameId: string) {
     return timeA - timeB;
   });
 }
+
+/**
+ * Calculate scores for athletes in a game
+ * Returns three types of scores:
+ * 1. gameScore - total points the athlete got in the entire game
+ * 2. sessionScore - points the user got with the athlete since lock-in (time-filtered)
+ * 3. userScore - total accumulated score that the athlete generated for the user (all sessions)
+ */
+export async function calculateAthleteScores(userId: string, gameId: string, playLog: any[]) {
+  const db = admin.firestore();
+  
+  // Get user's pick history for this game
+  const userPickRef = db.collection('gamePicks').doc(gameId).collection('users').doc(userId);
+  const userPickDoc = await userPickRef.get();
+
+  if (!userPickDoc.exists) {
+    logger.info(`No picks found for user ${userId} in game ${gameId}`);
+    return { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 };
+  }
+
+  const data = userPickDoc.data();
+  const picks = data?.picks || [];
+  
+  if (picks.length === 0) {
+    return { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 };
+  }
+
+  // Get the latest pick (current session)
+  const latestPick = picks[picks.length - 1];
+  const currentPlayers = new Set<string>(latestPick.players.map((p: any) => p.id as string));
+  
+  // Calculate game scores (all plays for each athlete)
+  const gameScores: Record<string, number> = {};
+  const athletePlayCounts: Record<string, number> = {};
+  
+  playLog.forEach(play => {
+    if (play.athletesInvolved && play.athletesInvolved.length > 0) {
+      play.athletesInvolved.forEach((athlete: any) => {
+        if (!athletePlayCounts[athlete.id]) athletePlayCounts[athlete.id] = 0;
+        athletePlayCounts[athlete.id]++;
+      });
+    }
+  });
+  
+  Object.keys(athletePlayCounts).forEach(athleteId => {
+    gameScores[athleteId] = athletePlayCounts[athleteId];
+  });
+
+  // Calculate session scores (time-filtered for current pick)
+  const sessionScores: Record<string, number> = {};
+  
+  Array.from(currentPlayers).forEach((playerId: string) => {
+    sessionScores[playerId] = 0;
+    
+    // Build lock time periods for this player
+    const lockTimesMs: Array<{ start: number; end?: number }> = [];
+    
+    // Add from playerHistory
+    const playerHistory = latestPick.playerHistory as Record<string, Array<{ start: string; end?: string }>> | undefined;
+    if (playerHistory && playerHistory[playerId]) {
+      playerHistory[playerId].forEach((period: any) => {
+        lockTimesMs.push({
+          start: new Date(period.start).getTime(),
+          end: period.end ? new Date(period.end).getTime() : undefined
+        });
+      });
+    }
+    
+    // Add current lock time if exists
+    const playerLockTimes = latestPick.playerLockTimes as Record<string, string> | undefined;
+    if (playerLockTimes && playerLockTimes[playerId]) {
+      lockTimesMs.push({
+        start: new Date(playerLockTimes[playerId]).getTime()
+      });
+    }
+    
+    // Fallback to global lock time
+    if (lockTimesMs.length === 0 && latestPick.lockedAt) {
+      lockTimesMs.push({
+        start: new Date(latestPick.lockedAt).getTime()
+      });
+    }
+    
+    if (lockTimesMs.length === 0) {
+      logger.warn(`No lock time found for player ${playerId} in session score calculation`);
+      return;
+    }
+    
+    // Count plays that happened AFTER the player was locked
+    playLog.forEach(play => {
+      if (!play.athletesInvolved) return;
+      
+      const hasPlayer = play.athletesInvolved.some((a: any) => a.id === playerId);
+      if (!hasPlayer) return;
+      
+      const playTime = new Date(play.timestamp).getTime();
+      
+      // Check if play happened during any locked period
+      const isDuringLockedPeriod = lockTimesMs.some(period => {
+        if (period.end) {
+          return playTime >= period.start && playTime <= period.end;
+        } else {
+          return playTime >= period.start;
+        }
+      });
+      
+      if (isDuringLockedPeriod) {
+        sessionScores[playerId]++;
+      }
+    });
+  });
+
+  // Calculate user scores (accumulated across all sessions)
+  const userScores: Record<string, number> = {};
+  
+  // Track all players the user has ever picked in this game
+  const allUserPlayers = new Set<string>();
+  picks.forEach((pick: any) => {
+    pick.players.forEach((p: any) => allUserPlayers.add(p.id));
+  });
+  
+  // For each player the user has picked, calculate total score across all their sessions
+  allUserPlayers.forEach(playerId => {
+    userScores[playerId] = 0;
+    
+    // Build all lock time periods for this player across all picks
+    const allLockPeriods: Array<{ start: number; end?: number }> = [];
+    
+    picks.forEach((pick: any) => {
+      // Check if this player was in this pick
+      const isInPick = pick.players.some((p: any) => p.id === playerId);
+      if (!isInPick) return;
+      
+      // Add from playerHistory
+      if (pick.playerHistory && pick.playerHistory[playerId]) {
+        pick.playerHistory[playerId].forEach((period: any) => {
+          allLockPeriods.push({
+            start: new Date(period.start).getTime(),
+            end: period.end ? new Date(period.end).getTime() : undefined
+          });
+        });
+      }
+      
+      // Add from playerLockTimes
+      if (pick.playerLockTimes && pick.playerLockTimes[playerId]) {
+        allLockPeriods.push({
+          start: new Date(pick.playerLockTimes[playerId]).getTime()
+        });
+      }
+      
+      // Fallback to global lock time
+      if (pick.lockedAt && (!pick.playerHistory || !pick.playerHistory[playerId]) && (!pick.playerLockTimes || !pick.playerLockTimes[playerId])) {
+        allLockPeriods.push({
+          start: new Date(pick.lockedAt).getTime()
+        });
+      }
+    });
+    
+    // Count plays that happened during any locked period
+    playLog.forEach(play => {
+      if (!play.athletesInvolved) return;
+      
+      const hasPlayer = play.athletesInvolved.some((a: any) => a.id === playerId);
+      if (!hasPlayer) return;
+      
+      const playTime = new Date(play.timestamp).getTime();
+      
+      const isDuringLockedPeriod = allLockPeriods.some(period => {
+        if (period.end) {
+          return playTime >= period.start && playTime <= period.end;
+        } else {
+          return playTime >= period.start;
+        }
+      });
+      
+      if (isDuringLockedPeriod) {
+        userScores[playerId]++;
+      }
+    });
+  });
+
+  // Calculate total user score
+  const totalScore = Object.values(userScores).reduce((sum, score) => sum + score, 0);
+
+  logger.info(`Calculated scores for user ${userId} in game ${gameId}: ${Object.keys(gameScores).length} athletes, total score: ${totalScore}`);
+
+  return {
+    gameScores,
+    sessionScores,
+    userScores,
+    totalScore
+  };
+}

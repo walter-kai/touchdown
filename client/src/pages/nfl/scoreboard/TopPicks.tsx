@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { FaTrophy, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import axios from 'axios';
 import { jwtStorage } from '../../../utils/jwtStorage';
+import { usePicks } from '../../../providers/PicksContext';
 
 interface TopPicksProps {
   gameId: string;
@@ -39,7 +40,8 @@ interface PlayerScore {
   jersey: string;
   position: string;
   teamId: string;
-  score: number;
+  gameScore: number; // Total points in game
+  userScore: number; // Total accumulated score for user
   isUserPick: boolean; // Has score (current or historical)
   isCurrentPick: boolean; // Currently active pick
 }
@@ -57,14 +59,13 @@ const TopPicks: React.FC<TopPicksProps> = ({
   const [userPickIds, setUserPickIds] = useState<Set<string>>(new Set());
   const [currentPickIds, setCurrentPickIds] = useState<Set<string>>(new Set()); // Currently active picks only
   const [isLoading, setIsLoading] = useState(true);
-  const [userPickScores, setUserPickScores] = useState<Record<string, number>>({});
-  const [playerHistory, setPlayerHistory] = useState<Record<string, Array<{ start: number; end?: number }>>>({});
-  const [playerLockTimes, setPlayerLockTimes] = useState<Record<string, number>>({});
-  const [globalLockedAt, setGlobalLockedAt] = useState<number | null>(null);
+  
+  // Use picks context for scores
+  const { fetchScores, getScores } = usePicks();
 
-  // Fetch user picks from API
+  // Fetch user picks and scores from API
   useEffect(() => {
-    const fetchUserPicks = async () => {
+    const fetchUserPicksAndScores = async () => {
       try {
         setIsLoading(true);
         const token = jwtStorage.getToken();
@@ -77,33 +78,30 @@ const TopPicks: React.FC<TopPicksProps> = ({
           return;
         }
 
-        console.log(`🔍 Fetching user picks for game ${gameId}...`);
-        const response = await axios.get(`/api/picks/game/${gameId}/user`, {
+        console.log(`🔍 Fetching user picks and scores for game ${gameId}...`);
+        
+        // Fetch user picks
+        const picksResponse = await axios.get(`/api/picks/game/${gameId}/user`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         
-        console.log('📦 Raw picks response:', response.data);
+        console.log('📦 Raw picks response:', picksResponse.data);
         
         // Extract players from the most recent pick submission
         let athleteIds: string[] = [];
         
-        if (response.data?.picks?.picks && response.data.picks.picks.length > 0) {
+        if (picksResponse.data?.picks?.picks && picksResponse.data.picks.picks.length > 0) {
           // Get the most recent pick (last in array)
-          const latestPick = response.data.picks.picks[response.data.picks.picks.length - 1];
+          const latestPick = picksResponse.data.picks.picks[picksResponse.data.picks.picks.length - 1];
           const players = latestPick.players || [];
           
           // Extract CURRENT pick IDs from latest submission
           const currentIds = new Set<string>(players.map((p: any) => p.id).filter(Boolean));
           
-          // Extract lock time data from API response
-          const apiPlayerHistory = latestPick.playerHistory || {};
-          const apiPlayerLockTimes = latestPick.playerLockTimes || {};
-          const apiGlobalLockedAt = latestPick.lockedAt || null;
-          
           // Collect ALL unique player IDs across ALL pick submissions
-          const allPickSubmissions = response.data.picks.picks;
+          const allPickSubmissions = picksResponse.data.picks.picks;
           const allPlayerIds = new Set<string>();
           
           allPickSubmissions.forEach((pick: any) => {
@@ -124,210 +122,54 @@ const TopPicks: React.FC<TopPicksProps> = ({
           console.log(`✅ Found ${allPlayerIds.size} total unique players across ${allPickSubmissions.length} pick submissions`);
           console.log('📚 All player IDs ever picked:', athleteIds);
           console.log('🎯 Current active picks:', Array.from(currentIds));
-          console.log('� Lock data from API:', { apiPlayerHistory, apiPlayerLockTimes, apiGlobalLockedAt });
           
-          // Set lock time state
-          setPlayerHistory(apiPlayerHistory);
-          setPlayerLockTimes(apiPlayerLockTimes);
-          setGlobalLockedAt(apiGlobalLockedAt);
           setCurrentPickIds(currentIds);
-          
-          // Save to localStorage for consistency
-          const storageKey = `playerPick_${homeTeamId}_${awayTeamId}`;
-          // Convert athleteIds back to player objects for localStorage compatibility
-          const allPlayerObjects = athleteIds.map(id => {
-            // Try to find player data from any pick submission
-            for (const pick of allPickSubmissions) {
-              const player = (pick.players || []).find((p: any) => p.id === id);
-              if (player) return player;
-            }
-            // Fallback if player not found in current picks (was removed)
-            return { id };
-          });
-          localStorage.setItem(storageKey, JSON.stringify({
-            players: allPlayerObjects,
-            lockedAt: apiGlobalLockedAt,
-            playerLockTimes: apiPlayerLockTimes,
-            playerHistory: apiPlayerHistory
-          }));
         } else {
           console.log('⚠️ No picks found in response');
         }
         
         console.log('🎯 Athlete IDs from picks:', athleteIds);
-        
         setUserPickIds(new Set(athleteIds));
-      } catch (error) {
-        console.error('❌ Failed to fetch user picks:', error);
-        setUserPickIds(new Set());
         
-        // Fallback to localStorage if API fails
-        const storageKey = `playerPick_${homeTeamId}_${awayTeamId}`;
-        const savedState = localStorage.getItem(storageKey);
-        if (savedState) {
-          try {
-            const parsed = JSON.parse(savedState);
-            
-            // Include currently active players
-            let currentIds = (parsed.players || []).map((p: any) => p.id);
-            
-            // Also include ALL players from playerHistory
-            const apiPlayerHistory = parsed.playerHistory || {};
-            const historicalPlayerIds = Object.keys(apiPlayerHistory);
-            const allPlayerIds = [...new Set([...currentIds, ...historicalPlayerIds])];
-            
-            setUserPickIds(new Set(allPlayerIds));
-            setCurrentPickIds(new Set(currentIds));
-            setPlayerHistory(apiPlayerHistory);
-            setPlayerLockTimes(parsed.playerLockTimes || {});
-            setGlobalLockedAt(parsed.lockedAt || null);
-            console.log('✅ Loaded picks from localStorage fallback (including historical)');
-          } catch (e) {
-            console.error('❌ Failed to parse localStorage data:', e);
-          }
-        }
+        // Fetch scores from API
+        await fetchScores(gameId);
+      } catch (error) {
+        console.error('❌ Failed to fetch user picks or scores:', error);
+        setUserPickIds(new Set());
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchUserPicks();
-  }, [gameId, homeTeamId, awayTeamId]);
+    fetchUserPicksAndScores();
+  }, [gameId, homeTeamId, awayTeamId, fetchScores]);
 
-  // Calculate time-filtered scores for user picks (same logic as YourPicks)
-  useEffect(() => {
-    if (userPickIds.size === 0 || playLog.length === 0) {
-      setUserPickScores({});
-      return;
-    }
-
-    console.log('🔄 TopPicks: Calculating time-filtered user scores...');
-    
-    // If no lock data available, can't calculate time-filtered scores
-    if (!globalLockedAt && Object.keys(playerLockTimes).length === 0 && Object.keys(playerHistory).length === 0) {
-      console.warn('⚠️ TopPicks: No lock time data available from API or localStorage');
-      setUserPickScores({});
-      return;
-    }
-
-    console.log('💾 TopPicks: Using lock data - Player lock times:', playerLockTimes);
-    console.log('💾 TopPicks: Global locked at:', globalLockedAt);
-    console.log('💾 TopPicks: Player history:', playerHistory);
-
-    const scores: Record<string, number> = {};
-    
-    // Helper to convert any timestamp format to milliseconds
-    const toMs = (ts: any): number => {
-      if (!ts) return 0;
-      if (typeof ts === 'number') return ts;
-      if (ts._seconds) return ts._seconds * 1000;
-      if (ts instanceof Date) return ts.getTime();
-      return new Date(ts).getTime();
-    };
-    
-    // Calculate score for each user pick
-    Array.from(userPickIds).forEach(playerId => {
-      scores[playerId] = 0;
-      
-      // Get lock times for this player
-      let lockTimesMs: Array<{ start: number; end?: number }> = [];
-      
-      // Add from playerHistory
-      if (playerHistory[playerId]) {
-        lockTimesMs = playerHistory[playerId].map(p => ({
-          start: toMs(p.start),
-          end: p.end ? toMs(p.end) : undefined
-        }));
-      }
-      
-      // Add current lock time if exists
-      if (playerLockTimes[playerId]) {
-        lockTimesMs.push({ start: toMs(playerLockTimes[playerId]) });
-      }
-      
-      // Fallback to global lock time
-      if (lockTimesMs.length === 0 && globalLockedAt) {
-        lockTimesMs = [{ start: toMs(globalLockedAt) }];
-      }
-      
-      if (lockTimesMs.length === 0) {
-        console.warn(`⚠️ No lock time for player ${playerId}`);
-        return;
-      }
-      
-      // Count plays that happened AFTER the player was locked
-      let totalPlaysForPlayer = 0;
-      let playsAfterLock = 0;
-      
-      playLog.forEach(play => {
-        if (!play.athletesInvolved || play.athletesInvolved.length === 0) return;
-        
-        const isInvolved = play.athletesInvolved.some(a => a.id === playerId);
-        if (!isInvolved) return;
-        
-        totalPlaysForPlayer++;
-        const playTime = toMs(play.timestamp);
-        
-        // Debug first play for this player
-        if (totalPlaysForPlayer === 1) {
-          console.log(`  First play for ${playerId}: ${new Date(playTime).toISOString()}, Lock times:`, lockTimesMs.map(p => ({
-            start: new Date(p.start).toISOString(),
-            end: p.end ? new Date(p.end).toISOString() : 'ongoing'
-          })));
-        }
-        
-        // Check if play is within any active period (after lock start, before lock end if exists)
-        const isInActivePeriod = lockTimesMs.some(period => {
-          const afterStart = playTime >= period.start;
-          const beforeEnd = !period.end || playTime <= period.end;
-          return afterStart && beforeEnd;
-        });
-        
-        if (isInActivePeriod) {
-          scores[playerId]++;
-          playsAfterLock++;
-        }
-      });
-      
-      if (totalPlaysForPlayer > 0) {
-        console.log(`  Player ${playerId}: ${playsAfterLock}/${totalPlaysForPlayer} plays after lock`);
-      }
-      
-      console.log(`✅ TopPicks: Player ${playerId} time-filtered score: ${scores[playerId]}`);
-    });
-
-    setUserPickScores(scores);
-  }, [userPickIds, playLog, playerHistory, playerLockTimes, globalLockedAt]);
-
-  // Calculate top picks from play log
+  // Calculate top picks from play log using context scores
   const topPicks = useMemo(() => {
-    console.log('🔄 Recalculating top picks...');
+    console.log('🔄 Recalculating top picks using context scores...');
     console.log('📊 User pick IDs:', Array.from(userPickIds));
     console.log('📝 Total plays in log:', playLog.length);
 
-    // Check if plays have athlete data
-    const playsWithAthletes = playLog.filter(p => p.athletesInvolved && p.athletesInvolved.length > 0).length;
-    console.log('📊 Plays with athlete data:', playsWithAthletes);
+    // Get scores from context
+    const scores = getScores(gameId);
     
-    // If less than 10% of plays have athlete data, the data is incomplete
-    if (playLog.length > 0 && playsWithAthletes < playLog.length * 0.1) {
-      console.warn('⚠️ Insufficient athlete data in plays. TopPicks will not be accurate.');
-      console.warn('   This game needs to be re-fetched from ESPN to populate athlete information.');
+    if (!scores) {
+      console.warn('⚠️ No scores available from context yet');
+      return [];
     }
 
-    // Build a map of all athletes who have scored
+    console.log('📊 Scores from context:', scores);
+
+    // Build a map of all athletes with scores
     const athleteScores = new Map<string, PlayerScore>();
 
     playLog.forEach((play) => {
-      // Count all plays where athletes are involved (no scoreValue filter)
       if (play.athletesInvolved && play.athletesInvolved.length > 0) {
         play.athletesInvolved.forEach((athlete) => {
           if (!athleteScores.has(athlete.id)) {
-            const isCurrentPick = currentPickIds.has(athlete.id);
             const hasScore = userPickIds.has(athlete.id);
-            if (hasScore) {
-              console.log(`⭐ Found user pick in play log: ${athlete.displayName} (ID: ${athlete.id})`);
-            }
+            const isCurrentPick = currentPickIds.has(athlete.id);
+            
             athleteScores.set(athlete.id, {
               id: athlete.id,
               fullName: athlete.fullName,
@@ -337,60 +179,30 @@ const TopPicks: React.FC<TopPicksProps> = ({
               jersey: athlete.jersey,
               position: athlete.position,
               teamId: athlete.team.id,
-              score: 0,
+              gameScore: scores.gameScores[athlete.id] || 0,
+              userScore: scores.userScores[athlete.id] || 0,
               isUserPick: hasScore,
               isCurrentPick: isCurrentPick,
             });
           }
-          // Increment score by 1 for each play involvement
-          const current = athleteScores.get(athlete.id)!;
-          current.score += 1;
         });
-      } else {
-        // Fallback: Extract player names from play text
-        const playText = play.text || '';
-        
-        // Try to extract player name (format: "I.Pacheco" or "P.Mahomes")
-        const nameMatch = playText.match(/^(?:\([\w\s]+\)\s*)?([A-Z]\.[A-Z][a-z]+)/);
-        if (nameMatch) {
-          const playerName = nameMatch[1]; // e.g., "P.Mahomes"
-          const playerId = playerName; // Use name as ID since we don't have actual ID
-          
-          if (!athleteScores.has(playerId)) {
-            athleteScores.set(playerId, {
-              id: playerId,
-              fullName: playerName,
-              displayName: playerName,
-              shortName: playerName,
-              headshot: '',
-              jersey: '',
-              position: '',
-              teamId: (play as any).team || '',
-              score: 0,
-              isUserPick: false,
-              isCurrentPick: false,
-            });
-          }
-          const current = athleteScores.get(playerId)!;
-          current.score += 1;
-        }
       }
     });
 
-    // Convert to array and sort by score descending
+    // Convert to array and sort by game score descending
     const sorted = Array.from(athleteScores.values())
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => b.gameScore - a.gameScore);
     
     const userPicks = sorted.filter(p => p.isUserPick);
     console.log(`✅ Total players with scores: ${sorted.length}, User picks: ${userPicks.length}`);
     
     return sorted;
-  }, [playLog, userPickIds, currentPickIds]);
+  }, [playLog, userPickIds, currentPickIds, gameId, getScores]);
 
-  // Calculate total user score from the topPicks data (not time-filtered)
+  // Calculate total user score from the topPicks data
   const userTotalScore = topPicks
     .filter(p => p.isUserPick)
-    .reduce((sum, player) => sum + player.score, 0);
+    .reduce((sum, player) => sum + player.userScore, 0);
 
   const displayedPicks = isExpanded ? topPicks : topPicks.slice(0, 5);
   const hasMore = topPicks.length > 5;
@@ -517,21 +329,21 @@ const TopPicks: React.FC<TopPicksProps> = ({
                     {/* Score */}
                     <div className="flex-shrink-0 text-right pr-3">
                       {player.isUserPick ? (
-                        // For user picks, show both their score and total score
+                        // For user picks, show user score and game score
                         <div className="flex items-center" style={{ gap: '12px' }}>
                           <div className="text-2xl font-bold text-[#00ffe7] drop-shadow-[0_0_10px_rgba(0,255,231,0.8)] text-center" style={{ width: '80px' }}>
-                            {userPickScores[player.id] || player.score}
+                            {player.userScore}
                           </div>
                           <div className="text-2xl font-bold text-white text-center" style={{ width: '80px' }}>
-                            {player.score}
+                            {player.gameScore}
                           </div>
                         </div>
                       ) : (
-                        // For non-user picks, show total score aligned to the right column
+                        // For non-user picks, show game score aligned to the right column
                         <div className="flex items-center" style={{ gap: '12px' }}>
                           <div style={{ width: '80px' }}></div>
                           <div className="text-3xl font-bold text-white text-center" style={{ width: '80px' }}>
-                            {player.score}
+                            {player.gameScore}
                           </div>
                         </div>
                       )}

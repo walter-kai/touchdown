@@ -10,6 +10,7 @@ import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-
 import { usePreview } from 'react-dnd-preview';
 import FootballField from '@/components/nfl/FootballField';
 import type { Athlete } from '@/types/espn/athlete';
+import { usePicks } from '../../../providers/PicksContext';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {
@@ -344,10 +345,18 @@ const YourPicks: React.FC<PlayerPickProps> = ({
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
   const [showGameLog, setShowGameLog] = useState(false);
   const [allPlayerScores, setAllPlayerScores] = useState<Record<string, number>>({});
-  const [playerHistory, setPlayerHistory] = useState<Record<string, Array<{ start: number; end?: number }>>>({});
-  const [playerLockTimes, setPlayerLockTimes] = useState<Record<string, number>>({});
-  const [globalLockedAt, setGlobalLockedAt] = useState<number | null>(null);
   const rosterSelectorRef = React.useRef<HTMLDivElement>(null);
+  
+  // Use picks context for scores
+  const { fetchScores, getScores } = usePicks();
+
+  // Fetch scores on mount and when gameId changes
+  useEffect(() => {
+    const loadScores = async () => {
+      await fetchScores(gameId);
+    };
+    loadScores();
+  }, [gameId, fetchScores]);
 
   // Load saved state from localStorage and backend
   useEffect(() => {
@@ -404,11 +413,6 @@ const YourPicks: React.FC<PlayerPickProps> = ({
               localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(backendState));
               console.log('💾 Saved backend picks to localStorage:', backendState);
               
-              // Set lock time data in state for score calculation
-              setPlayerHistory(latestPick.playerHistory || {});
-              setPlayerLockTimes(latestPick.playerLockTimes || {});
-              setGlobalLockedAt(lockedAt);
-              
               return; // Skip localStorage fallback if we got backend data
             }
           }
@@ -429,11 +433,6 @@ const YourPicks: React.FC<PlayerPickProps> = ({
           setShowStats(true);
         }
         
-        // Set lock time data in state for score calculation
-        setPlayerHistory(parsed.playerHistory || {});
-        setPlayerLockTimes(parsed.playerLockTimes || {});
-        setGlobalLockedAt(parsed.lockedAt || null);
-        
         // Check if still in cooldown period
         if (parsed.lockedAt) {
           const elapsed = Date.now() - parsed.lockedAt;
@@ -453,140 +452,38 @@ const YourPicks: React.FC<PlayerPickProps> = ({
     loadUserPicks();
   }, [homeTeamId, awayTeamId, gameId]);
 
-  // Calculate scores for current set based on playLog (EXACT SAME AS TopPicks)
+  // Get scores from context for display
   useEffect(() => {
     if (selectedPlayers.length === 0) {
       setCurrentSetScores({});
+      setAllPlayerScores({});
+      setTotalScore(0);
       return;
     }
 
-    console.log('🔄 YourPicks: Calculating scores...');
-    console.log('📊 Selected players:', selectedPlayers.map(p => `${p.displayName} (${p.id})`));
-    console.log('📝 Total plays in log:', playLog.length);
-    
-    // If no lock data available, can't calculate time-filtered scores
-    if (!globalLockedAt && Object.keys(playerLockTimes).length === 0 && Object.keys(playerHistory).length === 0) {
-      console.warn('⚠️ YourPicks: No lock time data available from state');
-      setCurrentSetScores({});
+    const scores = getScores(gameId);
+    if (!scores) {
+      console.warn('⚠️ YourPicks: No scores available from context yet');
       return;
     }
 
-    console.log('💾 YourPicks: Using lock data - Player lock times:', playerLockTimes);
-    console.log('💾 YourPicks: Global locked at:', globalLockedAt);
-    console.log('💾 YourPicks: Player history:', playerHistory);
+    console.log('📊 YourPicks: Using scores from context:', scores);
 
-    const scores: Record<string, number> = {};
-    
-    // Helper to convert any timestamp format to milliseconds (same as TopPicks)
-    const toMs = (ts: any): number => {
-      if (!ts) return 0;
-      if (typeof ts === 'number') return ts;
-      if (ts._seconds) return ts._seconds * 1000;
-      if (ts instanceof Date) return ts.getTime();
-      return new Date(ts).getTime();
-    };
-    
-    // Calculate score for each selected player (EXACT SAME AS TopPicks)
+    // Set session scores for selected players (time-filtered for current session)
+    const sessionScores: Record<string, number> = {};
     selectedPlayers.forEach(player => {
-      scores[player.id] = 0;
-      
-      // Get lock times for this player
-      let lockTimesMs: Array<{ start: number; end?: number }> = [];
-      
-      // Add from playerHistory
-      if (playerHistory[player.id]) {
-        lockTimesMs = playerHistory[player.id].map(p => ({
-          start: toMs(p.start),
-          end: p.end ? toMs(p.end) : undefined
-        }));
-      }
-      
-      // Add current lock time if exists
-      if (playerLockTimes[player.id]) {
-        lockTimesMs.push({ start: toMs(playerLockTimes[player.id]) });
-      }
-      
-      // Fallback to global lock time
-      if (lockTimesMs.length === 0 && globalLockedAt) {
-        lockTimesMs = [{ start: toMs(globalLockedAt) }];
-      }
-      
-      if (lockTimesMs.length === 0) {
-        console.warn(`⚠️ No lock time for player ${player.id}`);
-        return;
-      }
-      
-      // Count plays that happened AFTER the player was locked
-      let totalPlaysForPlayer = 0;
-      let playsAfterLock = 0;
-      
-      playLog.forEach(play => {
-        if (!play.athletesInvolved || play.athletesInvolved.length === 0) return;
-        
-        const isInvolved = play.athletesInvolved.some(a => a.id === player.id);
-        if (!isInvolved) return;
-        
-        totalPlaysForPlayer++;
-        const playTime = toMs(play.timestamp);
-        
-        // Debug first play for this player
-        if (totalPlaysForPlayer === 1) {
-          console.log(`  First play for ${player.id}: ${new Date(playTime).toISOString()}, Lock times:`, lockTimesMs.map(p => ({
-            start: new Date(p.start).toISOString(),
-            end: p.end ? new Date(p.end).toISOString() : 'ongoing'
-          })));
-        }
-        
-        // Check if play is within any active period (after lock start, before lock end if exists)
-        const isInActivePeriod = lockTimesMs.some(period => {
-          const afterStart = playTime >= period.start;
-          const beforeEnd = !period.end || playTime <= period.end;
-          return afterStart && beforeEnd;
-        });
-        
-        if (isInActivePeriod) {
-          scores[player.id]++;
-          playsAfterLock++;
-        }
-      });
-      
-      if (totalPlaysForPlayer > 0) {
-        console.log(`  Player ${player.id}: ${playsAfterLock}/${totalPlaysForPlayer} plays after lock`);
-      }
-      
-      console.log(`✅ YourPicks: Player ${player.displayName} (${player.id}) time-filtered score: ${scores[player.id]}`);
+      sessionScores[player.id] = scores.sessionScores[player.id] || 0;
     });
+    setCurrentSetScores(sessionScores);
 
-    console.log('📊 Final YourPicks scores:', scores);
-    console.log('🕐 Current time:', new Date().toISOString(), `(${Date.now()})`);
-    setCurrentSetScores(scores);
-  }, [playLog, selectedPlayers, playerHistory, playerLockTimes, globalLockedAt]);
+    // Set game scores for all roster players
+    setAllPlayerScores(scores.gameScores);
 
-  // Calculate scores for all roster players
-  useEffect(() => {
-    if (homeRoster.length === 0 && awayRoster.length === 0) {
-      return;
-    }
+    // Set total user score
+    setTotalScore(scores.totalScore);
+  }, [selectedPlayers, gameId, getScores]);
 
-    const allPlayers = [...homeRoster, ...awayRoster];
-    const scores: Record<string, number> = {};
-
-    allPlayers.forEach(player => {
-      scores[player.id] = 0;
-      
-      playLog.forEach(play => {
-        if (play.athletesInvolved) {
-          play.athletesInvolved.forEach(athlete => {
-            if (athlete.id === player.id) {
-              scores[player.id]++;
-            }
-          });
-        }
-      });
-    });
-
-    setAllPlayerScores(scores);
-  }, [playLog, homeRoster, awayRoster]);
+  // Roster player scores are now provided by context (allPlayerScores is set above)
 
   // Cooldown timer
   useEffect(() => {
