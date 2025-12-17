@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../providers/AuthContext';
+import { useScoreboard } from '../../providers/ScoreboardContext';
 import { FaExclamationCircle, FaChevronDown, FaSignOutAlt, FaUser } from 'react-icons/fa';
 
 const GoogleLoginButton: React.FC = () => {
   const { login, isAuthenticated, user, logout } = useAuth();
+  const { lastUpdated, countdown } = useScoreboard();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -225,8 +227,13 @@ const GoogleLoginButton: React.FC = () => {
                   )}
                 </div>
               </div>
-              <div className="mt-2 text-[10px] text-[#00ffe7] font-medium">
-                Logged in as {user.displayName || user.username || user.email}
+            </div>
+
+            {/* Page Status Info */}
+            <div className="px-3 py-2 border-t border-[#00ffe7]/10">
+              <div className="text-xs text-gray-400">
+                <div>Last updated: {lastUpdated?.toLocaleTimeString() || 'Never'}</div>
+                <div>Next refresh: {countdown}s</div>
               </div>
             </div>
 

@@ -77,6 +77,43 @@ const FootballField: React.FC<FootballFieldProps> = ({
         </div>
       )}
 
+            {/* Timeouts - Only show if showGameInfo is true */}
+      {/* {showGameInfo && situation && ( */}
+        <div className="flex justify-between items-center pt-4">
+          <div className="text-center">
+            <p className="text-[#b0b7bf] text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
+            <div className="flex gap-1 justify-center">
+              {[...Array(3)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`w-3 h-3 rounded-full ${
+                    i < (situation?.awayTimeouts ?? 3) 
+                      ? 'bg-[#00ffe7]' 
+                      : 'bg-gray-600'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+          
+          <div className="text-center">
+            <p className="text-[#b0b7bf] text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
+            <div className="flex gap-1 justify-center">
+              {[...Array(3)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`w-3 h-3 rounded-full ${
+                    i < (situation?.homeTimeouts ?? 3) 
+                      ? 'bg-[#faafe8]' 
+                      : 'bg-gray-600'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      {/* )} */}
+
       {/* Football Field */}
       <div className={showGameInfo ? "border-t border-[#00ffe7]/10 pt-6" : ""}>
     <div className="relative w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg" style={{ height: '200px' }}>
@@ -191,43 +228,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
         </div>
       )}
     </div>
-
-      {/* Timeouts - Only show if showGameInfo is true */}
-      {showGameInfo && situation && (
-        <div className="flex justify-between items-center pt-4">
-          <div className="text-center">
-            <p className="text-[#b0b7bf] text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
-            <div className="flex gap-1 justify-center">
-              {[...Array(3)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`w-3 h-3 rounded-full ${
-                    i < (situation?.awayTimeouts ?? 3) 
-                      ? 'bg-[#00ffe7]' 
-                      : 'bg-gray-600'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-          
-          <div className="text-center">
-            <p className="text-[#b0b7bf] text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
-            <div className="flex gap-1 justify-center">
-              {[...Array(3)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`w-3 h-3 rounded-full ${
-                    i < (situation?.homeTimeouts ?? 3) 
-                      ? 'bg-[#faafe8]' 
-                      : 'bg-gray-600'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Latest Play - Only show if showGameInfo is true */}
       {showGameInfo && playLog.length > 0 && (() => {

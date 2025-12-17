@@ -242,39 +242,6 @@ const Info: React.FC<InfoProps> = ({
                     lastPlay={competition.situation.lastPlay}
                     getTeamLogo={getTeamLogo}
                   />
-                  {/* Timeouts */}
-                  <div className="flex justify-between items-center pt-4">
-                    <div className="text-center">
-                      <p className="text-[#b0b7bf] text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
-                      <div className="flex gap-1 justify-center">
-                        {[...Array(3)].map((_, i) => (
-                          <div
-                            key={i}
-                            className={`w-3 h-3 rounded-full ${
-                              i < ((competition.situation?.awayTimeouts ?? 3))
-                                ? 'bg-[#00ffe7]'
-                                : 'bg-gray-600'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[#b0b7bf] text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
-                      <div className="flex gap-1 justify-center">
-                        {[...Array(3)].map((_, i) => (
-                          <div
-                            key={i}
-                            className={`w-3 h-3 rounded-full ${
-                              i < ((competition.situation?.homeTimeouts ?? 3))
-                                ? 'bg-[#faafe8]'
-                                : 'bg-gray-600'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Play Log */}
                   <div className="mt-4">

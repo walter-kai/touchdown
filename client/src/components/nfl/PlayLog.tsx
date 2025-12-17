@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaFootballBall, FaListUl } from 'react-icons/fa';
+import { useScoreboard } from '@/providers/ScoreboardContext';
 
 interface PlayLogProps {
   playLog: Array<{
@@ -55,6 +56,9 @@ const PlayLog: React.FC<PlayLogProps> = ({
   showTitle = true,
   maxHeight = 'none'
 }) => {
+  const { countdown } = useScoreboard();
+  const progress = (countdown / 30) * 100; // 30 seconds total
+
   if (playLog.length === 0) {
     return (
       <div className="text-[#b0b7bf] text-center py-8">
@@ -108,6 +112,20 @@ const PlayLog: React.FC<PlayLogProps> = ({
             <div className="text-right min-w-[120px] h-[60px] flex flex-col justify-center">
               <div className="text-[#00ffe7] text-3xl font-bold leading-tight">{playLog.length}</div>
               <div className="text-[#b0b7bf] text-xs">{playLog.length === 1 ? 'play' : 'plays'}</div>
+            </div>
+          </div>
+
+          {/* Loading Bar */}
+          <div className="mx-2 mb-4">
+            <div className="h-1 bg-[#23263a] rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-[#00ffe7] to-[#faafe8] transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(0,255,231,0.5)]"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between mt-1 px-1">
+              <span className="text-[#b0b7bf] text-[10px]">Next refresh</span>
+              <span className="text-[#00ffe7] text-[10px] font-bold">{countdown}s</span>
             </div>
           </div>
         </>

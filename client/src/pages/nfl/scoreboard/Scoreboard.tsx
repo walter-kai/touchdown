@@ -254,6 +254,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                   getTeamLogo={getTeamLogo}
                   homeTeam={homeTeam}
                   awayTeam={awayTeam}
+                  isGameInSession={isGameInSession}
                 />
               )}
             </div>

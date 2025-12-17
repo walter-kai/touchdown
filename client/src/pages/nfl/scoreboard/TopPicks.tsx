@@ -29,6 +29,7 @@ interface TopPicksProps {
   getTeamLogo: (team: any) => string;
   homeTeam: any;
   awayTeam: any;
+  isGameInSession: boolean;
 }
 
 interface PlayerScore {
@@ -54,6 +55,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
   getTeamLogo,
   homeTeam,
   awayTeam,
+  isGameInSession,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [userPickIds, setUserPickIds] = useState<Set<string>>(new Set());
@@ -250,7 +252,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
                   key={player.id}
                   className={`
                     relative border-b border-[#00ffe7]/10 last:border-b-0 transition-all
-                    ${player.isCurrentPick
+                    ${player.isCurrentPick && isGameInSession
                       ? 'bg-gradient-to-r from-[#00ffe7]/20 via-[#00ffe7]/10 to-transparent border-l-4 border-l-[#00ffe7] shadow-[0_0_15px_rgba(0,255,231,0.3)]'
                       : 'hover:bg-[#00ffe7]/5'
                     }
@@ -270,8 +272,8 @@ const TopPicks: React.FC<TopPicksProps> = ({
                     
                     {/* Player Image */}
                     <div className="flex-shrink-0 ml-3">
-                      <div className={player.isCurrentPick ? 'relative' : ''}>
-                        {player.isCurrentPick && (
+                      <div className={player.isCurrentPick && isGameInSession ? 'relative' : ''}>
+                        {player.isCurrentPick && isGameInSession && (
                           <div className="absolute inset-0 rounded-full bg-[#00ffe7] blur-md opacity-50 animate-pulse"></div>
                         )}
                         {player.headshot ? (
@@ -280,7 +282,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
                             alt={player.displayName}
                             className={`
                               relative w-14 h-14 rounded-full border-2 object-cover
-                              ${player.isCurrentPick ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
+                              ${player.isCurrentPick && isGameInSession ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
                             `}
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
@@ -292,7 +294,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
                         <div 
                           className={`
                             relative w-14 h-14 rounded-full border-2 bg-[#23263a] items-center justify-center
-                            ${player.isCurrentPick ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
+                            ${player.isCurrentPick && isGameInSession ? 'border-[#00ffe7]' : 'border-[#00ffe7]/30'}
                           `}
                           style={{ display: player.headshot ? 'none' : 'flex' }}
                         >
@@ -304,13 +306,13 @@ const TopPicks: React.FC<TopPicksProps> = ({
                     {/* Player Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <h4 className={`font-bold text-base truncate ${player.isCurrentPick ? 'text-[#00ffe7] drop-shadow-[0_0_8px_rgba(0,255,231,0.8)]' : 'text-white'}`}>
+                        <h4 className={`font-bold text-base truncate ${player.isCurrentPick && isGameInSession ? 'text-[#00ffe7] drop-shadow-[0_0_8px_rgba(0,255,231,0.8)]' : 'text-white'}`}>
                           {player.shortName || player.displayName}
                         </h4>
 
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className={player.isCurrentPick ? 'text-[#00ffe7]/80' : 'text-[#b0b7bf]'}>
+                        <span className={player.isCurrentPick && isGameInSession ? 'text-[#00ffe7]/80' : 'text-[#b0b7bf]'}>
                           {player.position} • #{player.jersey}
                         </span>
                         <div className="flex items-center gap-1">
@@ -319,7 +321,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
                             alt=""
                             className="w-3 h-3"
                           />
-                          <span className={`text-[10px] ${player.isCurrentPick ? 'text-[#00ffe7]/80' : 'text-[#b0b7bf]'}`}>
+                          <span className={`text-[10px] ${player.isCurrentPick && isGameInSession ? 'text-[#00ffe7]/80' : 'text-[#b0b7bf]'}`}>
                             {team?.team?.abbreviation}
                           </span>
                         </div>

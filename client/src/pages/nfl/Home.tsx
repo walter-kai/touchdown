@@ -1,66 +1,29 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaFootballBall, FaPlay, FaNewspaper, FaCalendar, FaChevronLeft, FaChevronRight, FaTrophy, FaMapMarkerAlt } from "react-icons/fa";
-import axios from "axios";
+import { FaFootballBall, FaPlay, FaCalendar, FaChevronLeft, FaChevronRight, FaMapMarkerAlt } from "react-icons/fa";
 import LoadingFootball from '../../components/common/LoadingFootball';
 import NewsTicker from '../../components/nfl/NewsTicker';
+import { useScoreboard } from '../../providers/ScoreboardContext';
 import type {
   Event,
-  TeamOnBye,
-  ScoreboardResponse,
   Competitor
 } from '@/types/espn/scoreboard';
-import type { NewsArticle } from '@/types/espn/news';
-
-// Removed AuthDebug banner per design request
-
-interface ESPNData extends ScoreboardResponse {
-  news?: {
-    articles?: NewsArticle[];
-  };
-}
 
 const NFLScoreboard: React.FC = () => {
   const navigate = useNavigate();
-  const [games, setGames] = useState<Event[]>([]);
-  const [news, setNews] = useState<NewsArticle[]>([]);
-  const [byeTeams, setByeTeams] = useState<TeamOnBye[]>([]);
-  const [weekNumber, setWeekNumber] = useState<number | null>(null);
-  const [selectedWeek, setSelectedWeek] = useState<number | null>(null); // Week to display
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [countdown, setCountdown] = useState<number>(30);
+  const {
+    games,
+    news,
+    byeTeams,
+    weekNumber,
+    selectedWeek,
+    initialLoading,
+    error,
+    handlePreviousWeek,
+    handleNextWeek,
+  } = useScoreboard();
 
-  // Helper function to get date range for a specific NFL week
-  // NFL weeks start on Thursday and end on Wednesday (7 days)
-  // Week 1 of 2024 season started on Sept 5, 2024
-  const getWeekDateRange = (week: number): string => {
-    // 2024 NFL Season: Week 1 started on Thursday, Sept 5, 2024
-    const season2025Week1Start = new Date('2025-09-04');
-    
-    // Calculate the start date for the requested week
-    const daysOffset = (week - 1) * 7;
-    const weekStart = new Date(season2025Week1Start);
-    weekStart.setDate(weekStart.getDate() + daysOffset);
-    
-    // Week ends 6 days later (Thursday to Wednesday)
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-    
-    // Format as YYYYMMDD
-    const formatDate = (date: Date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}${month}${day}`;
-    };
-    
-    return `${formatDate(weekStart)}-${formatDate(weekEnd)}`;
-  };
-
-  // Helper function to group games by date
+  // Helper function to group games by date and time
   const groupGamesByDate = (gamesList: Event[]) => {
     const grouped = gamesList.reduce((acc, game) => {
       const dateKey = new Date(game.date).toLocaleDateString('en-US', { 
@@ -70,11 +33,18 @@ const NFLScoreboard: React.FC = () => {
         year: 'numeric' 
       });
       if (!acc[dateKey]) {
-        acc[dateKey] = [];
+        acc[dateKey] = {};
       }
-      acc[dateKey].push(game);
+      
+      // Group by time within each date
+      const timeKey = new Date(game.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      if (!acc[dateKey][timeKey]) {
+        acc[dateKey][timeKey] = [];
+      }
+      acc[dateKey][timeKey].push(game);
+      
       return acc;
-    }, {} as Record<string, Event[]>);
+    }, {} as Record<string, Record<string, Event[]>>);
     
     return grouped;
   };
@@ -90,121 +60,13 @@ const NFLScoreboard: React.FC = () => {
     return { liveGames: live, completedGames: completed, upcomingGames: upcoming };
   }, [games]);
 
-  const fetchNFLData = async (isInitial = false, week?: number) => {
-    try {
-      if (isInitial) {
-        setInitialLoading(true);
-      } else {
-        setIsRefreshing(true);
-      }
-      setError(null);
-      
-      // Build URL with optional week parameter
-      let url = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?limit=50';
-      if (week) {
-        const dateRange = getWeekDateRange(week);
-        url += `&dates=${dateRange}`;
-      }
-      
-      // Fetch scoreboard and news in parallel
-      const [scoreboardResponse, newsResponse] = await Promise.all([
-        axios.get(url),
-        axios.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit=6')
-      ]);
-      
-      const data: ESPNData = scoreboardResponse.data;
-      
-      // Get games from events array
-      const events = data.events || [];
-      if (events) {
-        console.log('Fetched games:', events.length);
-        if (events.length > 0) {
-          console.log('First game sample:', events[0]);
-        }
-        setGames(events);
-      }
-      
-      // Set news from dedicated news endpoint
-      if (newsResponse.data?.articles) {
-        setNews(newsResponse.data.articles);
-      }
-
-      // Get week info from week property
-      const weekData = data.week;
-      if (weekData) {
-        setByeTeams(weekData.teamsOnBye || []);
-        const currentWeek = weekData.number || null;
-        setWeekNumber(currentWeek);
-        
-        // Set selected week if not already set
-        if (!selectedWeek && currentWeek) {
-          setSelectedWeek(currentWeek);
-        }
-      }
-      
-      setLastUpdated(new Date());
-      setCountdown(30); // Reset countdown to 30 seconds
-      setInitialLoading(false);
-      setIsRefreshing(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setInitialLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  const handleManualRefresh = () => {
-    fetchNFLData(false, selectedWeek || undefined);
-  };
-
-  const handlePreviousWeek = () => {
-    if (selectedWeek && selectedWeek > 1) {
-      const newWeek = selectedWeek - 1;
-      setSelectedWeek(newWeek);
-      fetchNFLData(false, newWeek);
-    }
-  };
-
-  const handleNextWeek = () => {
-    if (selectedWeek && selectedWeek < 18) { // Regular season is 18 weeks
-      const newWeek = selectedWeek + 1;
-      setSelectedWeek(newWeek);
-      fetchNFLData(false, newWeek);
-    }
-  };
-
-  useEffect(() => {
-    fetchNFLData(true);
-  }, []);
-
-  // Countdown timer effect
-  useEffect(() => {
-    if (countdown <= 0) {
-      fetchNFLData(false, selectedWeek || undefined);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [countdown, selectedWeek]);
-
   return (
   <>
   <div className="max-w-7xl mx-auto py-2">
 	
   {/* Week Navigation */}
-		<div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#faafe8]/30 mb-6 mx-2">
-          {lastUpdated && (
-        // <div className="bg-[#181a23]/50 rounded-lg p-3 border border-[#faafe8]/20 mb-6">
-          <p className="text-sm text-gray-400 text-center mb-2">
-            Last updated: {lastUpdated.toLocaleTimeString()} • Auto-refresh in {countdown}s
-          </p>
-        // </div>
-      )}
-			<div className="flex items-center justify-between gap-4">
+		<div className="bg-[#181a23]/50 rounded-lg p-2 mb-6 mx-2">
+			<div className="flex items-center justify-between gap-2">
 				<button
 					onClick={handlePreviousWeek}
 					disabled={!selectedWeek || selectedWeek <= 1}
@@ -234,7 +96,7 @@ const NFLScoreboard: React.FC = () => {
   {/* Teams on Bye - Ticker Banner */}
   {byeTeams.length > 0 && (
     <div className="mb-6 bg-[#181a23]/90 rounded-lg border border-[#faafe8]/30 overflow-hidden">
-      <div className="flex items-center gap-4 px-4 py-2">
+      <div className="flex items-center gap-2 px-4 py-2">
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-sm font-bold text-[#faafe8]">TEAMS ON BYE:</span>
         </div>
@@ -277,14 +139,19 @@ const NFLScoreboard: React.FC = () => {
 				<h1 className="flex items-center gap-2 mx-2 mb-4">
 				Live Now ({liveGames.length})
 				</h1>
-				{Object.entries(groupGamesByDate(liveGames)).map(([date, dateGames]) => (
+				{Object.entries(groupGamesByDate(liveGames)).map(([date, timeGroups]) => (
 					<div key={date} className="mb-6">
-            <h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-2 text-left">{date}</h2>
-						<div className="divide-y divide-[#00ffe7]/20">
-							{dateGames.map((game) => (
-								<GameGridCard key={game.id} game={game} navigate={navigate} />
-							))}
-						</div>
+						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-3">{date}</h2>
+						{Object.entries(timeGroups).map(([time, timeGames]) => (
+							<div key={`${date}-${time}`} className="mb-4">
+								<h3 className="text-sm font-medium text-gray-400 mx-2 mb-2">{time}</h3>
+								<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
+									{timeGames.map((game) => (
+										<GameGridCard key={game.id} game={game} navigate={navigate} />
+									))}
+								</div>
+							</div>
+						))}
 					</div>
 				))}
 			</div>
@@ -297,14 +164,19 @@ const NFLScoreboard: React.FC = () => {
 				<FaCalendar />
 				Upcoming ({upcomingGames.length})
 				</h1>
-				{Object.entries(groupGamesByDate(upcomingGames)).map(([date, dateGames]) => (
+				{Object.entries(groupGamesByDate(upcomingGames)).map(([date, timeGroups]) => (
 					<div key={date} className="mb-6">
-						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-2">{date}</h2>
-						<div className="divide-y divide-[#00ffe7]/20">
-							{dateGames.map((game) => (
-								<GameGridCard key={game.id} game={game} navigate={navigate} />
-							))}
-						</div>
+						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-3">{date}</h2>
+						{Object.entries(timeGroups).map(([time, timeGames]) => (
+							<div key={`${date}-${time}`} className="mb-4">
+								<h3 className="text-sm font-medium text-gray-400 mx-2 mb-2">{time}</h3>
+								<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
+									{timeGames.map((game) => (
+										<GameGridCard key={game.id} game={game} navigate={navigate} />
+									))}
+								</div>
+							</div>
+						))}
 					</div>
 				))}
 			</div>
@@ -316,14 +188,19 @@ const NFLScoreboard: React.FC = () => {
 				<h1 className="flex items-center gap-2 mx-2 mb-4">
 				Final ({completedGames.length})
 				</h1>
-				{Object.entries(groupGamesByDate(completedGames)).map(([date, dateGames]) => (
+				{Object.entries(groupGamesByDate(completedGames)).map(([date, timeGroups]) => (
 					<div key={date} className="mb-6">
-            <h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-2 text-left">{new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</h2>
-						<div className="divide-y divide-[#00ffe7]/20">
-							{dateGames.map((game) => (
-								<GameGridCard key={game.id} game={game} navigate={navigate} />
-							))}
-						</div>
+						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-3 text-left">{date}</h2>
+						{Object.entries(timeGroups).map(([time, timeGames]) => (
+							<div key={`${date}-${time}`} className="mb-4">
+								<h3 className="text-sm font-medium text-gray-400 mx-2 mb-2 text-left">{time}</h3>
+								<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
+									{timeGames.map((game) => (
+										<GameGridCard key={game.id} game={game} navigate={navigate} />
+									))}
+								</div>
+							</div>
+						))}
 					</div>
 				))}
 			</div>
@@ -365,7 +242,7 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
   return (
     <button
       onClick={() => navigate(`/nfl/game/${game.id}`)}
-      className="relative border-b border-t border-[#faafe8]/20  bg-[#181a23]/50 hover:bg-[#181a23]/70 p-2 px-4 transition-all duration-200 text-left w-full"
+      className="relative rounded-md border border-[#faafe8]/20  bg-[#181a23]/50 hover:bg-[#181a23]/70 p-3 px-4 transition-all duration-200 text-left w-full"
     >
       {/* Live Badge */}
       {isLive && (
@@ -383,30 +260,6 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
           </div>
         </div>
       )}
-
-      {/* Time and Venue/Broadcast Info */}
-      <div className="pb-2 mb-2 flex items-center justify-between gap-2">
-        {/* Left: Time */}
-        <div className="text-gray-400 text-xs">
-          {new Date(game.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-        </div>
-
-        {/* Right: Venue & Broadcast */}
-        <div className="flex items-center gap-2 text-xs flex-shrink-0">
-          {competition.venue && (
-            <div className="flex items-center gap-1 text-gray-400">
-              <FaMapMarkerAlt className="text-[#faafe8] flex-shrink-0 text-[10px]" />
-              <span className="truncate max-w-[120px]">{competition.venue.fullName}</span>
-            </div>
-          )}
-          {competition.broadcasts && competition.broadcasts.length > 0 && (
-            <div className="inline-flex items-center gap-1 px-2 py-1 bg-[#faafe8]/10 border border-[#faafe8]/30 rounded">
-              <span className="text-[#faafe8]">📺</span>
-              <span className="text-[#faafe8] font-semibold">{competition.broadcasts[0].names[0]}</span>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Teams */}
       <div>

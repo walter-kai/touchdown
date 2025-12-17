@@ -499,6 +499,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                       getTeamLogo={getTeamLogo}
                       homeTeam={homeTeam}
                       awayTeam={awayTeam}
+                      isGameInSession={false}
                     />
                   ) : (
                     <YourPicks
