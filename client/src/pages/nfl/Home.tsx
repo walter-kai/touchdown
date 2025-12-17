@@ -60,6 +60,25 @@ const NFLScoreboard: React.FC = () => {
     return `${formatDate(weekStart)}-${formatDate(weekEnd)}`;
   };
 
+  // Helper function to group games by date
+  const groupGamesByDate = (gamesList: Event[]) => {
+    const grouped = gamesList.reduce((acc, game) => {
+      const dateKey = new Date(game.date).toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
+      }
+      acc[dateKey].push(game);
+      return acc;
+    }, {} as Record<string, Event[]>);
+    
+    return grouped;
+  };
+
   // Categorize and sort games
   const { liveGames, completedGames, upcomingGames } = useMemo(() => {
     const live = games.filter(game => game.status.type.state === 'in');
@@ -177,7 +196,7 @@ const NFLScoreboard: React.FC = () => {
   <div className="max-w-7xl mx-auto py-2">
 	
   {/* Week Navigation */}
-		<div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#faafe8]/30 mb-6">
+		<div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#faafe8]/30 mb-6 mx-2">
           {lastUpdated && (
         // <div className="bg-[#181a23]/50 rounded-lg p-3 border border-[#faafe8]/20 mb-6">
           <p className="text-sm text-gray-400 text-center mb-2">
@@ -255,44 +274,58 @@ const NFLScoreboard: React.FC = () => {
 			{/* Live Games */}
 			{liveGames.length > 0 && (
 			<div>
-				<h1 className="flex items-center gap-2 mx-2">
+				<h1 className="flex items-center gap-2 mx-2 mb-4">
 				Live Now ({liveGames.length})
 				</h1>
-				<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 px-2">
-				{liveGames.map((game) => (
-					<GameGridCard key={game.id} game={game} navigate={navigate} />
+				{Object.entries(groupGamesByDate(liveGames)).map(([date, dateGames]) => (
+					<div key={date} className="mb-6">
+            <h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-2 text-left">{date}</h2>
+						<div className="divide-y divide-[#00ffe7]/20">
+							{dateGames.map((game) => (
+								<GameGridCard key={game.id} game={game} navigate={navigate} />
+							))}
+						</div>
+					</div>
 				))}
-				</div>
 			</div>
 			)}
 
       {/* Upcoming Games */}
 			{upcomingGames.length > 0 && (
 			<div>
-				<h1 className="flex items-center gap-2">
+				<h1 className="flex items-center gap-2 mx-2 mb-4">
 				<FaCalendar />
 				Upcoming ({upcomingGames.length})
 				</h1>
-				<div className={`px-2 grid gap-4 ${upcomingGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
-				{upcomingGames.map((game) => (
-					<GameGridCard key={game.id} game={game} navigate={navigate} />
+				{Object.entries(groupGamesByDate(upcomingGames)).map(([date, dateGames]) => (
+					<div key={date} className="mb-6">
+						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-2">{date}</h2>
+						<div className="divide-y divide-[#00ffe7]/20">
+							{dateGames.map((game) => (
+								<GameGridCard key={game.id} game={game} navigate={navigate} />
+							))}
+						</div>
+					</div>
 				))}
-				</div>
 			</div>
 			)}
 			
 			{/* Completed Games */}
 			{completedGames.length > 0 && (
 			<div>
-				<h1 className="flex items-center gap-2">
-				<FaTrophy />
+				<h1 className="flex items-center gap-2 mx-2 mb-4">
 				Final ({completedGames.length})
 				</h1>
-				<div className={`px-2 grid gap-4 ${completedGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3'}`}>
-				{completedGames.map((game) => (
-					<GameGridCard key={game.id} game={game} navigate={navigate} />
+				{Object.entries(groupGamesByDate(completedGames)).map(([date, dateGames]) => (
+					<div key={date} className="mb-6">
+            <h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-2 text-left">{new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</h2>
+						<div className="divide-y divide-[#00ffe7]/20">
+							{dateGames.map((game) => (
+								<GameGridCard key={game.id} game={game} navigate={navigate} />
+							))}
+						</div>
+					</div>
 				))}
-				</div>
 			</div>
 			)}
 			
@@ -332,7 +365,7 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
   return (
     <button
       onClick={() => navigate(`/nfl/game/${game.id}`)}
-      className="relative bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-4 hover:border-[#00ffe7]/50 hover:shadow-[0_0_30px_rgba(0,255,231,0.2)] transition-all duration-300 text-left w-full"
+      className="relative border-b border-t border-[#faafe8]/20  bg-[#181a23]/50 hover:bg-[#181a23]/70 p-2 px-4 transition-all duration-200 text-left w-full"
     >
       {/* Live Badge */}
       {isLive && (
@@ -351,8 +384,32 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
         </div>
       )}
 
+      {/* Time and Venue/Broadcast Info */}
+      <div className="pb-2 mb-2 flex items-center justify-between gap-2">
+        {/* Left: Time */}
+        <div className="text-gray-400 text-xs">
+          {new Date(game.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+        </div>
+
+        {/* Right: Venue & Broadcast */}
+        <div className="flex items-center gap-2 text-xs flex-shrink-0">
+          {competition.venue && (
+            <div className="flex items-center gap-1 text-gray-400">
+              <FaMapMarkerAlt className="text-[#faafe8] flex-shrink-0 text-[10px]" />
+              <span className="truncate max-w-[120px]">{competition.venue.fullName}</span>
+            </div>
+          )}
+          {competition.broadcasts && competition.broadcasts.length > 0 && (
+            <div className="inline-flex items-center gap-1 px-2 py-1 bg-[#faafe8]/10 border border-[#faafe8]/30 rounded">
+              <span className="text-[#faafe8]">📺</span>
+              <span className="text-[#faafe8] font-semibold">{competition.broadcasts[0].names[0]}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Teams */}
-      <div className={`space-y-3 ${!isLive ? 'mt-3' : ''}`}>
+      <div>
         {/* Away Team */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1">
@@ -361,7 +418,7 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
               alt={awayTeam.team.displayName}
               className="w-10 h-10 object-contain"
             />
-            <div>
+            <div className="flex items-center gap-2">
               <div className={`font-bold ${awayTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
                 {awayTeam.team.abbreviation}
               </div>
@@ -376,14 +433,14 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
         </div>
 
         {/* Home Team */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between space-y-2">
           <div className="flex items-center gap-3 flex-1">
             <img 
               src={homeTeam.team.logo} 
               alt={homeTeam.team.displayName}
               className="w-10 h-10 object-contain"
             />
-            <div>
+            <div className="flex items-center gap-2">
               <div className={`font-bold ${homeTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
                 {homeTeam.team.abbreviation}
               </div>
@@ -398,35 +455,6 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
         </div>
       </div>
 
-      {/* Date/Time and Venue/Broadcast Info */}
-      <div className="mt-3 pt-3 border-t border-[#faafe8]/20 flex items-start justify-between gap-4 text-xs">
-        {/* Left: Date & Time */}
-        <div className="text-gray-400 flex-shrink-0">
-          <div className="whitespace-nowrap">{new Date(game.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
-          <div className="whitespace-nowrap">{new Date(game.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
-        </div>
-
-        {/* Right: Venue & Broadcast */}
-        <div className="text-right text-gray-400 flex-1 min-w-0">
-          {competition.venue && (
-            <div className="flex items-center justify-end gap-1 mb-1">
-              <FaMapMarkerAlt className="text-[#faafe8] flex-shrink-0" />
-              <span className="truncate">{competition.venue.fullName}</span>
-            </div>
-          )}
-          {competition.broadcasts && competition.broadcasts.length > 0 && (
-            <div className="text-[#faafe8] truncate">
-              📺 {competition.broadcasts[0].names.join(', ')}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Corner Accents */}
-      <span className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#00ffe7] rounded-tl-xl opacity-60" />
-      <span className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#00ffe7] rounded-tr-xl opacity-60" />
-      <span className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#00ffe7] rounded-bl-xl opacity-60" />
-      <span className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#00ffe7] rounded-br-xl opacity-60" />
     </button>
   );
 };

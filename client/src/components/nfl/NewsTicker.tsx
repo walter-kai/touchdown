@@ -64,7 +64,7 @@ const NewsTicker: React.FC<NewsTickerProps> = ({ news }) => {
             </h5>
             
             {news[currentNewsIndex].description && (
-              <p className="text-gray-300 text-xs sm:text-xs line-clamp-4">
+              <p className="text-gray-300 text-xs sm:text-xs line-clamp-3">
                 {news[currentNewsIndex].description}
               </p>
             )}
