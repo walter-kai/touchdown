@@ -129,7 +129,7 @@ const NFLScoreboard: React.FC = () => {
 
   {/* Games Grid */}
 	{!initialLoading && games.length > 0 && (
-		<div className="space-y-8">
+		<div className="space-y-8 mb-16">
 			{/* Live Games */}
 			{liveGames.length > 0 && (
 			<div>
