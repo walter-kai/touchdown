@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import catchAsync from '../../utils/catch-async';
 import ApiError from '../../utils/api-error';
-import { createPick, getUserPicksForGame, getAllPicksForGame, getLatestUserPick, getUserPickHistory, calculateAthleteScores, getAllUserPicksAcrossGames } from './picks.service';
+import { createPick, getUserPicksForGame, getAllPicksForGame, getLatestUserPick, getUserPickHistory, calculateAthleteScores, getAllUserPicksAcrossGames, getAllUserPicksWithScores } from './picks.service';
 import { getGamePlayByPlay } from '../playbyplay/playbyplay.service';
 
 // POST /picks
@@ -128,4 +128,17 @@ export const getAllUserPicks = catchAsync(async (req: Request, res: Response) =>
   const userPicks = await getAllUserPicksAcrossGames(user.email);
 
   return res.status(200).json({ ok: true, games: userPicks });
+});
+
+// GET /picks/user/all-with-scores - OPTIMIZED endpoint for dashboard
+export const getAllUserPicksWithScoresController = catchAsync(async (req: Request, res: Response) => {
+  const { user } = req as any;
+
+  if (!user?.email) {
+    throw new ApiError(400, 'Missing user email from token');
+  }
+
+  const userPicksWithScores = await getAllUserPicksWithScores(user.email, getGamePlayByPlay);
+
+  return res.status(200).json({ ok: true, games: userPicksWithScores });
 });

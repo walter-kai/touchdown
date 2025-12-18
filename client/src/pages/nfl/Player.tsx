@@ -6,8 +6,8 @@ import type { AthleteOverview, AthleteBio } from '@/types/espn/athlete';
 import LoadingFootball from '../../components/common/LoadingFootball';
 
 interface NFLPlayerProps {
-  activeTab?: 'info' | 'schedule' | 'news';
-  onTabChange?: (tab: 'info' | 'schedule' | 'news') => void;
+  activeTab?: 'info' | 'schedule' | 'news' | 'dashboard' | 'games';
+  onTabChange?: (tab: 'info' | 'schedule' | 'news' | 'dashboard' | 'games') => void;
   onRegisterTabClick?: (callback: (tab: string) => void) => void;
 }
 
@@ -48,8 +48,8 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
   useEffect(() => {
     if (!isScrollingProgrammatically.current || !onTabChange) return;
     
-    const ref = sectionRefs[activeTab];
-    if (ref.current) {
+    const ref = sectionRefs[activeTab as keyof typeof sectionRefs];
+    if (ref && ref.current) {
       const navbarHeight = 80;
       const elementPosition = ref.current.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;

@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../../auth/middleware/auth';
-import { postPick, getUserPicks, getGameStats, getLatestPick, getPickHistory, getScores, getAllUserPicks } from './picks.controller';
+import { postPick, getUserPicks, getGameStats, getLatestPick, getPickHistory, getScores, getAllUserPicks, getAllUserPicksWithScoresController } from './picks.controller';
 
 const router = express.Router();
 
@@ -24,5 +24,8 @@ router.get('/game/:gameId/stats', getGameStats);
 
 // GET /api/picks/user/all - Get all user picks across all games
 router.get('/user/all', authenticate, getAllUserPicks);
+
+// GET /api/picks/user/all-with-scores - Get all user picks with scores calculated (OPTIMIZED for dashboard)
+router.get('/user/all-with-scores', authenticate, getAllUserPicksWithScoresController);
 
 export default router;

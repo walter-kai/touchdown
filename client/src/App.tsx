@@ -95,14 +95,14 @@ const App: React.FC = () => {
   const nodeRef = useRef<HTMLDivElement>(null);
   
   // State for game page navigation
-  const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks'>('info');
+  const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'dashboard' | 'games'>('info');
   const [navPreset, setNavPreset] = useState<'scoreboard' | 'summary'>('scoreboard');
   const [gameStatus, setGameStatus] = useState<'pre' | 'in' | 'post' | undefined>(undefined);
   
   // Ref to communicate button clicks to NFLGame
   const tabClickCallbackRef = useRef<((tab: string) => void) | null>(null);
   
-  const handleTabClick = (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks') => {
+  const handleTabClick = (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'dashboard' | 'games') => {
     if (tabClickCallbackRef.current) {
       tabClickCallbackRef.current(tab);
     }
@@ -185,18 +185,18 @@ const App: React.FC = () => {
         {/* Game Navigation Bar - Show on game pages, team pages, player pages, and dashboard/games when logged in */}
         {(isGamePage || isTeamPage || isPlayerPage || (isDashboardOrGames && user)) && (
           <GameNavBar 
-            activeTab={isDashboardOrGames ? (location.pathname === '/nfl/games' ? 'games' : 'dashboard') as any : gameTab} 
+            activeTab={isDashboardOrGames ? (location.pathname === '/nfl/games' ? 'games' : 'dashboard') : gameTab} 
             onTabChange={(tab) => {
-              if (tab === 'dashboard' as any) {
-                navigate('/nfl/dashboard');
-              } else if (tab === 'games' as any) {
+              if (tab === 'dashboard') {
+                navigate('/');
+              } else if (tab === 'games') {
                 navigate('/nfl/games');
               } else {
                 setGameTab(tab);
               }
-            }} 
+            }}
             onTabClick={handleTabClick} 
-            preset={isDashboardOrGames ? 'dashboard' as any : (isTeamPage ? 'team' : isPlayerPage ? 'player' : navPreset)} 
+            preset={isDashboardOrGames ? 'dashboard' : (isTeamPage ? 'team' : isPlayerPage ? 'player' : navPreset)}
             gameStatus={isGamePage ? gameStatus : undefined}
           />
         )}

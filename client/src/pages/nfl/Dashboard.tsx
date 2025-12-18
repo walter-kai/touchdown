@@ -71,30 +71,28 @@ const Dashboard: React.FC = () => {
           return;
         }
 
-        // Fetch all user picks across games
-        const picksResponse = await axios.get('/api/picks/user/all', {
+        // Fetch all user picks WITH scores in a single optimized call!
+        const picksResponse = await axios.get('/api/picks/user/all-with-scores', {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        const userGames: GamePick[] = picksResponse.data.games || [];
-        console.log('📊 User games with picks:', userGames);
+        interface GamePickWithScores extends GamePick {
+          scores: GameScores;
+        }
 
-        // Fetch game details and scores for each game
-        const gamesData: GameData[] = [];
+        const userGames: GamePickWithScores[] = picksResponse.data.games || [];
+        console.log('📊 User games with picks and scores:', userGames);
 
-        for (const gamePick of userGames) {
+        if (userGames.length === 0) {
+          setGamesWithPicks([]);
+          setLoading(false);
+          return;
+        }
+
+        // Process all games in parallel to fetch additional game info
+        const gamePromises = userGames.map(async (gamePick) => {
           try {
-            // Fetch play-by-play data to get scores
-            const playByPlayResponse = await axios.get(`/api/playbyplay/${gamePick.gameId}`);
-            const playByPlay = playByPlayResponse.data;
-
-            // Fetch scores for this game
-            const scoresResponse = await axios.get(`/api/picks/game/${gamePick.gameId}/user/scores`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            
-            const scores: GameScores = scoresResponse.data;
-            const totalUserScore = scores.totalScore || 0;
+            const totalUserScore = gamePick.scores?.totalScore || 0;
 
             // Try to get game info from scoreboard or summary (optional)
             let gameName = `Game ${gamePick.gameId}`;
@@ -130,24 +128,31 @@ const Dashboard: React.FC = () => {
               console.warn(`Could not fetch game info for ${gamePick.gameId}`);
             }
 
-            gamesData.push({
+            return {
               gameId: gamePick.gameId,
               gameName,
               homeTeam,
               awayTeam,
               picks: gamePick.picks,
-              scores,
+              scores: gamePick.scores,
               totalUserScore,
               status: gameStatus
-            });
+            };
           } catch (err) {
             console.error(`Error fetching data for game ${gamePick.gameId}:`, err);
+            return null;
           }
-        }
+        });
+
+        // Wait for all games to be processed
+        const results = await Promise.all(gamePromises);
+        
+        // Filter out any null results (failed requests)
+        const validGames = results.filter((game): game is NonNullable<typeof game> => game !== null);
 
         // Sort by total score descending
-        gamesData.sort((a, b) => b.totalUserScore - a.totalUserScore);
-        setGamesWithPicks(gamesData);
+        validGames.sort((a, b) => b.totalUserScore - a.totalUserScore);
+        setGamesWithPicks(validGames);
         setLoading(false);
       } catch (err: any) {
         console.error('Error fetching dashboard data:', err);
@@ -324,21 +329,21 @@ const Dashboard: React.FC = () => {
                     return (
                       <div
                         key={playerId}
-                        className="flex items-center justify-between p-3 bg-[#181a23]/30 rounded-lg hover:bg-[#181a23]/50 transition-all"
+                        className="flex items-center justify-between px-3 bg-[#181a23]/30 rounded-lg hover:bg-[#181a23]/50 transition-all"
                       >
                         <div className="flex items-center gap-3">
                           {player.headshot && (
                             <img
                               src={player.headshot}
                               alt={player.displayName}
-                              className="w-12 h-12 rounded-full bg-[#00ffe7]/10"
+                              className="w-16 h-12 rounded-full bg-[#00ffe7]/10"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = 'none';
                               }}
                             />
                           )}
                           <div>
-                            <p className="font-semibold">{player.displayName}</p>
+                            <p className="font-semibold text-white">{player.displayName}</p>
                             <p className="text-sm text-gray-400">{player.position}</p>
                           </div>
                         </div>

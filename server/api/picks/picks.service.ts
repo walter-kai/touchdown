@@ -17,15 +17,21 @@ type CreatePickArgs = {
 };
 
 /**
- * Create picks using array-based structure (similar to play-by-play)
+ * Create picks using USER-BASED structure for better query efficiency
  * 
- * Structure:
- * gamePicks/{gameId}/users/{userId} - Contains a picks array with multiple pick sets
+ * NEW Structure:
+ * gamePicks/{userId}
+ *   - gameIds: [array of game IDs]
+ *   - lastUpdated: timestamp
+ *   - picks/{gameId} (subcollection)
+ *       - picks: []
+ *       - timestamp: last update
  * 
  * This allows:
- * 1. Single read to get all user's picks: gamePicks/{gameId}/users/{userId}
- * 2. Single read to get all picks for a game: gamePicks/{gameId}/users/*
- * 3. Multiple pick submissions per user stored as array entries
+ * 1. Single read to get all user's games: gamePicks/{userId}
+ * 2. Single read to get user picks for a game: gamePicks/{userId}/picks/{gameId}
+ * 3. No need to query multiple game documents
+ * 4. MUCH faster for getAllUserPicksAcrossGames
  */
 export async function createPick(args: CreatePickArgs) {
   const db = admin.firestore();
@@ -84,14 +90,26 @@ export async function createPick(args: CreatePickArgs) {
     );
   }
 
-  // Store user's picks as an array: gamePicks/{gameId}/users/{userId}
-  const userPickRef = db.collection('gamePicks').doc(args.gameId).collection('users').doc(args.userId);
-  
-  // Use arrayUnion to append the new pick to the picks array
-  await userPickRef.set({
+  // NEW STRUCTURE: gamePicks/{userId}/picks/{gameId}
+  const userRef = db.collection('gamePicks').doc(args.userId);
+  const gamePickRef = userRef.collection('picks').doc(args.gameId);
+
+  // Update in a batch for atomicity
+  const batch = db.batch();
+
+  // Update the game picks subcollection
+  batch.set(gamePickRef, {
     picks: admin.firestore.FieldValue.arrayUnion(newPick),
+    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  // Update the user document with gameIds array (if not already present)
+  batch.set(userRef, {
+    gameIds: admin.firestore.FieldValue.arrayUnion(args.gameId),
     lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
   }, { merge: true });
+
+  await batch.commit();
 
   logger.info(`Successfully saved ${players.length} picks for user ${args.userId} in game ${args.gameId}`);
 
@@ -109,48 +127,49 @@ export async function createPick(args: CreatePickArgs) {
 export async function getUserPicksForGame(userId: string, gameId: string) {
   const db = admin.firestore();
   
-  const userPickRef = db.collection('gamePicks').doc(gameId).collection('users').doc(userId);
-  const userPickDoc = await userPickRef.get();
+  const gamePickRef = db.collection('gamePicks').doc(userId).collection('picks').doc(gameId);
+  const gamePickDoc = await gamePickRef.get();
 
-  if (!userPickDoc.exists) {
+  if (!gamePickDoc.exists) {
     logger.info(`No picks found for user ${userId} in game ${gameId}`);
     return null;
   }
 
-  const data = userPickDoc.data();
+  const data = gamePickDoc.data();
   
-  // Return the picks array with serialized timestamps
   return {
     picks: (data?.picks || []).map((pick: any) => ({
       ...pick,
       timestamp: pick.timestamp?.toDate ? pick.timestamp.toDate().toISOString() : pick.timestamp
     })),
-    lastUpdated: data?.lastUpdated?.toDate ? data.lastUpdated.toDate().toISOString() : data?.lastUpdated,
+    lastUpdated: data?.timestamp?.toDate ? data.timestamp.toDate().toISOString() : data?.timestamp,
     totalPicks: data?.picks?.length || 0
   };
 }
 
 /**
- * Get all picks for a specific game
- * Returns all user picks with their pick arrays for statistical analysis
+ * Get all picks for a specific game (from all users)
+ * Uses collection group query to find all picks for this game across all users
  */
 export async function getAllPicksForGame(gameId: string) {
   const db = admin.firestore();
   
-  const usersSnapshot = await db.collection('gamePicks')
-    .doc(gameId)
-    .collection('users')
-    .get();
+  // Use collection group query to find all picks for this game across all users
+  const picksQuery = db.collectionGroup('picks').where(admin.firestore.FieldPath.documentId(), '==', gameId);
+  const picksSnapshot = await picksQuery.get();
 
-  const allPicks = usersSnapshot.docs.map(doc => {
+  const allPicks = picksSnapshot.docs.map(doc => {
     const data = doc.data();
+    // Extract userId from the document path: gamePicks/{userId}/picks/{gameId}
+    const userId = doc.ref.parent.parent?.id || 'unknown';
+    
     return {
-      userId: doc.id,
+      userId,
       picks: (data?.picks || []).map((pick: any) => ({
         ...pick,
         timestamp: pick.timestamp?.toDate ? pick.timestamp.toDate().toISOString() : pick.timestamp
       })),
-      lastUpdated: data?.lastUpdated?.toDate ? data.lastUpdated.toDate().toISOString() : data?.lastUpdated,
+      lastUpdated: data?.timestamp?.toDate ? data.timestamp.toDate().toISOString() : data?.timestamp,
       totalPicks: data?.picks?.length || 0
     };
   });
@@ -165,30 +184,14 @@ export async function getAllPicksForGame(gameId: string) {
  * Returns only the most recent pick submission
  */
 export async function getLatestUserPick(userId: string, gameId: string) {
-  const db = admin.firestore();
+  const result = await getUserPicksForGame(userId, gameId);
   
-  const userPickRef = db.collection('gamePicks').doc(gameId).collection('users').doc(userId);
-  const userPickDoc = await userPickRef.get();
-
-  if (!userPickDoc.exists) {
-    logger.info(`No picks found for user ${userId} in game ${gameId}`);
-    return null;
-  }
-
-  const data = userPickDoc.data();
-  const picks = data?.picks || [];
-  
-  if (picks.length === 0) {
+  if (!result || !result.picks || result.picks.length === 0) {
     return null;
   }
 
   // Return the last pick in the array (most recent)
-  const latestPick = picks[picks.length - 1];
-  
-  return {
-    ...latestPick,
-    timestamp: latestPick.timestamp?.toDate ? latestPick.timestamp.toDate().toISOString() : latestPick.timestamp
-  };
+  return result.picks[result.picks.length - 1];
 }
 
 /**
@@ -218,23 +221,14 @@ export async function getUserPickHistory(userId: string, gameId: string) {
  * 3. userScore - total accumulated score that the athlete generated for the user (all sessions)
  */
 export async function calculateAthleteScores(userId: string, gameId: string, playLog: any[]) {
-  const db = admin.firestore();
-  
-  // Get user's pick history for this game
-  const userPickRef = db.collection('gamePicks').doc(gameId).collection('users').doc(userId);
-  const userPickDoc = await userPickRef.get();
+  const result = await getUserPicksForGame(userId, gameId);
 
-  if (!userPickDoc.exists) {
+  if (!result || !result.picks || result.picks.length === 0) {
     logger.info(`No picks found for user ${userId} in game ${gameId}`);
     return { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 };
   }
 
-  const data = userPickDoc.data();
-  const picks = data?.picks || [];
-  
-  if (picks.length === 0) {
-    return { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 };
-  }
+  const picks = result.picks;
 
   // Get the latest pick (current session)
   const latestPick = picks[picks.length - 1];
@@ -379,41 +373,49 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
 
 /**
  * Get all picks for a user across all games
- * Returns a map of gameId -> user picks data
+ * MUCH MORE EFFICIENT with new structure - single read of user document + picks subcollection!
  */
 export async function getAllUserPicksAcrossGames(userId: string) {
   const db = admin.firestore();
   
   try {
-    // Get all games
-    const gamesSnapshot = await db.collection('gamePicks').listDocuments();
+    // Get the user document with gameIds
+    const userRef = db.collection('gamePicks').doc(userId);
+    const userDoc = await userRef.get();
+    
+    if (!userDoc.exists) {
+      logger.info(`No picks found for user ${userId}`);
+      return [];
+    }
+    
+    const userData = userDoc.data();
+    const gameIds = userData?.gameIds || [];
+    
+    if (gameIds.length === 0) {
+      logger.info(`User ${userId} has no game picks`);
+      return [];
+    }
+    
+    // Get all picks subcollection documents
+    const picksSnapshot = await userRef.collection('picks').get();
     
     const allGamesData: Array<{
       gameId: string;
       picks: any[];
       lastUpdated: string | null;
       totalPicks: number;
-    }> = [];
-    
-    // For each game, check if user has picks
-    for (const gameRef of gamesSnapshot) {
-      const gameId = gameRef.id;
-      const userPickRef = gameRef.collection('users').doc(userId);
-      const userPickDoc = await userPickRef.get();
-      
-      if (userPickDoc.exists) {
-        const data = userPickDoc.data();
-        allGamesData.push({
-          gameId,
-          picks: (data?.picks || []).map((pick: any) => ({
-            ...pick,
-            timestamp: pick.timestamp?.toDate ? pick.timestamp.toDate().toISOString() : pick.timestamp
-          })),
-          lastUpdated: data?.lastUpdated?.toDate ? data.lastUpdated.toDate().toISOString() : data?.lastUpdated,
-          totalPicks: data?.picks?.length || 0
-        });
-      }
-    }
+    }> = picksSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        gameId: doc.id,
+        picks: (data?.picks || []).map((pick: any) => ({
+          ...pick,
+          timestamp: pick.timestamp?.toDate ? pick.timestamp.toDate().toISOString() : pick.timestamp
+        })),
+        lastUpdated: data?.timestamp?.toDate ? data.timestamp.toDate().toISOString() : data?.timestamp,
+        totalPicks: data?.picks?.length || 0
+      };
+    });
     
     logger.info(`Retrieved picks from ${allGamesData.length} games for user ${userId}`);
     
@@ -422,4 +424,230 @@ export async function getAllUserPicksAcrossGames(userId: string) {
     logger.error(`Error fetching all user picks for ${userId}: ${error}`);
     throw error;
   }
+}
+
+/**
+ * Get all user picks with scores calculated for each game
+ * OPTIMIZED: Single query for all picks, then calculates scores in memory
+ */
+export async function getAllUserPicksWithScores(userId: string, getPlayByPlayFn: (gameId: string) => Promise<any>) {
+  const db = admin.firestore();
+  
+  try {
+    // Get all user picks in one efficient query
+    const userRef = db.collection('gamePicks').doc(userId);
+    const [userDoc, picksSnapshot] = await Promise.all([
+      userRef.get(),
+      userRef.collection('picks').get()
+    ]);
+    
+    if (!userDoc.exists || picksSnapshot.empty) {
+      logger.info(`No picks found for user ${userId}`);
+      return [];
+    }
+
+    // Process all games in parallel
+    const gamesWithScores = await Promise.all(
+      picksSnapshot.docs.map(async (doc) => {
+        const gameId = doc.id;
+        const data = doc.data();
+        const picks = data?.picks || [];
+        
+        if (picks.length === 0) {
+          return {
+            gameId,
+            picks: [],
+            lastUpdated: null,
+            totalPicks: 0,
+            scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 }
+          };
+        }
+
+        try {
+          // Fetch play-by-play data for score calculation
+          const playByPlayData = await getPlayByPlayFn(gameId);
+          
+          if (!playByPlayData || !playByPlayData.plays) {
+            logger.warn(`No play-by-play data for game ${gameId}`);
+            return {
+              gameId,
+              picks: picks.map((pick: any) => ({
+                ...pick,
+                timestamp: pick.timestamp?.toDate ? pick.timestamp.toDate().toISOString() : pick.timestamp
+              })),
+              lastUpdated: data?.timestamp?.toDate ? data.timestamp.toDate().toISOString() : null,
+              totalPicks: picks.length,
+              scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 }
+            };
+          }
+
+          // Calculate scores using the same logic
+          const scores = await calculateAthleteScoresFromPicks(picks, playByPlayData.plays, userId, gameId);
+
+          return {
+            gameId,
+            picks: picks.map((pick: any) => ({
+              ...pick,
+              timestamp: pick.timestamp?.toDate ? pick.timestamp.toDate().toISOString() : pick.timestamp
+            })),
+            lastUpdated: data?.timestamp?.toDate ? data.timestamp.toDate().toISOString() : null,
+            totalPicks: picks.length,
+            scores
+          };
+        } catch (error) {
+          logger.error(`Error calculating scores for game ${gameId}: ${error}`);
+          return {
+            gameId,
+            picks: picks.map((pick: any) => ({
+              ...pick,
+              timestamp: pick.timestamp?.toDate ? pick.timestamp.toDate().toISOString() : pick.timestamp
+            })),
+            lastUpdated: data?.timestamp?.toDate ? data.timestamp.toDate().toISOString() : null,
+            totalPicks: picks.length,
+            scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 }
+          };
+        }
+      })
+    );
+
+    logger.info(`Retrieved picks with scores from ${gamesWithScores.length} games for user ${userId}`);
+    
+    return gamesWithScores;
+  } catch (error) {
+    logger.error(`Error fetching all user picks with scores for ${userId}: ${error}`);
+    throw error;
+  }
+}
+
+/**
+ * Helper function to calculate scores from picks data (used by both endpoints)
+ */
+async function calculateAthleteScoresFromPicks(picks: any[], playLog: any[], userId: string, gameId: string) {
+  if (picks.length === 0) {
+    return { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 };
+  }
+
+  // Get the latest pick (current session)
+  const latestPick = picks[picks.length - 1];
+  const currentPlayers = new Set<string>(latestPick.players.map((p: any) => p.id as string));
+  
+  // Calculate game scores (all plays for each athlete)
+  const gameScores: Record<string, number> = {};
+  const athletePlayCounts: Record<string, number> = {};
+  
+  playLog.forEach(play => {
+    if (play.athletesInvolved && play.athletesInvolved.length > 0) {
+      play.athletesInvolved.forEach((athlete: any) => {
+        if (!athletePlayCounts[athlete.id]) athletePlayCounts[athlete.id] = 0;
+        athletePlayCounts[athlete.id]++;
+      });
+    }
+  });
+  
+  Object.keys(athletePlayCounts).forEach(athleteId => {
+    gameScores[athleteId] = athletePlayCounts[athleteId];
+  });
+
+  // Calculate session scores (time-filtered for current pick)
+  const sessionScores: Record<string, number> = {};
+  
+  Array.from(currentPlayers).forEach((playerId: string) => {
+    sessionScores[playerId] = 0;
+    
+    if (!latestPick.timestamp) {
+      logger.warn(`No timestamp found for latest pick in session score calculation`);
+      return;
+    }
+    
+    const lockTimeMs = new Date(latestPick.timestamp).getTime();
+    
+    playLog.forEach(play => {
+      if (!play.athletesInvolved) return;
+      
+      const hasPlayer = play.athletesInvolved.some((a: any) => a.id === playerId);
+      if (!hasPlayer) return;
+      
+      const playTime = new Date(play.timestamp).getTime();
+      
+      if (playTime >= lockTimeMs) {
+        sessionScores[playerId]++;
+      }
+    });
+  });
+
+  // Calculate user scores (accumulated across all sessions)
+  const userScores: Record<string, number> = {};
+  const allUserPlayers = new Set<string>();
+  picks.forEach((pick: any) => {
+    pick.players.forEach((p: any) => allUserPlayers.add(p.id));
+  });
+  
+  allUserPlayers.forEach(playerId => {
+    userScores[playerId] = 0;
+    
+    const allLockPeriods: Array<{ start: number; end?: number }> = [];
+    
+    picks.forEach((pick: any, pickIndex: number) => {
+      const isInPick = pick.players.some((p: any) => p.id === playerId);
+      if (!isInPick) return;
+      
+      if (pick.playerHistory && pick.playerHistory[playerId]) {
+        pick.playerHistory[playerId].forEach((period: any) => {
+          allLockPeriods.push({
+            start: new Date(period.start).getTime(),
+            end: period.end ? new Date(period.end).getTime() : undefined
+          });
+        });
+      }
+      
+      if (pick.timestamp) {
+        const nextPick = picks[pickIndex + 1];
+        let endTime: number | undefined = undefined;
+        
+        if (nextPick) {
+          const isInNextPick = nextPick.players.some((p: any) => p.id === playerId);
+          if (!isInNextPick && nextPick.timestamp) {
+            endTime = new Date(nextPick.timestamp).getTime();
+          }
+        }
+        
+        allLockPeriods.push({
+          start: new Date(pick.timestamp).getTime(),
+          end: endTime
+        });
+      }
+    });
+    
+    playLog.forEach(play => {
+      if (!play.athletesInvolved) return;
+      
+      const hasPlayer = play.athletesInvolved.some((a: any) => a.id === playerId);
+      if (!hasPlayer) return;
+      
+      const playTime = new Date(play.timestamp).getTime();
+      
+      const isDuringLockedPeriod = allLockPeriods.some(period => {
+        if (period.end) {
+          return playTime >= period.start && playTime <= period.end;
+        } else {
+          return playTime >= period.start;
+        }
+      });
+      
+      if (isDuringLockedPeriod) {
+        userScores[playerId]++;
+      }
+    });
+  });
+
+  const totalScore = Object.values(userScores).reduce((sum, score) => sum + score, 0);
+
+  logger.info(`Calculated scores for user ${userId} in game ${gameId}: ${Object.keys(gameScores).length} athletes, total score: ${totalScore}`);
+
+  return {
+    gameScores,
+    sessionScores,
+    userScores,
+    totalScore
+  };
 }
