@@ -54,6 +54,15 @@ export interface GameStatsResponse {
   totalUsers: number;
 }
 
+export interface GamePickDocument {
+  picks: PickSubmission[];
+  timestamp: any; // Firestore timestamp
+  teamLogos?: {
+    awayLogo: string;
+    homeLogo: string;
+  };
+}
+
 export interface CreatePickRequest {
   homeTeamId?: string;
   awayTeamId?: string;
@@ -77,6 +86,10 @@ export interface CreatePickRequest {
       start: number | string;
       end?: number | string;
     }>>;
+    teamLogos?: {
+      awayLogo: string;
+      homeLogo: string;
+    };
   };
   gameId: string;
   selection?: string;

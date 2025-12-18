@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad } from 'react-icons/fa';
-import { jwtStorage } from '../../utils/jwtStorage';
-import LoadingFootball from '../../components/common/LoadingFootball';
-import { useAuth } from '../../providers/AuthContext';
+import { jwtStorage } from '../../../utils/jwtStorage';
+import LoadingFootball from '../../../components/common/LoadingFootball';
+import { useAuth } from '../../../providers/AuthContext';
 
 interface Player {
   id: string;
@@ -25,6 +25,10 @@ interface GamePick {
   picks: Pick[];
   lastUpdated: string | null;
   totalPicks: number;
+  teamLogos?: {
+    awayLogo: string;
+    homeLogo: string;
+  };
 }
 
 interface GameScores {
@@ -71,6 +75,34 @@ const Dashboard: React.FC = () => {
           return;
         }
 
+        // Check localStorage cache first (for processed data)
+        const cacheKey = 'dashboard_processed_cache';
+        const cachedData = localStorage.getItem(cacheKey);
+        
+        if (cachedData) {
+          try {
+            const { data, timestamp } = JSON.parse(cachedData);
+            const cacheAge = Date.now() - timestamp;
+            const CACHE_DURATION = 3 * 60 * 1000; // 3 minutes
+            
+            // Use cached data if less than 3 minutes old
+            if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
+              console.log(`✅ Using cached dashboard data (${Math.round(cacheAge / 1000)}s old)`);
+              setGamesWithPicks(data);
+              setLoading(false);
+              return;
+            } else {
+              console.log('Cache expired, fetching fresh data...');
+              localStorage.removeItem(cacheKey);
+            }
+          } catch (error) {
+            console.error('Error parsing cached dashboard data:', error);
+            localStorage.removeItem(cacheKey);
+          }
+        }
+
+        console.log('🔄 Fetching fresh dashboard data from API...');
+
         // Fetch all user picks WITH scores in a single optimized call!
         const picksResponse = await axios.get('/api/picks/user/all-with-scores', {
           headers: { Authorization: `Bearer ${token}` }
@@ -100,8 +132,16 @@ const Dashboard: React.FC = () => {
             let homeTeam: any = null;
             let awayTeam: any = null;
 
+            // First, check if team logos are stored at the document root
+            if (gamePick.teamLogos) {
+              // Use stored team logos from the game pick document
+              homeTeam = { team: { logo: gamePick.teamLogos.homeLogo } };
+              awayTeam = { team: { logo: gamePick.teamLogos.awayLogo } };
+              console.log(`Using stored logos for game ${gamePick.gameId}`);
+            }
+
             try {
-              // Try to fetch from ESPN API or cache
+              // Try to fetch from ESPN API or cache for additional info
               const gameInfoResponse = await axios.get(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gamePick.gameId}`);
               const gameInfo = gameInfoResponse.data;
               
@@ -109,11 +149,15 @@ const Dashboard: React.FC = () => {
                 const competition = gameInfo.header.competitions?.[0];
                 if (competition) {
                   const competitors = competition.competitors || [];
-                  homeTeam = competitors.find((c: any) => c.homeAway === 'home');
-                  awayTeam = competitors.find((c: any) => c.homeAway === 'away');
+                  const apiHomeTeam = competitors.find((c: any) => c.homeAway === 'home');
+                  const apiAwayTeam = competitors.find((c: any) => c.homeAway === 'away');
                   
-                  if (homeTeam && awayTeam) {
-                    gameName = `${awayTeam.team.abbreviation} @ ${homeTeam.team.abbreviation}`;
+                  // If we don't have logos from stored picks, use API logos
+                  if (!homeTeam) homeTeam = apiHomeTeam;
+                  if (!awayTeam) awayTeam = apiAwayTeam;
+                  
+                  if (apiHomeTeam && apiAwayTeam) {
+                    gameName = `${apiAwayTeam.team.abbreviation} @ ${apiHomeTeam.team.abbreviation}`;
                   }
 
                   // Determine game status
@@ -152,6 +196,13 @@ const Dashboard: React.FC = () => {
 
         // Sort by total score descending
         validGames.sort((a, b) => b.totalUserScore - a.totalUserScore);
+        
+        // Cache the processed results
+        localStorage.setItem(cacheKey, JSON.stringify({
+          data: validGames,
+          timestamp: Date.now()
+        }));
+        
         setGamesWithPicks(validGames);
         setLoading(false);
       } catch (err: any) {
@@ -213,7 +264,7 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 pb-24">
+    <div className="max-w-7xl mx-auto py-6 px-2 pb-24">
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">
@@ -251,10 +302,10 @@ const Dashboard: React.FC = () => {
 
       {/* Games List */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <FaFootballBall className="text-[#faafe8]" />
+        <h1 className="">
+          {/* <FaFootballBall className="text-[#faafe8]" /> */}
           Your Games
-        </h2>
+        </h1>
 
         {gamesWithPicks.map((game) => (
           <div
@@ -273,7 +324,7 @@ const Dashboard: React.FC = () => {
                         alt={game.awayTeam.team.abbreviation}
                         className="w-10 h-10"
                       />
-                      <span className="text-xl font-bold">@</span>
+                      <span className="text-xl font-bold text-white">@</span>
                       <img 
                         src={game.homeTeam.team.logo} 
                         alt={game.homeTeam.team.abbreviation}

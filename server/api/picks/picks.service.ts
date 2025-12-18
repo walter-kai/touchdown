@@ -10,6 +10,10 @@ type CreatePickArgs = {
     totalScore?: number;
     lockedAt?: number | string | null; // Can be epoch milliseconds or ISO string
     playerHistory?: Record<string, Array<{ start: number | string; end?: number | string }>>; // Can be epoch milliseconds or ISO string
+    teamLogos?: {
+      awayLogo: string;
+      homeLogo: string;
+    };
   };
   gameId?: string;
   selection?: string;
@@ -97,11 +101,22 @@ export async function createPick(args: CreatePickArgs) {
   // Update in a batch for atomicity
   const batch = db.batch();
 
-  // Update the game picks subcollection
-  batch.set(gamePickRef, {
+  // Prepare the document update - store teamLogos at document root level
+  const docUpdate: any = {
     picks: admin.firestore.FieldValue.arrayUnion(newPick),
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true });
+  };
+
+  // Add team logos at document root if provided
+  if (args.picksState.teamLogos) {
+    docUpdate.teamLogos = {
+      awayLogo: args.picksState.teamLogos.awayLogo,
+      homeLogo: args.picksState.teamLogos.homeLogo
+    };
+  }
+
+  // Update the game picks subcollection
+  batch.set(gamePickRef, docUpdate, { merge: true });
 
   // Update the user document with gameIds array (if not already present)
   batch.set(userRef, {
@@ -459,7 +474,8 @@ export async function getAllUserPicksWithScores(userId: string, getPlayByPlayFn:
             picks: [],
             lastUpdated: null,
             totalPicks: 0,
-            scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 }
+            scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 },
+            teamLogos: data?.teamLogos
           };
         }
 
@@ -492,7 +508,8 @@ export async function getAllUserPicksWithScores(userId: string, getPlayByPlayFn:
             })),
             lastUpdated: data?.timestamp?.toDate ? data.timestamp.toDate().toISOString() : null,
             totalPicks: picks.length,
-            scores
+            scores,
+            teamLogos: data?.teamLogos
           };
         } catch (error) {
           logger.error(`Error calculating scores for game ${gameId}: ${error}`);
@@ -504,7 +521,8 @@ export async function getAllUserPicksWithScores(userId: string, getPlayByPlayFn:
             })),
             lastUpdated: data?.timestamp?.toDate ? data.timestamp.toDate().toISOString() : null,
             totalPicks: picks.length,
-            scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 }
+            scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 },
+            teamLogos: data?.teamLogos
           };
         }
       })

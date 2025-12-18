@@ -16,7 +16,8 @@
     "docker": "docker build -t dexter-city-test .",
     "migrate:playbyplay": "ts-node server/scripts/migrate-playbyplay.ts",
     "migrate:picks": "ts-node server/scripts/migrate-picks.ts",
-    "migrate:picks-to-user": "ts-node server/scripts/migratePicksToUserBased.ts"
+    "migrate:picks-to-user": "ts-node server/scripts/migratePicksToUserBased.ts",
+    "migrate:add-team-logos": "ts-node server/scripts/addTeamLogosToPickDocs.ts"
   },
   "dependencies": {
     "@types/cors": "^2.8.17",

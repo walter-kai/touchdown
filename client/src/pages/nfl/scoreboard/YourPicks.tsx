@@ -716,7 +716,11 @@ const YourPicks: React.FC<PlayerPickProps> = ({
         lockedAt: currentTime,
         totalScore: totalScore,
         playerLockTimes: playerLockTimes,
-        playerHistory: playerHistory
+        playerHistory: playerHistory,
+        teamLogos: {
+          awayLogo: awayTeamLogo,
+          homeLogo: homeTeamLogo
+        }
       };
       localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(state));
       console.log('Saved to localStorage:', state);

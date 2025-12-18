@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaFootballBall, FaPlay, FaCalendar, FaChevronLeft, FaChevronRight, FaMapMarkerAlt } from "react-icons/fa";
-import LoadingFootball from '../../components/common/LoadingFootball';
-import NewsTicker from '../../components/nfl/NewsTicker';
-import { useScoreboard } from '../../providers/ScoreboardContext';
+import LoadingFootball from '../../../components/common/LoadingFootball';
+import NewsTicker from '../../../components/nfl/NewsTicker';
+import { useScoreboard } from '../../../providers/ScoreboardContext';
 import type {
   Event,
   Competitor

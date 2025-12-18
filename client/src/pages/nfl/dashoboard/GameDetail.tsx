@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
 import axios from 'axios';
-import ScoreboardView from './scoreboard/Scoreboard';
-import SummaryView from './summary/Summary';
+import ScoreboardView from '../scoreboard/Scoreboard';
+import SummaryView from '../summary/Summary';
 import { useLoading } from '@/providers/LoadingContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
@@ -20,7 +20,7 @@ interface NFLGameProps {
   onRegisterTabClick?: (callback: (tab: string) => void) => void;
 }
 
-const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
+const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
   const { gameId } = useParams<{ gameId: string }>();
   const { showLoading, hideLoading } = useLoading();
   const [event, setEvent] = useState<Event | null>(null);
@@ -379,4 +379,4 @@ const NFLGame: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChang
   );
 };
 
-export default NFLGame;
+export default GameDetail;

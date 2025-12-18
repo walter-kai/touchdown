@@ -4,11 +4,11 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import GameNavBar from './components/common/navs/NavBar';
 import LoginNav from './components/common/navs/LoginNav';
 
-import Dashboard from './pages/nfl/Dashboard';
-import NFL from './pages/nfl/GamesList';
+import DashboardCarousel from './pages/nfl/dashoboard/DashboardCarousel';
+import NFL from './pages/nfl/dashoboard/GamesList';
 import NFLTeamPage from './pages/nfl/Team';
 import NFLPlayerPage from './pages/nfl/Player';
-import NFLGame from './pages/nfl/GameDetail';
+import GameDetail from './pages/nfl/dashoboard/GameDetail';
 
 
 
@@ -18,9 +18,7 @@ import NotFound from './pages/NotFound';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useAuth } from './providers/AuthContext';
 import { PicksProvider } from './providers/PicksContext';
-import { LoadingProvider, useLoading } from './providers/LoadingContext';
 import LoginModal from './components/common/LoginModal';
-import LoadingFootball from './components/common/LoadingFootball';
 
 // Google OAuth callback handler (in-tab redirect)
 const GoogleOAuthCallback: React.FC = () => {
@@ -91,7 +89,6 @@ const App: React.FC = () => {
   const toggleButtonRef = React.useRef<HTMLButtonElement>(null);
   const onlineToggleButtonRef = React.useRef<HTMLButtonElement>(null);
   const { showLoginModal, closeLoginModal, user } = useAuth();
-  const { isLoading, loadingMessage } = useLoading();
   const nodeRef = useRef<HTMLDivElement>(null);
   
   // State for game page navigation
@@ -135,11 +132,20 @@ const App: React.FC = () => {
     }
   }, [location.pathname, isGamePage]);
 
+  // Create a stable key for carousel routes to prevent unmounting during tab switches
+  const getTransitionKey = () => {
+    // Group dashboard/games routes under same key to prevent transition animation
+    if (location.pathname === '/' || 
+        location.pathname === '/nfl' || 
+        location.pathname === '/nfl/dashboard' || 
+        location.pathname === '/nfl/games') {
+      return 'dashboard-carousel';
+    }
+    return location.pathname;
+  };
+
   return (
     <PicksProvider>
-      {/* Global Loading Overlay */}
-      {isLoading && <LoadingFootball message={loadingMessage} />}
-      
       <div className="min-h-screen overflow-x-hidden relative bg-black/90 bg-blend-overlay">
       
       {/* Top Login/Nav (hide on auth processing page) */}
@@ -152,7 +158,7 @@ const App: React.FC = () => {
         <div className="flex-1 relative mx-0 pt-14">
           <TransitionGroup component={null}>
             <CSSTransition
-              key={location.pathname}
+              key={getTransitionKey()}
               classNames="fade"
               timeout={10}
               unmountOnExit
@@ -164,12 +170,12 @@ const App: React.FC = () => {
               */}
               <div ref={nodeRef} >
                 <Routes location={location}>
-                  <Route path="/" element={user ? <Dashboard /> : <NFL />} />
-                  <Route path="/nfl" element={user ? <Dashboard /> : <NFL />} />
-                  <Route path="/nfl/dashboard" element={<Dashboard />} />
-                  <Route path="/nfl/games" element={<NFL />} />
+                  <Route path="/" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/')} /> : <NFL />} />
+                  <Route path="/nfl" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/nfl')} /> : <NFL />} />
+                  <Route path="/nfl/dashboard" element={<DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/nfl/dashboard')} />} />
+                  <Route path="/nfl/games" element={<DashboardCarousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/nfl/dashboard')} />} />
                   <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
-                  <Route path="/nfl/game/:gameId" element={<NFLGame activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
+                  <Route path="/nfl/game/:gameId" element={<GameDetail activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays'} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/player/:playerId" element={<NFLPlayerPage activeTab={gameTab as 'info' | 'schedule' | 'news'} onTabChange={(tab) => setGameTab(tab as any)} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   
@@ -187,10 +193,10 @@ const App: React.FC = () => {
           <GameNavBar 
             activeTab={isDashboardOrGames ? (location.pathname === '/nfl/games' ? 'games' : 'dashboard') : gameTab} 
             onTabChange={(tab) => {
-              if (tab === 'dashboard') {
-                navigate('/');
-              } else if (tab === 'games') {
-                navigate('/nfl/games');
+              if (tab === 'dashboard' || tab === 'games') {
+                // For dashboard/games tabs, call the callback that will update carousel state
+                // We still need to handle this through navigation for now
+                navigate(tab === 'games' ? '/nfl/games' : '/nfl/dashboard');
               } else {
                 setGameTab(tab);
               }
