@@ -5,6 +5,7 @@ import FootballField from '@/components/nfl/FootballField';
 import PlayLog from '@/components/nfl/PlayLog';
 import GameLeaders from '@/pages/nfl/summary/GameLeaders';
 import PredictionChart from '@/components/nfl/PredictionChart';
+import { CountUpScore } from '@/components/common/CountUpScore';
 import type { Summary } from '@/types/espn/summary';
 
 interface InfoProps {
@@ -155,9 +156,15 @@ const Info: React.FC<InfoProps> = ({
 
           {/* Center Scores */}
           <div className="flex items-center gap-4 px-6">
-            <p className="text-[#00ffe7] text-4xl md:text-5xl font-bold">{awayTeam?.score || '0'}</p>
+            <CountUpScore 
+              value={awayTeam?.score || 0} 
+              className="text-[#00ffe7] text-4xl md:text-5xl font-bold"
+            />
             <span className="text-[#b0b7bf] text-2xl">-</span>
-            <p className="text-[#00ffe7] text-4xl md:text-5xl font-bold">{homeTeam?.score || '0'}</p>
+            <CountUpScore 
+              value={homeTeam?.score || 0} 
+              className="text-[#00ffe7] text-4xl md:text-5xl font-bold"
+            />
           </div>
 
           {/* Home Team */}
@@ -290,9 +297,13 @@ const Info: React.FC<InfoProps> = ({
                           </div>
                         </td>
                         {awayTeam?.linescores?.map((score: any, idx: number) => (
-                          <td key={idx} className="text-center text-[#e0e7ef] py-3">{score.displayValue}</td>
+                          <td key={idx} className="text-center text-[#e0e7ef] py-3">
+                            <CountUpScore value={parseInt(score.displayValue) || 0} duration={800} />
+                          </td>
                         ))}
-                        <td className="text-center text-[#00ffe7] font-bold py-3">{awayTeam?.score}</td>
+                        <td className="text-center text-[#00ffe7] font-bold py-3">
+                          <CountUpScore value={awayTeam?.score || 0} />
+                        </td>
                       </tr>
                       <tr>
                         <td className="py-3">
@@ -302,9 +313,13 @@ const Info: React.FC<InfoProps> = ({
                           </div>
                         </td>
                         {homeTeam?.linescores?.map((score: any, idx: number) => (
-                          <td key={idx} className="text-center text-[#e0e7ef] py-3">{score.displayValue}</td>
+                          <td key={idx} className="text-center text-[#e0e7ef] py-3">
+                            <CountUpScore value={parseInt(score.displayValue) || 0} duration={800} />
+                          </td>
                         ))}
-                        <td className="text-center text-[#faafe8] font-bold py-3">{homeTeam?.score}</td>
+                        <td className="text-center text-[#faafe8] font-bold py-3">
+                          <CountUpScore value={homeTeam?.score || 0} />
+                        </td>
                       </tr>
                     </tbody>
                   </table>

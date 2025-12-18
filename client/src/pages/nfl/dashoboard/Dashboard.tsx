@@ -4,6 +4,7 @@ import axios from 'axios';
 import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad } from 'react-icons/fa';
 import { jwtStorage } from '../../../utils/jwtStorage';
 import LoadingFootball from '../../../components/common/LoadingFootball';
+import { CountUpScore } from '../../../components/common/CountUpScore';
 import { useAuth } from '../../../providers/AuthContext';
 
 interface Player {
@@ -274,29 +275,29 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-[#181a23]/50 border border-[#00ffe7]/20 rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <FaGamepad className="text-2xl text-[#00ffe7]" />
-            <h3 className="text-lg font-semibold">Games Played</h3>
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="bg-[#181a23]/30 border border-[#00ffe7]/20 rounded-lg p-6 text-center relative overflow-hidden flex flex-col">
+          <FaGamepad className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-[#00ffe7]/10" />
+          <h3 className="text-lg font-semibold mb-2 relative z-10">Games Played</h3>
+          <div className="flex-1 flex items-end justify-center pb-2">
+        <CountUpScore value={overallStats.totalGames} className="text-4xl font-bold text-[#00ffe7] relative z-10" />
           </div>
-          <p className="text-4xl font-bold text-[#00ffe7]">{overallStats.totalGames}</p>
         </div>
 
-        <div className="bg-[#181a23]/50 border border-[#faafe8]/20 rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <FaTrophy className="text-2xl text-[#faafe8]" />
-            <h3 className="text-lg font-semibold">Total Score</h3>
+        <div className="bg-[#181a23]/30 border border-[#faafe8]/20 rounded-lg p-6 text-center relative overflow-hidden flex flex-col">
+          <FaTrophy className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-[#faafe8]/10" />
+            <h3 className="text-lg font-semibold mb-2 relative z-10 leading-tight">Total<br />Score</h3>
+          <div className="flex-1 flex items-end justify-center pb-2">
+        <CountUpScore value={overallStats.totalScore} className="text-4xl font-bold text-[#faafe8] relative z-10" />
           </div>
-          <p className="text-4xl font-bold text-[#faafe8]">{overallStats.totalScore}</p>
         </div>
 
-        <div className="bg-[#181a23]/50 border border-[#00ffe7]/20 rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <FaChartBar className="text-2xl text-[#00ffe7]" />
-            <h3 className="text-lg font-semibold">Unique Players</h3>
+        <div className="bg-[#181a23]/30 border border-[#00ffe7]/20 rounded-lg p-6 text-center relative overflow-hidden flex flex-col">
+          <FaChartBar className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-[#00ffe7]/10" />
+          <h3 className="text-lg font-semibold mb-2 relative z-10">Unique Players</h3>
+          <div className="flex-1 flex items-end justify-center pb-2">
+        <CountUpScore value={overallStats.totalPlayers} className="text-4xl font-bold text-[#00ffe7] relative z-10" />
           </div>
-          <p className="text-4xl font-bold text-[#00ffe7]">{overallStats.totalPlayers}</p>
         </div>
       </div>
 
@@ -342,9 +343,10 @@ const Dashboard: React.FC = () => {
                 <div className="text-right">
                   <div className="flex items-center gap-2">
                     <FaTrophy className="text-[#faafe8]" />
-                    <span className="text-3xl font-bold text-[#faafe8]">
-                      {game.totalUserScore}
-                    </span>
+                    <CountUpScore 
+                      value={game.totalUserScore} 
+                      className="text-3xl font-bold text-[#faafe8]"
+                    />
                   </div>
                   <p className="text-sm text-gray-400">Total Score</p>
                 </div>
@@ -400,11 +402,12 @@ const Dashboard: React.FC = () => {
                         </div>
                         <div className="text-right">
                           <div className="flex items-center gap-2">
-                            <span className="text-2xl font-bold text-[#00ffe7]">
-                              {userScore}
-                            </span>
+                            <CountUpScore 
+                              value={userScore} 
+                              className="text-2xl font-bold text-[#00ffe7]"
+                            />
                             <span className="text-sm text-gray-400">
-                              / {gameScore}
+                              / <CountUpScore value={gameScore} duration={800} />
                             </span>
                           </div>
                           <p className="text-xs text-gray-500">Your Score / Total</p>
