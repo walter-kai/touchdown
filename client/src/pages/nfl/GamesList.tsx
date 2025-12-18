@@ -23,7 +23,7 @@ const NFLScoreboard: React.FC = () => {
     handleNextWeek,
   } = useScoreboard();
 
-  // Helper function to group games by date and time
+  // Helper function to group games by date with time information preserved
   const groupGamesByDate = (gamesList: Event[]) => {
     const grouped = gamesList.reduce((acc, game) => {
       const dateKey = new Date(game.date).toLocaleDateString('en-US', { 
@@ -33,18 +33,15 @@ const NFLScoreboard: React.FC = () => {
         year: 'numeric' 
       });
       if (!acc[dateKey]) {
-        acc[dateKey] = {};
+        acc[dateKey] = [];
       }
       
-      // Group by time within each date
+      // Add time to each game object
       const timeKey = new Date(game.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-      if (!acc[dateKey][timeKey]) {
-        acc[dateKey][timeKey] = [];
-      }
-      acc[dateKey][timeKey].push(game);
+      acc[dateKey].push({ ...game, timeKey });
       
       return acc;
-    }, {} as Record<string, Record<string, Event[]>>);
+    }, {} as Record<string, Array<Event & { timeKey: string }>>);
     
     return grouped;
   };
@@ -139,19 +136,14 @@ const NFLScoreboard: React.FC = () => {
 				<h1 className="flex items-center gap-2 mx-2 mb-4">
 				Live Now ({liveGames.length})
 				</h1>
-				{Object.entries(groupGamesByDate(liveGames)).map(([date, timeGroups]) => (
+				{Object.entries(groupGamesByDate(liveGames)).map(([date, gamesWithTime]) => (
 					<div key={date} className="mb-6">
-						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-3">{date}</h2>
-						{Object.entries(timeGroups).map(([time, timeGames]) => (
-							<div key={`${date}-${time}`} className="mb-4">
-								<h3 className="text-sm font-medium text-gray-400 mx-2 mb-2">{time}</h3>
-								<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
-									{timeGames.map((game) => (
-										<GameGridCard key={game.id} game={game} navigate={navigate} />
-									))}
-								</div>
-							</div>
-						))}
+						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-3 text-left">{date}</h2>
+						<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
+							{gamesWithTime.map((game) => (
+								<GameGridCard key={game.id} game={game} navigate={navigate} />
+							))}
+						</div>
 					</div>
 				))}
 			</div>
@@ -161,22 +153,16 @@ const NFLScoreboard: React.FC = () => {
 			{upcomingGames.length > 0 && (
 			<div>
 				<h1 className="flex items-center gap-2 mx-2 mb-4">
-				<FaCalendar />
 				Upcoming ({upcomingGames.length})
 				</h1>
-				{Object.entries(groupGamesByDate(upcomingGames)).map(([date, timeGroups]) => (
+				{Object.entries(groupGamesByDate(upcomingGames)).map(([date, gamesWithTime]) => (
 					<div key={date} className="mb-6">
-						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-3">{date}</h2>
-						{Object.entries(timeGroups).map(([time, timeGames]) => (
-							<div key={`${date}-${time}`} className="mb-4">
-								<h3 className="text-sm font-medium text-gray-400 mx-2 mb-2">{time}</h3>
-								<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
-									{timeGames.map((game) => (
-										<GameGridCard key={game.id} game={game} navigate={navigate} />
-									))}
-								</div>
-							</div>
-						))}
+						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-3 text-left">{date}</h2>
+						<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
+							{gamesWithTime.map((game) => (
+								<GameGridCard key={game.id} game={game} navigate={navigate} />
+							))}
+						</div>
 					</div>
 				))}
 			</div>
@@ -188,19 +174,14 @@ const NFLScoreboard: React.FC = () => {
 				<h1 className="flex items-center gap-2 mx-2 mb-4">
 				Final ({completedGames.length})
 				</h1>
-				{Object.entries(groupGamesByDate(completedGames)).map(([date, timeGroups]) => (
+				{Object.entries(groupGamesByDate(completedGames)).map(([date, gamesWithTime]) => (
 					<div key={date} className="mb-6">
 						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-3 text-left">{date}</h2>
-						{Object.entries(timeGroups).map(([time, timeGames]) => (
-							<div key={`${date}-${time}`} className="mb-4">
-								<h3 className="text-sm font-medium text-gray-400 mx-2 mb-2 text-left">{time}</h3>
-								<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
-									{timeGames.map((game) => (
-										<GameGridCard key={game.id} game={game} navigate={navigate} />
-									))}
-								</div>
-							</div>
-						))}
+						<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
+							{gamesWithTime.map((game) => (
+								<GameGridCard key={game.id} game={game} navigate={navigate} />
+							))}
+						</div>
 					</div>
 				))}
 			</div>
@@ -224,7 +205,7 @@ const NFLScoreboard: React.FC = () => {
 
 // Game Grid Card Component
 interface GameGridCardProps {
-  game: Event;
+  game: Event & { timeKey?: string };
   navigate: (path: string) => void;
 }
 
@@ -244,6 +225,11 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
       onClick={() => navigate(`/nfl/game/${game.id}`)}
       className="relative rounded-md border border-[#faafe8]/20  bg-[#181a23]/50 hover:bg-[#181a23]/70 p-3 px-4 transition-all duration-200 text-left w-full"
     >
+      {/* Time Header */}
+      {game.timeKey && (
+        <div className="text-xs text-gray-400 mb-2 font-medium">{game.timeKey}</div>
+      )}
+
       {/* Live Badge */}
       {isLive && (
         <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-[#00ffe7]/20 border border-[#00ffe7]/50 rounded-full">

@@ -4,10 +4,11 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import GameNavBar from './components/common/navs/NavBar';
 import LoginNav from './components/common/navs/LoginNav';
 
-import NFL from './pages/nfl/Home';
+import Dashboard from './pages/nfl/Dashboard';
+import NFL from './pages/nfl/GamesList';
 import NFLTeamPage from './pages/nfl/Team';
 import NFLPlayerPage from './pages/nfl/Player';
-import NFLGame from './pages/nfl/Game';
+import NFLGame from './pages/nfl/GameDetail';
 
 
 
@@ -112,6 +113,12 @@ const App: React.FC = () => {
   const isGamePage = location.pathname.startsWith('/nfl/game/');
   const isTeamPage = location.pathname.startsWith('/nfl/team/');
   const isPlayerPage = location.pathname.startsWith('/nfl/player/');
+  
+  // Check if we're on Dashboard or GamesList pages
+  const isDashboardOrGames = location.pathname === '/' || 
+                             location.pathname === '/nfl' || 
+                             location.pathname === '/nfl/dashboard' || 
+                             location.pathname === '/nfl/games';
 
   // Reset scroll position on route change (except for hash navigation)
   useEffect(() => {
@@ -157,8 +164,10 @@ const App: React.FC = () => {
               */}
               <div ref={nodeRef} >
                 <Routes location={location}>
-                  <Route path="/" element={<NFL />} />
-                  <Route path="/nfl" element={<NFL />} />
+                  <Route path="/" element={user ? <Dashboard /> : <NFL />} />
+                  <Route path="/nfl" element={user ? <Dashboard /> : <NFL />} />
+                  <Route path="/nfl/dashboard" element={<Dashboard />} />
+                  <Route path="/nfl/games" element={<NFL />} />
                   <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
                   <Route path="/nfl/game/:gameId" element={<NFLGame activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays'} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
@@ -173,13 +182,21 @@ const App: React.FC = () => {
           </TransitionGroup>
         </div>
         
-        {/* Game Navigation Bar - Show on game pages, team pages, and player pages */}
-        {(isGamePage || isTeamPage || isPlayerPage) && (
+        {/* Game Navigation Bar - Show on game pages, team pages, player pages, and dashboard/games when logged in */}
+        {(isGamePage || isTeamPage || isPlayerPage || (isDashboardOrGames && user)) && (
           <GameNavBar 
-            activeTab={gameTab} 
-            onTabChange={setGameTab} 
+            activeTab={isDashboardOrGames ? (location.pathname === '/nfl/games' ? 'games' : 'dashboard') as any : gameTab} 
+            onTabChange={(tab) => {
+              if (tab === 'dashboard' as any) {
+                navigate('/nfl/dashboard');
+              } else if (tab === 'games' as any) {
+                navigate('/nfl/games');
+              } else {
+                setGameTab(tab);
+              }
+            }} 
             onTabClick={handleTabClick} 
-            preset={isTeamPage ? 'team' : isPlayerPage ? 'player' : navPreset} 
+            preset={isDashboardOrGames ? 'dashboard' as any : (isTeamPage ? 'team' : isPlayerPage ? 'player' : navPreset)} 
             gameStatus={isGamePage ? gameStatus : undefined}
           />
         )}

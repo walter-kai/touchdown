@@ -376,3 +376,50 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
     totalScore
   };
 }
+
+/**
+ * Get all picks for a user across all games
+ * Returns a map of gameId -> user picks data
+ */
+export async function getAllUserPicksAcrossGames(userId: string) {
+  const db = admin.firestore();
+  
+  try {
+    // Get all games
+    const gamesSnapshot = await db.collection('gamePicks').listDocuments();
+    
+    const allGamesData: Array<{
+      gameId: string;
+      picks: any[];
+      lastUpdated: string | null;
+      totalPicks: number;
+    }> = [];
+    
+    // For each game, check if user has picks
+    for (const gameRef of gamesSnapshot) {
+      const gameId = gameRef.id;
+      const userPickRef = gameRef.collection('users').doc(userId);
+      const userPickDoc = await userPickRef.get();
+      
+      if (userPickDoc.exists) {
+        const data = userPickDoc.data();
+        allGamesData.push({
+          gameId,
+          picks: (data?.picks || []).map((pick: any) => ({
+            ...pick,
+            timestamp: pick.timestamp?.toDate ? pick.timestamp.toDate().toISOString() : pick.timestamp
+          })),
+          lastUpdated: data?.lastUpdated?.toDate ? data.lastUpdated.toDate().toISOString() : data?.lastUpdated,
+          totalPicks: data?.picks?.length || 0
+        });
+      }
+    }
+    
+    logger.info(`Retrieved picks from ${allGamesData.length} games for user ${userId}`);
+    
+    return allGamesData;
+  } catch (error) {
+    logger.error(`Error fetching all user picks for ${userId}: ${error}`);
+    throw error;
+  }
+}

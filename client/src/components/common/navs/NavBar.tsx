@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall } from 'react-icons/fa';
 
 interface GameNavBarProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks') => void;
-  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks') => void; // Called when button is clicked
-  preset?: 'scoreboard' | 'summary' | 'team' | 'player'; // Determines which buttons to show
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'dashboard' | 'games';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'dashboard' | 'games') => void;
+  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'dashboard' | 'games') => void; // Called when button is clicked
+  preset?: 'scoreboard' | 'summary' | 'team' | 'player' | 'dashboard'; // Determines which buttons to show
   gameStatus?: 'pre' | 'in' | 'post'; // Game status to conditionally show tabs
 }
 
@@ -27,6 +27,8 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
     { id: 'prediction', label: 'Predictions', icon: <FaPercentage /> },
     { id: 'schedule', label: preset === 'player' ? 'Game Log' : 'Schedule', icon: <FaCalendar /> },
     { id: 'news', label: 'News', icon: <FaNewspaper /> },
+    { id: 'dashboard', label: 'Dash', icon: <FaChartBar /> },
+    { id: 'games', label: 'Games', icon: <FaFootballBall /> },
   ];
 
   // Preset configurations
@@ -35,6 +37,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
     summary: ['info', 'pick', 'player', 'plays'],
     team: ['info', 'schedule', 'news'], // Team page shows back, info, schedule, news
     player: ['info', 'schedule', 'news'], // Player page shows back, overview, game log, news
+    dashboard: ['dashboard', 'games'], // Dashboard/Games navigation
   };
 
   // For upcoming games, hide 'player' and 'plays' tabs but keep 'pick' visible
