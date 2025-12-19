@@ -45,21 +45,21 @@
   from {
     opacity: 0;
     transform: translateX(-20px);
-    background-color: rgba(0, 255, 231, 0.15);
+    background-color: rgba(var(--neon-cyan-rgb), 0.15);
   }
   to {
     opacity: 1;
     transform: translateX(0);
-    background-color: rgba(0, 255, 231, 0.05);
+    background-color: rgba(var(--neon-cyan-rgb), 0.05);
   }
 }
 
 @keyframes pulse-dot {
   0%, 100% {
-    box-shadow: 0 0 8px rgba(0, 255, 231, 0.6);
+    box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.6);
   }
   50% {
-    box-shadow: 0 0 16px rgba(0, 255, 231, 1);
+    box-shadow: 0 0 16px rgba(var(--neon-cyan-rgb), 1);
   }
 }
 
@@ -253,18 +253,18 @@
 /* Firefox */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #00ffe7 #23263a;
+  scrollbar-color: var(--neon-cyan) var(--bg-darker);
 }
 /* Chrome, Edge, Safari */
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #00ffe799;
+  background: rgba(var(--neon-cyan-rgb), 0.6);
   border-radius: 8px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #23263a;
+  background: var(--bg-darker);
   border-radius: 8px;
 }
 

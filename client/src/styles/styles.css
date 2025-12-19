@@ -3,6 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Savate:ital,wght@0,200..900;1,200..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Sansation:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700');
 @import url('https://fonts.googleapis.com/css2?family=Marck+Script&display=swap');
+@import './colors.css';
 @import './animations.css';
 @import './buttons.css';
 @import './cards.css';
@@ -24,25 +25,26 @@ code {
 }
 
 .input-standard {
-  @apply h-fit p-2 border border-black rounded-none transition-colors duration-200 focus:border-[#336d82] !important;
+  @apply h-fit p-2 border border-black rounded-none transition-colors duration-200 !important;
+  border-color: var(--focus-color) !important;
 }
 
 h1 {
   @apply font-bold tracking-wide text-3xl mb-4;
-  background: linear-gradient(90deg, #00ffe7, #e0e7ef, #faafe8);
+  background: linear-gradient(90deg, var(--neon-cyan), var(--text-light), var(--neon-pink));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 6px rgba(0, 255, 231, 0.4);
+  text-shadow: 0 0 6px rgba(var(--neon-cyan-rgb), 0.4);
 }
 
 h2 {
   @apply text-center font-bold tracking-wide text-2xl mb-3;
-  background: linear-gradient(90deg, #00ffe7, #e0e7ef, #faafe8);
+  background: linear-gradient(90deg, var(--neon-cyan), var(--text-light), var(--neon-pink));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 5px rgba(0, 255, 231, 0.35);
+  text-shadow: 0 0 5px rgba(var(--neon-cyan-rgb), 0.35);
 }
 
 h3 {
@@ -60,14 +62,14 @@ ul {
 }
 
 li {
-  background-color: #23263a;
+  background-color: var(--bg-darker);
   margin-bottom: 10px;
   padding: 15px;
   border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0,255,231,0.1);
+  box-shadow: 0 2px 5px rgba(var(--neon-cyan-rgb), 0.1);
   position: relative;
-  color: #e0e7ef;
-  border: 1px solid rgba(0,255,231,0.3);
+  color: var(--text-light);
+  border: 1px solid rgba(var(--neon-cyan-rgb), 0.3);
 }
 
 a {
@@ -79,8 +81,9 @@ a:hover {
   text-decoration: underline;
 }
 .neon-text {
-  @apply text-[#00ffe7] drop-shadow-[0_0_8px_#00ffe7] transition-all duration-300 ease-in-out;
-  text-shadow: 0px 0 3px #00ffe7;
+  color: var(--neon-cyan);
+  text-shadow: 0px 0 3px var(--neon-cyan), 0 0 8px var(--neon-cyan);
+  @apply transition-all duration-300 ease-in-out;
 }
 
 .page-wrapper {
@@ -110,17 +113,17 @@ a:hover {
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: #1a1d2e;
+  background: var(--bg-darkest);
   border-radius: 4px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 231, 0.3);
+  background: rgba(var(--neon-cyan-rgb), 0.3);
   border-radius: 4px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 231, 0.5);
+  background: rgba(var(--neon-cyan-rgb), 0.5);
 }
 
 .line-clamp-2 {

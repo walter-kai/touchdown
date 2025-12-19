@@ -1,70 +1,200 @@
 .btn-standard {
-  @apply text-center bg-[#00ffe7]/10 text-[#00ffe7] font-bold rounded-lg px-6 py-3 transition duration-200;
-  @apply hover:bg-[#00ffe7]/20 border-2 border-[#00ffe7]/40 hover:border-[#00ffe7] shadow-[0_0_8px_rgba(0,255,231,0.3)] hover:shadow-[0_0_20px_#00ffe7];
-  @apply disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-[#00ffe7]/10 disabled:hover:border-[#00ffe7]/40 disabled:hover:shadow-[0_0_8px_rgba(0,255,231,0.3)];
+  background-color: rgba(var(--neon-cyan-rgb), 0.1);
+  color: var(--neon-cyan);
+  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
+  border-color: rgba(var(--neon-cyan-rgb), 0.4);
+  box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.3);
+}
+.btn-standard:hover {
+  background-color: rgba(var(--neon-cyan-rgb), 0.2);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 20px var(--neon-cyan);
+}
+.btn-standard:disabled {
+  @apply opacity-30 cursor-not-allowed;
+  background-color: rgba(var(--neon-cyan-rgb), 0.1);
+  border-color: rgba(var(--neon-cyan-rgb), 0.4);
+  box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.3);
 }
 
 .btn-teal {
-  @apply text-center bg-gradient-to-br from-[#00ffe7]/10 to-[#00b3a1]/20 text-[#00ffe7] font-bold rounded-lg px-6 py-3 transition duration-200;
-  @apply hover:from-[#00ffe7]/20 hover:to-[#00b3a1]/20 border-2 border-[#00ffe7]/40 hover:border-[#00ffe7] shadow-[0_0_8px_#00ffe7] hover:shadow-[0_0_20px_#00ffe7];
-  @apply disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:from-[#00ffe7]/20 disabled:hover:to-[#00b3a1]/20 disabled:hover:border-[#00ffe7]/40 disabled:hover:shadow-[0_0_8px_#00ffe7];
+  background: linear-gradient(to bottom right, rgba(var(--neon-cyan-rgb), 0.1), rgba(var(--accent-teal-rgb), 0.2));
+  color: var(--neon-cyan);
+  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
+  border-color: rgba(var(--neon-cyan-rgb), 0.4);
+  box-shadow: 0 0 8px var(--neon-cyan);
+}
+.btn-teal:hover {
+  background: linear-gradient(to bottom right, rgba(var(--neon-cyan-rgb), 0.2), rgba(var(--accent-teal-rgb), 0.2));
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 20px var(--neon-cyan);
+}
+.btn-teal:disabled {
+  @apply opacity-30 cursor-not-allowed;
+  background: linear-gradient(to bottom right, rgba(var(--neon-cyan-rgb), 0.2), rgba(var(--accent-teal-rgb), 0.2));
+  border-color: rgba(var(--neon-cyan-rgb), 0.4);
+  box-shadow: 0 0 8px var(--neon-cyan);
 }
 
 .btn-pink {
-  @apply text-center bg-gradient-to-br from-[#faafe8]/10 to-[#d968b9]/20 text-[#faafe8] font-bold rounded-lg px-6 py-3 transition duration-200;
-  @apply hover:from-[#faafe8]/20 hover:to-[#d968b9]/20 border-2 border-[#faafe8]/40 hover:border-[#faafe8] shadow-[0_0_8px_#faafe8] hover:shadow-[0_0_20px_#faafe8];
-  @apply disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:from-[#faafe8]/20 disabled:hover:to-[#d968b9]/20 disabled:hover:border-[#faafe8]/40 disabled:hover:shadow-[0_0_8px_#faafe8];
+  background: linear-gradient(to bottom right, rgba(var(--neon-pink-rgb), 0.1), rgba(var(--pink-darker-rgb), 0.2));
+  color: var(--neon-pink);
+  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
+  border-color: rgba(var(--neon-pink-rgb), 0.4);
+  box-shadow: 0 0 8px var(--neon-pink);
+}
+.btn-pink:hover {
+  background: linear-gradient(to bottom right, rgba(var(--neon-pink-rgb), 0.2), rgba(var(--pink-darker-rgb), 0.2));
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 20px var(--neon-pink);
+}
+.btn-pink:disabled {
+  @apply opacity-30 cursor-not-allowed;
+  background: linear-gradient(to bottom right, rgba(var(--neon-pink-rgb), 0.2), rgba(var(--pink-darker-rgb), 0.2));
+  border-color: rgba(var(--neon-pink-rgb), 0.4);
+  box-shadow: 0 0 8px var(--neon-pink);
 }
 
 .btn-purple {
-  @apply text-center bg-gradient-to-br from-[#a259ff]/10 to-[#6019b5]/20 text-white font-bold rounded-lg px-6 py-3 transition duration-200;
-  @apply hover:from-[#a259ff]/20 hover:to-[#6019b5]/20 border-2 border-[#9945ff]/40 hover:border-[#9945ff] shadow-[0_0_8px_#9945ff] hover:shadow-[0_0_20px_#9945ff];
-  @apply disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:from-[#a259ff]/20 disabled:hover:to-[#6019b5]/20 disabled:hover:border-[#9945ff]/40 disabled:hover:shadow-[0_0_8px_#9945ff];
+  background: linear-gradient(to bottom right, rgba(var(--purple-light-rgb), 0.1), rgba(var(--purple-dark-rgb), 0.2));
+  @apply text-center text-white font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
+  border-color: rgba(var(--purple-base-rgb), 0.4);
+  box-shadow: 0 0 8px var(--purple-base);
+}
+.btn-purple:hover {
+  background: linear-gradient(to bottom right, rgba(var(--purple-light-rgb), 0.2), rgba(var(--purple-dark-rgb), 0.2));
+  border-color: var(--purple-base);
+  box-shadow: 0 0 20px var(--purple-base);
+}
+.btn-purple:disabled {
+  @apply opacity-30 cursor-not-allowed;
+  background: linear-gradient(to bottom right, rgba(var(--purple-light-rgb), 0.2), rgba(var(--purple-dark-rgb), 0.2));
+  border-color: rgba(var(--purple-base-rgb), 0.4);
+  box-shadow: 0 0 8px var(--purple-base);
 }
 
 .btn-red {
-  @apply text-center bg-gradient-to-br from-[#ff005c]/10 to-[#b30042]/20 text-[#ff005c] font-bold rounded-lg px-6 py-3 transition duration-200;
-  @apply hover:from-[#ff005c]/20 hover:to-[#b30042]/20 border-2 border-[#ff005c]/40 hover:border-[#ff005c] shadow-[0_0_8px_#ff005c] hover:shadow-[0_0_20px_#ff005c];
-  @apply disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:from-[#ff005c]/20 disabled:hover:to-[#b30042]/20 disabled:hover:border-[#ff005c]/40 disabled:hover:shadow-[0_0_8px_#ff005c];
+  background: linear-gradient(to bottom right, rgba(var(--neon-pink-dark-rgb), 0.1), rgba(var(--red-darker-rgb), 0.2));
+  color: var(--neon-pink-dark);
+  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
+  border-color: rgba(var(--neon-pink-dark-rgb), 0.4);
+  box-shadow: 0 0 8px var(--neon-pink-dark);
+}
+.btn-red:hover {
+  background: linear-gradient(to bottom right, rgba(var(--neon-pink-dark-rgb), 0.2), rgba(var(--red-darker-rgb), 0.2));
+  border-color: var(--neon-pink-dark);
+  box-shadow: 0 0 20px var(--neon-pink-dark);
+}
+.btn-red:disabled {
+  @apply opacity-30 cursor-not-allowed;
+  background: linear-gradient(to bottom right, rgba(var(--neon-pink-dark-rgb), 0.2), rgba(var(--red-darker-rgb), 0.2));
+  border-color: rgba(var(--neon-pink-dark-rgb), 0.4);
+  box-shadow: 0 0 8px var(--neon-pink-dark);
 }
 
 .btn-green {
-  @apply text-center bg-gradient-to-br from-[#00ff88]/10 to-[#00b35f]/20 text-[#00ff88] font-bold rounded-lg px-6 py-3 transition duration-200;
-  @apply hover:from-[#00ff88]/20 hover:to-[#00b35f]/20 border-2 border-[#00ff88]/40 hover:border-[#00ff88] shadow-[0_0_8px_#00ff88] hover:shadow-[0_0_20px_#00ff88];
-  @apply disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:from-[#00ff88]/20 disabled:hover:to-[#00b35f]/20 disabled:hover:border-[#00ff88]/40 disabled:hover:shadow-[0_0_8px_#00ff88];
+  background: linear-gradient(to bottom right, rgba(var(--green-light-rgb), 0.1), rgba(var(--green-dark-rgb), 0.2));
+  color: var(--green-light);
+  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
+  border-color: rgba(var(--green-light-rgb), 0.4);
+  box-shadow: 0 0 8px var(--green-light);
+}
+.btn-green:hover {
+  background: linear-gradient(to bottom right, rgba(var(--green-light-rgb), 0.2), rgba(var(--green-dark-rgb), 0.2));
+  border-color: var(--green-light);
+  box-shadow: 0 0 20px var(--green-light);
+}
+.btn-green:disabled {
+  @apply opacity-30 cursor-not-allowed;
+  background: linear-gradient(to bottom right, rgba(var(--green-light-rgb), 0.2), rgba(var(--green-dark-rgb), 0.2));
+  border-color: rgba(var(--green-light-rgb), 0.4);
+  box-shadow: 0 0 8px var(--green-light);
 }
 
 .btn-blue {
-  @apply text-center bg-gradient-to-br from-[#4dabf7]/10 to-[#1a7fd1]/20 text-[#4dabf7] font-bold rounded-lg px-6 py-3 transition duration-200;
-  @apply hover:from-[#4dabf7]/20 hover:to-[#1a7fd1]/20 border-2 border-[#4dabf7]/40 hover:border-[#4dabf7] shadow-[0_0_8px_#4dabf7] hover:shadow-[0_0_20px_#4dabf7];
-  @apply disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:from-[#4dabf7]/20 disabled:hover:to-[#1a7fd1]/20 disabled:hover:border-[#4dabf7]/40 disabled:hover:shadow-[0_0_8px_#4dabf7];
+  background: linear-gradient(to bottom right, rgba(var(--blue-light-rgb), 0.1), rgba(var(--blue-dark-rgb), 0.2));
+  color: var(--blue-light);
+  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
+  border-color: rgba(var(--blue-light-rgb), 0.4);
+  box-shadow: 0 0 8px var(--blue-light);
+}
+.btn-blue:hover {
+  background: linear-gradient(to bottom right, rgba(var(--blue-light-rgb), 0.2), rgba(var(--blue-dark-rgb), 0.2));
+  border-color: var(--blue-light);
+  box-shadow: 0 0 20px var(--blue-light);
+}
+.btn-blue:disabled {
+  @apply opacity-30 cursor-not-allowed;
+  background: linear-gradient(to bottom right, rgba(var(--blue-light-rgb), 0.2), rgba(var(--blue-dark-rgb), 0.2));
+  border-color: rgba(var(--blue-light-rgb), 0.4);
+  box-shadow: 0 0 8px var(--blue-light);
 }
 
 .btn-transparent {
-  @apply text-center bg-transparent text-[#00ffe7] font-bold rounded-lg px-6 py-3 transition duration-200;
-  @apply hover:bg-[#00ffe7]/10 border-2 border-[#00ffe7]/40 hover:border-[#00ffe7] shadow-[0_0_8px_#00ffe7] hover:shadow-[0_0_20px_#00ffe7];
-  @apply disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-[#00ffe7]/40 disabled:hover:shadow-[0_0_8px_#00ffe7];
+  background-color: transparent;
+  color: var(--neon-cyan);
+  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
+  border-color: rgba(var(--neon-cyan-rgb), 0.4);
+  box-shadow: 0 0 8px var(--neon-cyan);
+}
+.btn-transparent:hover {
+  background-color: rgba(var(--neon-cyan-rgb), 0.1);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 20px var(--neon-cyan);
+}
+.btn-transparent:disabled {
+  @apply opacity-30 cursor-not-allowed;
+  background-color: transparent;
+  border-color: rgba(var(--neon-cyan-rgb), 0.4);
+  box-shadow: 0 0 8px var(--neon-cyan);
 }
 
 .btn-nav {
-  @apply text-center bg-transparent text-[#faafe8]/80 font-bold py-2 px-4 transition duration-200;
-  @apply tracking-widest hover:bg-[#00ffe7]/20 hover:text-[#181a23];
+  background-color: transparent;
+  color: rgba(var(--neon-pink-rgb), 0.8);
+  @apply text-center font-bold py-2 px-4 transition duration-200 tracking-widest;
+}
+.btn-nav:hover {
+  background-color: rgba(var(--neon-cyan-rgb), 0.2);
+  color: var(--bg-dark);
 }
 
 /* HUD-style button */
 .btn-hud {
-  @apply flex items-center justify-center gap-2 bg-[#00ffe7]/20 text-[#00ffe7] px-4 py-2 rounded-lg font-bold uppercase shadow-[0_0_8px_#00ffe7] border-2 border-[#00ffe7]/40 text-sm transition-all;
-  @apply hover:bg-[#00ffe7]/20 hover:border-[#00ffe7] hover:shadow-[0_0_20px_#00ffe7];
+  background-color: rgba(var(--neon-cyan-rgb), 0.2);
+  color: var(--neon-cyan);
+  @apply flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold uppercase text-sm transition-all border-2;
+  border-color: rgba(var(--neon-cyan-rgb), 0.4);
+  box-shadow: 0 0 8px var(--neon-cyan);
+}
+.btn-hud:hover {
+  background-color: rgba(var(--neon-cyan-rgb), 0.2);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 20px var(--neon-cyan);
 }
 
 /* Link-style button */
 .btn-link {
-  @apply text-[#00ffe7] text-xs underline cursor-pointer font-medium transition-colors duration-200;
-  @apply hover:text-[#ff005c] hover:no-underline;
+  color: var(--neon-cyan);
+  @apply text-xs underline cursor-pointer font-medium transition-colors duration-200;
+}
+.btn-link:hover {
+  color: var(--neon-pink-dark);
+  @apply no-underline;
 }
 
 .btn-special {
-  @apply text-center font-bold rounded-2xl px-10 py-4 text-xl border-2 transition-all duration-200 bg-gradient-to-br from-[#00ffe7]/20 to-[#9945ff]/20 text-white shadow-[0_0_24px_rgba(0,255,231,0.4)] border-[#00ffe7]/40;
-  @apply hover:from-[#00ffe7]/20 hover:to-[#9945ff]/20 hover:shadow-[0_0_32px_#00ffe7] hover:border-[#00ffe7];
-  @apply active:shadow-[0_0_40px_#00ffe7] active:from-[#00ffe7]/25 active:to-[#9945ff]/25;
+  background: linear-gradient(to bottom right, rgba(var(--neon-cyan-rgb), 0.2), rgba(var(--purple-base-rgb), 0.2));
+  @apply text-center text-white font-bold rounded-2xl px-10 py-4 text-xl border-2 transition-all duration-200;
+  border-color: rgba(var(--neon-cyan-rgb), 0.4);
+  box-shadow: 0 0 24px rgba(var(--neon-cyan-rgb), 0.4);
+}
+.btn-special:hover {
+  background: linear-gradient(to bottom right, rgba(var(--neon-cyan-rgb), 0.2), rgba(var(--purple-base-rgb), 0.2));
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 32px var(--neon-cyan);
+}
+.btn-special:active {
+  background: linear-gradient(to bottom right, rgba(var(--neon-cyan-rgb), 0.25), rgba(var(--purple-base-rgb), 0.25));
+  box-shadow: 0 0 40px var(--neon-cyan);
 }

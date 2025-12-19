@@ -1,0 +1,79 @@
+/* Color Palette - Single Source of Truth */
+:root {
+  /* Primary Neon Colors */
+  --neon-cyan: #00ffe7;
+  --neon-cyan-rgb: 0, 255, 231;
+  --neon-pink: #faafe8;
+  --neon-pink-rgb: 250, 175, 232;
+  --neon-pink-dark: #ff005c;
+  --neon-pink-dark-rgb: 255, 0, 92;
+  
+  /* Background Colors */
+  --bg-dark: #181a23;
+  --bg-darker: #23263a;
+  --bg-darkest: #1a1d2e;
+  --bg-card: #16182a;
+  
+  /* Text Colors */
+  --text-light: #e0e7ef;
+  --text-muted: #b0b7bf;
+  --text-disabled: #666666;
+  
+  /* Accent Colors */
+  --accent-blue: #b8eaff;
+  --accent-teal: #00b3a1;
+  --accent-teal-rgb: 0, 179, 161;
+  
+  /* Purple Shades */
+  --purple-light: #a259ff;
+  --purple-light-rgb: 162, 89, 255;
+  --purple-base: #9945ff;
+  --purple-base-rgb: 153, 69, 255;
+  --purple-dark: #6019b5;
+  --purple-dark-rgb: 96, 25, 181;
+  --purple-field-goal: #9333EA;
+  --purple-field-goal-rgb: 147, 51, 234;
+  
+  /* Green Shades */
+  --green-light: #00ff88;
+  --green-light-rgb: 0, 255, 136;
+  --green-base: #00FF00;
+  --green-base-rgb: 0, 255, 0;
+  --green-dark: #00b35f;
+  --green-dark-rgb: 0, 179, 95;
+  
+  /* Blue Shades */
+  --blue-light: #4dabf7;
+  --blue-light-rgb: 77, 171, 247;
+  --blue-dark: #1a7fd1;
+  --blue-dark-rgb: 26, 127, 209;
+  --blue-kickoff: #4169E1;
+  --blue-kickoff-rgb: 65, 105, 225;
+  --blue-punt: #87CEEB;
+  --blue-punt-rgb: 135, 206, 235;
+  
+  /* Red/Orange Shades */
+  --red-base: #FF3333;
+  --red-base-rgb: 255, 51, 51;
+  --red-dark: #CC0000;
+  --red-dark-rgb: 204, 0, 0;
+  --red-darker: #b30042;
+  --red-darker-rgb: 179, 0, 66;
+  --orange-base: #FF8800;
+  --orange-base-rgb: 255, 136, 0;
+  --orange-warning: #FF4500;
+  --orange-warning-rgb: 255, 69, 0;
+  
+  /* Yellow Shades */
+  --yellow-gold: #FFD700;
+  --yellow-gold-rgb: 255, 215, 0;
+  --yellow-bright: #FFFF00;
+  --yellow-bright-rgb: 255, 255, 0;
+  
+  /* Pink Darker */
+  --pink-darker: #d968b9;
+  --pink-darker-rgb: 217, 104, 185;
+  
+  /* Utility */
+  --focus-color: #336d82;
+}
