@@ -196,9 +196,9 @@ const getPlayVisualization = (playType?: PlayType | string | { text: string }) =
     return {
       color: '#FF6B6B',
       glowColor: 'rgba(255, 107, 107, 0.8)',
-      icon: '🔚',
+      icon: '✅',
       pattern: 'solid',
-      width: 2,
+      width: 1,
       animate: 'end-regulation'
     };
   }
@@ -344,7 +344,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-yellow-400/30" />
 
       {/* Start position dot - positioned at 50% vertical (center) */}
-      {lastPlay.start && (
+      {lastPlay.start && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
         <div
           className="absolute transform -translate-x-1/2 -translate-y-1/2"
           style={{ 
@@ -442,12 +442,12 @@ const FootballField: React.FC<FootballFieldProps> = ({
           className="absolute z-20 animate-timeout-spin"
           style={{ 
             left: '50%',
-            top: '60%',
+            top: '50%',
             transform: 'translate(-50%, -50%)'
           }}
         >
           <div 
-            className="text-6xl"
+            className="text-5xl"
             style={{
               filter: `drop-shadow(0 0 20px ${playViz.glowColor})`
             }}
@@ -460,10 +460,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* Two Minute Warning - pulsing alarm at center (doesn't need play positions) */}
       {playViz.animate === 'two-minute-warning' && (
         <div
-          className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20 animate-two-minute-warning"
+          className="absolute z-20 animate-two-minute-warning"
           style={{ 
-            left: `${50}%`,
-            top: '60%'
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)'
           }}
         >
           <div 
@@ -472,7 +473,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               filter: `drop-shadow(0 0 30px ${playViz.glowColor})`
             }}
           >
-            <div className="text-7xl">{playViz.icon}</div>
+            <div className="text-6xl">{playViz.icon}</div>
             <div 
               className="text-xl font-bold whitespace-nowrap"
               style={{ color: playViz.color }}
@@ -483,28 +484,44 @@ const FootballField: React.FC<FootballFieldProps> = ({
         </div>
       )}
 
-      {/* End of Regulation - pulsing at center */}
-      {playViz.animate === 'end-regulation' && (
+      {/* Pulse animations (touchdowns) - pulsing at center */}
+      {playViz.animate === 'pulse' && (
         <div
-          className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20 animate-end-regulation"
+          className="absolute z-20 animate-pulse"
           style={{ 
-            left: `${50}%`,
-            top: '60%'
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)'
           }}
         >
           <div 
-            className="flex flex-col items-center gap-2"
+            className="text-5xl"
             style={{
               filter: `drop-shadow(0 0 30px ${playViz.glowColor})`
             }}
           >
-            <div className="text-8xl">{playViz.icon}</div>
-            <div 
-              className="text-2xl font-bold whitespace-nowrap"
-              style={{ color: playViz.color }}
-            >
-              END
-            </div>
+            {playViz.icon}
+          </div>
+        </div>
+      )}
+
+      {/* End of regulation - scale pulse animation */}
+      {playViz.animate === 'end-regulation' && (
+        <div
+          className="absolute z-20"
+          style={{ 
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)'
+          }}
+        >
+          <div 
+            className="text-5xl animate-scale-pulse"
+            style={{
+              filter: `drop-shadow(0 0 30px ${playViz.glowColor})`
+            }}
+          >
+            {playViz.icon}
           </div>
         </div>
       )}

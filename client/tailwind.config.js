@@ -28,15 +28,6 @@ module.exports = {
           'from': '#00ffe7',
           'to': '#faafe8',
         }
-      },
-      animation: {
-        'ticker': 'ticker 60s linear infinite',
-      },
-      keyframes: {
-        'ticker': {
-          '0%': { transform: 'translateX(0%)' },
-          '100%': { transform: 'translateX(-50%)' },
-        }
       }
     },
   },

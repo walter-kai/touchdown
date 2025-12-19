@@ -118,6 +118,15 @@
   }
 }
 
+@keyframes scale-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+
 /* Animation Classes */
 .animate-slide-in-right {
   animation: slide-in-right 0.3s ease-out;
@@ -151,27 +160,11 @@
   animation: fade-in 0.4s ease-out;
 }
 
-/* Utility Animation Classes */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.animate-scale-pulse {
+  animation: scale-pulse 1.5s ease-in-out infinite;
 }
 
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 
-.line-clamp-4 {
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 
 /* Page Fade (was fading.css) */
 /* Page transition fade effects */
