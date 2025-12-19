@@ -1,25 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaFootballBall, FaListUl } from 'react-icons/fa';
+import { Play } from '@/types/espn/playByplay';
 
 interface PlayLogProps {
-  playLog: Array<{
-    text: string;
-    quarter: number;
-    clock: string;
-    yardage?: number;
-    timestamp: Date;
-    possession?: string;
-    athletesInvolved?: Array<{
-      id: string;
-      fullName: string;
-      displayName: string;
-      shortName: string;
-      headshot: string;
-      jersey: string;
-      position: string;
-      team: { id: string };
-    }>;
-  }>;
+  playLog: Play[];
   homeTeam?: {
     id: string;
     team: {

@@ -1,4 +1,5 @@
 import admin from '../../utils/firebase';
+import { Play, PlayByPlayData, ActiveGame } from '../../../types/espn/playByplay';
 
 const db = admin.firestore();
 const COLLECTION_NAME = 'playByPlay';
@@ -7,7 +8,7 @@ const COLLECTION_NAME = 'playByPlay';
  * Get play-by-play data for a specific game from Firebase
  * New simplified structure: playByPlay/{gameId} contains a plays array
  */
-export const getGamePlayByPlay = async (gameId: string) => {
+export const getGamePlayByPlay = async (gameId: string): Promise<PlayByPlayData | null> => {
   try {
     // Get the game document which now contains the plays array
     const gameDoc = await db.collection(COLLECTION_NAME).doc(gameId).get();
@@ -41,14 +42,14 @@ export const getGamePlayByPlay = async (gameId: string) => {
 /**
  * Get all games with play-by-play data (useful for finding active games)
  */
-export const getActiveGames = async () => {
+export const getActiveGames = async (): Promise<ActiveGame[]> => {
   try {
     const snapshot = await db.collection(COLLECTION_NAME)
       .orderBy('lastUpdated', 'desc')
       .limit(20)
       .get();
 
-    const games: any[] = [];
+    const games: ActiveGame[] = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
       games.push({
@@ -69,12 +70,12 @@ export const getActiveGames = async () => {
  * Save play-by-play data for a game
  * Stores plays as an array in the game document
  */
-export const saveGamePlayByPlay = async (gameId: string, plays: any[]) => {
+export const saveGamePlayByPlay = async (gameId: string, plays: any[]): Promise<{ gameId: string; totalPlays: number }> => {
   try {
     const gameRef = db.collection(COLLECTION_NAME).doc(gameId);
     
     // Simplify play data - only keep essential fields, store timestamps in ISO 8601 format
-    const simplifiedPlays = plays.map(play => ({
+    const simplifiedPlays: Play[] = plays.map(play => ({
       text: play.text || '',
       quarter: play.quarter || 0,
       clock: play.clock || '0:00',
@@ -114,12 +115,12 @@ export const saveGamePlayByPlay = async (gameId: string, plays: any[]) => {
  * Add a single play to a game
  * Appends to the plays array
  */
-export const addPlayToGame = async (gameId: string, play: any) => {
+export const addPlayToGame = async (gameId: string, play: any): Promise<{ gameId: string; totalPlays: number }> => {
   try {
     const gameRef = db.collection(COLLECTION_NAME).doc(gameId);
     
     // Simplify play data, store timestamp in ISO 8601 format
-    const simplifiedPlay = {
+    const simplifiedPlay: Play = {
       text: play.text || '',
       quarter: play.quarter || 0,
       clock: play.clock || '0:00',
