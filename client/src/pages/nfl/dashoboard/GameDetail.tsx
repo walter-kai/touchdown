@@ -272,9 +272,10 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     // Only auto-refresh if using scoreboard API (live games)
     if (navPreset === 'summary') return; // Don't refresh final games
     
-    if (countdown <= 0) {
+    // Handle countdown reaching 0
+    if (countdown === 0) {
       console.log('⏰ Countdown reached 0, triggering auto-refresh...');
-      // Trigger a new fetch by updating a dependency
+      
       const fetchGameData = async () => {
         if (!gameId) return;
 
@@ -297,22 +298,27 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
             setLastUpdated(new Date());
           }
           
-          setCountdown(30);
-          setIsRefreshing(false);
-          console.log('✅ Refresh complete, countdown reset to 30s');
+          console.log('✅ Refresh complete, countdown will reset to 30s');
         } catch (err) {
           console.error('❌ Error refreshing game data:', err);
+        } finally {
           setIsRefreshing(false);
+          // Reset countdown after fetch completes - this will trigger the effect again
           setCountdown(30);
         }
       };
 
       fetchGameData();
-      return;
+      return; // Don't set up interval when countdown is 0
     }
 
+    // Normal countdown tick - only run when countdown > 0
     const timer = setInterval(() => {
-      setCountdown((prev) => prev - 1);
+      setCountdown((prev) => {
+        const next = prev - 1;
+        console.log(`⏱️ Countdown: ${next}s`);
+        return next;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
