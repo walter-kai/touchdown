@@ -11,6 +11,7 @@ import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
 import { useAuth } from '@/providers/AuthContext';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
+import { Play } from '@/types/espn/playByplay';
 
 interface SummaryViewProps {
   event: Event;
@@ -18,24 +19,7 @@ interface SummaryViewProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
   onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games') => void;
   getTeamLogo: (team: any) => string;
-  playLog: Array<{
-    text: string;
-    quarter: number;
-    clock: string;
-    yardage?: number;
-    timestamp: Date;
-    possession?: string;
-    athletesInvolved?: Array<{
-      id: string;
-      fullName: string;
-      displayName: string;
-      shortName: string;
-      headshot: string;
-      jersey: string;
-      position: string;
-      team: { id: string };
-    }>;
-  }>;
+  playLog: Play[];
   gameId: string;
 }
 
@@ -54,24 +38,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   const [timeUntilGame, setTimeUntilGame] = useState<string>('');
   const [gameCountdown, setGameCountdown] = useState<number>(0);
   const [isPickExpanded, setIsPickExpanded] = useState(true);
-  const [apiPlayLog, setApiPlayLog] = useState<Array<{
-    text: string;
-    quarter: number;
-    clock: string;
-    yardage?: number;
-    timestamp: Date;
-    possession?: string;
-    athletesInvolved?: Array<{
-      id: string;
-      fullName: string;
-      displayName: string;
-      shortName: string;
-      headshot: string;
-      jersey: string;
-      position: string;
-      team: { id: string };
-    }>;
-  }>>([]);
+  const [apiPlayLog, setApiPlayLog] = useState<Play[]>([]);
 
   const competition = event.competitions[0];
   const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
@@ -102,24 +69,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
       try {
         const res = await axios.get(`/api/playbyplay/${event.id}`);
         const data = res.data;
-        const normalized: Array<{
-          text: string;
-          quarter: number;
-          clock: string;
-          yardage?: number;
-          timestamp: Date;
-          possession?: string;
-          athletesInvolved?: Array<{
-            id: string;
-            fullName: string;
-            displayName: string;
-            shortName: string;
-            headshot: string;
-            jersey: string;
-            position: string;
-            team: { id: string };
-          }>;
-        }> = [];
+        const normalized: Play[] = [];
 
         if (data?.drives?.previous?.length) {
           data.drives.previous.forEach((drive: any) => {
@@ -132,6 +82,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 yardage: typeof p.statYardage === 'number' ? p.statYardage : undefined,
                 timestamp: new Date(p.wallclock || competition.date),
                 possession: possessionTeamId,
+                type: p.type?.text || 'Play',
                 athletesInvolved: (p.athletesInvolved || []).map((a: any) => ({
                   id: a.athlete?.id || a.id,
                   fullName: a.athlete?.displayName || a.fullName || a.displayName,
@@ -155,6 +106,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
               yardage: typeof p.statYardage === 'number' ? p.statYardage : p.yardage,
               timestamp: new Date(p.wallclock || competition.date),
               possession: p.start?.team?.id || p.possession,
+              type: p.type?.text || p.type || 'Play',
               athletesInvolved: (p.athletesInvolved || []).map((a: any) => ({
                 id: a.athlete?.id || a.id,
                 fullName: a.athlete?.displayName || a.fullName || a.displayName,
@@ -184,24 +136,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
       return apiPlayLog;
     }
     if (state === 'post' && summary?.drives?.previous && summary.drives.previous.length > 0) {
-      const plays: Array<{
-        text: string;
-        quarter: number;
-        clock: string;
-        yardage?: number;
-        timestamp: Date;
-        possession?: string;
-        athletesInvolved?: Array<{
-          id: string;
-          fullName: string;
-          displayName: string;
-          shortName: string;
-          headshot: string;
-          jersey: string;
-          position: string;
-          team: { id: string };
-        }>;
-      }> = [];
+      const plays: Play[] = [];
 
       summary.drives.previous.forEach((drive) => {
         drive.plays.forEach((p: any) => {
@@ -213,6 +148,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             yardage: typeof p.statYardage === 'number' ? p.statYardage : undefined,
             timestamp: new Date(p.wallclock || competition.date),
             possession: possessionTeamId,
+            type: p.type?.text || 'Play',
             athletesInvolved: (p.athletesInvolved || [])
               .map((a: any) => ({
                 id: a.athlete?.id || a.id,
@@ -280,7 +216,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
           text: play.text,
           quarter: play.quarter,
           clock: play.clock,
-          timestamp: play.timestamp,
+          timestamp: typeof play.timestamp === 'string' ? new Date(play.timestamp) : play.timestamp,
           homeScore: currentHomeScore,
           awayScore: currentAwayScore
         });

@@ -8,6 +8,7 @@ import { useLoading } from '@/providers/LoadingContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
+import { Play } from '@/types/espn/playByplay';
 
 // Firebase Firestore endpoint (assuming you have a backend endpoint)
 const FIRESTORE_API = '/api/playbyplay';
@@ -30,24 +31,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState<number>(30);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [playLog, setPlayLog] = useState<Array<{ 
-    text: string; 
-    quarter: number; 
-    clock: string; 
-    yardage?: number;
-    timestamp: Date;
-    possession?: string;
-    athletesInvolved?: Array<{
-      id: string;
-      fullName: string;
-      displayName: string;
-      shortName: string;
-      headshot: string;
-      jersey: string;
-      position: string;
-      team: { id: string };
-    }>;
-  }>>([]);
+  const [playLog, setPlayLog] = useState<Play[]>([]);
   const [playsLoaded, setPlaysLoaded] = useState(false);
 
   // Load previous plays from Firebase on mount
@@ -180,14 +164,15 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
 
         if (!isDuplicate) {
           const possession = comp.situation?.possession;
-          const newPlay = {
+          const newPlay: Play = {
             text: currentPlayText,
             quarter: comp.status.period,
             clock: comp.status.displayClock,
             timestamp: new Date(),
             yardage: comp.situation?.lastPlay?.statYardage,
             possession: typeof possession === 'object' && possession !== null && 'id' in possession ? (possession as any).id : possession,
-            athletesInvolved: comp.situation?.lastPlay?.athletesInvolved
+            athletesInvolved: comp.situation?.lastPlay?.athletesInvolved,
+            type: comp.situation?.lastPlay?.type?.text || 'Play'
           };
           console.log('➕ Adding new play to log:', newPlay);
           return [newPlay, ...prev];

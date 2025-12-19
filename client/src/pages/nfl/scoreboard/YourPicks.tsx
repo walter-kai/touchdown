@@ -11,6 +11,7 @@ import { usePreview } from 'react-dnd-preview';
 import FootballField from '@/components/nfl/FootballField';
 import type { Athlete } from '@/types/espn/athlete';
 import { usePicks } from '../../../providers/PicksContext';
+import { Play } from '@/types/espn/playByplay';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {
@@ -46,24 +47,7 @@ interface PlayerPickProps {
   };
   isExpanded: boolean;
   onToggle: () => void;
-  playLog: Array<{
-    text: string;
-    quarter: number;
-    clock: string;
-    yardage?: number;
-    timestamp: Date;
-    possession?: string;
-    athletesInvolved?: Array<{
-      id: string;
-      fullName: string;
-      displayName: string;
-      shortName: string;
-      headshot: string;
-      jersey: string;
-      position: string;
-      team: { id: string };
-    }>;
-  }>;
+  playLog: Play[];
   situation?: {
     lastPlay?: {
       start?: { yardLine: number };

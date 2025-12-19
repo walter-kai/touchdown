@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaFootballBall } from 'react-icons/fa';
+import { Play } from '@/types/espn/playByplay';
 
 interface FootballFieldProps {
   homeTeam: any;
@@ -19,19 +20,7 @@ interface FootballFieldProps {
     awayTimeouts?: number;
     homeTimeouts?: number;
   };
-  playLog?: Array<{
-    text: string;
-    quarter: number;
-    clock: string;
-    possession?: string;
-    athletesInvolved?: Array<{
-      id: string;
-      displayName: string;
-      shortName: string;
-      headshot: string;
-      position: string;
-    }>;
-  }>;
+  playLog?: Play[];
   getTeamLogo: (team: any) => string;
   showGameInfo?: boolean;
 }

@@ -9,30 +9,14 @@ import PlayerPick from '@/pages/nfl/scoreboard/PlayerPick';
 import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
 import Info from '@/pages/nfl/scoreboard/Info';
 import type { Event } from '@/types/espn/scoreboard';
+import { Play } from '@/types/espn/playByplay';
 
 interface ScoreboardViewProps {
   event: Event;
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
   onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games') => void;
   getTeamLogo: (team: any) => string;
-  playLog: Array<{
-    text: string;
-    quarter: number;
-    clock: string;
-    yardage?: number;
-    timestamp: Date;
-    possession?: string;
-    athletesInvolved?: Array<{
-      id: string;
-      fullName: string;
-      displayName: string;
-      shortName: string;
-      headshot: string;
-      jersey: string;
-      position: string;
-      team: { id: string };
-    }>;
-  }>;
+  playLog: Play[];
   lastUpdated: Date | null;
   countdown: number;
   isRefreshing: boolean;
@@ -110,7 +94,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
           text: play.text,
           quarter: play.quarter,
           clock: play.clock,
-          timestamp: play.timestamp,
+          timestamp: typeof play.timestamp === 'string' ? new Date(play.timestamp) : play.timestamp,
           homeScore: currentHomeScore,
           awayScore: currentAwayScore
         });

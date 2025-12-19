@@ -3,29 +3,13 @@ import { FaTrophy, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import axios from 'axios';
 import { jwtStorage } from '../../../utils/jwtStorage';
 import { usePicks } from '../../../providers/PicksContext';
+import { Play } from '@/types/espn/playByplay';
 
 interface TopPicksProps {
   gameId: string;
   homeTeamId: string;
   awayTeamId: string;
-  playLog: Array<{
-    text: string;
-    quarter: number;
-    clock: string;
-    yardage?: number;
-    timestamp: Date;
-    possession?: string;
-    athletesInvolved?: Array<{
-      id: string;
-      fullName: string;
-      displayName: string;
-      shortName: string;
-      headshot: string;
-      jersey: string;
-      position: string;
-      team: { id: string };
-    }>;
-  }>;
+  playLog: Play[];
   getTeamLogo: (team: any) => string;
   homeTeam: any;
   awayTeam: any;
@@ -174,13 +158,13 @@ const TopPicks: React.FC<TopPicksProps> = ({
             
             athleteScores.set(athlete.id, {
               id: athlete.id,
-              fullName: athlete.fullName,
+              fullName: athlete.fullName || athlete.displayName,
               displayName: athlete.displayName,
-              shortName: athlete.shortName,
-              headshot: athlete.headshot,
-              jersey: athlete.jersey,
-              position: athlete.position,
-              teamId: athlete.team.id,
+              shortName: athlete.shortName || athlete.displayName,
+              headshot: athlete.headshot || '',
+              jersey: athlete.jersey || '',
+              position: athlete.position || '',
+              teamId: athlete.team?.id || '',
               gameScore: scores.gameScores[athlete.id] || 0,
               userScore: scores.userScores[athlete.id] || 0,
               isUserPick: hasScore,

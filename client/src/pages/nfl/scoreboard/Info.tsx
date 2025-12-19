@@ -7,6 +7,7 @@ import GameLeaders from '@/pages/nfl/summary/GameLeaders';
 import PredictionChart from '@/components/nfl/PredictionChart';
 import { CountUpScore } from '@/components/common/CountUpScore';
 import type { Summary } from '@/types/espn/summary';
+import { Play } from '@/types/espn/playByplay';
 
 interface InfoProps {
   homeTeam: any;
@@ -17,24 +18,7 @@ interface InfoProps {
   summary?: Summary | null;
   gameId?: string;
   countdown?: number;
-  playLog: Array<{
-    text: string;
-    quarter: number;
-    clock: string;
-    yardage?: number;
-    timestamp: Date;
-    possession?: string;
-    athletesInvolved?: Array<{
-      id: string;
-      fullName: string;
-      displayName: string;
-      shortName: string;
-      headshot: string;
-      jersey: string;
-      position: string;
-      team: { id: string };
-    }>;
-  }>;
+  playLog: Play[];
 }
 
 const Info: React.FC<InfoProps> = ({
