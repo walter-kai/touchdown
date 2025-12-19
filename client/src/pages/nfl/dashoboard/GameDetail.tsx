@@ -4,6 +4,7 @@ import { FaFootballBall } from 'react-icons/fa';
 import axios from 'axios';
 import ScoreboardView from '../scoreboard/Scoreboard';
 import SummaryView from '../summary/Summary';
+import FootballField from '@/components/nfl/FootballField';
 import { useLoading } from '@/providers/LoadingContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
@@ -33,6 +34,10 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [playLog, setPlayLog] = useState<Play[]>([]);
   const [playsLoaded, setPlaysLoaded] = useState(false);
+  
+  // Test mode controls
+  const [testGameId, setTestGameId] = useState<string>('401772949');
+  const [selectedPlayIndex, setSelectedPlayIndex] = useState<number>(0);
 
   // Load previous plays from Firebase on mount
   useEffect(() => {
@@ -69,16 +74,14 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
       }
 
       try {
-        // In test mode, skip backend play-by-play API call
-        if (gameId === 'test') {
-          setPlaysLoaded(true);
-          return;
-        }
+        // In test mode, use testGameId for loading plays
+        const actualGameId = gameId === 'test' ? testGameId : gameId;
+        
         showLoading('Loading play history...');
-        console.log(`Loading previous plays for game ${gameId} from backend API...`);
+        console.log(`Loading previous plays for game ${actualGameId} from backend API...`);
         
         // Fetch from your backend API that connects to Firebase
-        const response = await axios.get(`${FIRESTORE_API}/${gameId}`);
+        const response = await axios.get(`${FIRESTORE_API}/${actualGameId}`);
         
         if (response.data && response.data.plays && Array.isArray(response.data.plays)) {
           const historicalPlays = response.data.plays.map((play: any) => ({
@@ -132,7 +135,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
 
     loadPreviousPlays();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId]); // Only re-run when gameId changes
+  }, [gameId, testGameId, playsLoaded]); // Re-run when gameId or testGameId changes
 
   // Notify parent of game status changes
   useEffect(() => {
@@ -191,12 +194,26 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     let game: Event | undefined;
     let usedSummaryApi = false;
     if (gid === 'test') {
-      const response = await axios.get('/scoreboard copy 2.json');
-      // Support both ESPN scoreboard schema and a wrapped copy (content.sbData.events)
-      const topLevelEvents = (response.data as any)?.events;
-      const wrappedEvents = (response.data as any)?.content?.sbData?.events;
-      const events = Array.isArray(topLevelEvents) ? topLevelEvents : Array.isArray(wrappedEvents) ? wrappedEvents : [];
-      game = events?.[0] as Event | undefined;
+      // In test mode, fetch real game data using testGameId
+      const scoreboardResponse = await axios.get<ScoreboardResponse>(
+        'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
+      );
+      game = scoreboardResponse.data.events?.find(e => e.id === testGameId);
+      if (!game) {
+        // If not in scoreboard, try summary
+        try {
+          const summaryResponse = await axios.get<Summary>(
+            `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${testGameId}`
+          );
+          setSummary(summaryResponse.data);
+          usedSummaryApi = true;
+          if (summaryResponse.data.header) {
+            game = summaryResponse.data.header as unknown as Event;
+          }
+        } catch (summaryErr) {
+          console.error('Error fetching summary data:', summaryErr);
+        }
+      }
     } else {
       const scoreboardResponse = await axios.get<ScoreboardResponse>(
         'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
@@ -263,11 +280,14 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
 
     fetchGameData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId]); // Only re-run when gameId changes
+  }, [gameId, testGameId]); // Re-run when gameId or testGameId changes (for test mode)
 
   // Countdown timer effect for auto-refresh (only for live games)
   useEffect(() => {
     if (!event) return; // Don't start countdown until initial load
+    
+    // Don't auto-refresh in test mode
+    if (gameId === 'test') return;
     
     // Only auto-refresh if using scoreboard API (live games)
     if (navPreset === 'summary') return; // Don't refresh final games
@@ -351,33 +371,158 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     return '';
   };
 
+  // Test mode controls UI
+  const isTestMode = gameId === 'test';
+  const testControls = isTestMode ? (
+    <div className="sticky top-0 z-50 bg-[#1a1d2e] border-b-2 border-[#00ffe7] shadow-lg">
+      <div className="max-w-7xl mx-auto p-4">
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <label className="text-[#b0b7bf] text-xs mb-1 block">Test Game ID</label>
+            <input
+              type="text"
+              value={testGameId}
+              onChange={(e) => {
+                setTestGameId(e.target.value);
+                setPlaysLoaded(false); // Reset to reload plays
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setPlaysLoaded(false);
+                  window.location.reload();
+                }
+              }}
+              className="w-full bg-[#23263a] text-white px-4 py-2 rounded border border-[#00ffe7]/30 focus:border-[#00ffe7] outline-none"
+              placeholder="Enter ESPN Game ID"
+            />
+          </div>
+          <button
+            onClick={() => {
+              setPlaysLoaded(false);
+              window.location.reload();
+            }}
+            className="px-6 py-2 bg-[#00ffe7] text-[#1a1d2e] font-bold rounded hover:bg-[#00ffe7]/80 transition-colors mt-5"
+          >
+            Load Game
+          </button>
+        </div>
+        {playLog.length > 0 && (
+          <div className="mt-4">
+            <label className="text-[#b0b7bf] text-xs mb-1 block">
+              Emulate Current Play ({playLog.length} plays available)
+            </label>
+            <select
+              value={selectedPlayIndex}
+              onChange={(e) => setSelectedPlayIndex(Number(e.target.value))}
+              className="w-full bg-[#23263a] text-white px-4 py-2 rounded border border-[#faafe8]/30 focus:border-[#faafe8] outline-none"
+            >
+              {playLog.map((play, index) => (
+                <option key={index} value={index}>
+                  Q{play.quarter} {play.clock} - {typeof play.type === 'string' ? play.type : (play.type as any)?.text || 'Play'} - {play.text.substring(0, 80)}...
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null;
+
+  // In test mode, override the current play based on selection
+  const effectivePlayLog = isTestMode && playLog.length > 0 ? [playLog[selectedPlayIndex]] : playLog;
+  const effectiveEvent = isTestMode && event && playLog.length > 0 ? {
+    ...event,
+    competitions: event.competitions.map(comp => {
+      const selectedPlay = playLog[selectedPlayIndex];
+      // Convert Play to LastPlay format - handle both string and object type
+      const playTypeText = typeof selectedPlay.type === 'string' 
+        ? selectedPlay.type 
+        : (selectedPlay.type as any)?.text || 'Play';
+      
+      // Calculate start and end yard lines for field visualization
+      const startYardLine = selectedPlay.yardLine || 50; // Default to midfield if not available
+      const yardage = selectedPlay.yardage || 0;
+      const endYardLine = Math.max(0, Math.min(100, startYardLine + yardage)); // Keep within 0-100
+      
+      const lastPlay = {
+        id: `play-${selectedPlayIndex}`,
+        type: {
+          id: String(selectedPlay.type || 'play'),
+          text: playTypeText,
+          abbreviation: playTypeText.substring(0, 3)
+        },
+        text: selectedPlay.text,
+        scoreValue: selectedPlay.scoreValue || 0,
+        team: {
+          id: selectedPlay.possession || selectedPlay.team || ''
+        },
+        start: { yardLine: startYardLine },
+        end: { yardLine: endYardLine },
+        statYardage: selectedPlay.yardage,
+        athletesInvolved: selectedPlay.athletesInvolved
+      };
+      
+      return {
+        ...comp,
+        situation: {
+          ...comp.situation,
+          lastPlay
+        }
+      };
+    })
+  } as Event : event;
+
+  // Test mode football field visualization - must be after effectiveEvent is defined
+  const testFieldVisualization = isTestMode && event && playLog.length > 0 && effectiveEvent ? (
+    <div className="mx-2 my-4">
+      <div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#00ffe7]/20">
+        <h3 className="text-[#00ffe7] font-bold text-lg mb-4">Football Field Animation Test</h3>
+        <FootballField
+          homeTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'home')}
+          awayTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'away')}
+          lastPlay={effectiveEvent.competitions[0].situation?.lastPlay}
+          situation={effectiveEvent.competitions[0].situation}
+          getTeamLogo={getTeamLogo}
+        />
+      </div>
+    </div>
+  ) : null;
+
   // Render the appropriate view based on navPreset
   if (navPreset === 'scoreboard') {
     return (
-      <ScoreboardView
-        event={event}
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-        getTeamLogo={getTeamLogo}
-        playLog={playLog}
-        lastUpdated={lastUpdated}
-        countdown={countdown}
-        isRefreshing={isRefreshing}
-        onManualRefresh={() => setCountdown(0)}
-      />
+      <>
+        {testControls}
+        {testFieldVisualization}
+        <ScoreboardView
+          event={effectiveEvent || event}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          getTeamLogo={getTeamLogo}
+          playLog={effectivePlayLog}
+          lastUpdated={lastUpdated}
+          countdown={countdown}
+          isRefreshing={isRefreshing}
+          onManualRefresh={() => setCountdown(0)}
+        />
+      </>
     );
   }
 
   return (
-    <SummaryView
-      event={event}
-      summary={summary}
-      activeTab={activeTab}
-      onTabChange={onTabChange}
-      getTeamLogo={getTeamLogo}
-      playLog={playLog}
-      gameId={gameId || ''}
-    />
+    <>
+      {testControls}
+      {testFieldVisualization}
+      <SummaryView
+        event={effectiveEvent || event}
+        summary={summary}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        getTeamLogo={getTeamLogo}
+        playLog={effectivePlayLog}
+        gameId={gameId || ''}
+      />
+    </>
   );
 };
 

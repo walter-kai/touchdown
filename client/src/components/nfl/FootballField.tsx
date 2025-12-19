@@ -32,8 +32,16 @@ interface FootballFieldProps {
 }
 
 // Play visualization config
-const getPlayVisualization = (playType?: PlayType) => {
-  const type = playType?.toLowerCase() || '';
+const getPlayVisualization = (playType?: PlayType | string | { text: string }) => {
+  // Handle both string and object types - ensure we always have a string
+  let typeStr = '';
+  if (typeof playType === 'string') {
+    typeStr = playType;
+  } else if (playType && typeof playType === 'object' && 'text' in playType) {
+    typeStr = playType.text || '';
+  }
+  // Force to string and lowercase
+  const type = String(typeStr || '').toLowerCase();
   
   // Touchdowns - Gold/Yellow
   if (type.includes('touchdown')) {
@@ -221,8 +229,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const leftTeam = awayTeam;
   const rightTeam = homeTeam;
   
-  // Get visualization config for this play type
-  const playViz = getPlayVisualization(lastPlay.type?.text);
+  // Get visualization config for this play type - handle both string and object
+  const playViz = getPlayVisualization(lastPlay.type);
 
   return (
     <div className="space-y-6">
