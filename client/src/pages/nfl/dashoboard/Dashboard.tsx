@@ -6,6 +6,7 @@ import { jwtStorage } from '../../../utils/jwtStorage';
 import LoadingFootball from '../../../components/common/LoadingFootball';
 import { CountUpScore } from '../../../components/common/CountUpScore';
 import { useAuth } from '../../../providers/AuthContext';
+import TelegramCard from './TelegramCard';
 
 interface Player {
   id: string;
@@ -245,27 +246,8 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  if (gamesWithPicks.length === 0) {
-    return (
-      <div className="max-w-7xl mx-auto py-8 px-4">
-        <div className="text-center py-20">
-          <FaFootballBall className="text-6xl text-[#faafe8] mx-auto mb-4 animate-bounce" />
-          <h2 className="text-2xl font-bold mb-2">No Picks Yet</h2>
-          <p className="text-gray-400 mb-6">Start making picks to see your dashboard!</p>
-          <button
-            onClick={() => navigate('/nfl/games')}
-            className="btn-purple"
-          >
-            <FaGamepad className="inline mr-2" />
-            Browse Games
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-7xl mx-auto py-6 px-2 pb-24">
+    <div className="max-w-7xl mx-auto mt-2 px-2">
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">
@@ -276,7 +258,7 @@ const Dashboard: React.FC = () => {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-[#181a23]/30 border border-[#00ffe7]/20 rounded-lg p-6 text-center relative overflow-hidden flex flex-col">
+        <div className="bg-[#181a23]/30 border border-[#00ffe7]/20 rounded-lg px-6 py-2 text-center relative overflow-hidden flex flex-col">
           <FaGamepad className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-[#00ffe7]/10" />
           <h3 className="text-lg font-semibold mb-2 relative z-10">Games Played</h3>
           <div className="flex-1 flex items-end justify-center pb-2">
@@ -292,7 +274,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-[#181a23]/30 border border-[#00ffe7]/20 rounded-lg p-6 text-center relative overflow-hidden flex flex-col">
+        <div className="bg-[#181a23]/30 border border-[#00ffe7]/20 rounded-lg px-6 py-2 text-center relative overflow-hidden flex flex-col">
           <FaChartBar className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-[#00ffe7]/10" />
           <h3 className="text-lg font-semibold mb-2 relative z-10">Unique Players</h3>
           <div className="flex-1 flex items-end justify-center pb-2">
@@ -308,7 +290,21 @@ const Dashboard: React.FC = () => {
           Your Games
         </h1>
 
-        {gamesWithPicks.map((game) => (
+        {gamesWithPicks.length === 0 ? (
+          <div className="text-center py-6 bg-[#181a23]/30 border border-[#00ffe7]/20 rounded-lg">
+            <FaFootballBall className="text-6xl text-[#faafe8] mx-auto my-4 animate-bounce" />
+            <h2 className="text-2xl font-bold mb-2">No Picks Yet</h2>
+            <p className="text-gray-400 mb-6">Start making picks to see your dashboard!</p>
+            <button
+              onClick={() => navigate('/nfl/games')}
+              className="btn-purple"
+            >
+              <FaGamepad className="inline mr-2" />
+              Browse Games
+            </button>
+          </div>
+        ) : (
+          gamesWithPicks.map((game) => (
           <div
             key={game.gameId}
             className="bg-[#181a23]/50 border border-[#00ffe7]/20 rounded-lg overflow-hidden hover:border-[#00ffe7]/50 transition-all cursor-pointer"
@@ -419,7 +415,8 @@ const Dashboard: React.FC = () => {
               )}
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

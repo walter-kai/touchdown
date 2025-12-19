@@ -49,45 +49,42 @@ const telegramCards = [
 ];
 
 const TelegramCard: React.FC = () => (
-	<div className="flex flex-col items-center justify-center px-4 py-16 bg-black/50">
-		<h1>
-			<FaTelegramPlane className="text-[#0088cc] text-5xl" />
-			Dexter City on Telegram
-		</h1>
-		<p className="text-xl text-[#faafe8] mb-12 text-center max-w-2xl">
-			Telegram is the heart of Dexter City's community. Connect, share, and stay
-			updated with our channels, group, and bot!
+	<div className="flex flex-col items-center justify-center py-12">
+		<div className="flex items-center gap-3 mb-3">
+			<FaTelegramPlane className="text-[#0088cc] text-4xl" />
+			<h2 className="text-3xl font-bold">Join Our Community</h2>
+		</div>
+		<p className="text-lg text-gray-400 mb-8 text-center max-w-2xl">
+			Connect with other players, get updates, and stay informed through our Telegram channels!
 		</p>
-		<div className="max-w-7xl w-full flex flex-col lg:flex-row gap-10">
+		<div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 			{telegramCards.map((card) => (
 				<div
 					key={card.title}
-					className={`flex-1 flex flex-col items-center bg-[#181c23] border-2 ${card.borderColor} rounded-2xl shadow-[0_0_24px_#00ffe7]/20 p-8 hover:scale-[1.02] transition-transform min-w-[220px]`}
+					className={`flex flex-col bg-[#181a23]/50 border ${card.borderColor} rounded-lg p-6 hover:border-opacity-60 transition-all`}
 				>
-					<div className="flex flex-col items-center mb-2">
-						<div className="h-20 flex items-center justify-center">
+					<div className="flex flex-col items-center mb-4">
+						<div className="mb-3">
 							{card.icon}
 						</div>
-					</div>
-					<div className="flex-1 flex flex-col w-full">
-						<h2
-							className={`text-2xl font-bold ${card.titleColor} mb-2 text-center`}
+						<h3
+							className={`text-xl font-bold ${card.titleColor} mb-2 text-center`}
 						>
 							{card.title}
-						</h2>
-						<div className="text-[#e0e7ef] mb-4 text-center">
+						</h3>
+						<p className="text-gray-400 text-sm mb-4 text-center flex-1">
 							{card.desc}
-						</div>
-						<div className="mt-auto w-full flex justify-center">
-							<a
-								href={card.href}
-								target="_blank"
-								rel="noopener noreferrer"
-								className={`inline-block w-full px-5 py-2 ${card.buttonColor} ${card.buttonTextColor} font-bold rounded-lg shadow hover:bg-[#faafe8] hover:text-[#181a23] transition text-center`}
-							>
-								{card.buttonText}
-							</a>
-						</div>
+						</p>
+					</div>
+					<div className="mt-auto w-full">
+						<a
+							href={card.href}
+							target="_blank"
+							rel="noopener noreferrer"
+							className={`block w-full px-4 py-2 ${card.buttonColor} ${card.buttonTextColor} font-semibold rounded-lg transition text-center text-sm`}
+						>
+							{card.buttonText}
+						</a>
 					</div>
 				</div>
 			))}
