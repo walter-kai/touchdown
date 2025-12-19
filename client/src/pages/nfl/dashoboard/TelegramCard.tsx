@@ -3,48 +3,48 @@ import { FaUsers, FaComments, FaBullhorn, FaRobot, FaTelegramPlane } from "react
 
 const telegramCards = [
 	{
-		icon: <FaBullhorn className="text-4xl text-[#00ffe7]" />,
+		icon: <FaBullhorn className="text-4xl text-neon-cyan" />,
 		title: "Bulletin Channel",
 		desc: "Official news, updates, and announcements.",
 		buttonText: "Join Channel",
 		href: "https://t.me/+3kbxUgMdGkM2YTY9",
-		borderColor: "border-[#00ffe7]/30",
-		titleColor: "text-[#00ffe7]",
-		buttonColor: "bg-[#00ffe7] hover:bg-[#faafe8]",
-		buttonTextColor: "text-[#181a23]",
+		borderColor: "border-neon-cyan/30",
+		titleColor: "text-neon-cyan",
+		buttonColor: "bg-neon-cyan hover:bg-neon-pink",
+		buttonTextColor: "text-bg-dark",
 	},
 	{
-		icon: <FaComments className="text-4xl text-[#faafe8]" />,
+		icon: <FaComments className="text-4xl text-neon-pink" />,
 		title: "Group Chat",
 		desc: "Meet other users, ask questions, and discuss strategies.",
 		buttonText: "Join Group",
 		href: "https://t.me/+W1S8xA6ygboyN2Q9",
-		borderColor: "border-[#faafe8]/30",
-		titleColor: "text-[#faafe8]",
-		buttonColor: "bg-[#faafe8] hover:bg-[#00ffe7]",
-		buttonTextColor: "text-[#181a23]",
+		borderColor: "border-neon-pink/30",
+		titleColor: "text-neon-pink",
+		buttonColor: "bg-neon-pink hover:bg-neon-cyan",
+		buttonTextColor: "text-bg-dark",
 	},
 	{
-		icon: <FaRobot className="text-4xl text-[#00ffe7]" />,
+		icon: <FaRobot className="text-4xl text-neon-cyan" />,
 		title: "@DexterCity_bot",
 		desc: "Personal alerts, stats, and settings directly in Telegram.",
 		buttonText: "Open Bot",
 		href: "https://t.me/DexterCity_bot",
-		borderColor: "border-[#00ffe7]/30",
-		titleColor: "text-[#00ffe7]",
-		buttonColor: "bg-[#00ffe7] hover:bg-[#faafe8]",
-		buttonTextColor: "text-[#181a23]",
+		borderColor: "border-neon-cyan/30",
+		titleColor: "text-neon-cyan",
+		buttonColor: "bg-neon-cyan hover:bg-neon-pink",
+		buttonTextColor: "text-bg-dark",
 	},
 	{
-		icon: <FaUsers className="text-4xl text-[#faafe8]" />,
+		icon: <FaUsers className="text-4xl text-neon-pink" />,
 		title: "Community",
 		desc: "Share your bot builds, get help, and participate in events.",
 		buttonText: "Get Involved",
 		href: "https://t.me/+W1S8xA6ygboyN2Q9",
-		borderColor: "border-[#faafe8]/30",
-		titleColor: "text-[#faafe8]",
-		buttonColor: "bg-[#faafe8] hover:bg-[#00ffe7]",
-		buttonTextColor: "text-[#181a23]",
+		borderColor: "border-neon-pink/30",
+		titleColor: "text-neon-pink",
+		buttonColor: "bg-neon-pink hover:bg-neon-cyan",
+		buttonTextColor: "text-bg-dark",
 	},
 ];
 
@@ -61,7 +61,7 @@ const TelegramCard: React.FC = () => (
 			{telegramCards.map((card) => (
 				<div
 					key={card.title}
-					className={`flex flex-col bg-[#181a23]/50 border ${card.borderColor} rounded-lg p-6 hover:border-opacity-60 transition-all`}
+					className={`flex flex-col bg-bg-dark/50 border ${card.borderColor} rounded-lg p-6 hover:border-opacity-60 transition-all`}
 				>
 					<div className="flex flex-col items-center mb-4">
 						<div className="mb-3">

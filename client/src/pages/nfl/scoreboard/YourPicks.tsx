@@ -122,8 +122,8 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
   return (
     <div
       ref={(node) => drag(drop(node))}
-      className={`relative overflow-hidden bg-[#181a23]/90 rounded-lg p-3 border border-[#faafe8]/30 flex items-center gap-3 h-[72px] transition-all duration-1000 ${
-        isDragging ? 'opacity-100' : isAnimating ? '' : 'hover:border-[#faafe8]'
+      className={`relative overflow-hidden bg-bg-dark/90 rounded-lg p-3 border border-neon-pink/30 flex items-center gap-3 h-[72px] transition-all duration-1000 ${
+        isDragging ? 'opacity-100' : isAnimating ? '' : 'hover:border-neon-pink'
       }`}
       style={{ 
         ...(isAnimating && { 
@@ -151,7 +151,7 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
         <img
           src={headshotUrl}
           alt={player.displayName}
-          className="w-12 h-12 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0 relative z-10"
+          className="w-12 h-12 rounded-full object-cover border-2 border-neon-pink/50 flex-shrink-0 relative z-10"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).style.display = 'none';
             const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -160,19 +160,19 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
         />
       ) : null}
       <div 
-        className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0 relative z-10"
+        className="w-12 h-12 rounded-full bg-bg-darker border-2 border-neon-pink/50 flex items-center justify-center flex-shrink-0 relative z-10"
         style={{ display: headshotUrl ? 'none' : 'flex' }}
       >
-        <FaUsers className="text-[#faafe8] text-sm" />
+        <FaUsers className="text-neon-pink text-sm" />
       </div>
       <div className="flex-1 min-w-0 relative z-10">
         <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
-        <div className="text-[#faafe8] text-xs">{typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}</div>
+        <div className="text-neon-pink text-xs">{typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}</div>
       </div>
       {/* Score */}
       <div className="text-center relative z-10">
-        <div className="text-2xl font-bold text-[#faafe8]">{playerScore}</div>
-        <div className="text-[#b0b7bf] text-[10px]">PTS</div>
+        <div className="text-2xl font-bold text-neon-pink">{playerScore}</div>
+        <div className="text-text-muted text-[10px]">PTS</div>
       </div>
     </div>
   );
@@ -203,32 +203,32 @@ const EmptySlot: React.FC<EmptySlotProps> = ({ index, movePlayer, isActive, onSl
     <div
       ref={drop}
       onClick={() => onSlotClick(index)}
-      className={`bg-[#181a23]/50 rounded-lg p-3 border border-dashed flex items-center gap-3 h-[72px] transition-all duration-200 cursor-pointer ${
+      className={`bg-bg-dark/50 rounded-lg p-3 border border-dashed flex items-center gap-3 h-[72px] transition-all duration-200 cursor-pointer ${
         isActive
-          ? 'border-[#faafe8] bg-[#faafe8]/20 shadow-[0_0_12px_#faafe8]'
+          ? 'border-neon-pink bg-neon-pink/20 shadow-[0_0_12px_#faafe8]'
           : isOver 
-          ? 'border-[#faafe8] bg-[#faafe8]/20' 
-          : 'border-[#faafe8]/20 hover:border-[#faafe8]/40'
+          ? 'border-neon-pink bg-neon-pink/20' 
+          : 'border-neon-pink/20 hover:border-neon-pink/40'
       }`}
     >
       <div className={`w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 transition-all ${
         isActive 
-          ? 'bg-[#faafe8]/30 border-[#faafe8]'
+          ? 'bg-neon-pink/30 border-neon-pink'
           : isOver 
-          ? 'bg-[#faafe8]/30 border-[#faafe8]' 
-          : 'bg-[#23263a]/50 border-[#faafe8]/20'
+          ? 'bg-neon-pink/30 border-neon-pink' 
+          : 'bg-bg-darker/50 border-neon-pink/20'
       }`}>
         <FaPlus className={`text-sm transition-colors ${
-          isActive ? 'text-[#faafe8]' : isOver ? 'text-[#faafe8]' : 'text-[#faafe8]/40'
+          isActive ? 'text-neon-pink' : isOver ? 'text-neon-pink' : 'text-neon-pink/40'
         }`} />
       </div>
       <div className="flex-1 min-w-0">
         <span className={`text-sm transition-colors ${
           isActive 
-            ? 'text-[#faafe8] font-bold'
+            ? 'text-neon-pink font-bold'
             : isOver 
-            ? 'text-[#faafe8]' 
-            : 'text-[#faafe8]/40'
+            ? 'text-neon-pink' 
+            : 'text-neon-pink/40'
         }`}>
           {isDragging ? 'Drag here' : isActive ? 'Select player →' : 'Pick'}
         </span>
@@ -260,7 +260,7 @@ const MyPreview = () => {
       }} 
       className="cursor-grabbing"
     >
-      <div className="relative overflow-hidden bg-[#181a23] rounded-lg p-3 border-2 border-[#faafe8] flex items-center gap-2 shadow-2xl shadow-[#faafe8]/50" style={{ minHeight: '58px', minWidth: '200px' }}>
+      <div className="relative overflow-hidden bg-bg-dark rounded-lg p-3 border-2 border-neon-pink flex items-center gap-2 shadow-2xl shadow-neon-pink/50" style={{ minHeight: '58px', minWidth: '200px' }}>
         {/* Large team logo background */}
         {teamLogo && (
           <img 
@@ -278,16 +278,16 @@ const MyPreview = () => {
           <img
             src={headshotUrl}
             alt={item.player.displayName}
-            className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0 relative z-10"
+            className="w-10 h-10 rounded-full object-cover border-2 border-neon-pink/50 flex-shrink-0 relative z-10"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0 relative z-10">
-            <FaUsers className="text-[#faafe8] text-sm" />
+          <div className="w-10 h-10 rounded-full bg-bg-darker border-2 border-neon-pink/50 flex items-center justify-center flex-shrink-0 relative z-10">
+            <FaUsers className="text-neon-pink text-sm" />
           </div>
         )}
         <div className="flex-1 min-w-0 relative z-10">
           <div className="text-white font-bold text-xs truncate">{item.player.shortName}</div>
-          <div className="text-[#faafe8] text-[10px]">{typeof item.player.position === 'string' ? item.player.position : item.player.position?.abbreviation}</div>
+          <div className="text-neon-pink text-[10px]">{typeof item.player.position === 'string' ? item.player.position : item.player.position?.abbreviation}</div>
         </div>
       </div>
     </div>
@@ -795,9 +795,9 @@ const YourPicks: React.FC<PlayerPickProps> = ({
             {/* Current vs New Picks Display */}
      
             {/* Divider */}
-            <div className="border-t-2 border-[#00ffe7]/20"></div>
+            <div className="border-t-2 border-neon-cyan/20"></div>
             
-            <div className="flex items-center justify-between py-2 pr-2 border-b border-[#00ffe7]/10 mx-2 min-h-[76px]">
+            <div className="flex items-center justify-between py-2 pr-2 border-b border-neon-cyan/10 mx-2 min-h-[76px]">
               <div>
                   <h1>
                     {isLocked ? 'Selected Picks' : 'Your Picks'}
@@ -843,7 +843,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 style={{
                   width: (isRosterOpen && !isLocked) || isViewTransitioning || isAnimating ? 'calc(50% - 0.5rem)' : '100%'
                 }}>
-                <div className="text-[#b0b7bf] text-xs mb-2 font-bold h-[20px] flex items-center justify-between">
+                <div className="text-text-muted text-xs mb-2 font-bold h-[20px] flex items-center justify-between">
                   <div>
                     {isLocked ? (
                       <div className="flex items-center gap-2">
@@ -856,10 +856,10 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                   {/* Show column headers when roster is closed */}
                   {!isRosterOpen && showStats && (
                     <div className="flex items-center gap-3 pr-3">
-                      <div className="text-[10px] text-[#faafe8] font-bold text-center" style={{ width: '50px' }}>
+                      <div className="text-[10px] text-neon-pink font-bold text-center" style={{ width: '50px' }}>
                         GAME
                       </div>
-                      <div className="text-[10px] text-[#00ffe7] font-bold text-center" style={{ width: '50px' }}>
+                      <div className="text-[10px] text-neon-cyan font-bold text-center" style={{ width: '50px' }}>
                         SESSION
                       </div>
                     </div>
@@ -872,12 +872,12 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                       return (
                         <div
                           key={`empty-current-${idx}`}
-                          className="bg-[#181a23]/50 rounded-lg p-4 border border-dashed border-[#00ffe7]/20 flex items-center gap-4 h-[72px]"
+                          className="bg-bg-dark/50 rounded-lg p-4 border border-dashed border-neon-cyan/20 flex items-center gap-4 h-[72px]"
                         >
-                          <div className="w-7 h-6 rounded-full bg-[#00ffe7]/20 text-[#00ffe7] font-bold text-xs flex items-center justify-center flex-shrink-0">
+                          <div className="w-7 h-6 rounded-full bg-neon-cyan/20 text-neon-cyan font-bold text-xs flex items-center justify-center flex-shrink-0">
                             {idx + 1}
                           </div>
-                          <div className="text-[#b0b7bf] text-sm">Empty Slot</div>
+                          <div className="text-text-muted text-sm">Empty Slot</div>
                         </div>
                       );
                     }
@@ -891,7 +891,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                     return (
                       <div
                         key={player.id}
-                        className={`relative overflow-hidden bg-[#181a23]/90 rounded-lg p-4 border border-[#00ffe7]/30 flex items-center gap-4 h-[72px] transition-all duration-300 hover:border-[#00ffe7]/60 ${
+                        className={`relative overflow-hidden bg-bg-dark/90 rounded-lg p-4 border border-neon-cyan/30 flex items-center gap-4 h-[72px] transition-all duration-300 hover:border-neon-cyan/60 ${
                           isBeingReplaced ? 'opacity-0' : 'opacity-100'
                         }`}
                         style={{
@@ -916,7 +916,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                           <img
                             src={headshotUrl}
                             alt={player.displayName}
-                            className="w-12 h-12 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0 relative z-10"
+                            className="w-12 h-12 rounded-full object-cover border-2 border-neon-cyan/50 flex-shrink-0 relative z-10"
                             onError={(e) => {
                               (e.currentTarget as HTMLImageElement).style.display = 'none';
                               const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -925,16 +925,16 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                           />
                         ) : null}
                         <div 
-                          className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0 relative z-10"
+                          className="w-12 h-12 rounded-full bg-bg-darker border-2 border-neon-cyan/50 flex items-center justify-center flex-shrink-0 relative z-10"
                           style={{ display: headshotUrl ? 'none' : 'flex' }}
                         >
-                          <FaUsers className="text-[#00ffe7] text-sm" />
+                          <FaUsers className="text-neon-cyan text-sm" />
                         </div>
                         <div className="flex-1 min-w-0 relative z-10">
                           <div className="text-white font-bold text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                             {player.displayName}
                           </div>
-                          <div className="text-[#00ffe7] text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                          <div className="text-neon-cyan text-xs whitespace-nowrap overflow-hidden text-ellipsis">
                             {typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}
                           </div>
                         </div>
@@ -944,17 +944,17 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                           // Full view: Show both game and session scores
                           <div className="flex items-center gap-3 relative z-10">
                             <div className="text-center" style={{ width: '50px' }}>
-                              <div className="text-2xl font-bold text-[#faafe8]">{allPlayerScores[player.id] || 0}</div>
+                              <div className="text-2xl font-bold text-neon-pink">{allPlayerScores[player.id] || 0}</div>
                             </div>
                             <div className="text-center" style={{ width: '50px' }}>
-                              <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
+                              <div className="text-2xl font-bold text-neon-cyan">{playerScore}</div>
                             </div>
                           </div>
                         ) : isRosterOpen ? (
                           // Compressed view: Show only session score
                           <div className="text-center relative z-10">
-                            <div className="text-2xl font-bold text-[#00ffe7]">{playerScore}</div>
-                            <div className="text-[#b0b7bf] text-[10px]">PTS</div>
+                            <div className="text-2xl font-bold text-neon-cyan">{playerScore}</div>
+                            <div className="text-text-muted text-[10px]">PTS</div>
                           </div>
                         ) : null}
                       </div>
@@ -972,7 +972,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                     width: 'calc(50% - 0.5rem)',
                   }}
                 >
-                <div className="text-[#faafe8] text-xs mb-2 font-bold h-[20px] flex items-center">NEW</div>
+                <div className="text-neon-pink text-xs mb-2 font-bold h-[20px] flex items-center">NEW</div>
                 <div className="space-y-2">
                   {[...Array(5)].map((_, idx) => {
                     const player = newPicks[idx];
@@ -1021,7 +1021,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                   }}
                   className={`w-full p-4 flex items-center justify-center gap-3 transition-all ${
                   isRosterOpen 
-                    ? 'bg-gradient-to-r from-[#faafe8]/10 to-[#faafe8]/5 border-2 border-[#faafe8]/30 text-[#faafe8] hover:border-[#faafe8]/50' 
+                    ? 'bg-gradient-to-r from-neon-pink/10 to-neon-pink/5 border-2 border-neon-pink/30 text-neon-pink hover:border-neon-pink/50' 
                     : 'btn-green'
                   }`}>
                   <FaHandPointer className="text-xl" />
@@ -1035,20 +1035,20 @@ const YourPicks: React.FC<PlayerPickProps> = ({
               <div className={`space-y-4 transition-all duration-700 mx-2 ${
                 showStats ? 'opacity-100' : 'opacity-0'
               }`}>
-                <div className="bg-gradient-to-r from-[#00ffe7]/5 to-[#faafe8]/5 rounded-lg p-4 border border-[#00ffe7]/20">
+                <div className="bg-gradient-to-r from-neon-cyan/5 to-neon-pink/5 rounded-lg p-4 border border-neon-cyan/20">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#00ffe7]/20 border-2 border-[#00ffe7] flex items-center justify-center">
-                        <FaLock className="text-[#00ffe7] text-sm" />
+                      <div className="w-10 h-10 rounded-full bg-neon-cyan/20 border-2 border-neon-cyan flex items-center justify-center">
+                        <FaLock className="text-neon-cyan text-sm" />
                       </div>
                       <div>
                         <div className="text-white font-bold text-sm">Picks Locked</div>
-                        <div className="text-[#b0b7bf] text-xs">Next selection available in</div>
+                        <div className="text-text-muted text-xs">Next selection available in</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <FaClock className="text-[#00ffe7] text-xl" />
-                      <div className="text-[#00ffe7] text-3xl font-bold font-mono">
+                      <FaClock className="text-neon-cyan text-xl" />
+                      <div className="text-neon-cyan text-3xl font-bold font-mono">
                         {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
                       </div>
                     </div>
@@ -1065,8 +1065,8 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 onClick={() => setActiveTeam('home')}
                 className={`flex-1 py-3 rounded-tl-[5px] font-bold flex items-center justify-center gap-2 transition-all border ${
                   activeTeam === 'home'
-                  ? 'bg-[#00ffe7]/20 border-[#00ffe7]/50 text-[#00ffe7]'
-                  : 'bg-[#181a23] border-[#00ffe7]/20 text-gray-400 hover:border-[#00ffe7]/30'
+                  ? 'bg-neon-cyan/20 border-neon-cyan/50 text-neon-cyan'
+                  : 'bg-bg-dark border-neon-cyan/20 text-gray-400 hover:border-neon-cyan/30'
                 }`}
                 >
                 {homeTeamLogo && <img src={homeTeamLogo} alt="" className="w-7 h-6" />}
@@ -1076,8 +1076,8 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 onClick={() => setActiveTeam('away')}
                 className={`flex-1 py-3 rounded-tr-[5px] font-bold flex items-center justify-center gap-2 transition-all border ${
                   activeTeam === 'away'
-                    ? 'bg-[#00ffe7]/20 border-[#00ffe7]/50 text-[#00ffe7]'
-                    : 'bg-[#181a23] border-[#00ffe7]/20 text-gray-400 hover:border-[#00ffe7]/30'
+                    ? 'bg-neon-cyan/20 border-neon-cyan/50 text-neon-cyan'
+                    : 'bg-bg-dark border-neon-cyan/20 text-gray-400 hover:border-neon-cyan/30'
                 }`}
               >
                 {awayTeamLogo && <img src={awayTeamLogo} alt="" className="w-7 h-6" />}
@@ -1086,14 +1086,14 @@ const YourPicks: React.FC<PlayerPickProps> = ({
             </div>
 
             {/* Player List */}
-            <div className="bg-[#181a23]/90 rounded-b-lg py-4 mx-2">
+            <div className="bg-bg-dark/90 rounded-b-lg py-4 mx-2">
 
               
               {/* Split into Offense and Defense columns */}
               <div className="grid grid-cols-2 gap-2">
                 {/* Offense Column */}
                 <div>
-                  <h5 className="text-[#faafe8] font-bold text-sm mb-2">OFFENSE</h5>
+                  <h5 className="text-neon-pink font-bold text-sm mb-2">OFFENSE</h5>
                   <div className="space-y-2">
                     {currentRoster.filter(player => {
                       const pos = typeof player.position === 'string' ? player.position : player.position?.abbreviation;
@@ -1113,15 +1113,15 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                             isDuplicate
                               ? 'bg-gray-700/20 border border-gray-600/50 opacity-50 cursor-not-allowed'
                               : isInNew
-                              ? 'bg-[#00ffe7]/20 border border-[#00ffe7]/60'
-                              : 'bg-[#23263a]/50 border border-transparent hover:border-[#00ffe7]/30 cursor-pointer'
+                              ? 'bg-neon-cyan/20 border border-neon-cyan/60'
+                              : 'bg-bg-darker/50 border border-transparent hover:border-neon-cyan/30 cursor-pointer'
                           }`}
                         >
                           {headshotUrl ? (
                             <img
                               src={headshotUrl}
                               alt={player.displayName}
-                              className="w-8 h-8 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
+                              className="w-8 h-8 rounded-full object-cover border-2 border-neon-cyan/50 flex-shrink-0"
                               onError={(e) => {
                                 (e.currentTarget as HTMLImageElement).style.display = 'none';
                                 const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -1130,10 +1130,10 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                             />
                           ) : null}
                           <div 
-                            className="w-8 h-8 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
+                            className="w-8 h-8 rounded-full bg-bg-darker border-2 border-neon-cyan/50 flex items-center justify-center flex-shrink-0"
                             style={{ display: headshotUrl ? 'none' : 'flex' }}
                           >
-                            <FaUsers className="text-[#00ffe7] text-xs" />
+                            <FaUsers className="text-neon-cyan text-xs" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
@@ -1143,11 +1143,11 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                           </div>
                           {playerScore > 0 && (
                             <div className="text-right flex-shrink-0">
-                              <div className="text-[#00ffe7] font-bold text-sm">{playerScore}</div>
-                              <div className="text-[#b0b7bf] text-[9px]">pts</div>
+                              <div className="text-neon-cyan font-bold text-sm">{playerScore}</div>
+                              <div className="text-text-muted text-[9px]">pts</div>
                             </div>
                           )}
-                          {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs ml-2" />}
+                          {isInNew && <FaCheckCircle className="text-neon-cyan flex-shrink-0 text-xs ml-2" />}
                           {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs ml-2" />}
                         </button>
                       );
@@ -1157,7 +1157,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
 
                 {/* Defense Column */}
                 <div>
-                  <h5 className="text-[#faafe8] font-bold text-sm mb-2">DEFENSE</h5>
+                  <h5 className="text-neon-pink font-bold text-sm mb-2">DEFENSE</h5>
                   <div className="space-y-2">
                     {currentRoster.filter(player => {
                       const pos = typeof player.position === 'string' ? player.position : player.position?.abbreviation;
@@ -1177,15 +1177,15 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                             isDuplicate
                               ? 'bg-gray-700/20 border border-gray-600/50 opacity-50 cursor-not-allowed'
                               : isInNew
-                              ? 'bg-[#00ffe7]/20 border border-[#00ffe7]/60'
-                              : 'bg-[#23263a]/50 border border-transparent hover:border-[#00ffe7]/30 cursor-pointer'
+                              ? 'bg-neon-cyan/20 border border-neon-cyan/60'
+                              : 'bg-bg-darker/50 border border-transparent hover:border-neon-cyan/30 cursor-pointer'
                           }`}
                         >
                           {headshotUrl ? (
                             <img
                               src={headshotUrl}
                               alt={player.displayName}
-                              className="w-8 h-8 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0"
+                              className="w-8 h-8 rounded-full object-cover border-2 border-neon-cyan/50 flex-shrink-0"
                               onError={(e) => {
                                 (e.currentTarget as HTMLImageElement).style.display = 'none';
                                 const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -1194,10 +1194,10 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                             />
                           ) : null}
                           <div 
-                            className="w-8 h-8 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0"
+                            className="w-8 h-8 rounded-full bg-bg-darker border-2 border-neon-cyan/50 flex items-center justify-center flex-shrink-0"
                             style={{ display: headshotUrl ? 'none' : 'flex' }}
                           >
-                            <FaUsers className="text-[#00ffe7] text-xs" />
+                            <FaUsers className="text-neon-cyan text-xs" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-white font-bold text-xs truncate">{player.shortName}</div>
@@ -1207,11 +1207,11 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                           </div>
                           {playerScore > 0 && (
                             <div className="text-right flex-shrink-0">
-                              <div className="text-[#00ffe7] font-bold text-sm">{playerScore}</div>
-                              <div className="text-[#b0b7bf] text-[9px]">pts</div>
+                              <div className="text-neon-cyan font-bold text-sm">{playerScore}</div>
+                              <div className="text-text-muted text-[9px]">pts</div>
                             </div>
                           )}
-                          {isInNew && <FaCheckCircle className="text-[#00ffe7] flex-shrink-0 text-xs ml-2" />}
+                          {isInNew && <FaCheckCircle className="text-neon-cyan flex-shrink-0 text-xs ml-2" />}
                           {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs ml-2" />}
                         </button>
                       );

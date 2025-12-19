@@ -65,15 +65,15 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
 
   if (loading) {
     return (
-      <div className="bg-[#181a23]/95 rounded-xl border border-[#00ffe7]/30 p-6 text-center">
-        <p className="text-[#00ffe7]">Loading prediction data...</p>
+      <div className="bg-bg-dark/95 rounded-xl border border-neon-cyan/30 p-6 text-center">
+        <p className="text-neon-cyan">Loading prediction data...</p>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="bg-[#181a23]/95 rounded-xl border border-[#00ffe7]/30 p-6 text-center">
+      <div className="bg-bg-dark/95 rounded-xl border border-neon-cyan/30 p-6 text-center">
         <p className="text-gray-400">{error || 'No prediction data available'}</p>
       </div>
     );
@@ -99,12 +99,12 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
   const awayPredPtDiff = getStatValue(data.awayTeam.statistics, "teamPredPtDiff");
 
   return (
-    <div className="bg-[#181a23]/95 rounded-xl py-4 sm:p-6">
+    <div className="bg-bg-dark/95 rounded-xl py-4 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div className="flex items-center gap-2">
-          <FaPercent className="text-[#00ffe7] text-lg sm:text-xl" />
-          <h3 className="text-base sm:text-lg font-bold text-[#00ffe7]">Game Prediction</h3>
+          <FaPercent className="text-neon-cyan text-lg sm:text-xl" />
+          <h3 className="text-base sm:text-lg font-bold text-neon-cyan">Game Prediction</h3>
         </div>
       </div>
 
@@ -113,22 +113,22 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <img src={getTeamLogo(awayTeam)} alt={awayTeamInfo.name} className="w-8 h-8 object-contain" />
-            <span className="text-sm font-semibold text-[#e0e7ef]">{awayTeamInfo.name}</span>
+            <span className="text-sm font-semibold text-text-light">{awayTeamInfo.name}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-[#e0e7ef]">{homeTeamInfo.name}</span>
+            <span className="text-sm font-semibold text-text-light">{homeTeamInfo.name}</span>
             <img src={getTeamLogo(homeTeam)} alt={homeTeamInfo.name} className="w-8 h-8 object-contain" />
           </div>
         </div>
 
         {/* Win Probability Bar */}
-        <div className="relative h-12 bg-[#23263a] rounded-lg overflow-hidden mb-2">
+        <div className="relative h-12 bg-bg-darker rounded-lg overflow-hidden mb-2">
           <div
-            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#faafe8]/60 to-[#faafe8]/40 transition-all duration-500"
+            className="absolute left-0 top-0 h-full bg-gradient-to-r from-neon-pink/60 to-neon-pink/40 transition-all duration-500"
             style={{ width: `${awayWinProb}%` }}
           />
           <div
-            className="absolute right-0 top-0 h-full bg-gradient-to-l from-[#00ffe7]/60 to-[#00ffe7]/40 transition-all duration-500"
+            className="absolute right-0 top-0 h-full bg-gradient-to-l from-neon-cyan/60 to-neon-cyan/40 transition-all duration-500"
             style={{ width: `${homeWinProb}%` }}
           />
           <div className="absolute inset-0 flex items-center justify-between px-4">
@@ -141,20 +141,20 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
         {/* Matchup Quality */}
         <div className="text-center">
           <span className="text-xs text-gray-400">Matchup Quality: </span>
-          <span className="text-sm font-bold text-[#faafe8]">{matchupQuality}/100</span>
+          <span className="text-sm font-bold text-neon-pink">{matchupQuality}/100</span>
         </div>
       </div>
 
       {/* Predicted Point Differential */}
-      <div className="mb-6 p-3 bg-[#23263a]/50 rounded-lg">
+      <div className="mb-6 p-3 bg-bg-darker/50 rounded-lg">
         <div className="text-xs text-gray-400 font-bold uppercase mb-2 text-center">Predicted Point Differential</div>
         <div className="grid grid-cols-2 gap-4 text-center">
           <div>
-            <div className="text-2xl font-bold text-[#faafe8]">{awayPredPtDiff}</div>
+            <div className="text-2xl font-bold text-neon-pink">{awayPredPtDiff}</div>
             <div className="text-xs text-gray-400">{awayTeamInfo.name}</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-[#00ffe7]">{homePredPtDiff}</div>
+            <div className="text-2xl font-bold text-neon-cyan">{homePredPtDiff}</div>
             <div className="text-xs text-gray-400">{homeTeamInfo.name}</div>
           </div>
         </div>
@@ -165,53 +165,53 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
         <div className="text-xs text-gray-400 font-bold uppercase text-center mb-3">Team Efficiency Ratings</div>
         
         {/* Total Efficiency */}
-        <div className="p-3 bg-[#23263a]/50 rounded-lg">
+        <div className="p-3 bg-bg-darker/50 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-gray-400">Total Efficiency</span>
           </div>
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
-              <div className="text-xl font-bold text-[#faafe8]">{awayTotalEff}</div>
+              <div className="text-xl font-bold text-neon-pink">{awayTotalEff}</div>
             </div>
             <div>
-              <div className="text-xl font-bold text-[#00ffe7]">{homeTotalEff}</div>
+              <div className="text-xl font-bold text-neon-cyan">{homeTotalEff}</div>
             </div>
           </div>
         </div>
 
         {/* Offensive Efficiency */}
-        <div className="p-3 bg-[#23263a]/50 rounded-lg">
+        <div className="p-3 bg-bg-darker/50 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-gray-400">Offensive Efficiency</span>
           </div>
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
-              <div className="text-lg font-bold text-[#faafe8]">{awayOffEff}</div>
+              <div className="text-lg font-bold text-neon-pink">{awayOffEff}</div>
             </div>
             <div>
-              <div className="text-lg font-bold text-[#00ffe7]">{homeOffEff}</div>
+              <div className="text-lg font-bold text-neon-cyan">{homeOffEff}</div>
             </div>
           </div>
         </div>
 
         {/* Defensive Efficiency */}
-        <div className="p-3 bg-[#23263a]/50 rounded-lg">
+        <div className="p-3 bg-bg-darker/50 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-gray-400">Defensive Efficiency</span>
           </div>
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
-              <div className="text-lg font-bold text-[#faafe8]">{awayDefEff}</div>
+              <div className="text-lg font-bold text-neon-pink">{awayDefEff}</div>
             </div>
             <div>
-              <div className="text-lg font-bold text-[#00ffe7]">{homeDefEff}</div>
+              <div className="text-lg font-bold text-neon-cyan">{homeDefEff}</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Footer Note */}
-      <div className="mt-4 pt-4 border-t border-[#faafe8]/20">
+      <div className="mt-4 pt-4 border-t border-neon-pink/20">
         <p className="text-xs text-gray-500 text-center">
           Predictions powered by ESPN Analytics
         </p>

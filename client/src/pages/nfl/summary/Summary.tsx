@@ -311,7 +311,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
               {/* Points Chart - Show for all games with scoring data */}
               {scoringPlays.length > 0 && (
                 <div className="mt-4">
-                  <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+                  <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
                   <div className="mx-2">
                     <PointsChart
                       gameId={gameId}
@@ -341,18 +341,18 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 <div className="h-[calc(100%-64px)] flex items-center justify-center px-6">
                   <div className="max-w-md w-full">
                     {/* Hero Section */}
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#00ffe7]/20 via-[#1a1d2e] to-[#faafe8]/20 border-2 border-[#00ffe7]/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-6 sm:p-8">
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neon-cyan/20 via-bg-darkest to-neon-pink/20 border-2 border-neon-cyan/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-6 sm:p-8">
                       {/* Animated background elements */}
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-[#00ffe7]/10 rounded-full blur-3xl animate-pulse"></div>
-                      <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#faafe8]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-neon-cyan/10 rounded-full blur-3xl animate-pulse"></div>
+                      <div className="absolute bottom-0 left-0 w-64 h-64 bg-neon-pink/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
                       
                       <div className="relative z-10">
                         {/* Lock Icon */}
                         <div className="flex justify-center mb-4">
                           <div className="relative">
-                            <div className="absolute inset-0 bg-[#00ffe7] blur-xl opacity-50 animate-pulse"></div>
-                            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#00ffe7] to-[#faafe8] flex items-center justify-center shadow-lg">
-                              <FaLock className="text-[#1a1d2e] text-2xl" />
+                            <div className="absolute inset-0 bg-neon-cyan blur-xl opacity-50 animate-pulse"></div>
+                            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-neon-cyan to-neon-pink flex items-center justify-center shadow-lg">
+                              <FaLock className="text-bg-darkest text-2xl" />
                             </div>
                           </div>
                         </div>
@@ -361,49 +361,49 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                         <h1>
                           Unlock Your Picks
                         </h1>
-                        <p className="text-[#b0b7bf] text-center text-base mb-6">
+                        <p className="text-text-muted text-center text-base mb-6">
                           Join the game and start making your predictions!
                         </p>
 
                         {/* Features Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
-                            <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
-                              <FaCheckCircle className="text-[#00ffe7] text-base" />
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-neon-cyan/5 border border-neon-cyan/20">
+                            <div className="w-8 h-8 rounded-lg bg-neon-cyan/20 flex items-center justify-center flex-shrink-0">
+                              <FaCheckCircle className="text-neon-cyan text-base" />
                             </div>
                             <div>
-                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Track Your Picks</h3>
-                              <p className="text-[#b0b7bf] text-xs">Follow predictions in real-time</p>
+                              <h3 className="text-text-light font-bold text-sm mb-0.5">Track Your Picks</h3>
+                              <p className="text-text-muted text-xs">Follow predictions in real-time</p>
                             </div>
                           </div>
 
-                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
-                            <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
-                              <FaBolt className="text-[#faafe8] text-base" />
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-neon-pink/5 border border-neon-pink/20">
+                            <div className="w-8 h-8 rounded-lg bg-neon-pink/20 flex items-center justify-center flex-shrink-0">
+                              <FaBolt className="text-neon-pink text-base" />
                             </div>
                             <div>
-                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Live Updates</h3>
-                              <p className="text-[#b0b7bf] text-xs">Instant player scoring alerts</p>
+                              <h3 className="text-text-light font-bold text-sm mb-0.5">Live Updates</h3>
+                              <p className="text-text-muted text-xs">Instant player scoring alerts</p>
                             </div>
                           </div>
 
-                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
-                            <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
-                              <FaChartLine className="text-[#00ffe7] text-base" />
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-neon-cyan/5 border border-neon-cyan/20">
+                            <div className="w-8 h-8 rounded-lg bg-neon-cyan/20 flex items-center justify-center flex-shrink-0">
+                              <FaChartLine className="text-neon-cyan text-base" />
                             </div>
                             <div>
-                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Performance Stats</h3>
-                              <p className="text-[#b0b7bf] text-xs">Track prediction accuracy</p>
+                              <h3 className="text-text-light font-bold text-sm mb-0.5">Performance Stats</h3>
+                              <p className="text-text-muted text-xs">Track prediction accuracy</p>
                             </div>
                           </div>
 
-                          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
-                            <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
-                              <FaUsers className="text-[#faafe8] text-base" />
+                          <div className="flex items-start gap-2 p-3 rounded-lg bg-neon-pink/5 border border-neon-pink/20">
+                            <div className="w-8 h-8 rounded-lg bg-neon-pink/20 flex items-center justify-center flex-shrink-0">
+                              <FaUsers className="text-neon-pink text-base" />
                             </div>
                             <div>
-                              <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Compete & Compare</h3>
-                              <p className="text-[#b0b7bf] text-xs">See top picks and compete</p>
+                              <h3 className="text-text-light font-bold text-sm mb-0.5">Compete & Compare</h3>
+                              <p className="text-text-muted text-xs">See top picks and compete</p>
                             </div>
                           </div>
                         </div>
@@ -411,12 +411,12 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                         {/* CTA Button */}
                         <button
                           onClick={() => triggerLoginModal()}
-                          className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-[#1a1d2e] font-bold text-base shadow-[0_0_20px_rgba(0,255,231,0.5)] hover:shadow-[0_0_30px_rgba(0,255,231,0.7)] transform hover:scale-105 transition-all duration-200"
+                          className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-pink text-bg-darkest font-bold text-base shadow-[0_0_20px_rgba(0,255,231,0.5)] hover:shadow-[0_0_30px_rgba(0,255,231,0.7)] transform hover:scale-105 transition-all duration-200"
                         >
                           Sign In to Start Picking
                         </button>
 
-                        <p className="text-[#b0b7bf] text-center text-xs mt-3">
+                        <p className="text-text-muted text-center text-xs mt-3">
                           Free to join • No credit card required
                         </p>
                       </div>
@@ -470,9 +470,9 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             {!isPreGame && (
             <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '25%' }}>
               {/* Divider */}
-              <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+              <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
               <div className="mx-2">
-                <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
+                <div className="flex items-center mb-6 pb-3 border-b border-neon-cyan/10">
                   <h1>Player Statistics</h1>
                 </div>
               </div>
@@ -490,22 +490,22 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                           alt={teamData.team.displayName}
                           className="w-10 h-10"
                         />
-                        <h4 className="text-[#00ffe7] font-bold text-xl">{teamData.team.displayName}</h4>
+                        <h4 className="text-neon-cyan font-bold text-xl">{teamData.team.displayName}</h4>
                       </div>
 
                       {/* Statistics Categories */}
                       {teamData.statistics.map((category: any, catIdx: number) => (
-                        <div key={`${teamData.team.id}-${category.name}-${catIdx}`} className="bg-[#23263a]/50 rounded-lg p-2 sm:p-4 border border-[#00ffe7]/10">
-                          <h5 className="text-[#b0b7bf] font-semibold text-xs sm:text-sm mb-2">{category.text}</h5>
+                        <div key={`${teamData.team.id}-${category.name}-${catIdx}`} className="bg-bg-darker/50 rounded-lg p-2 sm:p-4 border border-neon-cyan/10">
+                          <h5 className="text-text-muted font-semibold text-xs sm:text-sm mb-2">{category.text}</h5>
 
                           {/* Table for player stats */}
                           <div className="overflow-x-auto">
                             <table className="w-full text-xs sm:text-sm">
                               <thead>
-                                <tr className="border-b border-[#00ffe7]/10">
-                                  <th className="text-left py-2 px-1 sm:px-2 text-[#b0b7bf] font-semibold">Player</th>
+                                <tr className="border-b border-neon-cyan/10">
+                                  <th className="text-left py-2 px-1 sm:px-2 text-text-muted font-semibold">Player</th>
                                   {category.labels.map((label: any, labelIdx: number) => (
-                                    <th key={`label-${labelIdx}`} className="text-center py-2 px-1 sm:px-2 text-[#b0b7bf] font-semibold whitespace-nowrap">
+                                    <th key={`label-${labelIdx}`} className="text-center py-2 px-1 sm:px-2 text-text-muted font-semibold whitespace-nowrap">
                                       {label}
                                     </th>
                                   ))}
@@ -515,7 +515,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                                 {category.athletes.map((athleteData: any, athleteIdx: number) => (
                                   <tr
                                     key={`${athleteData.athlete.id}-${athleteIdx}`}
-                                    className="border-b border-[#00ffe7]/5 hover:bg-[#00ffe7]/5 transition-colors cursor-pointer"
+                                    className="border-b border-neon-cyan/5 hover:bg-neon-cyan/5 transition-colors cursor-pointer"
                                     onClick={() => navigate(`/nfl/player/${athleteData.athlete.id}`)}
                                   >
                                     <td className="py-2 px-1 sm:px-2">
@@ -530,23 +530,23 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                                               className="w-7 h-6 sm:w-8 sm:h-8 rounded-full"
                                             />
                                           ) : (
-                                            <div className="w-7 h-6 sm:w-8 sm:h-8 rounded-full bg-[#23263a] flex items-center justify-center">
-                                              <FaFootballBall className="text-[#00ffe7] text-xs" />
+                                            <div className="w-7 h-6 sm:w-8 sm:h-8 rounded-full bg-bg-darker flex items-center justify-center">
+                                              <FaFootballBall className="text-neon-cyan text-xs" />
                                             </div>
                                           );
                                         })()}
                                         <div className="min-w-0">
-                                          <p className="text-[#e0e7ef] font-semibold text-xs sm:text-sm truncate">
+                                          <p className="text-text-light font-semibold text-xs sm:text-sm truncate">
                                             {athleteData.athlete.displayName}
                                           </p>
-                                          <p className="text-[#b0b7bf] text-[10px] sm:text-xs">
+                                          <p className="text-text-muted text-[10px] sm:text-xs">
                                             #{athleteData.athlete.jersey}
                                           </p>
                                         </div>
                                       </div>
                                     </td>
                                     {athleteData.stats.map((stat: any, statIdx: number) => (
-                                      <td key={`stat-${statIdx}`} className="text-center py-2 px-1 sm:px-2 text-[#e0e7ef] text-xs sm:text-sm">
+                                      <td key={`stat-${statIdx}`} className="text-center py-2 px-1 sm:px-2 text-text-light text-xs sm:text-sm">
                                         {stat}
                                       </td>
                                     ))}
@@ -554,10 +554,10 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                                 ))}
                                 {/* Totals row */}
                                 {category.totals && category.totals.length > 0 && (
-                                  <tr className="border-t-2 border-[#00ffe7]/20 font-bold bg-[#00ffe7]/5">
-                                    <td className="py-2 px-1 sm:px-2 text-[#00ffe7] text-xs sm:text-sm">Total</td>
+                                  <tr className="border-t-2 border-neon-cyan/20 font-bold bg-neon-cyan/5">
+                                    <td className="py-2 px-1 sm:px-2 text-neon-cyan text-xs sm:text-sm">Total</td>
                                     {category.totals.map((total: any, totalIdx: number) => (
-                                      <td key={`total-${totalIdx}`} className="text-center py-2 px-1 sm:px-2 text-[#00ffe7] text-xs sm:text-sm">
+                                      <td key={`total-${totalIdx}`} className="text-center py-2 px-1 sm:px-2 text-neon-cyan text-xs sm:text-sm">
                                         {total}
                                       </td>
                                     ))}
@@ -572,7 +572,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[#b0b7bf] text-center py-8">Player statistics will be available after the game.</p>
+                  <p className="text-text-muted text-center py-8">Player statistics will be available after the game.</p>
                 )}
               </div>
             </div>
@@ -582,12 +582,12 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             {!isPreGame && (
             <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '25%' }}>
               {/* Divider */}
-              <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+              <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
               <div className="mx-2">
-                <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#00ffe7]/10">
+                <div className="flex items-center justify-between mb-6 pb-3 border-b border-neon-cyan/10">
                   <h1>Plays</h1>
                   {playLog.length > 0 && (
-                    <span className="text-[#b0b7bf] text-xs">
+                    <span className="text-text-muted text-xs">
                       {playLog.length} {playLog.length === 1 ? 'play' : 'plays'} recorded
                     </span>
                   )}

@@ -153,13 +153,13 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
 
   if (error || !overview) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-bg-darkest to-bg-darkest flex items-center justify-center">
         <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-8 text-center max-w-md">
           <p className="text-red-400 font-bold mb-2 text-lg">Error loading player data</p>
-          <p className="text-[#e0e7ef] mb-4">{error || 'Player not found'}</p>
+          <p className="text-text-light mb-4">{error || 'Player not found'}</p>
           <button
             onClick={() => navigate(-1)}
-            className="px-6 py-2 bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/30 transition-colors"
+            className="px-6 py-2 bg-neon-cyan/20 border border-neon-cyan/30 rounded-lg text-neon-cyan hover:bg-neon-cyan/30 transition-colors"
           >
             Go Back
           </button>
@@ -171,15 +171,15 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
   const athlete = bio?.athlete;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a]">
+    <div className="min-h-screen bg-gradient-to-b from-bg-darkest to-bg-darkest">
       <div className="max-w-7xl mx-auto py-8 px-4">
 
         {/* Player Header */}
-        <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-8 mb-6">
+        <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-8 mb-6">
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* Player Image/Placeholder */}
             <div className="relative">
-              <div className="w-48 h-48 rounded-full bg-[#23263a] border-4 border-[#00ffe7]/50 flex items-center justify-center overflow-hidden">
+              <div className="w-48 h-48 rounded-full bg-bg-darker border-4 border-neon-cyan/50 flex items-center justify-center overflow-hidden">
                 <img 
                   src={`https://a.espncdn.com/i/headshots/nfl/players/full/${playerId}.png`}
                   alt="Player"
@@ -191,7 +191,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
                   }}
                 />
                 <div className="w-full h-full flex items-center justify-center" style={{ display: 'none' }}>
-                  <FaFootballBall className="text-6xl text-[#00ffe7]" />
+                  <FaFootballBall className="text-6xl text-neon-cyan" />
                 </div>
               </div>
             </div>
@@ -206,12 +206,12 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
                   {athlete?.position?.abbreviation || 'Position'}
                 </span>
                 {athlete?.team && (
-                  <span className="px-3 py-1 bg-[#faafe8]/20 border border-[#faafe8]/40 rounded-full text-[#faafe8] text-sm">
+                  <span className="px-3 py-1 bg-neon-pink/20 border border-neon-pink/40 rounded-full text-neon-pink text-sm">
                     {athlete.team.abbreviation}
                   </span>
                 )}
                 {athlete?.jersey && (
-                  <span className="px-3 py-1 bg-[#00ffe7]/20 border border-[#00ffe7]/40 rounded-full text-[#00ffe7] text-sm">
+                  <span className="px-3 py-1 bg-neon-cyan/20 border border-neon-cyan/40 rounded-full text-neon-cyan text-sm">
                     #{athlete.jersey}
                   </span>
                 )}
@@ -251,17 +251,17 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
               {/* Fantasy Info */}
               {overview.fantasy && (
                 <div className="flex flex-wrap gap-4 justify-center md:justify-start mt-4">
-                  <div className="bg-[#23263a]/50 px-4 py-2 rounded-lg border border-[#00ffe7]/20">
+                  <div className="bg-bg-darker/50 px-4 py-2 rounded-lg border border-neon-cyan/20">
                     <div className="text-xs text-gray-400">Draft Rank</div>
-                    <div className="text-lg font-bold text-[#00ffe7]">{overview.fantasy.draftRank}</div>
+                    <div className="text-lg font-bold text-neon-cyan">{overview.fantasy.draftRank}</div>
                   </div>
-                  <div className="bg-[#23263a]/50 px-4 py-2 rounded-lg border border-[#00ffe7]/20">
+                  <div className="bg-bg-darker/50 px-4 py-2 rounded-lg border border-neon-cyan/20">
                     <div className="text-xs text-gray-400">Position Rank</div>
-                    <div className="text-lg font-bold text-[#00ffe7]">{overview.fantasy.positionRank}</div>
+                    <div className="text-lg font-bold text-neon-cyan">{overview.fantasy.positionRank}</div>
                   </div>
-                  <div className="bg-[#23263a]/50 px-4 py-2 rounded-lg border border-[#00ffe7]/20">
+                  <div className="bg-bg-darker/50 px-4 py-2 rounded-lg border border-neon-cyan/20">
                     <div className="text-xs text-gray-400">% Owned</div>
-                    <div className="text-lg font-bold text-[#00ffe7]">{overview.fantasy.percentOwned}%</div>
+                    <div className="text-lg font-bold text-neon-cyan">{overview.fantasy.percentOwned}%</div>
                   </div>
                 </div>
               )}
@@ -271,15 +271,15 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
 
         {/* Rotowire News */}
         {overview.rotowire && (
-          <div className="bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-6 mb-6">
-            <h2 className="text-xl font-bold text-[#faafe8] mb-3 flex items-center gap-2">
+          <div className="bg-bg-dark/90 rounded-xl border border-neon-pink/30 p-6 mb-6">
+            <h2 className="text-xl font-bold text-neon-pink mb-3 flex items-center gap-2">
               <FaNewspaper />
               Latest Update
             </h2>
             <div className="text-sm text-gray-400 mb-2">
               {new Date(overview.rotowire.published).toLocaleDateString()}
             </div>
-            <p className="text-[#e0e7ef] mb-2">{overview.rotowire.headline}</p>
+            <p className="text-text-light mb-2">{overview.rotowire.headline}</p>
             <p className="text-gray-300 text-sm">{overview.rotowire.story}</p>
           </div>
         )}
@@ -287,8 +287,8 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
         {/* Overview/Stats Section */}
         <div id="info" ref={infoRef} className="space-y-6 scroll-mt-20">
           {overview.statistics && (
-            <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 p-2">
-              <h2 className="text-2xl font-bold text-[#00ffe7] mb-6 flex items-center gap-2">
+            <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 p-2">
+              <h2 className="text-2xl font-bold text-neon-cyan mb-6 flex items-center gap-2">
                 <FaInfoCircle />
                 Overview
               </h2>
@@ -296,23 +296,23 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
               {/* Stats by Category */}
               {overview.statistics.categories && overview.statistics.categories.map((category, idx) => (
                 <div key={idx} className="mb-6">
-                  <h3 className="text-xl font-bold text-[#faafe8] mb-3">{category.displayName}</h3>
+                  <h3 className="text-xl font-bold text-neon-pink mb-3">{category.displayName}</h3>
                   
                   {/* Stats by Split */}
                   {overview.statistics.splits && overview.statistics.splits.map((split, splitIdx) => (
                   <div key={splitIdx} className="mb-4">
-                    <h4 className="text-base font-semibold text-[#00ffe7] mb-2 px-2">{split.displayName}</h4>
+                    <h4 className="text-base font-semibold text-neon-cyan mb-2 px-2">{split.displayName}</h4>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-[#00ffe7]/20">
+                          <tr className="border-b border-neon-cyan/20">
                             {overview.statistics.labels && overview.statistics.labels.map((label, i) => (
                               <th key={i} className="text-center py-2 px-0 text-gray-400 text-sm">{label}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          <tr className="hover:bg-[#00ffe7]/5">
+                          <tr className="hover:bg-neon-cyan/5">
                             {split.stats && split.stats.map((stat, statIdx) => (
                               <td key={statIdx} className="text-center py-3 px-1 text-white font-bold text-base">
                                 {stat}
@@ -332,8 +332,8 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
 
         {/* Game Log Section */}
         <div id="schedule" ref={scheduleRef} className="space-y-6 scroll-mt-20">
-          <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 p-6">
-            <h2 className="text-2xl font-bold text-[#00ffe7] mb-6 flex items-center gap-2">
+          <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 p-6">
+            <h2 className="text-2xl font-bold text-neon-cyan mb-6 flex items-center gap-2">
               <FaChartLine />
               Game Log
             </h2>
@@ -341,7 +341,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
             {/* Game Log from Overview API */}
             {overview.gameLog && overview.gameLog.statistics && (
               <div>
-                <h3 className="text-xl font-bold text-[#faafe8] mb-4">Recent Games</h3>
+                <h3 className="text-xl font-bold text-neon-pink mb-4">Recent Games</h3>
                 {overview.gameLog.statistics?.map((statType, idx) => (
                   <div key={idx} className="mb-6">
                     <h4 className="text-lg font-semibold text-gray-300 mb-3">{statType.displayName}</h4>
@@ -353,11 +353,11 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
                         <button 
                           key={eventIdx} 
                           onClick={() => navigate(`/nfl/game/${event.eventId}`)}
-                          className="w-full mb-4 hover:bg-[#00ffe7]/10 rounded-lg p-3 transition-all cursor-pointer"
+                          className="w-full mb-4 hover:bg-neon-cyan/10 rounded-lg p-3 transition-all cursor-pointer"
                         >
                           {/* Game matchup as header */}
                           <div className="mb-3 px-2">
-                            <div className="text-[#00ffe7] font-semibold text-base">
+                            <div className="text-neon-cyan font-semibold text-base">
                               {gameInfo?.atVs} {gameInfo?.opponent.abbreviation}
                             </div>
                             <div className="text-sm text-gray-400">
@@ -369,14 +369,14 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
                           <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                               <thead>
-                                <tr className="border-b border-[#00ffe7]/20">
+                                <tr className="border-b border-neon-cyan/20">
                                   {statType.labels?.map((label, i) => (
                                     <th key={i} className="text-center py-2 px-2 text-gray-400 text-sm">{label}</th>
                                   ))}
                                 </tr>
                               </thead>
                               <tbody>
-                                <tr className="hover:bg-[#00ffe7]/5">
+                                <tr className="hover:bg-neon-cyan/5">
                                   {event.stats?.map((stat, statIdx) => (
                                     <td key={statIdx} className="text-center py-3 px-2 text-white font-bold text-base">
                                       {stat}
@@ -399,14 +399,14 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
         {/* News Section */}
         <div id="news" ref={newsRef} className="space-y-6 scroll-mt-20">
           {overview.news && overview.news.length > 0 && (
-            <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 p-6">
-              <h2 className="text-2xl font-bold text-[#00ffe7] mb-6 flex items-center gap-2">
+            <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 p-6">
+              <h2 className="text-2xl font-bold text-neon-cyan mb-6 flex items-center gap-2">
                 <FaNewspaper />
                 News
               </h2>
               <div className="space-y-4">
                 {overview.news.map((article, idx) => (
-                  <div key={idx} className="bg-[#23263a]/50 rounded-xl border border-[#00ffe7]/20 p-6 hover:border-[#00ffe7]/40 transition-all">
+                  <div key={idx} className="bg-bg-darker/50 rounded-xl border border-neon-cyan/20 p-6 hover:border-neon-cyan/40 transition-all">
                     <div className="flex flex-col md:flex-row gap-6">
                     {article.images && article.images.length > 0 && (
                       <img
@@ -419,7 +419,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
                       <div className="text-sm text-gray-400 mb-2">
                         {new Date(article.published).toLocaleDateString()} • {article.byline || 'ESPN'}
                       </div>
-                      <h3 className="text-xl font-bold text-[#00ffe7] mb-3">
+                      <h3 className="text-xl font-bold text-neon-cyan mb-3">
                         {article.headline}
                       </h3>
                       <p className="text-gray-300 mb-4">{article.description}</p>
@@ -427,7 +427,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
                         href={article.links.web.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-block px-4 py-2 bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/30 transition-colors text-sm"
+                        className="inline-block px-4 py-2 bg-neon-cyan/20 border border-neon-cyan/30 rounded-lg text-neon-cyan hover:bg-neon-cyan/30 transition-colors text-sm"
                       >
                         Read Full Article →
                       </a>
@@ -442,8 +442,8 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
 
         {/* Next Game */}
         {overview.nextGame && overview.nextGame.league.events && overview.nextGame.league.events.length > 0 && (
-          <div className="bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-6">
-            <h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
+          <div className="bg-bg-dark/90 rounded-xl border border-neon-pink/30 p-6">
+            <h2 className="text-2xl font-bold text-neon-pink mb-4 flex items-center gap-2">
               <FaCalendar />
               {overview.nextGame.displayName}
             </h2>
@@ -451,15 +451,15 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
               <button 
                 key={idx} 
                 onClick={() => navigate(`/nfl/game/${game.id}`)}
-                className="w-full bg-[#23263a]/50 p-6 rounded-lg hover:bg-[#00ffe7]/10 transition-all cursor-pointer"
+                className="w-full bg-bg-darker/50 p-6 rounded-lg hover:bg-neon-cyan/10 transition-all cursor-pointer"
               >
                 <div className="text-center mb-4">
-                  <div className="text-[#00ffe7] font-bold">{game.weekText}</div>
+                  <div className="text-neon-cyan font-bold">{game.weekText}</div>
                   <div className="text-gray-300">
                     {new Date(game.date).toLocaleDateString()} • {new Date(game.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                   {game.broadcast && (
-                    <div className="text-[#faafe8] text-sm mt-1">{game.broadcast}</div>
+                    <div className="text-neon-pink text-sm mt-1">{game.broadcast}</div>
                   )}
                 </div>
 
@@ -476,7 +476,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
                     </div>
                   )}
 
-                  <div className="text-4xl font-bold text-[#00ffe7]">VS</div>
+                  <div className="text-4xl font-bold text-neon-cyan">VS</div>
 
                   {game.competitors[1] && (
                     <div className="text-center">
@@ -492,7 +492,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
                 </div>
 
                 {game.odds && (
-                  <div className="mt-6 text-center border-t border-[#00ffe7]/20 pt-4">
+                  <div className="mt-6 text-center border-t border-neon-cyan/20 pt-4">
                     <div className="text-sm text-gray-400 mb-2">Game Odds</div>
                     <div className="flex justify-center gap-6 text-sm">
                       <div>

@@ -121,8 +121,8 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
   return (
     <div
       ref={(node) => drag(drop(node))}
-      className={`relative overflow-hidden bg-[#181a23]/90 rounded-lg p-3 border border-[#faafe8]/30 flex items-center gap-3 h-[72px] transition-all duration-1000 ${
-        isDragging ? 'opacity-100' : isAnimating ? '' : 'hover:border-[#faafe8]'
+      className={`relative overflow-hidden bg-bg-dark/90 rounded-lg p-3 border border-neon-pink/30 flex items-center gap-3 h-[72px] transition-all duration-1000 ${
+        isDragging ? 'opacity-100' : isAnimating ? '' : 'hover:border-neon-pink'
       }`}
       style={{ 
         ...(isAnimating && { 
@@ -150,7 +150,7 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
         <img
           src={headshotUrl}
           alt={player.displayName}
-          className="w-12 h-12 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0 relative z-10"
+          className="w-12 h-12 rounded-full object-cover border-2 border-neon-pink/50 flex-shrink-0 relative z-10"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).style.display = 'none';
             const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -159,14 +159,14 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
         />
       ) : null}
       <div 
-        className="w-12 h-12 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0 relative z-10"
+        className="w-12 h-12 rounded-full bg-bg-darker border-2 border-neon-pink/50 flex items-center justify-center flex-shrink-0 relative z-10"
         style={{ display: headshotUrl ? 'none' : 'flex' }}
       >
-        <FaUsers className="text-[#faafe8] text-sm" />
+        <FaUsers className="text-neon-pink text-sm" />
       </div>
       <div className="flex-1 min-w-0 relative z-10">
         <div className="text-white font-bold text-sm truncate">{player.shortName}</div>
-        <div className="text-[#faafe8] text-xs">{typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}</div>
+        <div className="text-neon-pink text-xs">{typeof player.position === 'string' ? player.position : player.position?.abbreviation}{player.jersey && ` • #${player.jersey}`}</div>
       </div>
     </div>
   );
@@ -197,32 +197,32 @@ const EmptySlot: React.FC<EmptySlotProps> = ({ index, movePlayer, isActive, onSl
     <div
       ref={drop}
       onClick={() => onSlotClick(index)}
-      className={`bg-[#181a23]/50 rounded-lg p-3 border border-dashed flex items-center gap-3 h-[72px] transition-all duration-200 cursor-pointer ${
+      className={`bg-bg-dark/50 rounded-lg p-3 border border-dashed flex items-center gap-3 h-[72px] transition-all duration-200 cursor-pointer ${
         isActive
-          ? 'border-[#faafe8] bg-[#faafe8]/20 shadow-[0_0_12px_#faafe8]'
+          ? 'border-neon-pink bg-neon-pink/20 shadow-[0_0_12px_#faafe8]'
           : isOver 
-          ? 'border-[#faafe8] bg-[#faafe8]/20' 
-          : 'border-[#faafe8]/20 hover:border-[#faafe8]/40'
+          ? 'border-neon-pink bg-neon-pink/20' 
+          : 'border-neon-pink/20 hover:border-neon-pink/40'
       }`}
     >
       <div className={`w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 transition-all ${
         isActive 
-          ? 'bg-[#faafe8]/30 border-[#faafe8]'
+          ? 'bg-neon-pink/30 border-neon-pink'
           : isOver 
-          ? 'bg-[#faafe8]/30 border-[#faafe8]' 
-          : 'bg-[#23263a]/50 border-[#faafe8]/20'
+          ? 'bg-neon-pink/30 border-neon-pink' 
+          : 'bg-bg-darker/50 border-neon-pink/20'
       }`}>
         <FaPlus className={`text-sm transition-colors ${
-          isActive ? 'text-[#faafe8]' : isOver ? 'text-[#faafe8]' : 'text-[#faafe8]/40'
+          isActive ? 'text-neon-pink' : isOver ? 'text-neon-pink' : 'text-neon-pink/40'
         }`} />
       </div>
       <div className="flex-1 min-w-0">
         <span className={`text-sm transition-colors ${
           isActive 
-            ? 'text-[#faafe8] font-bold'
+            ? 'text-neon-pink font-bold'
             : isOver 
-            ? 'text-[#faafe8]' 
-            : 'text-[#faafe8]/40'
+            ? 'text-neon-pink' 
+            : 'text-neon-pink/40'
         }`}>
           {isDragging ? 'Drag here' : isActive ? 'Select player →' : 'Pick'}
         </span>
@@ -255,7 +255,7 @@ const MyPreview = () => {
       }} 
       className="cursor-grabbing"
     >
-      <div className="relative overflow-hidden bg-[#181a23] rounded-lg p-3 border-2 border-[#faafe8] flex items-center gap-2 shadow-2xl shadow-[#faafe8]/50" style={{ minHeight: '58px', minWidth: '200px' }}>
+      <div className="relative overflow-hidden bg-bg-dark rounded-lg p-3 border-2 border-neon-pink flex items-center gap-2 shadow-2xl shadow-neon-pink/50" style={{ minHeight: '58px', minWidth: '200px' }}>
         {/* Large team logo background */}
         {teamLogo && (
           <img 
@@ -273,16 +273,16 @@ const MyPreview = () => {
           <img
             src={headshotUrl}
             alt={item.player.displayName}
-            className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50 flex-shrink-0 relative z-10"
+            className="w-10 h-10 rounded-full object-cover border-2 border-neon-pink/50 flex-shrink-0 relative z-10"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center flex-shrink-0 relative z-10">
-            <FaUsers className="text-[#faafe8] text-sm" />
+          <div className="w-10 h-10 rounded-full bg-bg-darker border-2 border-neon-pink/50 flex items-center justify-center flex-shrink-0 relative z-10">
+            <FaUsers className="text-neon-pink text-sm" />
           </div>
         )}
         <div className="flex-1 min-w-0 relative z-10">
           <div className="text-white font-bold text-xs truncate">{item.player.shortName}</div>
-          <div className="text-[#faafe8] text-[10px]">{typeof item.player.position === 'string' ? item.player.position : item.player.position?.abbreviation}</div>
+          <div className="text-neon-pink text-[10px]">{typeof item.player.position === 'string' ? item.player.position : item.player.position?.abbreviation}</div>
         </div>
       </div>
     </div>
@@ -785,67 +785,67 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       <div className="flex items-center justify-center px-6">
         <div className="max-w-md w-full">
           {/* Hero Section */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#00ffe7]/20 via-[#1a1d2e] to-[#faafe8]/20 border-2 border-[#00ffe7]/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-6 sm:p-8">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neon-cyan/20 via-bg-darkest to-neon-pink/20 border-2 border-neon-cyan/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-6 sm:p-8">
             {/* Animated background elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#00ffe7]/10 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#faafe8]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-neon-cyan/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-neon-pink/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
             
             <div className="relative z-10">
               {/* Lock Icon */}
               <div className="flex justify-center mb-4">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-[#00ffe7] blur-xl opacity-50 animate-pulse"></div>
-                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#00ffe7] to-[#faafe8] flex items-center justify-center shadow-lg">
-                    <FaLock className="text-[#1a1d2e] text-2xl" />
+                  <div className="absolute inset-0 bg-neon-cyan blur-xl opacity-50 animate-pulse"></div>
+                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-neon-cyan to-neon-pink flex items-center justify-center shadow-lg">
+                    <FaLock className="text-bg-darkest text-2xl" />
                   </div>
                 </div>
               </div>
 
               {/* Headline */}
               <h1>Unlock Your Picks</h1>
-              <p className="text-[#b0b7bf] text-center text-base mb-6">
+              <p className="text-text-muted text-center text-base mb-6">
                 Join the game and start making your predictions!
               </p>
 
               {/* Features Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
-                  <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
-                    <FaCheckCircle className="text-[#00ffe7] text-base" />
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-neon-cyan/5 border border-neon-cyan/20">
+                  <div className="w-8 h-8 rounded-lg bg-neon-cyan/20 flex items-center justify-center flex-shrink-0">
+                    <FaCheckCircle className="text-neon-cyan text-base" />
                   </div>
                   <div>
-                    <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Track Your Picks</h3>
-                    <p className="text-[#b0b7bf] text-xs">Follow predictions in real-time</p>
+                    <h3 className="text-text-light font-bold text-sm mb-0.5">Track Your Picks</h3>
+                    <p className="text-text-muted text-xs">Follow predictions in real-time</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
-                  <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
-                    <FaBolt className="text-[#faafe8] text-base" />
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-neon-pink/5 border border-neon-pink/20">
+                  <div className="w-8 h-8 rounded-lg bg-neon-pink/20 flex items-center justify-center flex-shrink-0">
+                    <FaBolt className="text-neon-pink text-base" />
                   </div>
                   <div>
-                    <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Live Updates</h3>
-                    <p className="text-[#b0b7bf] text-xs">Instant player scoring alerts</p>
+                    <h3 className="text-text-light font-bold text-sm mb-0.5">Live Updates</h3>
+                    <p className="text-text-muted text-xs">Instant player scoring alerts</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00ffe7]/5 border border-[#00ffe7]/20">
-                  <div className="w-8 h-8 rounded-lg bg-[#00ffe7]/20 flex items-center justify-center flex-shrink-0">
-                    <FaChartLine className="text-[#00ffe7] text-base" />
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-neon-cyan/5 border border-neon-cyan/20">
+                  <div className="w-8 h-8 rounded-lg bg-neon-cyan/20 flex items-center justify-center flex-shrink-0">
+                    <FaChartLine className="text-neon-cyan text-base" />
                   </div>
                   <div>
-                    <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Performance Stats</h3>
-                    <p className="text-[#b0b7bf] text-xs">Track prediction accuracy</p>
+                    <h3 className="text-text-light font-bold text-sm mb-0.5">Performance Stats</h3>
+                    <p className="text-text-muted text-xs">Track prediction accuracy</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-[#faafe8]/5 border border-[#faafe8]/20">
-                  <div className="w-8 h-8 rounded-lg bg-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
-                    <FaUsers className="text-[#faafe8] text-base" />
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-neon-pink/5 border border-neon-pink/20">
+                  <div className="w-8 h-8 rounded-lg bg-neon-pink/20 flex items-center justify-center flex-shrink-0">
+                    <FaUsers className="text-neon-pink text-base" />
                   </div>
                   <div>
-                    <h3 className="text-[#e0e7ef] font-bold text-sm mb-0.5">Compete & Compare</h3>
-                    <p className="text-[#b0b7bf] text-xs">See top picks and compete</p>
+                    <h3 className="text-text-light font-bold text-sm mb-0.5">Compete & Compare</h3>
+                    <p className="text-text-muted text-xs">See top picks and compete</p>
                   </div>
                 </div>
               </div>
@@ -853,12 +853,12 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
               {/* CTA Button */}
               <button
                 onClick={() => triggerLoginModal()}
-                className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#00ffe7] to-[#faafe8] text-[#1a1d2e] font-bold text-base shadow-[0_0_20px_rgba(0,255,231,0.5)] hover:shadow-[0_0_30px_rgba(0,255,231,0.7)] transform hover:scale-105 transition-all duration-200"
+                className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-pink text-bg-darkest font-bold text-base shadow-[0_0_20px_rgba(0,255,231,0.5)] hover:shadow-[0_0_30px_rgba(0,255,231,0.7)] transform hover:scale-105 transition-all duration-200"
               >
                 Sign In to Start Picking
               </button>
 
-              <p className="text-[#b0b7bf] text-center text-xs mt-3">
+              <p className="text-text-muted text-center text-xs mt-3">
                 Free to join • No credit card required
               </p>
             </div>

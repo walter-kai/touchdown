@@ -124,10 +124,10 @@ const SelectedAthletes: React.FC<SelectedAthletesProps> = ({
     <div className="w-full">
       {/* Minimalistic Score List - Vertical table format - Always show when there are selected players */}
       {selectedPlayers.length > 0 && (
-        <div className="bg-[#181a23]/50 rounded-lg p-3 mb-4 border border-[#00ffe7]/20">
+        <div className="bg-bg-dark/50 rounded-lg p-3 mb-4 border border-neon-cyan/20">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[#00ffe7] text-xs font-bold">SELECTED PICKS</span>
-            <span className="text-[#b0b7bf] text-[10px]">Total: {totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0)} pts</span>
+            <span className="text-neon-cyan text-xs font-bold">SELECTED PICKS</span>
+            <span className="text-text-muted text-[10px]">Total: {totalScore + Object.values(currentSetScores).reduce((sum, score) => sum + score, 0)} pts</span>
           </div>
           <div className="space-y-2">
             {selectedPlayers.map((player, idx) => {
@@ -137,7 +137,7 @@ const SelectedAthletes: React.FC<SelectedAthletesProps> = ({
               const teamLogo = isHome ? homeTeamLogo : awayTeamLogo;
               
               return (
-                <div key={player.id} className="relative overflow-hidden flex items-center gap-2 bg-[#181a23]/90 rounded-lg p-2 border border-[#00ffe7]/30">
+                <div key={player.id} className="relative overflow-hidden flex items-center gap-2 bg-bg-dark/90 rounded-lg p-2 border border-neon-cyan/30">
                   {/* Large team logo background */}
                   {teamLogo && (
                     <img 
@@ -156,7 +156,7 @@ const SelectedAthletes: React.FC<SelectedAthletesProps> = ({
                     <img
                       src={headshotUrl}
                       alt={player.displayName}
-                      className="w-8 h-8 rounded-full object-cover border-2 border-[#00ffe7]/50 flex-shrink-0 relative z-10"
+                      className="w-8 h-8 rounded-full object-cover border-2 border-neon-cyan/50 flex-shrink-0 relative z-10"
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).style.display = 'none';
                         const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -165,21 +165,21 @@ const SelectedAthletes: React.FC<SelectedAthletesProps> = ({
                     />
                   ) : null}
                   <div 
-                    className="w-8 h-8 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center flex-shrink-0 relative z-10"
+                    className="w-8 h-8 rounded-full bg-bg-darker border-2 border-neon-cyan/50 flex items-center justify-center flex-shrink-0 relative z-10"
                     style={{ display: headshotUrl ? 'none' : 'flex' }}
                   >
-                    <FaUsers className="text-[#00ffe7] text-xs" />
+                    <FaUsers className="text-neon-cyan text-xs" />
                   </div>
                   <div className="flex-1 min-w-0 relative z-10">
                     <span className="text-white text-xs font-bold truncate block">{player.shortName}</span>
-                    <span className="text-[#00ffe7] text-[10px] truncate block">
+                    <span className="text-neon-cyan text-[10px] truncate block">
                       {typeof player.position === 'string' ? player.position : player.position?.abbreviation}
                       {player.jersey && ` • #${player.jersey}`}
                     </span>
                   </div>
                   <div className="text-center relative z-10 flex-shrink-0">
-                    <div className="text-lg font-bold text-[#00ffe7]">{currentSetScores[player.id] || 0}</div>
-                    <div className="text-[#b0b7bf] text-[8px]">PTS</div>
+                    <div className="text-lg font-bold text-neon-cyan">{currentSetScores[player.id] || 0}</div>
+                    <div className="text-text-muted text-[8px]">PTS</div>
                   </div>
                 </div>
               );
@@ -190,9 +190,9 @@ const SelectedAthletes: React.FC<SelectedAthletesProps> = ({
 
       {/* Empty state message when no players selected */}
       {selectedPlayers.length === 0 && (
-        <div className="bg-[#181a23]/50 rounded-lg p-4 mb-4 border border-[#00ffe7]/10 text-center">
-          <FaUsers className="text-[#00ffe7]/30 text-2xl mx-auto mb-2" />
-          <p className="text-[#b0b7bf] text-xs">No picks selected yet</p>
+        <div className="bg-bg-dark/50 rounded-lg p-4 mb-4 border border-neon-cyan/10 text-center">
+          <FaUsers className="text-neon-cyan/30 text-2xl mx-auto mb-2" />
+          <p className="text-text-muted text-xs">No picks selected yet</p>
         </div>
       )}
     </div>

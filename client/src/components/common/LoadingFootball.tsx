@@ -17,9 +17,9 @@ const LoadingFootball: React.FC<LoadingFootballProps> = ({ message = 'Loading...
   }, []);
 
   return (
-    <div className="w-full h-screen flex flex-col items-center justify-center bg-[#23263a] relative overflow-hidden">
+    <div className="w-full h-screen flex flex-col items-center justify-center bg-bg-darker relative overflow-hidden">
       <div 
-        className="absolute inset-0 bg-[#0b0e17] transition-opacity opacity-0 duration-500"
+        className="absolute inset-0 bg-bg-dark transition-opacity opacity-0 duration-500"
         style={{ opacity: visible ? 1 : 0 }}
       />
       <div className="relative w-64 h-64 mb-8 z-10">
@@ -50,13 +50,13 @@ const LoadingFootball: React.FC<LoadingFootballProps> = ({ message = 'Loading...
 
       {/* Loading text */}
       <div className="text-center space-y-4 z-10">
-        <h2 className="text-2xl font-bold text-[#00ffe7] animate-pulse">
+        <h2 className="text-2xl font-bold text-neon-cyan animate-pulse">
           {message}
         </h2>
         <div className="flex justify-center items-center space-x-2">
-          <div className="w-2 h-2 bg-[#8b5cf6] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-2 h-2 bg-[#faafe8] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-2 h-2 bg-[#00ffe7] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-2 h-2 bg-neon-pink rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
         </div>
       </div>
     </div>

@@ -185,7 +185,7 @@ const GoogleLoginButton: React.FC = () => {
             <img 
               src={profilePicture} 
               alt={user.displayName || user.username || 'User'} 
-              className="w-9 h-9 rounded-full border-2 border-[#00ffe7]/50 hover:border-[#00ffe7] transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)] object-cover"
+              className="w-9 h-9 rounded-full border-2 border-neon-cyan/50 hover:border-neon-cyan transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)] object-cover"
               onError={(e) => {
                 console.error('Failed to load profile picture:', profilePicture);
                 setImageError(true);
@@ -193,29 +193,29 @@ const GoogleLoginButton: React.FC = () => {
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="w-9 h-9 rounded-full border-2 border-[#00ffe7]/50 hover:border-[#00ffe7] transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)] bg-[#181a23] flex items-center justify-center">
-              <FaUser className="text-[#00ffe7] text-sm" />
+            <div className="w-9 h-9 rounded-full border-2 border-neon-cyan/50 hover:border-neon-cyan transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)] bg-bg-dark flex items-center justify-center">
+              <FaUser className="text-neon-cyan text-sm" />
             </div>
           )}
-          <FaChevronDown className={`text-[#00ffe7] text-xs transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} />
+          <FaChevronDown className={`text-neon-cyan text-xs transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} />
         </button>
 
         {/* Dropdown Menu - Opens inward from the right */}
         {showDropdown && (
-          <div className="absolute right-0 top-full mt-2 min-w-64 bg-[#0b0e17] border border-[#00ffe7]/30 rounded-lg shadow-[0_0_20px_rgba(0,255,231,0.2)] overflow-hidden z-50 animate-fade-in">
+          <div className="absolute right-0 top-full mt-2 min-w-64 bg-bg-dark border border-neon-cyan/30 rounded-lg shadow-[0_0_20px_rgba(0,255,231,0.2)] overflow-hidden z-50 animate-fade-in">
             {/* User Info Section */}
-            <div className="p-4 border-b border-[#00ffe7]/20 bg-gradient-to-r from-[#00ffe7]/5 to-transparent">
+            <div className="p-4 border-b border-neon-cyan/20 bg-gradient-to-r from-neon-cyan/5 to-transparent">
               <div className="flex items-center gap-3">
                 {profilePicture && !imageError ? (
                   <img 
                     src={profilePicture} 
                     alt={user.displayName || user.username || 'User'} 
-                    className="w-10 h-10 rounded-full border-2 border-[#00ffe7]/50 object-cover"
+                    className="w-10 h-10 rounded-full border-2 border-neon-cyan/50 object-cover"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full border-2 border-[#00ffe7]/50 bg-[#181a23] flex items-center justify-center">
-                    <FaUser className="text-[#00ffe7] text-sm" />
+                  <div className="w-10 h-10 rounded-full border-2 border-neon-cyan/50 bg-bg-dark flex items-center justify-center">
+                    <FaUser className="text-neon-cyan text-sm" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
@@ -230,7 +230,7 @@ const GoogleLoginButton: React.FC = () => {
             </div>
 
             {/* Page Status Info */}
-            <div className="px-3 py-2 border-t border-[#00ffe7]/10">
+            <div className="px-3 py-2 border-t border-neon-cyan/10">
               <div className="text-xs text-gray-400">
                 <div>Last updated: {lastUpdated?.toLocaleTimeString() || 'Never'}</div>
                 <div>Next refresh: {countdown}s</div>
@@ -275,7 +275,7 @@ const GoogleLoginButton: React.FC = () => {
           {/* Tooltip popup */}
           {showTooltip && (
             <div className="absolute right-full top-1/2 -translate-y-1/2 mr-2 z-50 animate-fade-in">
-              <div className="bg-[#1a1d2e] border border-red-500/50 rounded-lg px-4 py-2 shadow-[0_0_15px_rgba(239,68,68,0.3)] min-w-[200px] max-w-[300px]">
+              <div className="bg-bg-darkest border border-red-500/50 rounded-lg px-4 py-2 shadow-[0_0_15px_rgba(239,68,68,0.3)] min-w-[200px] max-w-[300px]">
                 <div className="flex items-start gap-2">
                   <FaExclamationCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-red-400">{error}</p>
@@ -290,7 +290,7 @@ const GoogleLoginButton: React.FC = () => {
                 </button>
               </div>
               {/* Arrow pointing right */}
-              <div className="absolute top-1/2 left-full -translate-y-1/2 w-0 h-0 border-t-[6px] border-b-[6px] border-l-[6px] border-t-transparent border-b-transparent border-l-[#1a1d2e]" />
+              <div className="absolute top-1/2 left-full -translate-y-1/2 w-0 h-0 border-t-[6px] border-b-[6px] border-l-[6px] border-t-transparent border-b-transparent border-l-bg-darkest" />
             </div>
           )}
         </div>
@@ -300,10 +300,10 @@ const GoogleLoginButton: React.FC = () => {
       <button
         onClick={handleGoogleLogin}
         disabled={isLoading}
-        className="group flex items-center gap-3 px-5 py-2.5 rounded-md border border-[#00ffe7]/40 bg-[#0b0e17] text-[#e0e7ef] shadow-[0_0_12px_rgba(0,255,231,0.15)] hover:shadow-[0_0_20px_rgba(0,255,231,0.35)] hover:border-[#00ffe7]/70 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="group flex items-center gap-3 px-5 py-2.5 rounded-md border border-neon-cyan/40 bg-bg-dark text-text-light shadow-[0_0_12px_rgba(0,255,231,0.15)] hover:shadow-[0_0_20px_rgba(0,255,231,0.35)] hover:border-neon-cyan/70 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading ? (
-          <div className="w-4 h-4 border-2 border-[#00ffe7]/30 border-t-[#00ffe7] rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin" />
         ) : (
           <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

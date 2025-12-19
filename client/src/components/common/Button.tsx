@@ -13,8 +13,8 @@ const Button: React.FC<ButtonProps> = ({ label, onClick, type = 'button', classN
       type={type}
       onClick={onClick}
       className={`
-        bg-[#00ffe7] text-[#181a23] font-bold py-2 px-4 rounded transition duration-200
-        hover:bg-[#ff005c] hover:text-white shadow-[0_0_8px_#00ffe7] hover:shadow-[0_0_16px_#ff005c]
+        bg-neon-cyan text-bg-dark font-bold py-2 px-4 rounded transition duration-200
+        hover:bg-neon-pink-dark hover:text-white shadow-[0_0_8px] shadow-neon-cyan hover:shadow-[0_0_16px] hover:shadow-neon-pink-dark
         ${className}
       `}
     >

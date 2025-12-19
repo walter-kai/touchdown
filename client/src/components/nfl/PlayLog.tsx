@@ -72,7 +72,7 @@ const PlayLog: React.FC<PlayLogProps> = ({
 
   if (playLog.length === 0) {
     return (
-      <div className="text-[#b0b7bf] text-center py-8">
+      <div className="text-text-muted text-center py-8">
         No plays recorded yet
       </div>
     );
@@ -111,9 +111,9 @@ const PlayLog: React.FC<PlayLogProps> = ({
       {showTitle && (
         <>
           {/* Divider */}
-          <div className="border-t-2 border-[#00ffe7]/20"></div>
+          <div className="border-t-2 border-neon-cyan/20"></div>
           
-          <div className="flex items-center justify-between py-2 pr-2 border-b border-[#00ffe7]/10 mx-2 min-h-[76px]">
+          <div className="flex items-center justify-between py-2 pr-2 border-b border-neon-cyan/10 mx-2 min-h-[76px]">
             <div>
               <h1>
                 {title}
@@ -121,22 +121,22 @@ const PlayLog: React.FC<PlayLogProps> = ({
             </div>
             
             <div className="text-right min-w-[120px] h-[60px] flex flex-col justify-center">
-              <div className="text-[#00ffe7] text-3xl font-bold leading-tight">{playLog.length}</div>
-              <div className="text-[#b0b7bf] text-xs">{playLog.length === 1 ? 'play' : 'plays'}</div>
+              <div className="text-neon-cyan text-3xl font-bold leading-tight">{playLog.length}</div>
+              <div className="text-text-muted text-xs">{playLog.length === 1 ? 'play' : 'plays'}</div>
             </div>
           </div>
 
           {/* Loading Bar */}
           <div className="mx-2 mb-4">
-            <div className="h-1 bg-[#23263a] rounded-full overflow-hidden">
+            <div className="h-1 bg-bg-darker rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-[#00ffe7] to-[#faafe8] transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(0,255,231,0.5)]"
+                className="h-full bg-gradient-to-r from-neon-cyan to-neon-pink transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(0,255,231,0.5)]"
                 style={{ width: `${progress}%` }}
               />
             </div>
             <div className="flex items-center justify-between mt-1 px-1">
-              <span className="text-[#b0b7bf] text-[10px]">Next refresh</span>
-              <span className="text-[#00ffe7] text-[10px] font-bold">{countdown}s</span>
+              <span className="text-text-muted text-[10px]">Next refresh</span>
+              <span className="text-neon-cyan text-[10px] font-bold">{countdown}s</span>
             </div>
           </div>
         </>
@@ -145,9 +145,9 @@ const PlayLog: React.FC<PlayLogProps> = ({
       <div className="space-y-3" style={{ maxHeight, overflowY: maxHeight !== 'none' ? 'auto' : 'visible' }}>
         {groupedPlays.map((group, groupIdx) => {
           const isHome = group.team?.id === homeTeam?.id;
-          const borderColor = isHome ? 'border-[#faafe8]' : 'border-[#00ffe7]';
-          const bgGradient = isHome ? 'from-[#faafe8]/10' : 'from-[#00ffe7]/10';
-          const textColor = isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]';
+          const borderColor = isHome ? 'border-neon-pink' : 'border-neon-cyan';
+          const bgGradient = isHome ? 'from-neon-pink/10' : 'from-neon-cyan/10';
+          const textColor = isHome ? 'text-neon-pink' : 'text-neon-cyan';
 
           // Check if this is a new group (first play is new)
           const firstPlayId = `${group.plays[0].text}-${group.plays[0].quarter}-${group.plays[0].clock}`;
@@ -177,7 +177,7 @@ const PlayLog: React.FC<PlayLogProps> = ({
                     {group.team?.team.displayName || 'Unknown'}
                   </span>
                 </div>
-                <span className="text-[#b0b7bf] text-xs">
+                <span className="text-text-muted text-xs">
                   {group.plays.length} {group.plays.length === 1 ? 'play' : 'plays'}
                 </span>
               </div>
@@ -206,15 +206,15 @@ const PlayLog: React.FC<PlayLogProps> = ({
                             src={headshotUrl}
                             alt={primaryAthlete.displayName}
                             className={`rounded-lg object-cover border-2 flex-shrink-0 ${
-                              isSelected ? 'border-[#00ffe7]' : 'border-white/30'
+                              isSelected ? 'border-neon-cyan' : 'border-white/30'
                             }`}
                             style={{ width: '69px', height: '60px' }}
                           />
                           <div className="flex-1">
-                            <div className={`font-bold ${isSelected ? 'text-[#00ffe7]' : 'text-white'}`}>
+                            <div className={`font-bold ${isSelected ? 'text-neon-cyan' : 'text-white'}`}>
                               {primaryAthlete.displayName}
                             </div>
-                            <div className="text-[#b0b7bf] text-xs">
+                            <div className="text-text-muted text-xs">
                               {primaryAthlete.position} • #{primaryAthlete.jersey}
                             </div>
                           </div>
@@ -236,7 +236,7 @@ const PlayLog: React.FC<PlayLogProps> = ({
                       )}
 
                       {/* Play Description */}
-                      <p className="text-[#e0e7ef] text-sm leading-snug pl-0">
+                      <p className="text-text-light text-sm leading-snug pl-0">
                         {play.text}
                       </p>
 
@@ -247,7 +247,7 @@ const PlayLog: React.FC<PlayLogProps> = ({
                             const isAthleteSelected = selectedPlayers.some(p => p.id === athlete.id);
                             return (
                               <div key={aIdx} className={`flex items-center gap-2 px-2 py-1 rounded text-xs ${
-                                isAthleteSelected ? 'bg-[#00ffe7]/20 border border-[#00ffe7]/50 text-[#00ffe7]' : 'bg-[#23263a]/80 text-[#b0b7bf]'
+                                isAthleteSelected ? 'bg-neon-cyan/20 border border-neon-cyan/50 text-neon-cyan' : 'bg-bg-darker/80 text-text-muted'
                               }`}>
                                 {athlete.headshot && (
                                   <img 

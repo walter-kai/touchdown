@@ -71,7 +71,7 @@ const GoogleOAuthCallback: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center text-white">
-      <div className="bg-[#181a23] border border-[#00ffe7]/30 rounded-lg p-6">
+      <div className="bg-bg-dark border border-neon-cyan/30 rounded-lg p-6">
         Processing login...
       </div>
     </div>

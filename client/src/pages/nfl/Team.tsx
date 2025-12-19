@@ -240,10 +240,10 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-bg-darkest to-bg-darkest flex items-center justify-center">
         <div className="text-center">
-          <FaFootballBall className="text-6xl text-[#00ffe7] mx-auto mb-4 animate-bounce" />
-          <p className="text-[#e0e7ef] text-xl">Loading team details...</p>
+          <FaFootballBall className="text-6xl text-neon-cyan mx-auto mb-4 animate-bounce" />
+          <p className="text-text-light text-xl">Loading team details...</p>
         </div>
       </div>
     );
@@ -251,13 +251,13 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
   if (error || !teamData) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-bg-darkest to-bg-darkest flex items-center justify-center">
         <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-8 text-center max-w-md">
           <p className="text-red-400 font-bold mb-2 text-lg">Error loading team data</p>
-          <p className="text-[#e0e7ef] mb-4">{error || 'Team not found'}</p>
+          <p className="text-text-light mb-4">{error || 'Team not found'}</p>
           <button
             onClick={() => navigate('/nfl')}
-            className="px-6 py-2 bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-lg text-[#00ffe7] hover:bg-[#00ffe7]/30 transition-colors"
+            className="px-6 py-2 bg-neon-cyan/20 border border-neon-cyan/30 rounded-lg text-neon-cyan hover:bg-neon-cyan/30 transition-colors"
           >
             Back to Scoreboard
           </button>
@@ -288,11 +288,11 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
   const teamLeaders = passedLeaders || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a]">
+    <div className="min-h-screen bg-gradient-to-b from-bg-darkest to-bg-darkest">
       <div className="max-w-7xl mx-auto py-8 px-4">
 
         {/* Team Header */}
-        <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-8 mb-6">
+        <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-8 mb-6">
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* Team Logo */}
             <div className="relative">
@@ -317,7 +317,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-4">
                 <span className="text-2xl font-bold text-white">{totalRecord?.summary}</span>
                 {team.standingSummary && (
-                  <span className="px-4 py-1 bg-[#faafe8]/20 border border-[#faafe8]/30 rounded-full text-[#faafe8] text-sm">
+                  <span className="px-4 py-1 bg-neon-pink/20 border border-neon-pink/30 rounded-full text-neon-pink text-sm">
                     {team.standingSummary}
                   </span>
                 )}
@@ -326,8 +326,8 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
               {/* Record Breakdown */}
               <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                 {homeRecord && (
-                  <div className="flex items-center gap-2 px-4 py-2 bg-[#23263a]/50 rounded-lg border border-[#00ffe7]/20">
-                    <FaHome className="text-[#00ffe7]" />
+                  <div className="flex items-center gap-2 px-4 py-2 bg-bg-darker/50 rounded-lg border border-neon-cyan/20">
+                    <FaHome className="text-neon-cyan" />
                     <div>
                       <div className="text-xs text-gray-400">Home</div>
                       <div className="text-sm font-bold text-white">{homeRecord.summary}</div>
@@ -335,8 +335,8 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                   </div>
                 )}
                 {awayRecord && (
-                  <div className="flex items-center gap-2 px-4 py-2 bg-[#23263a]/50 rounded-lg border border-[#00ffe7]/20">
-                    <FaRoad className="text-[#faafe8]" />
+                  <div className="flex items-center gap-2 px-4 py-2 bg-bg-darker/50 rounded-lg border border-neon-cyan/20">
+                    <FaRoad className="text-neon-pink" />
                     <div>
                       <div className="text-xs text-gray-400">Away</div>
                       <div className="text-sm font-bold text-white">{awayRecord.summary}</div>
@@ -350,7 +350,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
         {/* Team Info Section */}
         <div ref={infoRef} className="mb-8 scroll-mt-20">
-          <h2 className="text-2xl font-bold text-[#00ffe7] mb-4 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-neon-cyan mb-4 flex items-center gap-2">
             <FaClipboardList />
             Team Info
           </h2>
@@ -359,13 +359,13 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               {/* Next Game - Takes 2 columns */}
               {nextGame && (
-                <div className="lg:col-span-2 bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 shadow-[0_0_20px_rgba(250,175,232,0.1)] p-6">
-                  <h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
+                <div className="lg:col-span-2 bg-bg-dark/90 rounded-xl border border-neon-pink/30 shadow-[0_0_20px_rgba(250,175,232,0.1)] p-6">
+                  <h2 className="text-2xl font-bold text-neon-pink mb-4 flex items-center gap-2">
                     <FaCalendar />
                     {nextCompetition?.status.type.completed ? 'Last Game' : 'Next Game'}
                   </h2>
                   
-                  <div className="bg-[#23263a]/50 rounded-lg p-6">
+                  <div className="bg-bg-darker/50 rounded-lg p-6">
                     <div className="text-center mb-4">
                       <div className="text-sm text-gray-400 mb-1">
                         {new Date(nextGame.date).toLocaleDateString('en-US', { 
@@ -375,7 +375,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                           day: 'numeric' 
                         })}
                       </div>
-                      <div className="text-lg font-bold text-[#00ffe7]">
+                      <div className="text-lg font-bold text-neon-cyan">
                         {nextGame.name}
                       </div>
                     </div>
@@ -391,7 +391,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                           />
                           <div className="text-lg font-bold text-white">{awayTeam.team.abbreviation}</div>
                           {awayTeam.score && (
-                            <div className="text-3xl font-bold text-[#00ffe7] mt-2">
+                            <div className="text-3xl font-bold text-neon-cyan mt-2">
                               {awayTeam.score.displayValue}
                             </div>
                           )}
@@ -413,7 +413,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                           />
                           <div className="text-lg font-bold text-white">{homeTeam.team.abbreviation}</div>
                           {homeTeam.score && (
-                            <div className="text-3xl font-bold text-[#00ffe7] mt-2">
+                            <div className="text-3xl font-bold text-neon-cyan mt-2">
                               {homeTeam.score.displayValue}
                             </div>
                           )}
@@ -423,7 +423,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
                     {/* Game Status */}
                     <div className="text-center mt-4">
-                      <span className="px-4 py-2 bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-full text-[#00ffe7] text-sm font-bold">
+                      <span className="px-4 py-2 bg-neon-cyan/20 border border-neon-cyan/30 rounded-full text-neon-cyan text-sm font-bold">
                         {nextCompetition?.status.type.description || 'Scheduled'}
                       </span>
                     </div>
@@ -434,12 +434,12 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
               {/* Quick Stats - 2x2 Grid */}
               <div className="grid grid-cols-2 gap-4">
                 {/* Points For */}
-                <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 p-4">
+                <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <FaChartLine className="text-lg text-[#00ffe7]" />
+                    <FaChartLine className="text-lg text-neon-cyan" />
                     <div className="text-xs text-gray-400">Pts For</div>
                   </div>
-                  <div className="text-2xl font-bold text-[#00ffe7]">
+                  <div className="text-2xl font-bold text-neon-cyan">
                     {getStatValue('pointsFor')?.toFixed(0) || 'N/A'}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">
@@ -448,12 +448,12 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                 </div>
 
                 {/* Points Against */}
-                <div className="bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-4">
+                <div className="bg-bg-dark/90 rounded-xl border border-neon-pink/30 p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <FaChartLine className="text-lg text-[#faafe8]" />
+                    <FaChartLine className="text-lg text-neon-pink" />
                     <div className="text-xs text-gray-400">Pts Against</div>
                   </div>
-                  <div className="text-2xl font-bold text-[#faafe8]">
+                  <div className="text-2xl font-bold text-neon-pink">
                     {getStatValue('pointsAgainst')?.toFixed(0) || 'N/A'}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">
@@ -462,12 +462,12 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                 </div>
 
                 {/* Point Differential */}
-                <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 p-4">
+                <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <FaTrophy className="text-lg text-[#00ffe7]" />
+                    <FaTrophy className="text-lg text-neon-cyan" />
                     <div className="text-xs text-gray-400">Differential</div>
                   </div>
-                  <div className={`text-2xl font-bold ${(getStatValue('pointDifferential') || 0) >= 0 ? 'text-[#00ffe7]' : 'text-red-400'}`}>
+                  <div className={`text-2xl font-bold ${(getStatValue('pointDifferential') || 0) >= 0 ? 'text-neon-cyan' : 'text-red-400'}`}>
                     {(getStatValue('pointDifferential') || 0) >= 0 ? '+' : ''}{getStatValue('pointDifferential')?.toFixed(0) || 'N/A'}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">
@@ -476,12 +476,12 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                 </div>
 
                 {/* Streak */}
-                <div className="bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-4">
+                <div className="bg-bg-dark/90 rounded-xl border border-neon-pink/30 p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <FaFootballBall className="text-lg text-[#faafe8]" />
+                    <FaFootballBall className="text-lg text-neon-pink" />
                     <div className="text-xs text-gray-400">Streak</div>
                   </div>
-                  <div className={`text-2xl font-bold ${(getStatValue('streak') || 0) >= 0 ? 'text-[#00ffe7]' : 'text-red-400'}`}>
+                  <div className={`text-2xl font-bold ${(getStatValue('streak') || 0) >= 0 ? 'text-neon-cyan' : 'text-red-400'}`}>
                     {(getStatValue('streak') || 0) >= 0 ? 'W' : 'L'}{Math.abs(getStatValue('streak') || 0)}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">
@@ -493,16 +493,16 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
             {/* Season Projections - Compact Grid */}
             {projectionData && (
-              <div className="bg-gradient-to-br from-[#181a23]/90 to-[#23263a]/90 rounded-xl border border-[#faafe8]/30 shadow-[0_0_20px_rgba(250,175,232,0.1)] p-6 mb-6">
-                <h2 className="text-xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
+              <div className="bg-gradient-to-br from-bg-dark/90 to-bg-darker/90 rounded-xl border border-neon-pink/30 shadow-[0_0_20px_rgba(250,175,232,0.1)] p-6 mb-6">
+                <h2 className="text-xl font-bold text-neon-pink mb-4 flex items-center gap-2">
                   <FaCrosshairs />
                   2025 Projections
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
                   {/* Projected Record */}
-                  <div className="bg-[#23263a]/50 rounded-lg p-4 border border-[#00ffe7]/30">
+                  <div className="bg-bg-darker/50 rounded-lg p-4 border border-neon-cyan/30">
                     <div className="text-xs text-gray-400 mb-2">Projected Record</div>
-                    <div className="text-3xl font-bold text-[#00ffe7] mb-1">
+                    <div className="text-3xl font-bold text-neon-cyan mb-1">
                       {projectionData.projectedWins.toFixed(1)}-{projectionData.projectedLosses.toFixed(1)}
                     </div>
                     <div className="text-xs text-gray-400">
@@ -511,9 +511,9 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                   </div>
 
                   {/* Division Odds */}
-                  <div className="bg-[#23263a]/50 rounded-lg p-4 border border-[#faafe8]/30">
+                  <div className="bg-bg-darker/50 rounded-lg p-4 border border-neon-pink/30">
                     <div className="text-xs text-gray-400 mb-2">Division Odds</div>
-                    <div className="text-3xl font-bold text-[#faafe8] mb-1">
+                    <div className="text-3xl font-bold text-neon-pink mb-1">
                       {(projectionData.chanceToWinDivision * 100).toFixed(1)}%
                     </div>
                     <div className="text-xs text-gray-400">
@@ -522,9 +522,9 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                   </div>
 
                   {/* This Week */}
-                  <div className="bg-[#23263a]/50 rounded-lg p-4 border border-[#00ffe7]/30">
+                  <div className="bg-bg-darker/50 rounded-lg p-4 border border-neon-cyan/30">
                     <div className="text-xs text-gray-400 mb-2">This Week</div>
-                    <div className="text-3xl font-bold text-[#00ffe7] mb-1">
+                    <div className="text-3xl font-bold text-neon-cyan mb-1">
                       {(projectionData.chanceToWinThisWeek * 100).toFixed(1)}%
                     </div>
                     <div className="text-xs text-gray-400">Win Probability</div>
@@ -533,14 +533,14 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                   {/* Playoff Outlook */}
                   <div className={`rounded-lg p-4 border-2 ${
                     projectionData.projectedWins >= 10 
-                      ? 'bg-[#00ffe7]/10 border-[#00ffe7]/50' 
+                      ? 'bg-neon-cyan/10 border-neon-cyan/50' 
                       : projectionData.projectedWins >= 9 
                       ? 'bg-yellow-500/10 border-yellow-500/50'
                       : 'bg-red-500/10 border-red-500/50'
                   }`}>
                     <div className="text-xs text-gray-400 mb-2">Playoff Outlook</div>
                     <div className={`text-3xl font-bold mb-1 ${
-                      projectionData.projectedWins >= 10 ? 'text-[#00ffe7]' : 
+                      projectionData.projectedWins >= 10 ? 'text-neon-cyan' : 
                       projectionData.projectedWins >= 9 ? 'text-yellow-400' : 
                       'text-red-400'
                     }`}>
@@ -556,8 +556,8 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
         {/* Detailed Records Breakdown */}
         {detailedRecords && (
-          <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
-            <h2 className="text-xl font-bold text-[#00ffe7] mb-4 flex items-center gap-2">
+          <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
+            <h2 className="text-xl font-bold text-neon-cyan mb-4 flex items-center gap-2">
               <FaListOl />
               Detailed Records
             </h2>
@@ -571,7 +571,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                 return (
                   <div 
                     key={idx}
-                    className="bg-[#23263a]/50 rounded-lg border border-[#00ffe7]/20 p-3 hover:border-[#00ffe7]/40 transition-all"
+                    className="bg-bg-darker/50 rounded-lg border border-neon-cyan/20 p-3 hover:border-neon-cyan/40 transition-all"
                   >
                     <div className="text-xs text-gray-400 mb-1 uppercase">{record.displayName || record.name}</div>
                     <div className="text-2xl font-bold text-white mb-1">{record.summary}</div>
@@ -584,33 +584,33 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
         )}
 
         {/* Division Stats */}
-        <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
-          <h2 className="text-2xl font-bold text-[#00ffe7] mb-4 flex items-center gap-2">
+        <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
+          <h2 className="text-2xl font-bold text-neon-cyan mb-4 flex items-center gap-2">
             <FaUsers />
             Division Performance
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-[#23263a]/50 rounded-lg">
+            <div className="text-center p-4 bg-bg-darker/50 rounded-lg">
               <div className="text-sm text-gray-400 mb-1">Division Record</div>
               <div className="text-2xl font-bold text-white">
                 {getStatValue('divisionWins')?.toFixed(0)}-{getStatValue('divisionLosses')?.toFixed(0)}
               </div>
             </div>
-            <div className="text-center p-4 bg-[#23263a]/50 rounded-lg">
+            <div className="text-center p-4 bg-bg-darker/50 rounded-lg">
               <div className="text-sm text-gray-400 mb-1">Division Win %</div>
-              <div className="text-2xl font-bold text-[#00ffe7]">
+              <div className="text-2xl font-bold text-neon-cyan">
                 {((getStatValue('divisionWinPercent') || 0) * 100).toFixed(1)}%
               </div>
             </div>
-            <div className="text-center p-4 bg-[#23263a]/50 rounded-lg">
+            <div className="text-center p-4 bg-bg-darker/50 rounded-lg">
               <div className="text-sm text-gray-400 mb-1">Games Played</div>
               <div className="text-2xl font-bold text-white">
                 {getStatValue('gamesPlayed')?.toFixed(0) || 'N/A'}
               </div>
             </div>
-            <div className="text-center p-4 bg-[#23263a]/50 rounded-lg">
+            <div className="text-center p-4 bg-bg-darker/50 rounded-lg">
               <div className="text-sm text-gray-400 mb-1">Playoff Seed</div>
-              <div className="text-2xl font-bold text-[#faafe8]">
+              <div className="text-2xl font-bold text-neon-pink">
                 #{getStatValue('playoffSeed')?.toFixed(0) || 'N/A'}
               </div>
             </div>
@@ -619,13 +619,13 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
         {/* Next Game */}
         {nextGame && (
-          <div className="bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 shadow-[0_0_20px_rgba(250,175,232,0.1)] p-6">
-            <h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
+          <div className="bg-bg-dark/90 rounded-xl border border-neon-pink/30 shadow-[0_0_20px_rgba(250,175,232,0.1)] p-6">
+            <h2 className="text-2xl font-bold text-neon-pink mb-4 flex items-center gap-2">
               <FaCalendar />
               {nextCompetition?.status.type.completed ? 'Last Game' : 'Next Game'}
             </h2>
             
-            <div className="bg-[#23263a]/50 rounded-lg p-6">
+            <div className="bg-bg-darker/50 rounded-lg p-6">
               <div className="text-center mb-4">
                 <div className="text-sm text-gray-400 mb-1">
                   {new Date(nextGame.date).toLocaleDateString('en-US', { 
@@ -635,7 +635,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                     day: 'numeric' 
                   })}
                 </div>
-                <div className="text-lg font-bold text-[#00ffe7]">
+                <div className="text-lg font-bold text-neon-cyan">
                   {nextGame.name}
                 </div>
               </div>
@@ -651,7 +651,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                     />
                     <div className="text-lg font-bold text-white">{awayTeam.team.abbreviation}</div>
                     {awayTeam.score && (
-                      <div className="text-3xl font-bold text-[#00ffe7] mt-2">
+                      <div className="text-3xl font-bold text-neon-cyan mt-2">
                         {awayTeam.score.displayValue}
                       </div>
                     )}
@@ -673,7 +673,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                     />
                     <div className="text-lg font-bold text-white">{homeTeam.team.abbreviation}</div>
                     {homeTeam.score && (
-                      <div className="text-3xl font-bold text-[#00ffe7] mt-2">
+                      <div className="text-3xl font-bold text-neon-cyan mt-2">
                         {homeTeam.score.displayValue}
                       </div>
                     )}
@@ -683,7 +683,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
               {/* Game Status */}
               <div className="text-center mt-4">
-                <span className="px-4 py-2 bg-[#00ffe7]/20 border border-[#00ffe7]/30 rounded-full text-[#00ffe7] text-sm font-bold">
+                <span className="px-4 py-2 bg-neon-cyan/20 border border-neon-cyan/30 rounded-full text-neon-cyan text-sm font-bold">
                   {nextCompetition?.status.type.description || 'Scheduled'}
                 </span>
               </div>
@@ -693,8 +693,8 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
         {/* Team Season Leaders */}
         {teamLeaders.length > 0 && (
-          <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
-            <h2 className="text-2xl font-bold text-[#00ffe7] mb-6 flex items-center gap-2">
+          <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
+            <h2 className="text-2xl font-bold text-neon-cyan mb-6 flex items-center gap-2">
               <FaStar />
               Season Leaders
             </h2>
@@ -706,11 +706,11 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                 return (
                   <div 
                     key={idx} 
-                    className="bg-gradient-to-br from-[#23263a]/80 to-[#181a23]/80 rounded-xl border border-[#00ffe7]/20 p-5 hover:border-[#00ffe7]/40 transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,255,231,0.2)]"
+                    className="bg-gradient-to-br from-bg-darker/80 to-bg-dark/80 rounded-xl border border-neon-cyan/20 p-5 hover:border-neon-cyan/40 transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,255,231,0.2)]"
                   >
                     {/* Category Badge */}
                     <div className="mb-4">
-                      <span className="inline-block px-4 py-1.5 bg-[#00ffe7]/20 border border-[#00ffe7]/40 rounded-full text-[#00ffe7] text-xs font-bold uppercase tracking-wider">
+                      <span className="inline-block px-4 py-1.5 bg-neon-cyan/20 border border-neon-cyan/40 rounded-full text-neon-cyan text-xs font-bold uppercase tracking-wider">
                         {leader.displayName}
                       </span>
                     </div>
@@ -721,7 +721,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                         <img 
                           src={topLeader.athlete.headshot.href}
                           alt={topLeader.athlete.displayName}
-                          className="w-16 h-16 rounded-full object-cover border-2 border-[#faafe8]/30 flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                          className="w-16 h-16 rounded-full object-cover border-2 border-neon-pink/30 flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
                           onClick={() => navigate(`/nfl/player/${topLeader.athlete.id}`)}
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = 'none';
@@ -731,15 +731,15 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                         />
                       ) : null}
                       <div 
-                        className="w-16 h-16 rounded-full bg-[#23263a] border-2 border-[#faafe8]/30 flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                        className="w-16 h-16 rounded-full bg-bg-darker border-2 border-neon-pink/30 flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
                         style={{ display: topLeader.athlete.headshot ? 'none' : 'flex' }}
                         onClick={() => navigate(`/nfl/player/${topLeader.athlete.id}`)}
                       >
-                        <FaFootballBall className="text-[#faafe8] text-2xl" />
+                        <FaFootballBall className="text-neon-pink text-2xl" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div 
-                          className="text-lg font-bold text-white truncate cursor-pointer hover:text-[#00ffe7] transition-colors"
+                          className="text-lg font-bold text-white truncate cursor-pointer hover:text-neon-cyan transition-colors"
                           onClick={() => navigate(`/nfl/player/${topLeader.athlete.id}`)}
                         >
                           {topLeader.athlete.displayName}
@@ -751,8 +751,8 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                     </div>
                     
                     {/* Stats Value */}
-                    <div className="pt-3 border-t border-[#faafe8]/20">
-                      <div className="text-3xl font-bold text-[#faafe8] text-center">
+                    <div className="pt-3 border-t border-neon-pink/20">
+                      <div className="text-3xl font-bold text-neon-pink text-center">
                         {topLeader.displayValue}
                       </div>
                     </div>
@@ -765,12 +765,12 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
         {/* Stadium Information */}
         {team.franchise?.venue && (
-          <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
-            <h2 className="text-2xl font-bold text-[#00ffe7] mb-4 flex items-center gap-2">
+          <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
+            <h2 className="text-2xl font-bold text-neon-cyan mb-4 flex items-center gap-2">
               <FaMapMarkerAlt />
               Stadium Information
             </h2>
-            <div className="bg-[#23263a]/50 rounded-lg p-6">
+            <div className="bg-bg-darker/50 rounded-lg p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <div className="text-sm text-gray-400 mb-1">Venue</div>
@@ -784,13 +784,13 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                 </div>
                 <div>
                   <div className="text-sm text-gray-400 mb-1">Surface</div>
-                  <div className="text-lg font-bold text-[#00ffe7]">
+                  <div className="text-lg font-bold text-neon-cyan">
                     {team.franchise.venue.grass ? 'Natural Grass' : 'Artificial Turf'}
                   </div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-400 mb-1">Type</div>
-                  <div className="text-lg font-bold text-[#00ffe7]">
+                  <div className="text-lg font-bold text-neon-cyan">
                     {team.franchise.venue.indoor ? 'Indoor Stadium' : 'Outdoor Stadium'}
                   </div>
                 </div>
@@ -815,8 +815,8 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
         {/* Schedule Section */}
         <div ref={scheduleRef} className="mb-8 scroll-mt-20">
         {scheduleData && scheduleData.events && scheduleData.events.length > 0 && (
-          <div className="bg-[#181a23]/90 rounded-xl border border-[#00ffe7]/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
-            <h2 className="text-2xl font-bold text-[#00ffe7] mb-6 flex items-center gap-2">
+          <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
+            <h2 className="text-2xl font-bold text-neon-cyan mb-6 flex items-center gap-2">
               <FaCalendar />
               2025 Season Schedule
             </h2>
@@ -838,9 +838,9 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                     className={`bg-gradient-to-r rounded-xl border-2 p-4 transition-all hover:scale-[1.02] cursor-pointer ${
                       isCompleted
                         ? didWin
-                          ? 'from-[#00ffe7]/10 to-[#00ffe7]/5 border-[#00ffe7]/40 hover:border-[#00ffe7]/60 hover:shadow-[0_0_20px_rgba(0,255,231,0.2)]'
+                          ? 'from-neon-cyan/10 to-neon-cyan/5 border-neon-cyan/40 hover:border-neon-cyan/60 hover:shadow-[0_0_20px_rgba(0,255,231,0.2)]'
                           : 'from-red-500/10 to-red-500/5 border-red-500/40 hover:border-red-500/60 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]'
-                        : 'from-[#23263a]/80 to-[#181a23]/60 border-[#faafe8]/30 hover:border-[#faafe8]/50 hover:shadow-[0_0_20px_rgba(250,175,232,0.2)]'
+                        : 'from-bg-darker/80 to-bg-dark/60 border-neon-pink/30 hover:border-neon-pink/50 hover:shadow-[0_0_20px_rgba(250,175,232,0.2)]'
                     }`}
                     onClick={() => navigate(`/nfl/game/${event.id}`)}
                   >
@@ -848,7 +848,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                       {/* Week & Date Info - Left */}
                       <div className="flex-shrink-0 min-w-[70px]">
                         <div className="text-xs text-gray-400 uppercase tracking-wider">{event.week.text}</div>
-                        <div className="text-sm font-bold text-[#00ffe7]">
+                        <div className="text-sm font-bold text-neon-cyan">
                           {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </div>
                       </div>
@@ -879,10 +879,10 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                       {/* Scores - Right Aligned */}
                       {isCompleted && (
                         <div className="flex flex-col gap-2 flex-shrink-0 min-w-[50px] items-end">
-                          <div className={`text-xl font-bold ${awayTeam?.winner ? 'text-[#00ffe7]' : 'text-gray-400'}`}>
+                          <div className={`text-xl font-bold ${awayTeam?.winner ? 'text-neon-cyan' : 'text-gray-400'}`}>
                             {awayTeam?.score?.displayValue || '0'}
                           </div>
-                          <div className={`text-xl font-bold ${homeTeam?.winner ? 'text-[#00ffe7]' : 'text-gray-400'}`}>
+                          <div className={`text-xl font-bold ${homeTeam?.winner ? 'text-neon-cyan' : 'text-gray-400'}`}>
                             {homeTeam?.score?.displayValue || '0'}
                           </div>
                         </div>
@@ -890,11 +890,11 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                     </div>
 
                     {/* Status Footer */}
-                    <div className="mt-3 pt-3 border-t border-[#00ffe7]/10 flex items-center justify-between">
+                    <div className="mt-3 pt-3 border-t border-neon-cyan/10 flex items-center justify-between">
                       <div className="text-xs text-gray-400">
                         {isCompleted ? (
                           didWin ? (
-                            <span className="text-[#00ffe7] font-semibold">Final - Win</span>
+                            <span className="text-neon-cyan font-semibold">Final - Win</span>
                           ) : (
                             <span className="text-red-400 font-semibold">Final - Loss</span>
                           )
@@ -904,7 +904,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                       </div>
                       {competition.venue && (
                         <div className="flex items-center gap-1 text-xs text-gray-400">
-                          <FaMapMarkerAlt className="text-[#faafe8]" />
+                          <FaMapMarkerAlt className="text-neon-pink" />
                           <span className="truncate max-w-[200px]">{competition.venue.fullName}</span>
                         </div>
                       )}
@@ -921,22 +921,22 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
         {/* News Section */}
         <div ref={newsRef} className="mb-8 scroll-mt-20">
-          <h2 className="text-2xl font-bold text-[#faafe8] mb-4 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-neon-pink mb-4 flex items-center gap-2">
             <FaNewspaper />
             Team News
           </h2>
 
           {loadingNews ? (
               <div className="text-center py-20">
-                <FaFootballBall className="text-6xl text-[#faafe8] mx-auto mb-4 animate-pulse" />
-                <p className="text-[#e0e7ef] text-xl">Loading team news...</p>
+                <FaFootballBall className="text-6xl text-neon-pink mx-auto mb-4 animate-pulse" />
+                <p className="text-text-light text-xl">Loading team news...</p>
               </div>
             ) : news.length > 0 ? (
               <NewsTicker news={news} />
             ) : (
-              <div className="bg-[#181a23]/90 rounded-xl border border-[#faafe8]/30 p-12 text-center">
-                <FaNewspaper className="text-6xl text-[#faafe8] mx-auto mb-4 opacity-50" />
-                <p className="text-[#e0e7ef] text-xl">No news available for this team</p>
+              <div className="bg-bg-dark/90 rounded-xl border border-neon-pink/30 p-12 text-center">
+                <FaNewspaper className="text-6xl text-neon-pink mx-auto mb-4 opacity-50" />
+                <p className="text-text-light text-xl">No news available for this team</p>
               </div>
             )}
         </div>

@@ -120,33 +120,33 @@ const PointsChart: React.FC<PointsChartProps> = ({
   
   if (scoringPlays.length === 0) {
     return (
-      <div className="bg-[#181a23]/95 rounded-xl border border-[#00ffe7]/30 p-6 text-center">
+      <div className="bg-bg-dark/95 rounded-xl border border-neon-cyan/30 p-6 text-center">
         <p className="text-gray-400">No scoring data available yet</p>
       </div>
     );
   }
   
   return (
-    <div className="bg-[#181a23]/95 rounded-xl py-4 sm:p-6">
+    <div className="bg-bg-dark/95 rounded-xl py-4 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div className="flex items-center gap-2">
-          <FaChartBar className="text-[#00ffe7] text-lg sm:text-xl" />
-          <h3 className="text-base sm:text-lg font-bold text-[#00ffe7]">Scoring by Time</h3>
+          <FaChartBar className="text-neon-cyan text-lg sm:text-xl" />
+          <h3 className="text-base sm:text-lg font-bold text-neon-cyan">Scoring by Time</h3>
         </div>
       </div>
 
       {/* Team Labels */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-gradient-to-br from-[#00ffe7]/70 to-[#00ffe7]/50 rounded"></div>
-          <span className="text-sm font-semibold text-[#e0e7ef]">{awayTeamInfo.name}</span>
+          <div className="w-3 h-3 bg-gradient-to-br from-neon-cyan/70 to-neon-cyan/50 rounded"></div>
+          <span className="text-sm font-semibold text-text-light">{awayTeamInfo.name}</span>
           <span className="text-xs text-gray-400">({totalAwayPoints} pts)</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400">({totalHomePoints} pts)</span>
-          <span className="text-sm font-semibold text-[#e0e7ef]">{homeTeamInfo.name}</span>
-          <div className="w-3 h-3 bg-gradient-to-br from-[#faafe8]/70 to-[#faafe8]/50 rounded"></div>
+          <span className="text-sm font-semibold text-text-light">{homeTeamInfo.name}</span>
+          <div className="w-3 h-3 bg-gradient-to-br from-neon-pink/70 to-neon-pink/50 rounded"></div>
         </div>
       </div>
 
@@ -167,11 +167,11 @@ const PointsChart: React.FC<PointsChartProps> = ({
               {/* Bars container */}
               <div className="flex-1 flex items-center gap-1">
                 {/* Away team bar (left side - cyan) */}
-                <div className="flex-1 h-8 bg-[#23263a]/50 rounded-l-lg overflow-hidden flex items-center justify-end relative">
+                <div className="flex-1 h-8 bg-bg-darker/50 rounded-l-lg overflow-hidden flex items-center justify-end relative">
                   {interval.awayPoints > 0 && (
                     <>
                       <div 
-                        className="absolute right-0 top-0 bottom-0 bg-gradient-to-l from-[#00ffe7]/70 to-[#00ffe7]/50 transition-all duration-300"
+                        className="absolute right-0 top-0 bottom-0 bg-gradient-to-l from-neon-cyan/70 to-neon-cyan/50 transition-all duration-300"
                         style={{ width: `${awayHeight}%` }}
                       />
                       <span className="relative z-10 text-xs font-bold text-white pr-2">
@@ -182,14 +182,14 @@ const PointsChart: React.FC<PointsChartProps> = ({
                 </div>
                 
                 {/* Divider */}
-                <div className="w-px h-8 bg-[#faafe8]/20"></div>
+                <div className="w-px h-8 bg-neon-pink/20"></div>
                 
                 {/* Home team bar (right side - pink) */}
-                <div className="flex-1 h-8 bg-[#23263a]/50 rounded-r-lg overflow-hidden flex items-center justify-start relative">
+                <div className="flex-1 h-8 bg-bg-darker/50 rounded-r-lg overflow-hidden flex items-center justify-start relative">
                   {interval.homePoints > 0 && (
                     <>
                       <div 
-                        className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-[#faafe8]/70 to-[#faafe8]/50 transition-all duration-300"
+                        className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-neon-pink/70 to-neon-pink/50 transition-all duration-300"
                         style={{ width: `${homeHeight}%` }}
                       />
                       <span className="relative z-10 text-xs font-bold text-white pl-2">
@@ -206,22 +206,22 @@ const PointsChart: React.FC<PointsChartProps> = ({
 
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="p-3 bg-[#23263a]/50 rounded-lg text-center">
+        <div className="p-3 bg-bg-darker/50 rounded-lg text-center">
           <div className="text-xs text-gray-400 mb-1">Scoring Plays</div>
-          <div className="text-lg font-bold text-[#00ffe7]">{scoringPlays.length}</div>
+          <div className="text-lg font-bold text-neon-cyan">{scoringPlays.length}</div>
         </div>
-        <div className="p-3 bg-[#23263a]/50 rounded-lg text-center">
+        <div className="p-3 bg-bg-darker/50 rounded-lg text-center">
           <div className="text-xs text-gray-400 mb-1">Highest Interval</div>
-          <div className="text-lg font-bold text-[#faafe8]">{maxPoints} pts</div>
+          <div className="text-lg font-bold text-neon-pink">{maxPoints} pts</div>
         </div>
-        <div className="p-3 bg-[#23263a]/50 rounded-lg text-center">
+        <div className="p-3 bg-bg-darker/50 rounded-lg text-center">
           <div className="text-xs text-gray-400 mb-1">Total Points</div>
           <div className="text-lg font-bold text-white">{totalHomePoints + totalAwayPoints}</div>
         </div>
       </div>
 
       {/* Footer Note */}
-      <div className="mt-4 pt-4 border-t border-[#faafe8]/20">
+      <div className="mt-4 pt-4 border-t border-neon-pink/20">
         <p className="text-xs text-gray-500 text-center">
           Points aggregated in 5-minute intervals • {intervals.length * 5} minutes of game time shown
         </p>

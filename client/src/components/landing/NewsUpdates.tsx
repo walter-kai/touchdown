@@ -140,7 +140,7 @@ const NewsUpdates: React.FC = () => {
       case 'twitter':
         return <FaTwitter className="text-blue-400" />;
       default:
-        return <span className="text-[#00ffe7]">📰</span>;
+        return <span className="text-neon-cyan">📰</span>;
     }
   };
 
@@ -161,7 +161,7 @@ const NewsUpdates: React.FC = () => {
   const getSentimentColor = (sentiment: number) => {
     if (sentiment > 3) return 'text-green-400';
     if (sentiment < -3) return 'text-red-400';
-    return 'text-[#e0e7ef]';
+    return 'text-text-light';
   };
 
   const formatDate = (dateString: string | null) => {
@@ -319,7 +319,7 @@ const NewsUpdates: React.FC = () => {
         <p className="text-red-400 mb-4">Error loading news: {error}</p>
         <button 
           onClick={fetchNews}
-          className="bg-[#00ffe7] text-[#181a23] px-4 py-2 rounded hover:bg-[#ff005c] hover:text-white transition"
+          className="bg-neon-cyan text-bg-dark px-4 py-2 rounded hover:bg-neon-pink-dark hover:text-white transition"
         >
           Try Again
         </button>
@@ -338,13 +338,13 @@ const NewsUpdates: React.FC = () => {
 
       {/* Content Type Toggle */}
       <div className="flex items-center justify-center gap-4 mb-4">
-        <div className="flex border border-[#00ffe7]/30 rounded-lg overflow-hidden">
+        <div className="flex border border-neon-cyan/30 rounded-lg overflow-hidden">
           <button
             onClick={() => setContentType('news')}
             className={`px-4 py-2 font-semibold transition-all duration-200 ${
               contentType === 'news'
-                ? 'bg-[#00ffe7] text-[#181a23]'
-                : 'bg-[#23263a] text-[#e0e7ef] hover:bg-[#00ffe7]/20'
+                ? 'bg-neon-cyan text-bg-dark'
+                : 'bg-bg-darker text-text-light hover:bg-neon-cyan/20'
             }`}
           >
             <FaNewspaper className="inline mr-2" />
@@ -354,8 +354,8 @@ const NewsUpdates: React.FC = () => {
             onClick={() => setContentType('updates')}
             className={`px-4 py-2 font-semibold transition-all duration-200 ${
               contentType === 'updates'
-                ? 'bg-[#00ffe7] text-[#181a23]'
-                : 'bg-[#23263a] text-[#e0e7ef] hover:bg-[#00ffe7]/20'
+                ? 'bg-neon-cyan text-bg-dark'
+                : 'bg-bg-darker text-text-light hover:bg-neon-cyan/20'
             }`}
           >
             <FaCode className="inline mr-2" />
@@ -369,7 +369,7 @@ const NewsUpdates: React.FC = () => {
           <div className="flex items-center justify-center gap-4">
             <button
               onClick={() => setShowTicker(!showTicker)}
-              className="flex items-center gap-2 bg-[#00ffe7] text-[#181a23] px-4 py-2 rounded hover:bg-[#ff005c] hover:text-white transition-all duration-200 font-semibold"
+              className="flex items-center gap-2 bg-neon-cyan text-bg-dark px-4 py-2 rounded hover:bg-neon-pink-dark hover:text-white transition-all duration-200 font-semibold"
             >
               {showTicker ? <FaChevronUp /> : <FaChevronDown />}
               {showTicker ? 'Hide Posts' : 'Show Posts'}
@@ -378,11 +378,11 @@ const NewsUpdates: React.FC = () => {
             <div className="flex gap-3">
               {/* Filter */}
               <div className="flex items-center gap-2">
-                <FaFilter className="text-[#00ffe7]" />
+                <FaFilter className="text-neon-cyan" />
                 <select
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
-                  className="bg-[#23263a] text-[#e0e7ef] border border-[#00ffe7]/30 rounded px-3 py-1 text-sm"
+                  className="bg-bg-darker text-text-light border border-neon-cyan/30 rounded px-3 py-1 text-sm"
                 >
                   <option value="all">All Sources</option>
                   <option value="youtube">YouTube</option>
@@ -392,11 +392,11 @@ const NewsUpdates: React.FC = () => {
 
               {/* Sort */}
               <div className="flex items-center gap-2">
-                <FaSort className="text-[#00ffe7]" />
+                <FaSort className="text-neon-cyan" />
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as 'date' | 'engagement')}
-                  className="bg-[#23263a] text-[#e0e7ef] border border-[#00ffe7]/30 rounded px-3 py-1 text-sm"
+                  className="bg-bg-darker text-text-light border border-neon-cyan/30 rounded px-3 py-1 text-sm"
                 >
                   <option value="date">Latest</option>
                   <option value="engagement">Most Engaging</option>
@@ -417,14 +417,14 @@ const NewsUpdates: React.FC = () => {
             `}
           >
             {filteredAndSortedNews.length === 0 ? (
-              <div className="text-center py-8 text-[#e0e7ef] bg-[#23263a] border border-[#00ffe7]/30 rounded-lg">
+              <div className="text-center py-8 text-text-light bg-bg-darker border border-neon-cyan/30 rounded-lg">
                 No news items found for the selected filter.
               </div>
             ) : (
               <>
                 {/* Ticker Container */}
                 <div 
-                  className="relative overflow-hidden py-4 border border-[#00ffe7]/20 rounded-lg bg-[#181a23]/95 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,255,231,0.3)]"
+                  className="relative overflow-hidden py-4 border border-neon-cyan/20 rounded-lg bg-bg-dark/95 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,255,231,0.3)]"
                   style={{ height: '320px' }}
                   onMouseEnter={() => setIsPaused(true)}
                   onMouseLeave={() => setIsPaused(false)}
@@ -432,7 +432,7 @@ const NewsUpdates: React.FC = () => {
                   {/* Close button */}
                   <button
                     onClick={() => setShowTicker(false)}
-                    className="absolute top-2 right-2 z-10 bg-[#ff005c] text-white w-7 h-6 rounded-full flex items-center justify-center text-xs hover:bg-[#ff3380] transition"
+                    className="absolute top-2 right-2 z-10 bg-neon-pink-dark text-white w-7 h-6 rounded-full flex items-center justify-center text-xs hover:bg-neon-pink transition"
                   >
                     ✕
                   </button>
@@ -451,20 +451,20 @@ const NewsUpdates: React.FC = () => {
                         className="flex-shrink-0 w-80 cursor-pointer transition-all duration-300 hover:scale-105"
                         onClick={() => item.post_urls.length > 0 && window.open(item.post_urls[0], '_blank')}
                       >
-                        <div className="bg-[#23263a] border border-[#00ffe7]/30 rounded-lg p-4 h-72 overflow-hidden hover:shadow-[0_0_16px_#00ffe7] transition-all duration-300">
+                        <div className="bg-bg-darker border border-neon-cyan/30 rounded-lg p-4 h-72 overflow-hidden hover:shadow-[0_0_16px_#00ffe7] transition-all duration-300">
                           {/* Header */}
                           <div className="flex items-start gap-3 mb-3">
                             <img
                               src={item.author.profile_image_url}
                               alt={item.author.name}
-                              className="w-8 h-8 rounded-full border border-[#00ffe7]/50 flex-shrink-0"
+                              className="w-8 h-8 rounded-full border border-neon-cyan/50 flex-shrink-0"
                             />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-semibold text-[#00ffe7] text-sm truncate">{item.author.name}</h3>
+                                <h3 className="font-semibold text-neon-cyan text-sm truncate">{item.author.name}</h3>
                                 {item.author.verified && <span className="text-blue-400 text-xs">✓</span>}
                               </div>
-                              <div className="flex items-center gap-2 text-xs text-[#e0e7ef]">
+                              <div className="flex items-center gap-2 text-xs text-text-light">
                                 {getSourceIcon(item.sourcetype)}
                                 <span>{formatDate(item.date)}</span>
                               </div>
@@ -473,7 +473,7 @@ const NewsUpdates: React.FC = () => {
 
                           {/* Content */}
                           {item.content && (
-                            <p className="text-[#e0e7ef] mb-3 h-12 leading-relaxed text-sm line-clamp-4">
+                            <p className="text-text-light mb-3 h-12 leading-relaxed text-sm line-clamp-4">
                               {truncateContent(item.content, 120)}
                             </p>
                           )}
@@ -484,7 +484,7 @@ const NewsUpdates: React.FC = () => {
                               <img
                                 src={item.media_urls[0]}
                                 alt="Post media"
-                                className="w-full h-20 object-cover rounded-lg border border-[#00ffe7]/30"
+                                className="w-full h-20 object-cover rounded-lg border border-neon-cyan/30"
                               />
                             </div>
                           )}
@@ -496,7 +496,7 @@ const NewsUpdates: React.FC = () => {
                                 {item.hashtags.slice(0, 2).map((tag, idx) => (
                                   <span
                                     key={idx}
-                                    className="text-[#00ffe7] text-xs bg-[#181a23] px-2 py-1 rounded"
+                                    className="text-neon-cyan text-xs bg-bg-dark px-2 py-1 rounded"
                                   >
                                     #{tag}
                                   </span>
@@ -510,14 +510,14 @@ const NewsUpdates: React.FC = () => {
                             </div>
                           ) : (
                             <div className="mb-3">
-                              <span className="text-xs text-gray-400 bg-[#181a23] px-2 py-1 rounded">
+                              <span className="text-xs text-gray-400 bg-bg-dark px-2 py-1 rounded">
                                 no hashtags
                               </span>
                             </div>
                           )}
 
                           {/* Metrics */}
-                          <div className="flex items-center justify-between pt-2 border-t border-[#00ffe7]/20 mt-auto">
+                          <div className="flex items-center justify-between pt-2 border-t border-neon-cyan/20 mt-auto">
                             <div className="flex items-center gap-2 text-xs text-[#b8eaff]">
                               {item.sourcetype === 'youtube' && item.metrics.youtube && (
                                 <>
@@ -563,20 +563,20 @@ const NewsUpdates: React.FC = () => {
                         className="flex-shrink-0 w-80 cursor-pointer transition-all duration-300 hover:scale-105"
                         onClick={() => item.post_urls.length > 0 && window.open(item.post_urls[0], '_blank')}
                       >
-                        <div className="bg-[#23263a] border border-[#00ffe7]/30 rounded-lg p-4 h-64 overflow-hidden hover:shadow-[0_0_16px_#00ffe7] transition-all duration-300">
+                        <div className="bg-bg-darker border border-neon-cyan/30 rounded-lg p-4 h-64 overflow-hidden hover:shadow-[0_0_16px_#00ffe7] transition-all duration-300">
                           {/* Header */}
                           <div className="flex items-start gap-3 mb-3">
                             <img
                               src={item.author.profile_image_url}
                               alt={item.author.name}
-                              className="w-8 h-8 rounded-full border border-[#00ffe7]/50 flex-shrink-0"
+                              className="w-8 h-8 rounded-full border border-neon-cyan/50 flex-shrink-0"
                             />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-semibold text-[#00ffe7] text-sm truncate">{item.author.name}</h3>
+                                <h3 className="font-semibold text-neon-cyan text-sm truncate">{item.author.name}</h3>
                                 {item.author.verified && <span className="text-blue-400 text-xs">✓</span>}
                               </div>
-                              <div className="flex items-center gap-2 text-xs text-[#e0e7ef]">
+                              <div className="flex items-center gap-2 text-xs text-text-light">
                                 {getSourceIcon(item.sourcetype)}
                                 <span>{formatDate(item.date)}</span>
                               </div>
@@ -585,7 +585,7 @@ const NewsUpdates: React.FC = () => {
 
                           {/* Content */}
                           {item.content && (
-                            <p className="text-[#e0e7ef] mb-3 leading-relaxed text-sm line-clamp-4">
+                            <p className="text-text-light mb-3 leading-relaxed text-sm line-clamp-4">
                               {truncateContent(item.content, 120)}
                             </p>
                           )}
@@ -596,7 +596,7 @@ const NewsUpdates: React.FC = () => {
                               <img
                                 src={item.media_urls[0]}
                                 alt="Post media"
-                                className="w-full h-20 object-cover rounded-lg border border-[#00ffe7]/30"
+                                className="w-full h-20 object-cover rounded-lg border border-neon-cyan/30"
                               />
                             </div>
                           )}
@@ -608,7 +608,7 @@ const NewsUpdates: React.FC = () => {
                                 {item.hashtags.slice(0, 2).map((tag, idx) => (
                                   <span
                                     key={idx}
-                                    className="text-[#00ffe7] text-xs bg-[#181a23] px-2 py-1 rounded"
+                                    className="text-neon-cyan text-xs bg-bg-dark px-2 py-1 rounded"
                                   >
                                     #{tag}
                                   </span>
@@ -623,7 +623,7 @@ const NewsUpdates: React.FC = () => {
                           )}
 
                           {/* Metrics */}
-                          <div className="flex items-center justify-between pt-2 border-t border-[#00ffe7]/20 mt-auto">
+                          <div className="flex items-center justify-between pt-2 border-t border-neon-cyan/20 mt-auto">
                             <div className="flex items-center gap-2 text-xs text-[#b8eaff]">
                               {item.sourcetype === 'youtube' && item.metrics.youtube && (
                                 <>
@@ -666,7 +666,7 @@ const NewsUpdates: React.FC = () => {
 
                 {/* Ticker control indicator */}
                 <div className="flex justify-center mt-2">
-                  <span className="text-xs text-[#b8eaff] opacity-70 bg-[#181a23]/80 px-2 py-1 rounded">
+                  <span className="text-xs text-[#b8eaff] opacity-70 bg-bg-dark/80 px-2 py-1 rounded">
                     {isPaused ? '⏸️ Hover to pause' : '▶️ Auto-scrolling ticker'}
                   </span>
                 </div>
@@ -676,27 +676,27 @@ const NewsUpdates: React.FC = () => {
           </div>
 
         
-        <div className="bg-[#23263a] border border-[#00ffe7]/30 rounded-lg p-6">
+        <div className="bg-bg-darker border border-neon-cyan/30 rounded-lg p-6">
           <div className="space-y-4">
             {platformUpdates.map((update, index) => (
-              <div key={index} className="bg-[#181a23] border border-[#00ffe7]/20 rounded-lg p-4 hover:shadow-[0_0_16px_#00ffe7]/30 transition-all duration-300">
+              <div key={index} className="bg-bg-dark border border-neon-cyan/20 rounded-lg p-4 hover:shadow-[0_0_16px_#00ffe7]/30 transition-all duration-300">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 ${getUpdateTypeColor(update.type)} rounded-lg flex items-center justify-center text-white font-bold`}>
                       {getUpdateTypeIcon(update.type)}
                     </div>
                     <div>
-                      <h3 className="text-[#00ffe7] font-bold text-lg">{update.title}</h3>
+                      <h3 className="text-neon-cyan font-bold text-lg">{update.title}</h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[#faafe8] font-semibold">{update.version}</span>
-                        <span className="text-[#e0e7ef] text-sm">{new Date(update.date).toLocaleDateString()}</span>
+                        <span className="text-neon-pink font-semibold">{update.version}</span>
+                        <span className="text-text-light text-sm">{new Date(update.date).toLocaleDateString()}</span>
                         {getStatusBadge(update.status)}
                       </div>
                     </div>
                   </div>
                 </div>
                 
-                <p className="text-[#e0e7ef] leading-relaxed">{update.description}</p>
+                <p className="text-text-light leading-relaxed">{update.description}</p>
                 
                 <div className="mt-3 flex items-center gap-2">
                   <span className={`px-2 py-1 rounded text-xs text-white ${getUpdateTypeColor(update.type)}`}>
@@ -708,7 +708,7 @@ const NewsUpdates: React.FC = () => {
           </div>
           
           {platformUpdates.length === 0 && (
-            <div className="text-center py-8 text-[#e0e7ef]">
+            <div className="text-center py-8 text-text-light">
               No platform updates available.
             </div>
           )}

@@ -81,7 +81,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
   if (loading) {
     return (
       <div className="text-center py-6">
-        <p className="text-[#00ffe7]">Loading head-to-head data...</p>
+        <p className="text-neon-cyan">Loading head-to-head data...</p>
       </div>
     );
   }
@@ -96,7 +96,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
   
   return (
     <div>
-      <h3 className="text-[#00ffe7] font-bold text-lg mb-4">Head-to-Head Leaders</h3>
+      <h3 className="text-neon-cyan font-bold text-lg mb-4">Head-to-Head Leaders</h3>
       
       <div className="space-y-3">
         {homeTeamLeaders.map((homeLeader: Leader, idx: number) => {
@@ -110,10 +110,10 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
           return (
             <div 
               key={idx} 
-              className="bg-[#181a23]/50 rounded-lg p-3 border border-[#00ffe7]/20"
+              className="bg-bg-dark/50 rounded-lg p-3 border border-neon-cyan/20"
             >
               {/* Category Header */}
-              <div className="text-[#00ffe7] text-xs font-bold uppercase mb-3 text-center">
+              <div className="text-neon-cyan text-xs font-bold uppercase mb-3 text-center">
                 {homeLeader.displayName}
               </div>
 
@@ -128,7 +128,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                         <img 
                           src={awayTopLeader.athlete.headshot.href}
                           alt={awayTopLeader.athlete.displayName}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-[#faafe8]/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
+                          className="w-10 h-10 rounded-full object-cover border-2 border-neon-pink/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
                           onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = 'none';
@@ -138,29 +138,29 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                         />
                       ) : null}
                       <div 
-                        className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#faafe8]/50 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
+                        className="w-10 h-10 rounded-full bg-bg-darker border-2 border-neon-pink/50 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
                         style={{ display: awayTopLeader.athlete.headshot?.href ? 'none' : 'flex' }}
                         onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
                       >
-                        <FaFootballBall className="text-[#faafe8] text-xs" />
+                        <FaFootballBall className="text-neon-pink text-xs" />
                       </div>
 
                       <div className="min-w-0 flex-1">
                         <div 
-                          className="font-bold text-sm text-white cursor-pointer hover:text-[#faafe8] transition-colors truncate text-right"
+                          className="font-bold text-sm text-white cursor-pointer hover:text-neon-pink transition-colors truncate text-right"
                           onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
                         >
                           {awayTopLeader.athlete.displayName}
                         </div>
-                        <div className="text-[#faafe8] font-bold text-lg text-right">
+                        <div className="text-neon-pink font-bold text-lg text-right">
                           {awayTopLeader.displayValue}
                         </div>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="w-10 h-10 rounded-full bg-[#23263a]/50 border-2 border-[#faafe8]/20 flex items-center justify-center flex-shrink-0">
-                        <FaFootballBall className="text-[#faafe8]/30 text-xs" />
+                      <div className="w-10 h-10 rounded-full bg-bg-darker/50 border-2 border-neon-pink/20 flex items-center justify-center flex-shrink-0">
+                        <FaFootballBall className="text-neon-pink/30 text-xs" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="text-gray-500 text-sm">No data</div>
@@ -176,12 +176,12 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                 <div className="flex items-center gap-2 justify-end">
                   <div className="min-w-0 flex-1">
                     <div 
-                      className="font-bold text-sm text-white cursor-pointer hover:text-[#00ffe7] transition-colors truncate text-left"
+                      className="font-bold text-sm text-white cursor-pointer hover:text-neon-cyan transition-colors truncate text-left"
                       onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
                     >
                       {homeTopLeader.athlete.displayName}
                     </div>
-                    <div className="text-[#00ffe7] font-bold text-lg text-left">
+                    <div className="text-neon-cyan font-bold text-lg text-left">
                       {homeTopLeader.displayValue}
                     </div>
                   </div>
@@ -189,7 +189,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                     <img 
                       src={homeTopLeader.athlete.headshot.href}
                       alt={homeTopLeader.athlete.displayName}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-[#00ffe7]/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
+                      className="w-10 h-10 rounded-full object-cover border-2 border-neon-cyan/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
                       onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
@@ -199,11 +199,11 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                     />
                   ) : null}
                   <div 
-                    className="w-10 h-10 rounded-full bg-[#23263a] border-2 border-[#00ffe7]/50 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
+                    className="w-10 h-10 rounded-full bg-bg-darker border-2 border-neon-cyan/50 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
                     style={{ display: homeTopLeader.athlete.headshot?.href ? 'none' : 'flex' }}
                     onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
                   >
-                    <FaFootballBall className="text-[#00ffe7] text-xs" />
+                    <FaFootballBall className="text-neon-cyan text-xs" />
                   </div>
                 </div>
               </div>

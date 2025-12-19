@@ -258,27 +258,27 @@ const Dashboard: React.FC = () => {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-[#181a23]/30 border border-[#00ffe7]/20 rounded-lg px-6 py-2 text-center relative overflow-hidden flex flex-col">
-          <FaGamepad className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-[#00ffe7]/10" />
+        <div className="bg-bg-dark/30 border border-neon-cyan/20 rounded-lg px-6 py-2 text-center relative overflow-hidden flex flex-col">
+          <FaGamepad className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-neon-cyan/10" />
           <h3 className="text-lg font-semibold mb-2 relative z-10">Games Played</h3>
           <div className="flex-1 flex items-end justify-center pb-2">
-        <CountUpScore value={overallStats.totalGames} className="text-4xl font-bold text-[#00ffe7] relative z-10" />
+        <CountUpScore value={overallStats.totalGames} className="text-4xl font-bold text-neon-cyan relative z-10" />
           </div>
         </div>
 
-        <div className="bg-[#181a23]/30 border border-[#faafe8]/20 rounded-lg p-6 text-center relative overflow-hidden flex flex-col">
-          <FaTrophy className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-[#faafe8]/10" />
+        <div className="bg-bg-dark/30 border border-neon-pink/20 rounded-lg p-6 text-center relative overflow-hidden flex flex-col">
+          <FaTrophy className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-neon-pink/10" />
             <h3 className="text-lg font-semibold mb-2 relative z-10 leading-tight">Total<br />Score</h3>
           <div className="flex-1 flex items-end justify-center pb-2">
-        <CountUpScore value={overallStats.totalScore} className="text-4xl font-bold text-[#faafe8] relative z-10" />
+        <CountUpScore value={overallStats.totalScore} className="text-4xl font-bold text-neon-pink relative z-10" />
           </div>
         </div>
 
-        <div className="bg-[#181a23]/30 border border-[#00ffe7]/20 rounded-lg px-6 py-2 text-center relative overflow-hidden flex flex-col">
-          <FaChartBar className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-[#00ffe7]/10" />
+        <div className="bg-bg-dark/30 border border-neon-cyan/20 rounded-lg px-6 py-2 text-center relative overflow-hidden flex flex-col">
+          <FaChartBar className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-neon-cyan/10" />
           <h3 className="text-lg font-semibold mb-2 relative z-10">Unique Players</h3>
           <div className="flex-1 flex items-end justify-center pb-2">
-        <CountUpScore value={overallStats.totalPlayers} className="text-4xl font-bold text-[#00ffe7] relative z-10" />
+        <CountUpScore value={overallStats.totalPlayers} className="text-4xl font-bold text-neon-cyan relative z-10" />
           </div>
         </div>
       </div>
@@ -286,13 +286,13 @@ const Dashboard: React.FC = () => {
       {/* Games List */}
       <div className="space-y-6">
         <h1 className="">
-          {/* <FaFootballBall className="text-[#faafe8]" /> */}
+          {/* <FaFootballBall className="text-neon-pink" /> */}
           Your Games
         </h1>
 
         {gamesWithPicks.length === 0 ? (
-          <div className="text-center py-6 bg-[#181a23]/30 border border-[#00ffe7]/20 rounded-lg">
-            <FaFootballBall className="text-6xl text-[#faafe8] mx-auto my-4 animate-bounce" />
+          <div className="text-center py-6 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg">
+            <FaFootballBall className="text-6xl text-neon-pink mx-auto my-4 animate-bounce" />
             <h2 className="text-2xl font-bold mb-2">No Picks Yet</h2>
             <p className="text-gray-400 mb-6">Start making picks to see your dashboard!</p>
             <button
@@ -307,11 +307,11 @@ const Dashboard: React.FC = () => {
           gamesWithPicks.map((game) => (
           <div
             key={game.gameId}
-            className="bg-[#181a23]/50 border border-[#00ffe7]/20 rounded-lg overflow-hidden hover:border-[#00ffe7]/50 transition-all cursor-pointer"
+            className="bg-bg-dark/50 border border-neon-cyan/20 rounded-lg overflow-hidden hover:border-neon-cyan/50 transition-all cursor-pointer"
             onClick={() => navigate(`/nfl/game/${game.gameId}`)}
           >
             {/* Game Header */}
-            <div className="p-4 bg-[#00ffe7]/10 border-b border-[#00ffe7]/20">
+            <div className="p-4 bg-neon-cyan/10 border-b border-neon-cyan/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   {game.awayTeam && game.homeTeam && (
@@ -338,10 +338,10 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <div className="flex items-center gap-2">
-                    <FaTrophy className="text-[#faafe8]" />
+                    <FaTrophy className="text-neon-pink" />
                     <CountUpScore 
                       value={game.totalUserScore} 
-                      className="text-3xl font-bold text-[#faafe8]"
+                      className="text-3xl font-bold text-neon-pink"
                     />
                   </div>
                   <p className="text-sm text-gray-400">Total Score</p>
@@ -352,7 +352,7 @@ const Dashboard: React.FC = () => {
             {/* Players List */}
             <div className="p-4">
               <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                <FaChartBar className="text-[#00ffe7]" />
+                <FaChartBar className="text-neon-cyan" />
                 Your Players
               </h4>
               
@@ -378,14 +378,14 @@ const Dashboard: React.FC = () => {
                     return (
                       <div
                         key={playerId}
-                        className="flex items-center justify-between px-3 bg-[#181a23]/30 rounded-lg hover:bg-[#181a23]/50 transition-all"
+                        className="flex items-center justify-between px-3 bg-bg-dark/30 rounded-lg hover:bg-bg-dark/50 transition-all"
                       >
                         <div className="flex items-center gap-3">
                           {player.headshot && (
                             <img
                               src={player.headshot}
                               alt={player.displayName}
-                              className="w-16 h-12 rounded-full bg-[#00ffe7]/10"
+                              className="w-16 h-12 rounded-full bg-neon-cyan/10"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = 'none';
                               }}
@@ -400,7 +400,7 @@ const Dashboard: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <CountUpScore 
                               value={userScore} 
-                              className="text-2xl font-bold text-[#00ffe7]"
+                              className="text-2xl font-bold text-neon-cyan"
                             />
                             <span className="text-sm text-gray-400">
                               / <CountUpScore value={gameScore} duration={800} />

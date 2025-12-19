@@ -27,9 +27,9 @@ const GameLeaders: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamI
   return (
     <div>
       {/* Divider */}
-      <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+      <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
       <div className="mx-2">
-        <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
+        <div className="flex items-center mb-6 pb-3 border-b border-neon-cyan/10">
           <h1>Game Leaders</h1>
         </div>
       </div>
@@ -47,11 +47,11 @@ const GameLeaders: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamI
           const awayLeader = otherCategory.leaders[0];
 
           return (
-            <div key={`category-${catIdx}`} className="bg-[#23263a]/50 rounded-lg p-3 border border-[#00ffe7]/10">
+            <div key={`category-${catIdx}`} className="bg-bg-darker/50 rounded-lg p-3 border border-neon-cyan/10">
               <div className="grid grid-cols-3 gap-2 items-center">
                 {/* Away Leader */}
                 <div
-                  className="flex flex-col items-center cursor-pointer hover:bg-[#00ffe7]/5 p-1 rounded transition-colors"
+                  className="flex flex-col items-center cursor-pointer hover:bg-neon-cyan/5 p-1 rounded transition-colors"
                   onClick={() => navigate(`/nfl/player/${awayLeader.athlete.id}`)}
                 >
                   {(() => {
@@ -61,30 +61,30 @@ const GameLeaders: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamI
                       <img
                         src={headshotUrl}
                         alt={awayLeader.athlete.displayName}
-                        className="w-12 h-12 rounded-full mb-1 border-2 border-[#00ffe7]/30 object-cover"
+                        className="w-12 h-12 rounded-full mb-1 border-2 border-neon-cyan/30 object-cover"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full mb-1 border-2 border-[#00ffe7]/30 bg-[#23263a] flex items-center justify-center">
-                        <FaFootballBall className="text-[#00ffe7] text-sm" />
+                      <div className="w-12 h-12 rounded-full mb-1 border-2 border-neon-cyan/30 bg-bg-darker flex items-center justify-center">
+                        <FaFootballBall className="text-neon-cyan text-sm" />
                       </div>
                     );
                   })()}
-                  <p className="text-[#e0e7ef] font-semibold text-xs text-center truncate w-full">
+                  <p className="text-text-light font-semibold text-xs text-center truncate w-full">
                     {awayLeader.athlete.displayName}
                   </p>
                   {awayLeader.displayValue && (
-                    <p className="text-[#00ffe7] font-bold text-xs">{awayLeader.displayValue.split(',')[0].trim()}</p>
+                    <p className="text-neon-cyan font-bold text-xs">{awayLeader.displayValue.split(',')[0].trim()}</p>
                   )}
                 </div>
 
                 {/* VS */}
                 <div className="flex items-center justify-center">
-                  <span className="text-[#b0b7bf] text-xs font-bold">VS</span>
+                  <span className="text-text-muted text-xs font-bold">VS</span>
                 </div>
 
                 {/* Home Leader */}
                 <div
-                  className="flex flex-col items-center cursor-pointer hover:bg-[#faafe8]/5 p-1 rounded transition-colors"
+                  className="flex flex-col items-center cursor-pointer hover:bg-neon-pink/5 p-1 rounded transition-colors"
                   onClick={() => navigate(`/nfl/player/${homeLeader.athlete.id}`)}
                 >
                   {(() => {
@@ -94,19 +94,19 @@ const GameLeaders: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamI
                       <img
                         src={headshotUrl}
                         alt={homeLeader.athlete.displayName}
-                        className="w-12 h-12 rounded-full mb-1 border-2 border-[#faafe8]/30 object-cover"
+                        className="w-12 h-12 rounded-full mb-1 border-2 border-neon-pink/30 object-cover"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full mb-1 border-2 border-[#faafe8]/30 bg-[#23263a] flex items-center justify-center">
-                        <FaFootballBall className="text-[#faafe8] text-sm" />
+                      <div className="w-12 h-12 rounded-full mb-1 border-2 border-neon-pink/30 bg-bg-darker flex items-center justify-center">
+                        <FaFootballBall className="text-neon-pink text-sm" />
                       </div>
                     );
                   })()}
-                  <p className="text-[#e0e7ef] font-semibold text-xs text-center truncate w-full">
+                  <p className="text-text-light font-semibold text-xs text-center truncate w-full">
                     {homeLeader.athlete.shortName || homeLeader.athlete.displayName}
                   </p>
                   {homeLeader.displayValue && (
-                    <p className="text-[#faafe8] font-bold text-xs">{homeLeader.displayValue.split(',')[0].trim()}</p>
+                    <p className="text-neon-pink font-bold text-xs">{homeLeader.displayValue.split(',')[0].trim()}</p>
                   )}
                 </div>
               </div>

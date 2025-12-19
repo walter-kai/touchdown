@@ -178,7 +178,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
               {/* Points Chart - Show for all games with scoring data */}
               {scoringPlays.length > 0 && (
                 <div className="mt-4">
-                  <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+                  <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
                   <div className="mx-2">
                     <PointsChart
                       gameId={event.id}
@@ -247,9 +247,9 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             {/* Odds Section */}
             <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: '20%' }}>
               {/* Divider */}
-              <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
+              <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
               <div className="mx-2">
-                <div className="flex items-center mb-6 pb-3 border-b border-[#00ffe7]/10">
+                <div className="flex items-center mb-6 pb-3 border-b border-neon-cyan/10">
                   <h1>Odds</h1>
                 </div>
               </div>

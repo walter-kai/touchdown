@@ -115,7 +115,7 @@ const NewsFetcher: React.FC = () => {
       case 'twitter':
         return <FaTwitter className="text-blue-400" />;
       default:
-        return <span className="text-[#00ffe7]">📰</span>;
+        return <span className="text-neon-cyan">📰</span>;
     }
   };
 
@@ -136,7 +136,7 @@ const NewsFetcher: React.FC = () => {
   const getSentimentColor = (sentiment: number) => {
     if (sentiment > 3) return 'text-green-400';
     if (sentiment < -3) return 'text-red-400';
-    return 'text-[#e0e7ef]';
+    return 'text-text-light';
   };
 
   const formatDate = (dateString: string | null) => {
@@ -196,7 +196,7 @@ const NewsFetcher: React.FC = () => {
         <p className="text-red-400 mb-4">Error loading news: {error}</p>
         <button 
           onClick={fetchNews}
-          className="bg-[#00ffe7] text-[#181a23] px-4 py-2 rounded hover:bg-[#ff005c] hover:text-white transition"
+          className="bg-neon-cyan text-bg-dark px-4 py-2 rounded hover:bg-neon-pink-dark hover:text-white transition"
         >
           Try Again
         </button>
@@ -206,8 +206,8 @@ const NewsFetcher: React.FC = () => {
 
   return (
     <div className="mb-12">
-      <div className="flex relative bg-[#181a23] justify-between border border-[#00ffe7]/30 rounded-lg p-6 shadow-[0_8px_32px_rgba(0,255,231,0.3)] backdrop-blur-sm">
-        <h2 className="text-2xl font-bold text-center text-[#00ffe7]">
+      <div className="flex relative bg-bg-dark justify-between border border-neon-cyan/30 rounded-lg p-6 shadow-[0_8px_32px_rgba(0,255,231,0.3)] backdrop-blur-sm">
+        <h2 className="text-2xl font-bold text-center text-neon-cyan">
           Trading bots updates in the media
         </h2>
         {/* Toggle and Filter Controls */}
@@ -221,11 +221,11 @@ const NewsFetcher: React.FC = () => {
           </button>
           <div className="flex gap-3">
             <div className="flex items-center gap-2">
-              <FaFilter className="text-[#00ffe7]" />
+              <FaFilter className="text-neon-cyan" />
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="bg-[#23263a] text-[#e0e7ef] border border-[#00ffe7]/30 rounded px-3 py-1 text-sm"
+                className="bg-bg-darker text-text-light border border-neon-cyan/30 rounded px-3 py-1 text-sm"
               >
                 <option value="all">All Sources</option>
                 <option value="youtube">YouTube</option>
@@ -233,11 +233,11 @@ const NewsFetcher: React.FC = () => {
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <FaSort className="text-[#00ffe7]" />
+              <FaSort className="text-neon-cyan" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'date' | 'engagement')}
-                className="bg-[#23263a] text-[#e0e7ef] border border-[#00ffe7]/30 rounded px-3 py-1 text-sm"
+                className="bg-bg-darker text-text-light border border-neon-cyan/30 rounded px-3 py-1 text-sm"
               >
                 <option value="date">Latest</option>
                 <option value="engagement">Most Engaging</option>
@@ -257,20 +257,20 @@ const NewsFetcher: React.FC = () => {
         `}
       >
         {filteredAndSortedNews.length === 0 ? (
-          <div className="text-center py-8 text-[#e0e7ef] bg-[#23263a] border border-[#00ffe7]/30 rounded-lg max-w-7xl mx-auto">
+          <div className="text-center py-8 text-text-light bg-bg-darker border border-neon-cyan/30 rounded-lg max-w-7xl mx-auto">
             No news items found for the selected filter.
           </div>
         ) : (
           <>
             <div 
-              className="overflow-hidden py-4 border border-[#00ffe7]/20 rounded-lg bg-[#181a23]/95 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,255,231,0.3)]"
+              className="overflow-hidden py-4 border border-neon-cyan/20 rounded-lg bg-bg-dark/95 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,255,231,0.3)]"
               style={{ height: '320px' }}
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
             >
               <button
                 onClick={() => setShowTicker(false)}
-                className="absolute top-2 right-4 z-10 bg-[#ff005c] text-white w-7 h-6 rounded-full flex items-center justify-center text-xs hover:bg-[#ff3380] transition"
+                className="absolute top-2 right-4 z-10 bg-neon-pink-dark text-white w-7 h-6 rounded-full flex items-center justify-center text-xs hover:bg-neon-pink transition"
               >
                 ✕
               </button>
@@ -287,19 +287,19 @@ const NewsFetcher: React.FC = () => {
                     className="flex-shrink-0 w-80 cursor-pointer transition-all duration-300 hover:scale-105"
                     onClick={() => item.post_urls.length > 0 && window.open(item.post_urls[0], '_blank')}
                   >
-                    <div className="bg-[#23263a] border border-[#00ffe7]/30 rounded-lg p-4 h-72 overflow-hidden hover:shadow-[0_0_16px_#00ffe7] transition-all duration-300">
+                    <div className="bg-bg-darker border border-neon-cyan/30 rounded-lg p-4 h-72 overflow-hidden hover:shadow-[0_0_16px_#00ffe7] transition-all duration-300">
                       <div className="flex items-start gap-3 mb-3">
                         <img
                           src={item.author.profile_image_url}
                           alt={item.author.name}
-                          className="w-8 h-8 rounded-full border border-[#00ffe7]/50 flex-shrink-0"
+                          className="w-8 h-8 rounded-full border border-neon-cyan/50 flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-[#00ffe7] text-sm truncate">{item.author.name}</h3>
+                            <h3 className="font-semibold text-neon-cyan text-sm truncate">{item.author.name}</h3>
                             {item.author.verified && <span className="text-blue-400 text-xs">✓</span>}
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-[#e0e7ef]">
+                          <div className="flex items-center gap-2 text-xs text-text-light">
                             {getSourceIcon(item.sourcetype)}
                             <span>{formatDate(item.date)}</span>
                           </div>
@@ -307,7 +307,7 @@ const NewsFetcher: React.FC = () => {
                       </div>
 
                       {item.content && (
-                        <p className="text-[#e0e7ef] mb-3 h-12 leading-relaxed text-sm line-clamp-4">
+                        <p className="text-text-light mb-3 h-12 leading-relaxed text-sm line-clamp-4">
                           {truncateContent(item.content, 120)}
                         </p>
                       )}
@@ -317,7 +317,7 @@ const NewsFetcher: React.FC = () => {
                           <img
                             src={item.media_urls[0]}
                             alt="Post media"
-                            className="w-full h-20 object-cover rounded-lg border border-[#00ffe7]/30"
+                            className="w-full h-20 object-cover rounded-lg border border-neon-cyan/30"
                           />
                         </div>
                       )}
@@ -328,7 +328,7 @@ const NewsFetcher: React.FC = () => {
                             {item.hashtags.slice(0, 2).map((tag, idx) => (
                               <span
                                 key={idx}
-                                className="text-[#00ffe7] text-xs bg-[#181a23] px-2 py-1 rounded"
+                                className="text-neon-cyan text-xs bg-bg-dark px-2 py-1 rounded"
                               >
                                 #{tag}
                               </span>
@@ -342,13 +342,13 @@ const NewsFetcher: React.FC = () => {
                         </div>
                       ) : (
                         <div className="mb-3">
-                          <span className="text-xs text-gray-400 bg-[#181a23] px-2 py-1 rounded">
+                          <span className="text-xs text-gray-400 bg-bg-dark px-2 py-1 rounded">
                             no hashtags
                           </span>
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between pt-2 border-t border-[#00ffe7]/20 mt-auto">
+                      <div className="flex items-center justify-between pt-2 border-t border-neon-cyan/20 mt-auto">
                         <div className="flex items-center gap-2 text-xs text-[#b8eaff]">
                           {item.sourcetype === 'youtube' && item.metrics.youtube && (
                             <>
@@ -390,7 +390,7 @@ const NewsFetcher: React.FC = () => {
             </div>
 
             <div className="flex justify-center mt-2">
-              <span className="text-xs text-[#b8eaff] opacity-70 bg-[#181a23]/80 px-2 py-1 rounded">
+              <span className="text-xs text-[#b8eaff] opacity-70 bg-bg-dark/80 px-2 py-1 rounded">
                 {isPaused ? '⏸️ Hover to pause' : '▶️ Auto-scrolling ticker'}
               </span>
             </div>

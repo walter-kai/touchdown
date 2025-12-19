@@ -187,19 +187,19 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   return (
     <>
       <div className={`fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[30] transition-opacity duration-500 ${show ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="bg-[#23263a] w-full max-w-lg rounded-lg p-8 relative border border-[#00ffe7]/30 shadow-[0_0_24px_#00ffe7]">
+        <div className="bg-bg-darker w-full max-w-lg rounded-lg p-8 relative border border-neon-cyan/30 shadow-[0_0_24px_#00ffe7]">
           <button
             onClick={() => {
               closeLoginModal();
               onClose();
             }}
-            className="absolute z-10 top-4 right-4 bg-[#181a23] p-2 rounded-full hover:bg-[#00ffe7] hover:text-[#181a23] text-[#00ffe7] shadow-[0_0_8px_#00ffe7] transition"
+            className="absolute z-10 top-4 right-4 bg-bg-dark p-2 rounded-full hover:bg-neon-cyan hover:text-bg-dark text-neon-cyan shadow-[0_0_8px_#00ffe7] transition"
           >
             ✕
           </button>
           
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-center text-[#00ffe7] mb-6 drop-shadow-[0_0_8px_#00ffe7]">
+            <h2 className="text-2xl font-bold text-center text-neon-cyan mb-6 drop-shadow-[0_0_8px_#00ffe7]">
               Welcome to Dexter City
             </h2>
 
@@ -209,7 +209,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 const isSubmitDisabled = username.length < 3 || usernameAvailable !== true || checkingUsername || (email.trim() !== '' && emailValid === false) || isConnecting;
                 
                 return (
-                  <div className="bg-gradient-to-r from-[#181a23] to-[#23263a] border border-[#00ffe7]/50 rounded-lg p-6 shadow-[0_0_16px_#00ffe7/20]">
+                  <div className="bg-gradient-to-r from-bg-dark to-bg-darker border border-neon-cyan/50 rounded-lg p-6 shadow-[0_0_16px_#00ffe7/20]">
                     <div className="flex items-start space-x-4">
                       {/* Profile Picture */}
                       <div className="flex-shrink-0">
@@ -217,13 +217,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                           <img
                             src={`https://robohash.org/dextercity-${username || 'default'}?set=set1&size=300x400`}
                             alt={`Citizen ${profilePictureId}`}
-                            className="w-30 h-40 rounded-lg border-2 border-[#00ffe7] shadow-lg bg-[#181a23] transition-all duration-500"
+                            className="w-30 h-40 rounded-lg border-2 border-neon-cyan shadow-lg bg-bg-dark transition-all duration-500"
                           />
                         </div>
                         {/* Status Badge */}
                         <div className="items-center space-y-2 mt-6">
                           <div>
-                            <div className="text-xs text-[#e0e7ef]">ISSUED BY:</div>
+                            <div className="text-xs text-text-light">ISSUED BY:</div>
                             <span
                               className="neon-text tracking-widest font-savate text-base italic"
                             >
@@ -236,7 +236,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       {/* Form Fields */}
                       <div className="flex-1 space-y-4">
                         <div>
-                          <label className="block text-[#e0e7ef] text-sm font-semibold mb-1 flex items-center justify-between">
+                          <label className="block text-text-light text-sm font-semibold mb-1 flex items-center justify-between">
                             <span>CITIZEN NAME</span>
                             <span>
                             {username.length < 3 && (
@@ -245,7 +245,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                               </span>
                             )}
                             {checkingUsername && username.length >= 3 && (
-                              <span className="text-xs text-[#00ffe7]">Verifying availability...</span>
+                              <span className="text-xs text-neon-cyan">Verifying availability...</span>
                             )}
                             {username && username.length >= 3 && usernameAvailable === false && !checkingUsername && (
                               <span className="text-xs text-red-400">❌ Name unavailable</span>
@@ -259,7 +259,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                             type="text"
                             value={username}
                             onChange={handleUsernameChange}
-                            className="w-full px-3 py-2 bg-[#0f1015] border border-[#00ffe7]/30 rounded text-[#e0e7ef] focus:outline-none focus:border-[#00ffe7] focus:ring-1 focus:ring-[#00ffe7] text-sm"
+                            className="w-full px-3 py-2 bg-bg-dark border border-neon-cyan/30 rounded text-text-light focus:outline-none focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan text-sm"
                             placeholder="Enter your citizen name"
                             required
                             autoFocus
@@ -268,7 +268,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                         </div>
 
                         <div>
-                          <label className="block text-[#e0e7ef] text-sm font-semibold mb-1 flex items-center justify-between">
+                          <label className="block text-text-light text-sm font-semibold mb-1 flex items-center justify-between">
                             <span>EMAIL</span>
                             <span>
                               {email.trim() && emailValid === false && (
@@ -278,7 +278,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                                 <span className="text-xs text-green-400">✅ Valid email</span>
                               )}
                               {!email.trim() && (
-                                <span className="text-xs text-[#00ffe7]/50">Optional field</span>
+                                <span className="text-xs text-neon-cyan/50">Optional field</span>
                               )}
                             </span>
                           </label>
@@ -286,23 +286,23 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                             type="email"
                             value={email}
                             onChange={handleEmailChange}
-                            className={`w-full px-3 py-2 bg-[#0f1015] border rounded text-[#e0e7ef] focus:outline-none focus:ring-1 text-sm transition-colors ${
+                            className={`w-full px-3 py-2 bg-bg-dark border rounded text-text-light focus:outline-none focus:ring-1 text-sm transition-colors ${
                               email.trim() && emailValid === false 
                                 ? 'border-red-400/50 focus:border-red-400 focus:ring-red-400/50' 
                                 : email.trim() && emailValid === true
                                 ? 'border-green-400/50 focus:border-green-400 focus:ring-green-400/50'
-                                : 'border-[#00ffe7]/30 focus:border-[#00ffe7] focus:ring-[#00ffe7]'
+                                : 'border-neon-cyan/30 focus:border-neon-cyan focus:ring-neon-cyan'
                             }`}
                             placeholder="Optional email address"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[#e0e7ef] text-sm font-semibold mb-1 flex items-center justify-between">
+                          <label className="block text-text-light text-sm font-semibold mb-1 flex items-center justify-between">
                             <span>REFERRAL CODE</span>
                             <span>
                             {!referral.trim() && (
-                              <span className="text-xs text-[#00ffe7]/50">Optional field</span>
+                              <span className="text-xs text-neon-cyan/50">Optional field</span>
                             )}
                             </span>
                           </label>
@@ -310,10 +310,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                             type="text"
                             value={referral}
                             onChange={e => setReferral(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#0f1015] border border-[#00ffe7]/30 rounded text-[#e0e7ef] focus:outline-none focus:border-[#00ffe7] focus:ring-1 focus:ring-[#00ffe7] text-sm"
+                            className="w-full px-3 py-2 bg-bg-dark border border-neon-cyan/30 rounded text-text-light focus:outline-none focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan text-sm"
                             placeholder="Optional referral code"
                           />
-                          <span className="text-xs text-[#00ffe7]">Get 1000 commission-free trades</span>
+                          <span className="text-xs text-neon-cyan">Get 1000 commission-free trades</span>
                         </div>
 
                         
@@ -335,7 +335,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       className={`w-full font-bold py-3 px-6 rounded transition-all duration-500 ${
                         isSubmitDisabled
                           ? "bg-gray-600 text-gray-300 cursor-not-allowed"
-                          : "bg-[#00ffe7] text-[#181a23] hover:bg-[#ff005c] hover:text-white shadow-[0_0_8px_#00ffe7] hover:shadow-[0_0_16px_#ff005c]"
+                          : "bg-neon-cyan text-bg-dark hover:bg-neon-pink-dark hover:text-white shadow-[0_0_8px_#00ffe7] hover:shadow-[0_0_16px_#ff005c]"
                       }`}
                     >
                       {isConnecting ? "Creating Account..." : checkingUsername ? "Verifying..." : "Create Account & Enter City"}
@@ -343,7 +343,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                   );
                 })()}
 
-                <div className="text-center text-[#e0e7ef] text-sm">
+                <div className="text-center text-text-light text-sm">
                   <p>Create your citizen identity to explore Dexter City</p>
                 </div>
               </div>

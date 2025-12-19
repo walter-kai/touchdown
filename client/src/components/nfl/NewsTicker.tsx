@@ -36,7 +36,7 @@ const NewsTicker: React.FC<NewsTickerProps> = ({ news }) => {
         </span>
       </div>
       
-      <div className="mx-2 bg-[#181a23] rounded-xl border border-[#faafe8]/30 shadow-[0_0_20px_rgba(250,175,232,0.15)] overflow-hidden h-[100px]">
+      <div className="mx-2 bg-bg-dark rounded-xl border border-neon-pink/30 shadow-[0_0_20px_rgba(250,175,232,0.15)] overflow-hidden h-[100px]">
         <div className="flex items-stretch h-full">
           {/* Article Image */}
           <div className={`w-[100px] flex-shrink-0 relative overflow-hidden transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
@@ -48,11 +48,11 @@ const NewsTicker: React.FC<NewsTickerProps> = ({ news }) => {
                   alt={news[currentNewsIndex].headline}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#181a23]" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-bg-dark" />
               </>
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-[#23263a] to-[#181a23] flex items-center justify-center">
-                <FaNewspaper className="text-[#faafe8]/30 text-5xl" />
+              <div className="w-full h-full bg-gradient-to-br from-bg-darker to-bg-dark flex items-center justify-center">
+                <FaNewspaper className="text-neon-pink/30 text-5xl" />
               </div>
             )}
           </div>
@@ -86,8 +86,8 @@ const NewsTicker: React.FC<NewsTickerProps> = ({ news }) => {
             }}
             className={`h-1.5 rounded-full transition-all duration-300 ${
               idx === currentNewsIndex 
-                ? 'w-8 bg-[#faafe8]' 
-                : 'w-1.5 bg-[#faafe8]/30 hover:bg-[#faafe8]/50'
+                ? 'w-8 bg-neon-pink' 
+                : 'w-1.5 bg-neon-pink/30 hover:bg-neon-pink/50'
             }`}
             aria-label={`Go to article ${idx + 1}`}
           />

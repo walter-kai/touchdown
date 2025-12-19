@@ -356,15 +356,15 @@ const SliderCaptcha: React.FC<SliderCaptchaProps> = ({
         ref={canvasRef}
         width={width - 2}
         height={height}
-        className="border border-[#00ffe7]/30 rounded-lg block"
+        className="border border-neon-cyan/30 rounded-lg block"
       />
       
       {/* Loading overlay */}
       {isLoading && (
-        <div className="absolute inset-0 bg-black/80 border border-[#00ffe7]/30 rounded-lg flex items-center justify-center backdrop-blur-sm">
+        <div className="absolute inset-0 bg-black/80 border border-neon-cyan/30 rounded-lg flex items-center justify-center backdrop-blur-sm">
           <div className="text-center">
             <LoadingScreenDots size={4} />
-            <p className="text-[#e0e7ef] text-sm mt-4">{loadingText}</p>
+            <p className="text-text-light text-sm mt-4">{loadingText}</p>
           </div>
         </div>
       )}
@@ -373,7 +373,7 @@ const SliderCaptcha: React.FC<SliderCaptchaProps> = ({
       <button
         onClick={handleRefresh}
         disabled={isLoading}
-        className="absolute top-2 right-2 w-8 h-8 bg-[#23263a] border border-[#00ffe7]/30 rounded text-[#00ffe7] hover:bg-[#00ffe7] hover:text-[#181a23] transition-all duration-200 flex items-center justify-center disabled:opacity-50"
+        className="absolute top-2 right-2 w-8 h-8 bg-bg-darker border border-neon-cyan/30 rounded text-neon-cyan hover:bg-neon-cyan hover:text-bg-dark transition-all duration-200 flex items-center justify-center disabled:opacity-50"
       >
         <FaRedo className="text-xs" />
       </button>
@@ -394,7 +394,7 @@ const SliderCaptcha: React.FC<SliderCaptchaProps> = ({
       {/* Slider container */}
       <div
         ref={containerRef}
-        className={`mt-4 relative h-12 bg-[#23263a] border border-[#00ffe7]/30 rounded-lg overflow-hidden ${
+        className={`mt-4 relative h-12 bg-bg-darker border border-neon-cyan/30 rounded-lg overflow-hidden ${
           isDragging ? 'shadow-[0_4px_12px_rgba(0,255,231,0.4)]' : ''
         } ${
           isSuccess 
@@ -405,12 +405,12 @@ const SliderCaptcha: React.FC<SliderCaptchaProps> = ({
         }`}
       >
         {/* Background track */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#181a23] to-[#23263a]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-bg-dark to-bg-darker" />
         
         {/* Progress mask */}
         <div
           ref={maskRef}
-          className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#00ffe7]/20 to-[#00ffe7]/10 transition-none"
+          className="absolute left-0 top-0 h-full bg-gradient-to-r from-neon-cyan/20 to-neon-cyan/10 transition-none"
           style={{ width: '0px' }}
         />
         
@@ -424,19 +424,19 @@ const SliderCaptcha: React.FC<SliderCaptchaProps> = ({
               ? 'bg-green-500' 
               : isFailed 
               ? 'bg-red-500' 
-              : 'bg-[#00ffe7]'
+              : 'bg-neon-cyan'
           } ${!imageLoaded || isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
           style={{ left: '0px' }}
           onMouseDown={handleStart}
           onTouchStart={handleStart}
         >
-          <FaArrowRight className={`text-[#181a23] ${isDragging ? 'animate-pulse' : ''}`} />
+          <FaArrowRight className={`text-bg-dark ${isDragging ? 'animate-pulse' : ''}`} />
         </div>
         
         {/* Text */}
         <span
           ref={textRef}
-          className="absolute inset-0 flex items-center justify-center text-[#e0e7ef] text-sm font-medium pointer-events-none"
+          className="absolute inset-0 flex items-center justify-center text-text-light text-sm font-medium pointer-events-none"
         >
           {text}
         </span>

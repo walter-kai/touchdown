@@ -53,7 +53,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
     .filter((item): item is NonNullable<typeof item> => item !== undefined);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#181a23] border-t border-[#00ffe7]/30 shadow-[0_-2px_24px_0_#00ffe7/20] backdrop-blur-md">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-bg-dark border-t border-neon-cyan/30 shadow-[0_-2px_24px_0_#00ffe7/20] backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-2 sm:px-4">
         <div className="flex items-center justify-around py-2 sm:py-3 gap-1 sm:gap-2">
           {navItems.map((item) => {
@@ -74,15 +74,15 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
                   px-2 sm:px-4 py-2 sm:py-2.5 rounded-lg 
                   transition-all duration-200 min-w-0 flex-1
                   ${isActive 
-                    ? 'bg-[#00ffe7] text-[#1a1d2e] shadow-[0_0_12px_#00ffe7]' 
-                    : 'text-[#00ffe7] hover:bg-[#00ffe7]/10'
+                    ? 'bg-neon-cyan text-bg-darkest shadow-[0_0_12px_#00ffe7]' 
+                    : 'text-neon-cyan hover:bg-neon-cyan/10'
                   }
                 `}
               >
-                <span className={`text-base sm:text-xl ${isActive ? 'text-[#1a1d2e]' : ''}`}>
+                <span className={`text-base sm:text-xl ${isActive ? 'text-bg-darkest' : ''}`}>
                   {item.icon}
                 </span>
-                <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight truncate max-w-full ${isActive ? 'text-[#1a1d2e]' : ''}`}>
+                <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight truncate max-w-full ${isActive ? 'text-bg-darkest' : ''}`}>
                   {item.label}
                 </span>
               </button>

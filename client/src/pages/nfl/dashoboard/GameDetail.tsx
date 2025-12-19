@@ -351,10 +351,10 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1d2e] to-[#16182a] flex items-center justify-center pb-20">
+      <div className="min-h-screen bg-gradient-to-b from-bg-darkest to-bg-card flex items-center justify-center pb-20">
         <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-8 text-center max-w-md">
           <p className="text-red-400 font-bold mb-2 text-lg">Error loading game</p>
-          <p className="text-[#e0e7ef]">{error}</p>
+          <p className="text-text-light">{error}</p>
         </div>
       </div>
     );
@@ -374,11 +374,11 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
   // Test mode controls UI
   const isTestMode = gameId === 'test';
   const testControls = isTestMode ? (
-    <div className="sticky top-0 z-50 bg-[#1a1d2e] border-b-2 border-[#00ffe7] shadow-lg">
+    <div className="sticky top-0 z-50 bg-bg-darkest border-b-2 border-neon-cyan shadow-lg">
       <div className="max-w-7xl mx-auto p-4">
         <div className="flex items-center gap-4">
           <div className="flex-1">
-            <label className="text-[#b0b7bf] text-xs mb-1 block">Test Game ID</label>
+            <label className="text-text-muted text-xs mb-1 block">Test Game ID</label>
             <input
               type="text"
               value={testGameId}
@@ -392,7 +392,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
                   window.location.reload();
                 }
               }}
-              className="w-full bg-[#23263a] text-white px-4 py-2 rounded border border-[#00ffe7]/30 focus:border-[#00ffe7] outline-none"
+              className="w-full bg-bg-darker text-white px-4 py-2 rounded border border-neon-cyan/30 focus:border-neon-cyan outline-none"
               placeholder="Enter ESPN Game ID"
             />
           </div>
@@ -401,20 +401,20 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
               setPlaysLoaded(false);
               window.location.reload();
             }}
-            className="px-6 py-2 bg-[#00ffe7] text-[#1a1d2e] font-bold rounded hover:bg-[#00ffe7]/80 transition-colors mt-5"
+            className="px-6 py-2 bg-neon-cyan text-bg-darkest font-bold rounded hover:bg-neon-cyan/80 transition-colors mt-5"
           >
             Load Game
           </button>
         </div>
         {playLog.length > 0 && (
           <div className="mt-4">
-            <label className="text-[#b0b7bf] text-xs mb-1 block">
+            <label className="text-text-muted text-xs mb-1 block">
               Emulate Current Play ({playLog.length} plays available)
             </label>
             <select
               value={selectedPlayIndex}
               onChange={(e) => setSelectedPlayIndex(Number(e.target.value))}
-              className="w-full bg-[#23263a] text-white px-4 py-2 rounded border border-[#faafe8]/30 focus:border-[#faafe8] outline-none"
+              className="w-full bg-bg-darker text-white px-4 py-2 rounded border border-neon-pink/30 focus:border-neon-pink outline-none"
             >
               {playLog.map((play, index) => (
                 <option key={index} value={index}>
@@ -475,8 +475,8 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
   // Test mode football field visualization - must be after effectiveEvent is defined
   const testFieldVisualization = isTestMode && event && playLog.length > 0 && effectiveEvent ? (
     <div className="mx-2 my-4">
-      <div className="bg-[#181a23]/50 rounded-lg p-4 border border-[#00ffe7]/20">
-        <h3 className="text-[#00ffe7] font-bold text-lg mb-4">Football Field Animation Test</h3>
+      <div className="bg-bg-dark/50 rounded-lg p-4 border border-neon-cyan/20">
+        <h3 className="text-neon-cyan font-bold text-lg mb-4">Football Field Animation Test</h3>
         <FootballField
           homeTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'home')}
           awayTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'away')}

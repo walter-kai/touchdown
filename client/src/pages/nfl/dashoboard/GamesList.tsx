@@ -62,7 +62,7 @@ const NFLScoreboard: React.FC = () => {
   <div className="max-w-7xl mx-auto py-2">
 	
   {/* Week Navigation */}
-		<div className="bg-[#181a23]/50 rounded-lg p-2 mb-6 mx-2">
+		<div className="bg-bg-dark/50 rounded-lg p-2 mb-6 mx-2">
 			<div className="flex items-center justify-between gap-2">
 				<button
 					onClick={handlePreviousWeek}
@@ -92,17 +92,17 @@ const NFLScoreboard: React.FC = () => {
 
   {/* Teams on Bye - Ticker Banner */}
   {byeTeams.length > 0 && (
-    <div className="mb-6 bg-[#181a23]/90 rounded-lg border border-[#faafe8]/30 overflow-hidden">
+    <div className="mb-6 bg-bg-dark/90 rounded-lg border border-neon-pink/30 overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-2">
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-sm font-bold text-[#faafe8]">TEAMS ON BYE:</span>
+          <span className="text-sm font-bold text-neon-pink">TEAMS ON BYE:</span>
         </div>
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1">
           {byeTeams.map((team) => (
             <button
               key={team.id}
               onClick={() => navigate(`/nfl/team/${team.id}`)}
-              className="flex items-center gap-2 bg-[#23263a]/50 hover:bg-[#23263a] border border-[#faafe8]/20 hover:border-[#faafe8]/50 rounded px-3 py-1 transition-all flex-shrink-0"
+              className="flex items-center gap-2 bg-bg-darker/50 hover:bg-bg-darker border border-neon-pink/20 hover:border-neon-pink/50 rounded px-3 py-1 transition-all flex-shrink-0"
             >
               {team.logo && <img src={team.logo} alt={team.displayName} className="w-5 h-5" />}
               <span className="text-white text-xs font-semibold">{team.abbreviation}</span>
@@ -123,7 +123,7 @@ const NFLScoreboard: React.FC = () => {
 	{error && (
 		<div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 sm:p-5 md:p-6 text-center">
 		<p className="text-red-400 font-bold mb-2 text-sm sm:text-base">Error loading data</p>
-		<p className="text-[#e0e7ef] text-xs sm:text-sm">{error}</p>
+		<p className="text-text-light text-xs sm:text-sm">{error}</p>
 		</div>
 	)}
 
@@ -138,7 +138,7 @@ const NFLScoreboard: React.FC = () => {
 				</h1>
 				{Object.entries(groupGamesByDate(liveGames)).map(([date, gamesWithTime]) => (
 					<div key={date} className="mb-6">
-						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-3 text-left">{date}</h2>
+						<h2 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{date}</h2>
 						<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
 							{gamesWithTime.map((game) => (
 								<GameGridCard key={game.id} game={game} navigate={navigate} />
@@ -157,7 +157,7 @@ const NFLScoreboard: React.FC = () => {
 				</h1>
 				{Object.entries(groupGamesByDate(upcomingGames)).map(([date, gamesWithTime]) => (
 					<div key={date} className="mb-6">
-						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-3 text-left">{date}</h2>
+						<h2 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{date}</h2>
 						<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
 							{gamesWithTime.map((game) => (
 								<GameGridCard key={game.id} game={game} navigate={navigate} />
@@ -176,7 +176,7 @@ const NFLScoreboard: React.FC = () => {
 				</h1>
 				{Object.entries(groupGamesByDate(completedGames)).map(([date, gamesWithTime]) => (
 					<div key={date} className="mb-6">
-						<h2 className="text-lg font-semibold text-[#00ffe7] mx-2 mb-3 text-left">{date}</h2>
+						<h2 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{date}</h2>
 						<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
 							{gamesWithTime.map((game) => (
 								<GameGridCard key={game.id} game={game} navigate={navigate} />
@@ -193,8 +193,8 @@ const NFLScoreboard: React.FC = () => {
   {/* No Games */}
 	{!initialLoading && games.length === 0 && !error && (
 		<div className="text-center py-12 sm:py-16 md:py-20">
-		<FaFootballBall className="text-4xl sm:text-5xl md:text-6xl text-[#faafe8] mx-auto mb-3 sm:mb-4" />
-		<p className="text-[#e0e7ef] text-base sm:text-lg md:text-xl">No games scheduled at this time</p>
+		<FaFootballBall className="text-4xl sm:text-5xl md:text-6xl text-neon-pink mx-auto mb-3 sm:mb-4" />
+		<p className="text-text-light text-base sm:text-lg md:text-xl">No games scheduled at this time</p>
 		</div>
 	)}
 
@@ -223,7 +223,7 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
   return (
     <button
       onClick={() => navigate(`/nfl/game/${game.id}`)}
-      className="relative rounded-md border border-[#faafe8]/20  bg-[#181a23]/50 hover:bg-[#181a23]/70 p-3 px-4 transition-all duration-200 text-left w-full"
+      className="relative rounded-md border border-neon-pink/20  bg-bg-dark/50 hover:bg-bg-dark/70 p-3 px-4 transition-all duration-200 text-left w-full"
     >
       {/* Time Header */}
       {game.timeKey && (
@@ -232,16 +232,16 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
 
       {/* Live Badge */}
       {isLive && (
-        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-[#00ffe7]/20 border border-[#00ffe7]/50 rounded-full">
-          <FaPlay className="text-[10px] text-[#00ffe7] animate-pulse" />
-          <span className="text-xs font-bold text-[#00ffe7]">LIVE</span>
+        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-neon-cyan/20 border border-neon-cyan/50 rounded-full">
+          <FaPlay className="text-[10px] text-neon-cyan animate-pulse" />
+          <span className="text-xs font-bold text-neon-cyan">LIVE</span>
         </div>
       )}
 
       {/* Game Time/Status */}
       {isLive && (
         <div className="text-center mb-3">
-          <div className="text-sm text-[#00ffe7] font-bold">
+          <div className="text-sm text-neon-cyan font-bold">
             Q{competition.status.period} - {competition.status.displayClock}
           </div>
         </div>
@@ -258,7 +258,7 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
               className="w-10 h-10 object-contain"
             />
             <div className="flex items-center gap-2">
-              <div className={`font-bold ${awayTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
+              <div className={`font-bold ${awayTeam.winner ? 'text-neon-cyan' : 'text-white'}`}>
                 {awayTeam.team.abbreviation}
               </div>
               <div className="text-xs text-gray-400">
@@ -266,7 +266,7 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
               </div>
             </div>
           </div>
-          <div className={`text-2xl font-bold ${awayTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
+          <div className={`text-2xl font-bold ${awayTeam.winner ? 'text-neon-cyan' : 'text-white'}`}>
             {awayTeam.score || '0'}
           </div>
         </div>
@@ -280,7 +280,7 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
               className="w-10 h-10 object-contain"
             />
             <div className="flex items-center gap-2">
-              <div className={`font-bold ${homeTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
+              <div className={`font-bold ${homeTeam.winner ? 'text-neon-cyan' : 'text-white'}`}>
                 {homeTeam.team.abbreviation}
               </div>
               <div className="text-xs text-gray-400">
@@ -288,7 +288,7 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
               </div>
             </div>
           </div>
-          <div className={`text-2xl font-bold ${homeTeam.winner ? 'text-[#00ffe7]' : 'text-white'}`}>
+          <div className={`text-2xl font-bold ${homeTeam.winner ? 'text-neon-cyan' : 'text-white'}`}>
             {homeTeam.score || '0'}
           </div>
         </div>

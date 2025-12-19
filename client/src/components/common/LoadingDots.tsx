@@ -33,23 +33,23 @@ const LoadingScreenDots: React.FC<LoadingScreenDotsProps> = ({ size = 4 }) => {
     <div className="w-full items-center relative">
       <div className={`flex justify-center items-center ${spacingClass}`}>
         <div 
-          className={`${smallClasses} bg-[#8b5cf6] rounded-full animate-bounce shadow-[0_0_6px_#8b5cf6] border border-[#8b5cf6]/30`}
+          className={`${smallClasses} bg-purple-500 rounded-full animate-bounce shadow-[0_0_6px_#8b5cf6] border border-purple-500/30`}
           style={{ animationDelay: '0ms' }}
         ></div>
         <div 
-          className={`${mediumClasses} bg-[#faafe8] rounded-full animate-bounce shadow-[0_0_8px_#faafe8] border border-[#faafe8]/30`}
+          className={`${mediumClasses} bg-neon-pink rounded-full animate-bounce shadow-[0_0_8px_#faafe8] border border-neon-pink/30`}
           style={{ animationDelay: '150ms' }}
         ></div>
         <div 
-          className={`${largestClasses} bg-[#00ffe7] rounded-full animate-bounce shadow-[0_0_10px_#00ffe7] border border-[#00ffe7]/30`}
+          className={`${largestClasses} bg-neon-cyan rounded-full animate-bounce shadow-[0_0_10px_#00ffe7] border border-neon-cyan/30`}
           style={{ animationDelay: '300ms' }}
         ></div>
         <div 
-          className={`${mediumClasses} bg-[#faafe8] rounded-full animate-bounce shadow-[0_0_8px_#faafe8] border border-[#faafe8]/30`}
+          className={`${mediumClasses} bg-neon-pink rounded-full animate-bounce shadow-[0_0_8px_#faafe8] border border-neon-pink/30`}
           style={{ animationDelay: '450ms' }}
         ></div>
         <div 
-          className={`${smallClasses} bg-[#8b5cf6] rounded-full animate-bounce shadow-[0_0_6px_#8b5cf6] border border-[#8b5cf6]/30`}
+          className={`${smallClasses} bg-purple-500 rounded-full animate-bounce shadow-[0_0_6px_#8b5cf6] border border-purple-500/30`}
           style={{ animationDelay: '600ms' }}
         ></div>
       </div>

@@ -240,21 +240,21 @@ const FootballField: React.FC<FootballFieldProps> = ({
           {/* Down & Distance */}
           {situation.downDistanceText && (
             <div className="flex-1 text-center">
-              <p className="text-[#b0b7bf] text-xs mb-2">Down & Distance</p>
-              <p className="text-[#faafe8] font-bold text-xl">{situation.downDistanceText}</p>
+              <p className="text-text-muted text-xs mb-2">Down & Distance</p>
+              <p className="text-neon-pink font-bold text-xl">{situation.downDistanceText}</p>
             </div>
           )}
           
           {/* Possession */}
           <div className="flex-1 text-center">
-            <p className="text-[#b0b7bf] text-xs mb-2">Possession</p>
+            <p className="text-text-muted text-xs mb-2">Possession</p>
             <div className="flex items-center justify-center gap-2">
               <img
                 src={situation.possession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
                 alt="Possession"
                 className="w-10 h-10"
               />
-              <p className="text-[#00ffe7] font-bold text-xl">
+              <p className="text-neon-cyan font-bold text-xl">
                 {situation.possession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
               </p>
             </div>
@@ -266,14 +266,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* {showGameInfo && situation && ( */}
         <div className="flex justify-between items-center pt-4">
           <div className="text-center">
-            <p className="text-[#b0b7bf] text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
+            <p className="text-text-muted text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
             <div className="flex gap-1 justify-center">
               {[...Array(3)].map((_, i) => (
                 <div 
                   key={i} 
                   className={`w-3 h-3 rounded-full ${
                     i < (situation?.awayTimeouts ?? 3) 
-                      ? 'bg-[#00ffe7]' 
+                      ? 'bg-neon-cyan' 
                       : 'bg-gray-600'
                   }`}
                 />
@@ -284,7 +284,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           {/* Play Type Display */}
           {lastPlay?.type?.text && (
             <div className="flex-1 text-center">
-              <p className="text-[#b0b7bf] text-xs mb-1">Play Type</p>
+              <p className="text-text-muted text-xs mb-1">Play Type</p>
               <p className="font-bold text-sm" style={{ color: playViz.color }}>
                 {lastPlay.type.text}
               </p>
@@ -292,14 +292,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
           )}
           
           <div className="text-center">
-            <p className="text-[#b0b7bf] text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
+            <p className="text-text-muted text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
             <div className="flex gap-1 justify-center">
               {[...Array(3)].map((_, i) => (
                 <div 
                   key={i} 
                   className={`w-3 h-3 rounded-full ${
                     i < (situation?.homeTimeouts ?? 3) 
-                      ? 'bg-[#faafe8]' 
+                      ? 'bg-neon-pink' 
                       : 'bg-gray-600'
                   }`}
                 />
@@ -310,7 +310,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* )} */}
 
       {/* Football Field */}
-      <div className={showGameInfo ? "border-t border-[#00ffe7]/10 pt-6" : ""}>
+      <div className={showGameInfo ? "border-t border-neon-cyan/10 pt-6" : ""}>
     <div className="relative w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg" style={{ height: '200px' }}>
       {/* End zones - 10% each */}
       <div className="absolute left-0 top-0 bottom-0 w-[10%] bg-blue-900/40 flex items-center justify-center">
@@ -846,11 +846,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 />
               </div>
               {/* Player name tooltip */}
-              <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-[#23263a] border rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-[9999]"
+              <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-bg-darker border rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-[9999]"
                 style={{ borderColor: `${playViz.color}80` }}
               >
                 <p className="text-xs font-bold" style={{ color: playViz.color }}>{lastPlay.athletesInvolved[0].displayName}</p>
-                <p className="text-[#b0b7bf] text-xs">{lastPlay.athletesInvolved[0].position}</p>
+                <p className="text-text-muted text-xs">{lastPlay.athletesInvolved[0].position}</p>
               </div>
             </div>
           </div>
@@ -866,14 +866,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
         return (
           <div className="mt-4">
-            <div className="text-[#b0b7bf] text-xs mb-2 flex items-center gap-2">
-              <FaFootballBall className="text-[#00ffe7]" />
+            <div className="text-text-muted text-xs mb-2 flex items-center gap-2">
+              <FaFootballBall className="text-neon-cyan" />
               Latest Play
             </div>
-            <div className={`bg-gradient-to-r ${isHome ? 'from-[#faafe8]/10' : 'from-[#00ffe7]/10'} rounded-lg p-3 border-l-2 ${isHome ? 'border-[#faafe8]' : 'border-[#00ffe7]'}`}>
+            <div className={`bg-gradient-to-r ${isHome ? 'from-neon-pink/10' : 'from-neon-cyan/10'} rounded-lg p-3 border-l-2 ${isHome ? 'border-neon-pink' : 'border-neon-cyan'}`}>
               <div className="flex items-center gap-2 mb-2">
                 <img src={getTeamLogo(team?.team)} alt="" className="w-5 h-5" />
-                <span className={`text-xs font-bold ${isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]'}`}>
+                <span className={`text-xs font-bold ${isHome ? 'text-neon-pink' : 'text-neon-cyan'}`}>
                   Q{latestPlay.quarter} {latestPlay.clock}
                 </span>
               </div>
@@ -887,11 +887,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
                         <img
                           src={athlete.headshot}
                           alt={athlete.displayName}
-                          className="w-8 h-8 rounded-full border-2 border-[#00ffe7]/30"
+                          className="w-8 h-8 rounded-full border-2 border-neon-cyan/30"
                         />
                         <div className="flex flex-col">
-                          <span className="text-[#e0e7ef] text-xs font-semibold">{athlete.shortName}</span>
-                          <span className="text-[#b0b7bf] text-[10px]">{athlete.position}</span>
+                          <span className="text-text-light text-xs font-semibold">{athlete.shortName}</span>
+                          <span className="text-text-muted text-[10px]">{athlete.position}</span>
                         </div>
                       </div>
                     )
@@ -899,7 +899,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 </div>
               )}
               
-              <p className="text-[#e0e7ef] text-xs">
+              <p className="text-text-light text-xs">
                 {latestPlay.text}
               </p>
             </div>
