@@ -188,6 +188,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                 getTeamLogo={getTeamLogo}
                 gameCountdown={gameCountdown}
                 playLog={playLog}
+                countdown={countdown}
               />
               
               {/* Points Chart - Show for all games with scoring data */}

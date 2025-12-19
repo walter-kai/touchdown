@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaFootballBall, FaListUl } from 'react-icons/fa';
-import { useScoreboard } from '@/providers/ScoreboardContext';
 
 interface PlayLogProps {
   playLog: Array<{
@@ -44,6 +43,7 @@ interface PlayLogProps {
   title?: string;
   showTitle?: boolean;
   maxHeight?: string;
+  countdown?: number;
 }
 
 const PlayLog: React.FC<PlayLogProps> = ({
@@ -54,10 +54,37 @@ const PlayLog: React.FC<PlayLogProps> = ({
   selectedPlayers = [],
   title = 'Play Log',
   showTitle = true,
-  maxHeight = 'none'
+  maxHeight = 'none',
+  countdown = 30
 }) => {
-  const { countdown } = useScoreboard();
   const progress = (countdown / 30) * 100; // 30 seconds total
+  const [newPlayIds, setNewPlayIds] = useState<Set<string>>(new Set());
+  const prevPlayCountRef = useRef(playLog.length);
+
+  // Track new plays for animation
+  useEffect(() => {
+    if (playLog.length > prevPlayCountRef.current) {
+      // New plays were added
+      const newIds = new Set<string>();
+      const numNewPlays = playLog.length - prevPlayCountRef.current;
+      
+      // Mark the first N plays as new (they're added at the beginning)
+      for (let i = 0; i < numNewPlays; i++) {
+        const play = playLog[i];
+        const playId = `${play.text}-${play.quarter}-${play.clock}`;
+        newIds.add(playId);
+      }
+      
+      setNewPlayIds(newIds);
+      
+      // Remove the "new" marker after animation completes
+      setTimeout(() => {
+        setNewPlayIds(new Set());
+      }, 1000);
+    }
+    
+    prevPlayCountRef.current = playLog.length;
+  }, [playLog]);
 
   if (playLog.length === 0) {
     return (
@@ -138,10 +165,19 @@ const PlayLog: React.FC<PlayLogProps> = ({
           const bgGradient = isHome ? 'from-[#faafe8]/10' : 'from-[#00ffe7]/10';
           const textColor = isHome ? 'text-[#faafe8]' : 'text-[#00ffe7]';
 
+          // Check if this is a new group (first play is new)
+          const firstPlayId = `${group.plays[0].text}-${group.plays[0].quarter}-${group.plays[0].clock}`;
+          const isNewGroup = newPlayIds.has(firstPlayId);
+
           return (
             <div
               key={`possession-${groupIdx}`}
-              className={`p-3 bg-gradient-to-r ${bgGradient} border-l-4 ${borderColor} rounded-lg`}
+              className={`p-3 bg-gradient-to-r ${bgGradient} border-l-4 ${borderColor} rounded-lg ${
+                isNewGroup ? 'animate-slide-in-play' : ''
+              }`}
+              style={{
+                animationDelay: isNewGroup ? `${groupIdx * 50}ms` : '0ms'
+              }}
             >
               {/* Possession Header - shown once per group */}
               <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
@@ -168,9 +204,17 @@ const PlayLog: React.FC<PlayLogProps> = ({
                   const primaryAthlete = play.athletesInvolved && play.athletesInvolved.length > 0 ? play.athletesInvolved[0] : null;
                   const headshotUrl = primaryAthlete?.headshot;
                   const isSelected = selectedPlayers.some(p => p.id === primaryAthlete?.id);
+                  const playId = `${play.text}-${play.quarter}-${play.clock}`;
+                  const isNewPlay = newPlayIds.has(playId);
 
                   return (
-                    <div key={`play-${groupIdx}-${playIdx}`} className="space-y-2">
+                    <div 
+                      key={`play-${groupIdx}-${playIdx}`} 
+                      className={`space-y-2 ${isNewPlay ? 'animate-fade-in-scale' : ''}`}
+                      style={{
+                        animationDelay: isNewPlay ? `${(groupIdx * 50) + (playIdx * 100)}ms` : '0ms'
+                      }}
+                    >
                       {/* Player Header with Large Headshot */}
                       {headshotUrl && primaryAthlete && (
                         <div className="flex items-center gap-3">

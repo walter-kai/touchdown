@@ -47,6 +47,32 @@ const FootballField: React.FC<FootballFieldProps> = ({
 }) => {
   if (!lastPlay) return null;
 
+  // Determine field orientation based on possession and play direction
+  // If possession team's yardLine increased, they're driving left-to-right (should be on left)
+  // If possession team's yardLine decreased, they're driving right-to-left (should be on right)
+  let leftTeam = awayTeam;
+  let rightTeam = homeTeam;
+  
+  if (situation?.possession && lastPlay.start && lastPlay.end) {
+    const playDirection = lastPlay.end.yardLine - lastPlay.start.yardLine;
+    const possessingTeam = situation.possession === homeTeam?.id ? homeTeam : awayTeam;
+    const defendingTeam = situation.possession === homeTeam?.id ? awayTeam : homeTeam;
+    
+    // If play moved towards higher yard numbers (right), possessing team is on left
+    // If play moved towards lower yard numbers (left), possessing team is on right
+    if (playDirection > 0) {
+      leftTeam = possessingTeam;
+      rightTeam = defendingTeam;
+    } else if (playDirection < 0) {
+      leftTeam = defendingTeam;
+      rightTeam = possessingTeam;
+    } else {
+      // No gain - use possession to determine (possession drives towards higher numbers by default)
+      leftTeam = possessingTeam;
+      rightTeam = defendingTeam;
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Current Drive Info - Only show if showGameInfo is true */}
@@ -119,10 +145,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
     <div className="relative w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg" style={{ height: '200px' }}>
       {/* End zones - 10% each */}
       <div className="absolute left-0 top-0 bottom-0 w-[10%] bg-blue-900/40 flex items-center justify-center">
-        <img src={getTeamLogo(awayTeam?.team)} alt="" className="w-12 h-12 opacity-60" />
+        <img src={getTeamLogo(leftTeam?.team)} alt="" className="w-12 h-12 opacity-60" />
       </div>
       <div className="absolute right-0 top-0 bottom-0 w-[10%] bg-red-900/40 flex items-center justify-center">
-        <img src={getTeamLogo(homeTeam?.team)} alt="" className="w-12 h-12 opacity-60" />
+        <img src={getTeamLogo(rightTeam?.team)} alt="" className="w-12 h-12 opacity-60" />
       </div>
 
       {/* Playing field - 80% between end zones */}

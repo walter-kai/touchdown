@@ -170,6 +170,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     const previousPlayText = previousEvent?.competitions?.[0]?.situation?.lastPlay?.text;
 
     if (currentPlayText !== previousPlayText) {
+      console.log('🆕 New play detected:', currentPlayText);
       setPlayLog(prev => {
         const isDuplicate = prev.some(p =>
           p.text === currentPlayText &&
@@ -188,10 +189,15 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
             possession: typeof possession === 'object' && possession !== null && 'id' in possession ? (possession as any).id : possession,
             athletesInvolved: comp.situation?.lastPlay?.athletesInvolved
           };
+          console.log('➕ Adding new play to log:', newPlay);
           return [newPlay, ...prev];
+        } else {
+          console.log('⏭️ Duplicate play, skipping');
         }
         return prev;
       });
+    } else {
+      console.log('⏸️ No new plays since last refresh');
     }
   };
 
@@ -282,6 +288,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     if (navPreset === 'summary') return; // Don't refresh final games
     
     if (countdown <= 0) {
+      console.log('⏰ Countdown reached 0, triggering auto-refresh...');
       // Trigger a new fetch by updating a dependency
       const fetchGameData = async () => {
         if (!gameId) return;
@@ -290,9 +297,12 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
           setIsRefreshing(true);
           setError(null);
 
+          console.log('🔄 Fetching fresh game data from API...');
           const { game, usedSummaryApi } = await getGameData(gameId);
           
           if (game) {
+            console.log('✅ Game data refreshed, updating state...');
+            console.log('📊 Latest play:', game.competitions[0]?.situation?.lastPlay?.text);
             mergeLatestPlay(game, event);
             
             const preset = usedSummaryApi ? 'summary' : 'scoreboard';
@@ -304,8 +314,9 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
           
           setCountdown(30);
           setIsRefreshing(false);
+          console.log('✅ Refresh complete, countdown reset to 30s');
         } catch (err) {
-          console.error('Error refreshing game data:', err);
+          console.error('❌ Error refreshing game data:', err);
           setIsRefreshing(false);
           setCountdown(30);
         }

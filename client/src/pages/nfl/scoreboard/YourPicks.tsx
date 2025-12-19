@@ -454,13 +454,6 @@ const YourPicks: React.FC<PlayerPickProps> = ({
 
   // Get scores from context for display
   useEffect(() => {
-    if (selectedPlayers.length === 0) {
-      setCurrentSetScores({});
-      setAllPlayerScores({});
-      setTotalScore(0);
-      return;
-    }
-
     const scores = getScores(gameId);
     if (!scores) {
       console.warn('⚠️ YourPicks: No scores available from context yet');
@@ -469,18 +462,21 @@ const YourPicks: React.FC<PlayerPickProps> = ({
 
     console.log('📊 YourPicks: Using scores from context:', scores);
 
-    // Set session scores for selected players (time-filtered for current session)
-    const sessionScores: Record<string, number> = {};
-    selectedPlayers.forEach(player => {
-      sessionScores[player.id] = scores.sessionScores[player.id] || 0;
-    });
-    setCurrentSetScores(sessionScores);
-
-    // Set game scores for all roster players
+    // Set game scores for all roster players (always set this for roster display)
     setAllPlayerScores(scores.gameScores);
 
-    // Set total user score
-    setTotalScore(scores.totalScore);
+    // Set session scores for selected players (time-filtered for current session)
+    if (selectedPlayers.length > 0) {
+      const sessionScores: Record<string, number> = {};
+      selectedPlayers.forEach(player => {
+        sessionScores[player.id] = scores.sessionScores[player.id] || 0;
+      });
+      setCurrentSetScores(sessionScores);
+      setTotalScore(scores.totalScore);
+    } else {
+      setCurrentSetScores({});
+      setTotalScore(0);
+    }
   }, [selectedPlayers, gameId, getScores]);
 
   // Roster player scores are now provided by context (allPlayerScores is set above)

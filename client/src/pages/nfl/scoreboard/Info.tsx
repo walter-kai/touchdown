@@ -16,6 +16,7 @@ interface InfoProps {
   gameCountdown?: number;
   summary?: Summary | null;
   gameId?: string;
+  countdown?: number;
   playLog: Array<{
     text: string;
     quarter: number;
@@ -45,6 +46,7 @@ const Info: React.FC<InfoProps> = ({
   summary,
   gameId,
   playLog,
+  countdown = 30,
 }) => {
   const navigate = useNavigate();
 
@@ -247,6 +249,7 @@ const Info: React.FC<InfoProps> = ({
                     homeTeam={homeTeam}
                     awayTeam={awayTeam}
                     lastPlay={competition.situation.lastPlay}
+                    situation={competition.situation}
                     getTeamLogo={getTeamLogo}
                   />
 
@@ -259,6 +262,7 @@ const Info: React.FC<InfoProps> = ({
                       getTeamLogo={getTeamLogo}
                       title="Play Log"
                       showTitle={true}
+                      countdown={countdown}
                     />
                   </div>
                 </div>
@@ -405,7 +409,7 @@ const Info: React.FC<InfoProps> = ({
       </div>
 
       {/* Predictions */}
-      <div className="pt-4 pb-12">
+      <div className=" ">
         {/* Divider */}
         <div className="border-t-2 border-[#00ffe7]/20 pt-2 mb-4"></div>
         <div className="mx-2">
