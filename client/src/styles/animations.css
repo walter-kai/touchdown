@@ -160,6 +160,12 @@
   animation: fade-in 0.4s ease-out;
 }
 
+.animate-fade-in-delayed {
+  animation: fade-in 0.4s ease-out;
+  animation-delay: 6s;
+  animation-fill-mode: both;
+}
+
 .animate-scale-pulse {
   animation: scale-pulse 1.5s ease-in-out infinite;
 }

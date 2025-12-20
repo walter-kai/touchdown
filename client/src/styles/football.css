@@ -221,11 +221,15 @@
     opacity: 1;
   }
   50% {
-    transform: translateX(calc(var(--distance) * 0.5 * 1vw)) translateY(calc(var(--arc-height, -90px) * -1)) rotate(0deg) scale(1);
+    transform: translateX(calc(var(--distance-px) * 0.5)) translateY(calc(var(--arc-height, -90px) * -1)) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(var(--distance-px)) translateY(0) rotate(45deg) scale(0.8);
     opacity: 1;
   }
   100% {
-    transform: translateX(calc(var(--distance) * 1vw)) translateY(0) rotate(45deg) scale(0.8);
+    transform: translateX(var(--distance-px)) translateY(0) rotate(45deg) scale(0.8);
     opacity: 1;
   }
 }
@@ -237,16 +241,20 @@
     opacity: 1;
   }
   45% {
-    transform: translateX(calc(var(--distance) * 0.5 * 1vw)) translateY(calc(var(--arc-height, -90px) * -1)) rotate(10deg) scale(1);
+    transform: translateX(calc(var(--distance-px) * 0.5)) translateY(calc(var(--arc-height, -90px) * -1)) rotate(10deg) scale(1);
     opacity: 1;
   }
   60% {
-    transform: translateX(calc(var(--distance) * 0.7 * 1vw)) translateY(-20px) rotate(90deg) scale(0.9);
+    transform: translateX(calc(var(--distance-px) * 0.7)) translateY(-20px) rotate(90deg) scale(0.9);
     opacity: 1;
+  }
+  80% {
+    transform: translateX(var(--distance-px)) translateY(150px) rotate(360deg) scale(0.2);
+    opacity: 0;
   }
 
   100% {
-    transform: translateX(calc(var(--distance) * 1vw)) translateY(150px) rotate(360deg) scale(0.2);
+    transform: translateX(var(--distance-px)) translateY(150px) rotate(360deg) scale(0.2);
     opacity: 0;
   }
 }
@@ -258,11 +266,15 @@
     opacity: 1;
   }
   50% {
-    transform: translateX(calc(var(--distance) * 0.5 * 1vw)) scale(1);
+    transform: translateX(calc(var(--distance-px) * 0.5)) scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(var(--distance-px)) scale(0.9);
     opacity: 1;
   }
   100% {
-    transform: translateX(calc(var(--distance) * 1vw)) scale(0.9);
+    transform: translateX(var(--distance-px)) scale(0.9);
     opacity: 1;
   }
 }
@@ -270,39 +282,16 @@
 /* Punt/Kickoff High Arc */
 @keyframes punt-trajectory {
   0% {
-    transform: translateX(0) translateY(0) rotate(-30deg) scale(0.4);
-    opacity: 0;
-  }
-  5% {
-    opacity: 0.7;
-  }
-  12% {
-    transform: translateX(calc(var(--distance) * 0.15)) translateY(-70px) rotate(-5deg) scale(0.5);
+    transform: translateX(0) translateY(0) rotate(-45deg) scale(0.8);
     opacity: 1;
   }
-  25% {
-    transform: translateX(calc(var(--distance) * 0.35)) translateY(-130px) rotate(10deg) scale(0.6);
-  }
-  45% {
-    transform: translateX(calc(var(--distance) * 0.65)) translateY(-130px) rotate(-5deg) scale(0.6);
-  }
-  58% {
-    transform: translateX(calc(var(--distance) * 0.85)) translateY(-70px) rotate(-20deg) scale(0.5);
-  }
-  68% {
-    transform: translateX(var(--distance)) translateY(0) rotate(-30deg) scale(0.4);
+  50% {
+    transform: translateX(calc(var(--distance) * 0.5 * 1vw)) translateY(calc(var(--arc-height, -90px) * -1)) rotate(0deg) scale(1);
     opacity: 1;
-  }
-  92% {
-    transform: translateX(var(--distance)) translateY(0) rotate(-30deg) scale(0.4);
-    opacity: 1;
-  }
-  98% {
-    opacity: 0;
   }
   100% {
-    transform: translateX(0) translateY(0) rotate(-30deg) scale(0.4);
-    opacity: 0;
+    transform: translateX(calc(var(--distance) * 1vw)) translateY(0) rotate(45deg) scale(0.8);
+    opacity: 1;
   }
 }
 
@@ -310,82 +299,64 @@
 @keyframes field-goal-arc {
   0% {
     transform: translateX(0) translateY(0) rotate(-20deg) scale(0.3);
-    opacity: 0;
-  }
-  5% {
-    opacity: 0.7;
+    opacity: 1;
   }
   18% {
-    transform: translateX(calc(var(--distance) * 0.25)) translateY(-85px) rotate(0deg) scale(0.5);
+    transform: translateX(calc(var(--distance) * 0.25 * 1vw)) translateY(-85px) rotate(0deg) scale(0.5);
     opacity: 1;
   }
   38% {
-    transform: translateX(calc(var(--distance) * 0.5)) translateY(-135px) rotate(12deg) scale(0.65);
+    transform: translateX(calc(var(--distance) * 0.5 * 1vw)) translateY(-135px) rotate(12deg) scale(0.65);
   }
   58% {
-    transform: translateX(calc(var(--distance) * 0.75)) translateY(-105px) rotate(18deg) scale(0.5);
-  }
-  70% {
-    transform: translateX(var(--distance)) translateY(-20px) rotate(30deg) scale(0.3);
-    opacity: 1;
-  }
-  92% {
-    transform: translateX(var(--distance)) translateY(-20px) rotate(30deg) scale(0.3);
-    opacity: 1;
-  }
-  98% {
-    opacity: 0;
+    transform: translateX(calc(var(--distance) * 0.75 * 1vw)) translateY(-105px) rotate(18deg) scale(0.5);
   }
   100% {
-    transform: translateX(0) translateY(0) rotate(-20deg) scale(0.3);
-    opacity: 0;
+    transform: translateX(calc(var(--distance) * 1vw)) translateY(-20px) rotate(30deg) scale(0.3);
+    opacity: 1;
   }
 }
 
 /* Kickoff/Punt Fail - High arc then bounces off wall and falls */
 @keyframes kickoff-fail {
   0% {
-    transform: translateX(0) translateY(0) rotate(-30deg) scale(0.4);
-    opacity: 0;
-  }
-  4% {
-    opacity: 0.7;
-  }
-  10% {
-    transform: translateX(calc(var(--distance) * 0.15)) translateY(-70px) rotate(-8deg) scale(0.5);
+    transform: translateX(0) translateY(0) rotate(-45deg) scale(0.8);
     opacity: 1;
   }
-  22% {
-    transform: translateX(calc(var(--distance) * 0.35)) translateY(-135px) rotate(8deg) scale(0.6);
-  }
-  38% {
-    transform: translateX(calc(var(--distance) * 0.6)) translateY(-155px) rotate(0deg) scale(0.7);
+  45% {
+    transform: translateX(calc(var(--distance) * 0.5 * 1vw)) translateY(calc(var(--arc-height, -90px) * -1)) rotate(10deg) scale(1);
+    opacity: 1;
   }
   50% {
-    transform: translateX(calc(var(--distance) * 0.88)) translateY(-75px) rotate(-18deg) scale(0.6);
+    transform: translateX(calc(var(--distance) * 0.55 * 1vw)) translateY(calc(var(--arc-height, -90px) * -0.8)) rotate(25deg) scale(0.95);
   }
   55% {
-    transform: translateX(var(--distance)) translateY(-35px) rotate(-30deg) scale(0.5);
+    transform: translateX(calc(var(--distance) * 0.5 * 1vw)) translateY(calc(var(--arc-height, -90px) * -0.6)) rotate(40deg) scale(0.9);
+  }
+  60% {
+    transform: translateX(calc(var(--distance) * 0.48 * 1vw)) translateY(calc(var(--arc-height, -90px) * -0.4)) rotate(55deg) scale(0.85);
+  }
+  65% {
+    transform: translateX(calc(var(--distance) * 0.47 * 1vw)) translateY(calc(var(--arc-height, -90px) * -0.2)) rotate(70deg) scale(0.8);
+  }
+  70% {
+    transform: translateX(calc(var(--distance) * 0.46 * 1vw)) translateY(0) rotate(90deg) scale(0.75);
+  }
+  75% {
+    transform: translateX(calc(var(--distance) * 0.45 * 1vw)) translateY(20px) rotate(120deg) scale(0.7);
+  }
+  80% {
+    transform: translateX(calc(var(--distance) * 0.44 * 1vw)) translateY(40px) rotate(150deg) scale(0.65);
+  }
+  85% {
+    transform: translateX(calc(var(--distance) * 0.43 * 1vw)) translateY(60px) rotate(180deg) scale(0.6);
     opacity: 1;
   }
-  58% {
-    transform: translateX(calc(var(--distance) * 0.94)) translateY(-25px) rotate(50deg) scale(0.45);
-    opacity: 0.9;
-  }
-  64% {
-    transform: translateX(calc(var(--distance) * 0.88)) translateY(40px) rotate(180deg) scale(0.4);
-    opacity: 0.6;
-  }
-  74% {
-    transform: translateX(calc(var(--distance) * 0.8)) translateY(160px) rotate(360deg) scale(0.1);
-    opacity: 0;
-  }
-  93% {
-    transform: translateX(calc(var(--distance) * 0.8)) translateY(160px) rotate(360deg) scale(0.1);
-    opacity: 0;
+  90% {
+    opacity: 0.5;
   }
   100% {
-    transform: translateX(0) translateY(0) rotate(-30deg) scale(0.4);
+    transform: translateX(calc(var(--distance) * 0.42 * 1vw)) translateY(100px) rotate(270deg) scale(0.4);
     opacity: 0;
   }
 }
@@ -393,6 +364,11 @@
 .animate-rush-slide {
   animation: rush-slide 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
   animation-delay: 0s;
+}
+
+.animate-rush-slide-delayed {
+  animation: rush-slide 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-delay: 6s;
 }
 
 .animate-pass-arc {
@@ -408,7 +384,7 @@
 }
 
 .animate-punt-trajectory {
-  animation: punt-trajectory 6s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+  animation: punt-trajectory 4s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
 }
 
 .animate-field-goal-arc {
@@ -536,5 +512,23 @@
 
 .animate-fadeInOut {
   animation: fadeInOut 2s ease-in-out infinite;
+}
+
+@keyframes fadeOutLinear {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeOutFast {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 

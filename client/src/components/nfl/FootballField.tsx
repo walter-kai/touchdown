@@ -7,6 +7,7 @@ interface FootballFieldProps {
   homeTeam: any;
   awayTeam: any;
   lastPlay?: {
+    id?: string;
     start?: { yardLine: number };
     end?: { yardLine: number };
     type?: {
@@ -19,6 +20,7 @@ interface FootballFieldProps {
       headshot: string;
       position: string;
     }>;
+    text?: string;
   };
   situation?: {
     downDistanceText?: string;
@@ -224,9 +226,41 @@ const FootballField: React.FC<FootballFieldProps> = ({
   showGameInfo = false,
 }) => {
   const fieldRef = React.useRef<HTMLDivElement>(null);
+  const [kickPhaseComplete, setKickPhaseComplete] = React.useState(false);
+  const [kickDone, setKickDone] = React.useState(false);
+  const [returnStarted, setReturnStarted] = React.useState(false);
+  const [ballFade, setBallFade] = React.useState(false);
+  const [loopCycle, setLoopCycle] = React.useState(0);
+
+  // Normalize team abbreviations for yard conversions
+  const awayAbbr = awayTeam?.team?.abbreviation?.toUpperCase() || awayTeam?.abbreviation?.toUpperCase() || awayTeam?.shortDisplayName?.toUpperCase();
+  const homeAbbr = homeTeam?.team?.abbreviation?.toUpperCase() || homeTeam?.abbreviation?.toUpperCase() || homeTeam?.shortDisplayName?.toUpperCase();
+  const abbrMatches = (abbr?: string, target?: string) => {
+    if (!abbr || !target) return false;
+    const a = abbr.toUpperCase();
+    const b = target.toUpperCase();
+    if (a === b) return true;
+    // handle shortened city codes like LA vs LAR
+    if (a.length === 2 && b.startsWith(a)) return true;
+    if (b.length === 2 && a.startsWith(b)) return true;
+    return false;
+  };
+  const convertToFieldYard = (abbr?: string, yard?: number) => {
+    if (yard === undefined || yard < 0 || yard > 100) return undefined;
+    if (!abbr) return yard; // unknown team, assume left-to-right as-is
+    if (abbrMatches(abbr, awayAbbr)) return yard; // left team keeps yard as-is
+    if (abbrMatches(abbr, homeAbbr)) return 100 - yard; // flip for right team
+    // Unrecognized team token: leave as-is to avoid stalling the animation
+    return yard;
+  };
   
   // Single source of truth for all headshot vertical positions
   const HEADSHOT_VERTICAL_POSITION = '64%';
+  // Duration of the kickoff arc animation (matches animate-pass-arc duration)
+  const KICK_ANIMATION_MS = 5000;
+  // Duration of rush animation (matches rush-slide timing)
+  const RUSH_ANIMATION_MS = 3000;
+  const PLAY_LOOP_MS = KICK_ANIMATION_MS + RUSH_ANIMATION_MS + 600; // small buffer
   
   if (!lastPlay) return null;
 
@@ -236,6 +270,134 @@ const FootballField: React.FC<FootballFieldProps> = ({
   
   // Get visualization config for this play type - handle both string and object
   const playViz = getPlayVisualization(lastPlay.type);
+
+  // For kickoffs/punts, extract accurate yard lines from text since start/end data is unreliable
+  let kickStartYard: number | null = null;
+  let kickEndYard: number | null = null;
+  let returnStartYard: number | null = null; // Where returner catches/recovers
+  let returnEndYard: number | null = null; // Final position after return
+  const isKickPlay = playViz.animate === 'punt' || playViz.animate === 'kickoff' || playViz.animate === 'kickoff-fail';
+  
+  console.log('🏈 Is kick play?', isKickPlay, 'playViz.animate:', playViz.animate);
+
+  // Gate the return animation until the kick arc finishes
+  const playKey = lastPlay?.id ?? lastPlay?.text ?? lastPlay?.type?.id ?? lastPlay?.type?.text ?? '';
+
+  React.useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (isKickPlay) {
+      setKickPhaseComplete(false);
+      setKickDone(false);
+      setReturnStarted(false);
+      setBallFade(false);
+      timer = setTimeout(() => {
+        setKickPhaseComplete(true);
+        setKickDone(true);
+        setReturnStarted(true);
+        setBallFade(true);
+      }, KICK_ANIMATION_MS);
+      console.log('⏱️ Kick phase reset; will complete after', KICK_ANIMATION_MS, 'ms');
+    } else {
+      setKickPhaseComplete(true);
+      setKickDone(true);
+      setReturnStarted(true);
+      setBallFade(true);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [playKey, isKickPlay, loopCycle]);
+
+  // Loop the full kick->rush sequence for kick plays
+  React.useEffect(() => {
+    if (!isKickPlay) return;
+    const loopTimer = setTimeout(() => setLoopCycle((c) => c + 1), PLAY_LOOP_MS);
+    return () => clearTimeout(loopTimer);
+  }, [isKickPlay, loopCycle, PLAY_LOOP_MS]);
+  
+  if (isKickPlay && lastPlay.text) {
+    // Extract "kicks XX yards from TEAM YY to TEAM ZZ" for kick trajectory
+    const kickMatch = lastPlay.text.match(/kicks\s+\d+\s+yards\s+from\s+(\w+)\s+(\d+)\s+to\s+(\w+)\s+(\d+)/i);
+    const toEndZoneMatch = lastPlay.text.match(/kicks\s+\d+\s+yards\s+from\s+(\w+)\s+(\d+)\s+to\s+(?:the\s+)?end zone/i);
+    
+    // Extract "recovers at TEAM YY" for muffed kicks
+    const recoveryMatch = lastPlay.text.match(/recovers at\s+(\w+)\s+(\d+)/i);
+    
+    // Extract "to TEAM YY for ZZ yards" for return
+    const returnMatch = lastPlay.text.match(/to\s+(\w+)\s+(\d+)\s+for\s+\d+\s+yards/i);
+    
+    if (kickMatch) {
+      const kickTeamAbbr = kickMatch[1].toUpperCase();
+      const kickYardLine = parseInt(kickMatch[2]);
+      const landTeamAbbr = kickMatch[3].toUpperCase();
+      const landYardLine = parseInt(kickMatch[4]);
+      
+      // Convert kick start position
+      const isKickTeamLeft = kickTeamAbbr === awayTeam?.abbreviation?.toUpperCase() || 
+                             kickTeamAbbr === awayTeam?.shortDisplayName?.toUpperCase();
+      kickStartYard = isKickTeamLeft ? kickYardLine : (100 - kickYardLine);
+      
+      // Convert landing position (where ball first lands)
+      const isLandTeamLeft = landTeamAbbr === awayTeam?.abbreviation?.toUpperCase() || 
+                            landTeamAbbr === awayTeam?.shortDisplayName?.toUpperCase();
+      kickEndYard = isLandTeamLeft ? landYardLine : (100 - landYardLine);
+      
+      // Default return start is where ball lands
+      returnStartYard = kickEndYard;
+    } else if (toEndZoneMatch) {
+      // Touchback case
+      const kickTeamAbbr = toEndZoneMatch[1].toUpperCase();
+      const kickYardLine = parseInt(toEndZoneMatch[2]);
+      
+      const isKickTeamLeft = kickTeamAbbr === awayTeam?.abbreviation?.toUpperCase() || 
+                             kickTeamAbbr === awayTeam?.shortDisplayName?.toUpperCase();
+      kickStartYard = isKickTeamLeft ? kickYardLine : (100 - kickYardLine);
+      
+      // Touchback goes to receiving team's 25
+      kickEndYard = isKickTeamLeft ? 75 : 25;
+      returnStartYard = kickEndYard;
+      returnEndYard = kickEndYard; // No return on touchback
+    }
+    
+    // Check for recovery position (muffed kick)
+    if (recoveryMatch) {
+      const recoveryTeamAbbr = recoveryMatch[1].toUpperCase();
+      const recoveryYardLine = parseInt(recoveryMatch[2]);
+      
+      const isRecoveryTeamLeft = recoveryTeamAbbr === awayTeam?.abbreviation?.toUpperCase() || 
+                                 recoveryTeamAbbr === awayTeam?.shortDisplayName?.toUpperCase();
+      returnStartYard = isRecoveryTeamLeft ? recoveryYardLine : (100 - recoveryYardLine);
+    }
+    
+    // Get return end position if there's a return
+    if (returnMatch) {
+      const returnTeamAbbr = returnMatch[1].toUpperCase();
+      const returnYardLine = parseInt(returnMatch[2]);
+      
+      const isReturnTeamLeft = returnTeamAbbr === awayTeam?.abbreviation?.toUpperCase() || 
+                              returnTeamAbbr === awayTeam?.shortDisplayName?.toUpperCase();
+      returnEndYard = isReturnTeamLeft ? returnYardLine : (100 - returnYardLine);
+    } else {
+      // No return, final position is where ball was caught/recovered
+      returnEndYard = returnStartYard;
+    }
+    
+    console.log('🏈 KICK YARD LINE PARSING:', {
+      text: lastPlay.text,
+      kickStartYard,
+      kickEndYard,
+      returnStartYard,
+      returnEndYard,
+      awayTeam: awayTeam?.abbreviation,
+      homeTeam: homeTeam?.abbreviation,
+      hasAthletes: !!lastPlay.athletesInvolved,
+      athleteCount: lastPlay.athletesInvolved?.length || 0
+    });
+  }
+  
+  // Use kick yards if available, otherwise use lastPlay data
+  const effectiveStartYard = isKickPlay && kickStartYard !== null ? kickStartYard : lastPlay.start?.yardLine;
+  const effectiveEndYard = isKickPlay && returnEndYard !== null ? returnEndYard : lastPlay.end?.yardLine;
 
   return (
     <div className="space-y-6">
@@ -349,11 +511,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
       <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-yellow-400/30" />
 
       {/* Start position dot - positioned at arrow/football level */}
-      {lastPlay.start && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
+      {effectiveStartYard !== undefined && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
         <div
           className="absolute transform -translate-x-1/2 -translate-y-1/2"
           style={{ 
-            left: `${10 + (lastPlay.start.yardLine * 0.8)}%`,
+            left: `${10 + (effectiveStartYard * 0.8)}%`,
             top: HEADSHOT_VERTICAL_POSITION
           }}
         >
@@ -368,7 +530,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       )}
 
       {/* Arrow showing play direction - positioned at 50% (middle) */}
-      {lastPlay.start && lastPlay.end && lastPlay.start.yardLine !== lastPlay.end.yardLine && (
+      {effectiveStartYard !== undefined && effectiveEndYard !== undefined && effectiveStartYard !== effectiveEndYard && (
         <>
           <svg
             className={`absolute left-0 top-0 w-full h-full pointer-events-none ${
@@ -379,7 +541,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               <marker
                 id={`arrowhead-${playViz.color.replace('#', '')}`}
                 markerWidth="10"
-                markerHeight="6"
+                markerHeight="8"
                 refX="8"
                 refY="3"
                 orient="auto"
@@ -400,9 +562,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
             </defs>
             
             <line
-              x1={`${10 + (lastPlay.start.yardLine * 0.8)}%`}
+              x1={`${10 + (effectiveStartYard * 0.8)}%`}
               y1={HEADSHOT_VERTICAL_POSITION}
-              x2={`${10 + (lastPlay.end.yardLine * 0.8)}%`}
+              x2={`${10 + (effectiveEndYard * 0.8)}%`}
               y2={HEADSHOT_VERTICAL_POSITION}
               stroke={playViz.color}
               strokeWidth={playViz.width}
@@ -413,9 +575,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
             />
             
             {/* Arc path for punts/kickoffs */}
-            {playViz.animate === 'arc' && (
+            {playViz.animate === 'arc' && effectiveStartYard !== undefined && effectiveEndYard !== undefined && (
               <path
-                d={`M ${10 + (lastPlay.start.yardLine * 0.8)}%,${HEADSHOT_VERTICAL_POSITION} Q ${10 + ((lastPlay.start.yardLine + lastPlay.end.yardLine) / 2 * 0.8)}%,13% ${10 + (lastPlay.end.yardLine * 0.8)}%,${HEADSHOT_VERTICAL_POSITION}`}
+                d={`M ${10 + (effectiveStartYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION} Q ${10 + ((effectiveStartYard + effectiveEndYard) / 2 * 0.8)}%,13% ${10 + (effectiveEndYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION}`}
                 stroke={playViz.color}
                 strokeWidth={playViz.width}
                 fill="none"
@@ -426,11 +588,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
           </svg>
           
           {/* Play type icon at midpoint - only show for fail cases */}
-          {playViz.icon === '🚫' && (
+          {playViz.icon === '🚫' && effectiveStartYard !== undefined && effectiveEndYard !== undefined && (
             <div
               className="absolute transform -translate-x-1/2 -translate-y-1/2 text-2xl z-20"
               style={{
-                left: `${10 + ((lastPlay.start.yardLine + lastPlay.end.yardLine) / 2 * 0.8)}%`,
+                left: `${10 + ((effectiveStartYard + effectiveEndYard) / 2 * 0.8)}%`,
                 top: '50%',
                 filter: `drop-shadow(0 0 8px ${playViz.glowColor})`
               }}
@@ -534,14 +696,25 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* Animated play elements */}
       {lastPlay.start && lastPlay.end && lastPlay.athletesInvolved && lastPlay.athletesInvolved.length > 0 && (() => {
         console.log('Play data:', lastPlay);
-        const startX = 10 + (lastPlay.start.yardLine * 0.8);
-        const endX = 10 + (lastPlay.end.yardLine * 0.8);
-        const distance = endX - startX;
+        const baseStartX = 10 + (lastPlay.start.yardLine * 0.8);
+        const baseEndX = 10 + (lastPlay.end.yardLine * 0.8);
+        // Use raw start/end yard lines to keep arrow and animation aligned
+        const passStartYard = lastPlay.start.yardLine;
+        const passEndYard = lastPlay.end.yardLine;
+
+        const passStartX = 10 + (passStartYard * 0.8);
+        const passEndX = 10 + (passEndYard * 0.8);
+        const distance = passEndX - passStartX;
+        const fieldWidthPx = fieldRef.current?.offsetWidth || 1000;
+        const signedDistancePx = distance / 100 * fieldWidthPx;
+        const distancePx = Math.abs(signedDistancePx);
+        const passDurationMs = Math.min(Math.max(distancePx * 5, 900), 4800); // clamp for fluid speed
+        const PASS_PAUSE_MS = 2000;
         
         // Rush animation - headshot slides from dot with football
         if (playViz.animate === 'rush') {
           // Calculate distance as percentage of field width
-          const distancePercent = endX - startX;
+          const distancePercent = baseEndX - baseStartX;
           const fieldWidth = fieldRef.current?.offsetWidth || 1000;
           // Add extra distance to account for football offset (headshot is 64px, football is 32px to the right)
           // Add approximately 24px (half headshot radius + half football width) to reach the end position with the football
@@ -549,7 +722,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           // Check if there's actual yardage gain (not just pixel distance)
           const hasGain = lastPlay.end.yardLine > lastPlay.start.yardLine;
           
-          console.log('Rush animation:', { startX, endX, distancePercent, fieldWidth, distancePixels, hasGain });
+          console.log('Rush animation:', { startX: baseStartX, endX: baseEndX, distancePercent, fieldWidth, distancePixels, hasGain });
           
           return (
             <>
@@ -558,7 +731,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 key={`rush-${lastPlay.start?.yardLine}-${lastPlay.end?.yardLine}`}
                 className="absolute z-10"
                 style={{ 
-                  left: `${startX}%`,
+                  left: `${baseStartX}%`,
                   top: HEADSHOT_VERTICAL_POSITION,
                   transform: 'translate(-50%, -50%)'
                 }}
@@ -626,16 +799,18 @@ const FootballField: React.FC<FootballFieldProps> = ({
               <div
                 className="absolute z-20"
                 style={{ 
-                  left: `${startX}%`,
+                  left: `${passStartX}%`,
                   top: HEADSHOT_VERTICAL_POSITION,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
                 <div
-                  className={playViz.animate === 'pass-complete' ? 'animate-pass-arc' : 'animate-pass-incomplete'}
                   style={{
                     '--distance': distance,
-                    '--arc-height': `${Math.abs(distance) * 2.5}px`
+                    '--distance-px': `${signedDistancePx}px`,
+                    '--arc-height': `${Math.abs(distance) * 2.5}px`,
+                    animation: `${playViz.animate === 'pass-complete' ? 'pass-arc' : 'pass-incomplete'} ${passDurationMs + PASS_PAUSE_MS}ms linear 0s infinite`,
+                    willChange: 'transform, opacity'
                   } as React.CSSProperties}
                 >
                   <img
@@ -653,15 +828,17 @@ const FootballField: React.FC<FootballFieldProps> = ({
               <div
                 className="absolute z-10"
                 style={{ 
-                  left: `${startX}%`,
+                  left: `${passStartX}%`,
                   top: HEADSHOT_VERTICAL_POSITION,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
                 <div
-                  className="animate-headshot-follow"
                   style={{
-                    '--distance': distance
+                    '--distance': distance,
+                    '--distance-px': `${signedDistancePx}px`,
+                    animation: `headshot-follow ${passDurationMs + PASS_PAUSE_MS}ms linear 0s infinite`,
+                    willChange: 'transform, opacity'
                   } as React.CSSProperties}
                 >
                   <div className="relative group">
@@ -688,63 +865,167 @@ const FootballField: React.FC<FootballFieldProps> = ({
         
         // Punt/Kickoff - high arc trajectory with football and headshot at end
         if (playViz.animate === 'punt' || playViz.animate === 'kickoff' || playViz.animate === 'kickoff-fail') {
-          const animationClass = playViz.animate === 'kickoff-fail' ? 'animate-kickoff-fail' : 'animate-punt-trajectory';
+          // Use pass-arc for the kick, rush-slide for the return
+          const kickStartX = kickStartYard !== null ? 10 + (kickStartYard * 0.8) : baseStartX;
+          const kickLandX = kickEndYard !== null ? 10 + (kickEndYard * 0.8) : baseEndX;
+          const returnStartX = returnStartYard !== null ? 10 + (returnStartYard * 0.8) : kickLandX;
+          const returnEndX = returnEndYard !== null ? 10 + (returnEndYard * 0.8) : baseEndX;
+          
+          const kickDistance = kickLandX - kickStartX;
+          const returnDistance = returnEndX - returnStartX;
+          const fieldWidth = fieldRef.current?.offsetWidth || 1000;
+          const kickDistancePx = (kickDistance / 100) * fieldWidth;
+          const returnDistancePixels = (returnDistance / 100) * fieldWidth;
+          const needsReturnNudge = Math.abs(returnDistance) < 1; // e.g. touchback shows no movement
+          const fallbackReturnSign = kickDistance === 0 ? 1 : -Math.sign(kickDistance || -1); // run opposite kick direction
+          const effectiveReturnDistancePixels = needsReturnNudge
+            ? fallbackReturnSign * 24 // minimal visible slide so "rush" is apparent
+            : returnDistancePixels;
+          
+          console.log('🏈 KICKOFF/PUNT ANIMATION SETUP:', { 
+            kickStartX,
+            kickLandX,
+            returnStartX,
+            returnEndX,
+            kickDistance,
+            returnDistance,
+            returnDistancePixels,
+            needsReturnNudge,
+            effectiveReturnDistancePixels,
+            kickDone,
+            returnStarted,
+            playType: playViz.animate,
+            isKickoffFail: playViz.animate === 'kickoff-fail',
+            hasAthletes: !!lastPlay.athletesInvolved,
+            athleteCount: lastPlay.athletesInvolved?.length || 0,
+            returnDistanceAbs: Math.abs(returnDistance),
+            willShowRush: playViz.animate !== 'kickoff-fail' && lastPlay.athletesInvolved && lastPlay.athletesInvolved[0]
+          });
           
           return (
             <>
-              {/* Football arc */}
+              {/* Phase 1: Football arc (reuse pass-arc animation) */}
               <div
+                key={`kick-arc-${playKey}-${kickStartX}-${kickLandX}-${loopCycle}`}
                 className="absolute z-20"
                 style={{ 
-                  left: `${startX}%`,
+                  left: `${kickStartX}%`,
                   top: HEADSHOT_VERTICAL_POSITION,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
                 <div
-                  className={animationClass}
                   style={{
-                    '--distance': `${distance}%`
+                    '--distance': kickDistance,
+                    '--distance-px': `${kickDistancePx}px`,
+                    '--arc-height': `${Math.abs(kickDistance) * 2.5}px`,
+                    animation: `${playViz.animate === 'kickoff-fail' ? 'pass-incomplete' : 'pass-arc'} ${KICK_ANIMATION_MS}ms linear 0s 1 forwards`,
+                    opacity: 1,
+                    willChange: 'transform, opacity'
                   } as React.CSSProperties}
+                  onAnimationEnd={() => {
+                    console.log('🏁 Kick arc animation ended');
+                    setKickDone(true);
+                    setReturnStarted(true);
+                    setBallFade(true);
+                  }}
                 >
                   <img
                     src="/assets/football_spin.gif"
                     alt="Football"
-                    className="w-10 h-10 object-contain"
+                    className="w-8 h-8 object-contain"
                     style={{
-                      filter: `drop-shadow(0 0 15px ${playViz.glowColor})`
+                      filter: `drop-shadow(0 0 10px ${playViz.glowColor})`,
+                      animation: ballFade ? 'fadeOutFast 400ms linear 0s 1 forwards' : 'none'
                     }}
                   />
                 </div>
               </div>
-              
-              {/* Headshot at end position - only show for successful kicks */}
-              {playViz.animate !== 'kickoff-fail' && lastPlay.athletesInvolved && lastPlay.athletesInvolved[0] && (
-                <div
-                  className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
-                  style={{ 
-                    left: `${endX}%`,
-                    top: HEADSHOT_VERTICAL_POSITION
-                  }}
-                >
-                  <div className="relative group">
-                    <div 
-                      className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
-                      style={{
-                        backgroundColor: `${playViz.color}30`,
-                        boxShadow: `0 0 20px ${playViz.glowColor}`
-                      }}
-                    >
-                      <img
-                        src={lastPlay.athletesInvolved[0].headshot}
-                        alt={lastPlay.athletesInvolved[0].displayName}
-                        className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                        style={{ borderColor: playViz.color }}
-                      />
-                    </div>
+
+              {/* Receiver headshot always present at landing spot; animates only after kick completes */}
+              {(() => {
+                const shouldShowReturn = playViz.animate !== 'kickoff-fail' && lastPlay.athletesInvolved && lastPlay.athletesInvolved[0];
+                const showReturnPhase = shouldShowReturn;
+                const canSlide = (Math.abs(returnDistance) > 1 || needsReturnNudge) && (kickDone || returnStarted);
+                console.log('🏈 RETURN ANIMATION CHECK:', {
+                  shouldShowReturn,
+                  showReturnPhase,
+                  kickDone,
+                  returnStarted,
+                  kickPhaseComplete,
+                  isNotKickoffFail: playViz.animate !== 'kickoff-fail',
+                  hasAthletes: !!lastPlay.athletesInvolved,
+                  hasFirstAthlete: !!(lastPlay.athletesInvolved && lastPlay.athletesInvolved[0]),
+                  returnDistance: Math.abs(returnDistance),
+                  willSlide: canSlide,
+                  needsReturnNudge
+                });
+                return showReturnPhase ? (
+                  <div
+                    className="absolute z-10"
+                    style={{ 
+                      left: `${returnStartX}%`,
+                      top: HEADSHOT_VERTICAL_POSITION,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                  >
+                    {canSlide ? (
+                      <div
+                        style={{
+                          '--distance': `${effectiveReturnDistancePixels}px`,
+                          animation: `rush-slide ${RUSH_ANIMATION_MS}ms linear 0s 1 forwards`
+                        } as React.CSSProperties}
+                      >
+                        <div className="relative group">
+                          <div 
+                            className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                            style={{
+                              backgroundColor: `${playViz.color}30`,
+                              boxShadow: `0 0 20px ${playViz.glowColor}`
+                            }}
+                          >
+                            <img
+                              src={lastPlay.athletesInvolved[0].headshot}
+                              alt={lastPlay.athletesInvolved[0].displayName}
+                              className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                              style={{ borderColor: playViz.color }}
+                            />
+                          </div>
+                          <div 
+                            className="absolute -right-1 top-1/2 transform -translate-y-1/3 -rotate-45"
+                            style={{
+                              filter: `drop-shadow(0 0 8px ${playViz.glowColor})`
+                            }}
+                          >
+                            <img
+                              src="/assets/football.png"
+                              alt="Football"
+                              className="w-8 h-8 object-contain"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative group">
+                        <div 
+                          className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                          style={{
+                            backgroundColor: `${playViz.color}30`,
+                            boxShadow: `0 0 20px ${playViz.glowColor}`
+                          }}
+                        >
+                          <img
+                            src={lastPlay.athletesInvolved[0].headshot}
+                            alt={lastPlay.athletesInvolved[0].displayName}
+                            className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                            style={{ borderColor: playViz.color }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                ) : null;
+              })()}
             </>
           );
         }
@@ -757,7 +1038,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               <div
                 className="absolute z-20"
                 style={{ 
-                  left: `${startX}%`,
+                  left: `${baseStartX}%`,
                   top: HEADSHOT_VERTICAL_POSITION,
                   transform: 'translate(-50%, -50%)'
                 }}
@@ -765,7 +1046,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 <div
                   className="animate-field-goal-arc"
                   style={{
-                    '--distance': `${distance}%`
+                    '--distance': distance
                   } as React.CSSProperties}
                 >
                   <img
@@ -783,7 +1064,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               <div
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
-                  left: `${endX}%`,
+                  left: `${baseEndX}%`,
                   top: HEADSHOT_VERTICAL_POSITION
                 }}
               >
@@ -815,7 +1096,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               <div
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
-                  left: `${endX}%`,
+                  left: `${baseEndX}%`,
                   top: HEADSHOT_VERTICAL_POSITION
                 }}
               >
@@ -843,7 +1124,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 <div
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 text-2xl"
                 style={{ 
-                  left: `${endX - 8}%`,
+                  left: `${baseEndX - 8}%`,
                   top: HEADSHOT_VERTICAL_POSITION,
                   filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
                 }}
@@ -853,7 +1134,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 <div
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 text-2xl"
                 style={{ 
-                  left: `${endX + 8}%`,
+                  left: `${baseEndX + 8}%`,
                   top: HEADSHOT_VERTICAL_POSITION,
                   filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
                 }}
@@ -870,7 +1151,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             <div
               className="absolute z-10"
               style={{ 
-                left: `${startX}%`,
+                left: `${baseStartX}%`,
                 top: HEADSHOT_VERTICAL_POSITION,
                 transform: 'translate(-50%, -50%)'
               }}
@@ -907,7 +1188,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           <div
             className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
             style={{ 
-              left: `${endX}%`,
+              left: `${baseEndX}%`,
               top: HEADSHOT_VERTICAL_POSITION
             }}
           >
@@ -948,6 +1229,15 @@ const FootballField: React.FC<FootballFieldProps> = ({
         );
       })()}
     </div>
+
+      {/* Play caption (last play text) */}
+      {lastPlay?.text && (
+        <div className="pt-3 text-center text-text-light text-xs sm:text-sm leading-snug">
+          <span className="font-semibold" style={{ color: playViz.color }}>
+            {lastPlay.text}
+          </span>
+        </div>
+      )}
 
       {/* Latest Play - Only show if showGameInfo is true */}
       {showGameInfo && playLog.length > 0 && (() => {
