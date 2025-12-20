@@ -225,6 +225,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
 }) => {
   const fieldRef = React.useRef<HTMLDivElement>(null);
   
+  // Single source of truth for all headshot vertical positions
+  const HEADSHOT_VERTICAL_POSITION = '64%';
+  
   if (!lastPlay) return null;
 
   // Match the box score layout: away team on left, home team on right
@@ -345,13 +348,13 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* 50 yard line highlight */}
       <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-yellow-400/30" />
 
-      {/* Start position dot - positioned at 64% vertical to align with headshot */}
+      {/* Start position dot - positioned at arrow/football level */}
       {lastPlay.start && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
         <div
           className="absolute transform -translate-x-1/2 -translate-y-1/2"
           style={{ 
             left: `${10 + (lastPlay.start.yardLine * 0.8)}%`,
-            top: '64%'
+            top: HEADSHOT_VERTICAL_POSITION
           }}
         >
           <div 
@@ -398,9 +401,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
             
             <line
               x1={`${10 + (lastPlay.start.yardLine * 0.8)}%`}
-              y1="64%"
+              y1={HEADSHOT_VERTICAL_POSITION}
               x2={`${10 + (lastPlay.end.yardLine * 0.8)}%`}
-              y2="64%"
+              y2={HEADSHOT_VERTICAL_POSITION}
               stroke={playViz.color}
               strokeWidth={playViz.width}
               strokeDasharray={playViz.pattern === 'dashed' ? '8,4' : playViz.pattern === 'dotted' ? '2,4' : 'none'}
@@ -412,7 +415,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             {/* Arc path for punts/kickoffs */}
             {playViz.animate === 'arc' && (
               <path
-                d={`M ${10 + (lastPlay.start.yardLine * 0.8)}%,64% Q ${10 + ((lastPlay.start.yardLine + lastPlay.end.yardLine) / 2 * 0.8)}%,44% ${10 + (lastPlay.end.yardLine * 0.8)}%,64%`}
+                d={`M ${10 + (lastPlay.start.yardLine * 0.8)}%,${HEADSHOT_VERTICAL_POSITION} Q ${10 + ((lastPlay.start.yardLine + lastPlay.end.yardLine) / 2 * 0.8)}%,13% ${10 + (lastPlay.end.yardLine * 0.8)}%,${HEADSHOT_VERTICAL_POSITION}`}
                 stroke={playViz.color}
                 strokeWidth={playViz.width}
                 fill="none"
@@ -543,7 +546,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
           // Add extra distance to account for football offset (headshot is 64px, football is 32px to the right)
           // Add approximately 24px (half headshot radius + half football width) to reach the end position with the football
           const distancePixels = (distancePercent / 100) * fieldWidth + 12;
-          const hasGain = distancePixels > 0;
+          // Check if there's actual yardage gain (not just pixel distance)
+          const hasGain = lastPlay.end.yardLine > lastPlay.start.yardLine;
           
           console.log('Rush animation:', { startX, endX, distancePercent, fieldWidth, distancePixels, hasGain });
           
@@ -555,7 +559,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-10"
                 style={{ 
                   left: `${startX}%`,
-                  top: '64%',
+                  top: HEADSHOT_VERTICAL_POSITION,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -623,14 +627,15 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${startX}%`,
-                  top: '50%',
+                  top: HEADSHOT_VERTICAL_POSITION,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
                 <div
                   className={playViz.animate === 'pass-complete' ? 'animate-pass-arc' : 'animate-pass-incomplete'}
                   style={{
-                    '--distance': `${distance}%`
+                    '--distance': distance,
+                    '--arc-height': `${Math.abs(distance) * 2.5}px`
                   } as React.CSSProperties}
                 >
                   <img
@@ -649,7 +654,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-10"
                 style={{ 
                   left: `${startX}%`,
-                  top: '50%',
+                  top: HEADSHOT_VERTICAL_POSITION,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -692,7 +697,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${startX}%`,
-                  top: '50%',
+                  top: HEADSHOT_VERTICAL_POSITION,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -719,7 +724,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                   style={{ 
                     left: `${endX}%`,
-                    top: '50%'
+                    top: HEADSHOT_VERTICAL_POSITION
                   }}
                 >
                   <div className="relative group">
@@ -753,7 +758,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${startX}%`,
-                  top: '50%',
+                  top: HEADSHOT_VERTICAL_POSITION,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -779,7 +784,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
                   left: `${endX}%`,
-                  top: '50%'
+                  top: HEADSHOT_VERTICAL_POSITION
                 }}
               >
                 <div className="relative group">
@@ -811,7 +816,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
                   left: `${endX}%`,
-                  top: '50%'
+                  top: HEADSHOT_VERTICAL_POSITION
                 }}
               >
                 <div className="relative group">
@@ -839,7 +844,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 text-2xl"
                 style={{ 
                   left: `${endX - 8}%`,
-                  top: '50%',
+                  top: HEADSHOT_VERTICAL_POSITION,
                   filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
                 }}
                 >
@@ -849,7 +854,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 text-2xl"
                 style={{ 
                   left: `${endX + 8}%`,
-                  top: '50%',
+                  top: HEADSHOT_VERTICAL_POSITION,
                   filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
                 }}
                 >
@@ -866,7 +871,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               className="absolute z-10"
               style={{ 
                 left: `${startX}%`,
-                top: '50%',
+                top: HEADSHOT_VERTICAL_POSITION,
                 transform: 'translate(-50%, -50%)'
               }}
             >
@@ -903,7 +908,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
             style={{ 
               left: `${endX}%`,
-              top: '50%'
+              top: HEADSHOT_VERTICAL_POSITION
             }}
           >
             <div className="relative group">
