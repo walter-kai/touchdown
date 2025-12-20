@@ -85,7 +85,8 @@ export const saveGamePlayByPlay = async (gameId: string, plays: any[]): Promise<
       possession: play.possession?.id || play.possession || play.team?.id || null,
       type: play.type?.text || play.type?.abbreviation || '',
       scoreValue: play.scoreValue || 0,
-      yardLine: play.drive?.end?.yardLine || play.drive?.start?.yardLine || null,
+      yardLine: play.start?.yardLine || play.end?.yardLine || null,
+      yardage: play.statYardage || null,
       athletesInvolved: play.athletesInvolved?.map((athlete: any) => ({
         id: athlete.id,
         displayName: athlete.displayName,
@@ -129,7 +130,8 @@ export const addPlayToGame = async (gameId: string, play: any): Promise<{ gameId
       team: play.team?.id || null,
       type: play.type?.text || play.type?.abbreviation || '',
       scoreValue: play.scoreValue || 0,
-      yardLine: play.drive?.end?.yardLine || play.drive?.start?.yardLine || null,
+      yardLine: play.start?.yardLine || play.end?.yardLine || null,
+      yardage: play.statYardage || null,
       athletesInvolved: play.athletesInvolved?.map((athlete: any) => ({
         id: athlete.id,
         displayName: athlete.displayName,

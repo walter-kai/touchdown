@@ -223,6 +223,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
   getTeamLogo,
   showGameInfo = false,
 }) => {
+  const fieldRef = React.useRef<HTMLDivElement>(null);
+  
   if (!lastPlay) return null;
 
   // Match the box score layout: away team on left, home team on right
@@ -311,7 +313,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
       {/* Football Field */}
       <div className={showGameInfo ? "border-t border-neon-cyan/10 pt-6" : ""}>
-    <div className="relative w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg" style={{ height: '200px' }}>
+    <div ref={fieldRef} className="relative w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg" style={{ height: '200px' }}>
       {/* End zones - 10% each */}
       <div className="absolute left-0 top-0 bottom-0 w-[10%] bg-blue-900/40 flex items-center justify-center">
         <img src={getTeamLogo(leftTeam?.team)} alt="" className="w-12 h-12 opacity-60" />
@@ -343,13 +345,13 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* 50 yard line highlight */}
       <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-yellow-400/30" />
 
-      {/* Start position dot - positioned at 50% vertical (center) */}
+      {/* Start position dot - positioned at 64% vertical to align with headshot */}
       {lastPlay.start && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
         <div
           className="absolute transform -translate-x-1/2 -translate-y-1/2"
           style={{ 
             left: `${10 + (lastPlay.start.yardLine * 0.8)}%`,
-            top: '60%'
+            top: '64%'
           }}
         >
           <div 
@@ -366,7 +368,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {lastPlay.start && lastPlay.end && lastPlay.start.yardLine !== lastPlay.end.yardLine && (
         <>
           <svg
-            className={`absolute -left-2 w-full h-full pointer-events-none -top-9 ${
+            className={`absolute left-0 top-0 w-full h-full pointer-events-none ${
               playViz.animate === 'pulse' ? 'animate-pulse' : ''
             }`}
           >
@@ -374,12 +376,12 @@ const FootballField: React.FC<FootballFieldProps> = ({
               <marker
                 id={`arrowhead-${playViz.color.replace('#', '')}`}
                 markerWidth="10"
-                markerHeight="10"
+                markerHeight="6"
                 refX="8"
-                refY="4"
+                refY="3"
                 orient="auto"
               >
-                <polygon points="0 0, 8 4, 0 8" fill={playViz.color} />
+                <polygon points="0 1, 8 3, 0 5" fill={playViz.color} />
               </marker>
               
               {/* Glow filter for special plays */}
@@ -396,9 +398,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
             
             <line
               x1={`${10 + (lastPlay.start.yardLine * 0.8)}%`}
-              y1="50%"
+              y1="64%"
               x2={`${10 + (lastPlay.end.yardLine * 0.8)}%`}
-              y2="50%"
+              y2="64%"
               stroke={playViz.color}
               strokeWidth={playViz.width}
               strokeDasharray={playViz.pattern === 'dashed' ? '8,4' : playViz.pattern === 'dotted' ? '2,4' : 'none'}
@@ -410,7 +412,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             {/* Arc path for punts/kickoffs */}
             {playViz.animate === 'arc' && (
               <path
-                d={`M ${10 + (lastPlay.start.yardLine * 0.8)}%,50% Q ${10 + ((lastPlay.start.yardLine + lastPlay.end.yardLine) / 2 * 0.8)}%,30% ${10 + (lastPlay.end.yardLine * 0.8)}%,50%`}
+                d={`M ${10 + (lastPlay.start.yardLine * 0.8)}%,64% Q ${10 + ((lastPlay.start.yardLine + lastPlay.end.yardLine) / 2 * 0.8)}%,44% ${10 + (lastPlay.end.yardLine * 0.8)}%,64%`}
                 stroke={playViz.color}
                 strokeWidth={playViz.width}
                 fill="none"
@@ -426,7 +428,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               className="absolute transform -translate-x-1/2 -translate-y-1/2 text-2xl z-20"
               style={{
                 left: `${10 + ((lastPlay.start.yardLine + lastPlay.end.yardLine) / 2 * 0.8)}%`,
-                top: '60%',
+                top: '50%',
                 filter: `drop-shadow(0 0 8px ${playViz.glowColor})`
               }}
             >
@@ -439,7 +441,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* Timeout - spinning clock emoji (doesn't need play positions) */}
       {playViz.animate === 'timeout' && (
         <div
-          className="absolute z-20 animate-timeout-spin"
+          className="absolute z-20"
           style={{ 
             left: '50%',
             top: '50%',
@@ -447,7 +449,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           }}
         >
           <div 
-            className="text-5xl"
+            className="text-5xl animate-timeout-spin"
             style={{
               filter: `drop-shadow(0 0 20px ${playViz.glowColor})`
             }}
@@ -460,7 +462,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* Two Minute Warning - pulsing alarm at center (doesn't need play positions) */}
       {playViz.animate === 'two-minute-warning' && (
         <div
-          className="absolute z-20 animate-two-minute-warning"
+          className="absolute z-20"
           style={{ 
             left: '50%',
             top: '50%',
@@ -468,7 +470,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           }}
         >
           <div 
-            className="flex flex-col items-center gap-2"
+            className="flex flex-col items-center gap-2 animate-two-minute-warning"
             style={{
               filter: `drop-shadow(0 0 30px ${playViz.glowColor})`
             }}
@@ -487,7 +489,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* Pulse animations (touchdowns) - pulsing at center */}
       {playViz.animate === 'pulse' && (
         <div
-          className="absolute z-20 animate-pulse"
+          className="absolute z-20"
           style={{ 
             left: '50%',
             top: '50%',
@@ -495,7 +497,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           }}
         >
           <div 
-            className="text-5xl"
+            className="text-5xl animate-pulse"
             style={{
               filter: `drop-shadow(0 0 30px ${playViz.glowColor})`
             }}
@@ -528,38 +530,87 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
       {/* Animated play elements */}
       {lastPlay.start && lastPlay.end && lastPlay.athletesInvolved && lastPlay.athletesInvolved.length > 0 && (() => {
+        console.log('Play data:', lastPlay);
         const startX = 10 + (lastPlay.start.yardLine * 0.8);
         const endX = 10 + (lastPlay.end.yardLine * 0.8);
         const distance = endX - startX;
         
-        // Rush animation - headshot slides
+        // Rush animation - headshot slides from dot with football
         if (playViz.animate === 'rush') {
+          // Calculate distance as percentage of field width
+          const distancePercent = endX - startX;
+          const fieldWidth = fieldRef.current?.offsetWidth || 1000;
+          // Add extra distance to account for football offset (headshot is 64px, football is 32px to the right)
+          // Add approximately 24px (half headshot radius + half football width) to reach the end position with the football
+          const distancePixels = (distancePercent / 100) * fieldWidth + 12;
+          const hasGain = distancePixels > 0;
+          
+          console.log('Rush animation:', { startX, endX, distancePercent, fieldWidth, distancePixels, hasGain });
+          
           return (
-            <div
-              className="absolute z-10 animate-rush-slide"
-              style={{ 
-                left: `${startX}%`,
-                top: '60%',
-                '--distance': distance
-              } as React.CSSProperties}
-            >
-              <div className="relative group">
-                <div 
-                  className="w-20 h-16 rounded-full flex items-center justify-center shadow-2xl"
+            <>
+              {/* Headshot with football starts at dot */}
+              <div
+                key={`rush-${lastPlay.start?.yardLine}-${lastPlay.end?.yardLine}`}
+                className="absolute z-10"
+                style={{ 
+                  left: `${startX}%`,
+                  top: '64%',
+                  transform: 'translate(-50%, -50%)'
+                }}
+              >
+                <div
+                  className={hasGain ? "animate-rush-slide" : ""}
                   style={{
-                    backgroundColor: `${playViz.color}30`,
-                    boxShadow: `0 0 20px ${playViz.glowColor}`
-                  }}
+                    '--distance': `${distancePixels}px`
+                  } as React.CSSProperties}
                 >
-                  <img
-                    src={lastPlay.athletesInvolved[0].headshot}
-                    alt={lastPlay.athletesInvolved[0].displayName}
-                    className="w-14 h-14 rounded-full object-cover z-1 border-2"
-                    style={{ borderColor: playViz.color }}
-                  />
+                  <div className="relative group">
+                    {/* Headshot */}
+                    <div 
+                      className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                      style={{
+                        backgroundColor: `${playViz.color}30`,
+                        boxShadow: `0 0 20px ${playViz.glowColor}`
+                      }}
+                    >
+                      <img
+                        src={lastPlay.athletesInvolved[0].headshot}
+                        alt={lastPlay.athletesInvolved[0].displayName}
+                        className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                        style={{ borderColor: playViz.color }}
+                      />
+                    </div>
+                    {/* Football being carried - only show if has gain */}
+                    {hasGain && (
+                      <div 
+                        className="absolute -right-1 top-1/2 transform -translate-y-1/3 -rotate-45"
+                        style={{
+                          filter: `drop-shadow(0 0 8px ${playViz.glowColor})`
+                        }}
+                      >
+                        <img
+                          src="/assets/football.png"
+                          alt="Football"
+                          className="w-8 h-8 object-contain"
+                        />
+                      </div>
+                    )}
+                    {/* No gain emoji - animated overlay */}
+                    {!hasGain && (
+                      <div 
+                        className="absolute top-[30px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl animate-fadeInOut z-20"
+                        style={{
+                          filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
+                        }}
+                      >
+                        😰
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           );
         }
         
@@ -569,46 +620,60 @@ const FootballField: React.FC<FootballFieldProps> = ({
             <>
               {/* Football animation */}
               <div
-                className={`absolute z-20 ${playViz.animate === 'pass-complete' ? 'animate-pass-arc' : 'animate-pass-incomplete'}`}
+                className="absolute z-20"
                 style={{ 
                   left: `${startX}%`,
-                  top: '60%',
-                  '--distance': `${distance}%`
-                } as React.CSSProperties}
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)'
+                }}
               >
-                <img
-                  src="/assets/football_spin.gif"
-                  alt="Football"
-                  className="w-8 h-8 object-contain"
+                <div
+                  className={playViz.animate === 'pass-complete' ? 'animate-pass-arc' : 'animate-pass-incomplete'}
                   style={{
-                    filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
-                  }}
-                />
+                    '--distance': `${distance}%`
+                  } as React.CSSProperties}
+                >
+                  <img
+                    src="/assets/football_spin.gif"
+                    alt="Football"
+                    className="w-8 h-8 object-contain"
+                    style={{
+                      filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
+                    }}
+                  />
+                </div>
               </div>
               
               {/* Headshot follows */}
               <div
-                className="absolute z-10 animate-headshot-follow"
+                className="absolute z-10"
                 style={{ 
                   left: `${startX}%`,
-                  top: '60%',
-                  '--distance': distance
-                } as React.CSSProperties}
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)'
+                }}
               >
-                <div className="relative group">
-                  <div 
-                    className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
-                    style={{
-                      backgroundColor: `${playViz.color}30`,
-                      boxShadow: `0 0 20px ${playViz.glowColor}`
-                    }}
-                  >
-                    <img
-                      src={lastPlay.athletesInvolved[0].headshot}
-                      alt={lastPlay.athletesInvolved[0].displayName}
-                      className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                      style={{ borderColor: playViz.color }}
-                    />
+                <div
+                  className="animate-headshot-follow"
+                  style={{
+                    '--distance': distance
+                  } as React.CSSProperties}
+                >
+                  <div className="relative group">
+                    <div 
+                      className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                      style={{
+                        backgroundColor: `${playViz.color}30`,
+                        boxShadow: `0 0 20px ${playViz.glowColor}`
+                      }}
+                    >
+                      <img
+                        src={lastPlay.athletesInvolved[0].headshot}
+                        alt={lastPlay.athletesInvolved[0].displayName}
+                        className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                        style={{ borderColor: playViz.color }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -624,21 +689,28 @@ const FootballField: React.FC<FootballFieldProps> = ({
             <>
               {/* Football arc */}
               <div
-                className={`absolute z-20 ${animationClass}`}
+                className="absolute z-20"
                 style={{ 
                   left: `${startX}%`,
-                  top: '60%',
-                  '--distance': `${distance}%`
-                } as React.CSSProperties}
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)'
+                }}
               >
-                <img
-                  src="/assets/football_spin.gif"
-                  alt="Football"
-                  className="w-10 h-10 object-contain"
+                <div
+                  className={animationClass}
                   style={{
-                    filter: `drop-shadow(0 0 15px ${playViz.glowColor})`
-                  }}
-                />
+                    '--distance': `${distance}%`
+                  } as React.CSSProperties}
+                >
+                  <img
+                    src="/assets/football_spin.gif"
+                    alt="Football"
+                    className="w-10 h-10 object-contain"
+                    style={{
+                      filter: `drop-shadow(0 0 15px ${playViz.glowColor})`
+                    }}
+                  />
+                </div>
               </div>
               
               {/* Headshot at end position - only show for successful kicks */}
@@ -647,7 +719,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                   style={{ 
                     left: `${endX}%`,
-                    top: '60%'
+                    top: '50%'
                   }}
                 >
                   <div className="relative group">
@@ -678,21 +750,28 @@ const FootballField: React.FC<FootballFieldProps> = ({
             <>
               {/* Football arc */}
               <div
-                className="absolute z-20 animate-field-goal-arc"
+                className="absolute z-20"
                 style={{ 
                   left: `${startX}%`,
-                  top: '60%',
-                  '--distance': `${distance}%`
-                } as React.CSSProperties}
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)'
+                }}
               >
-                <img
-                  src="/assets/football_spin.gif"
-                  alt="Football"
-                  className="w-8 h-8 object-contain"
+                <div
+                  className="animate-field-goal-arc"
                   style={{
-                    filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
-                  }}
-                />
+                    '--distance': `${distance}%`
+                  } as React.CSSProperties}
+                >
+                  <img
+                    src="/assets/football_spin.gif"
+                    alt="Football"
+                    className="w-8 h-8 object-contain"
+                    style={{
+                      filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
+                    }}
+                  />
+                </div>
               </div>
               
               {/* Headshot at end position */}
@@ -700,7 +779,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
                   left: `${endX}%`,
-                  top: '60%'
+                  top: '50%'
                 }}
               >
                 <div className="relative group">
@@ -732,7 +811,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
                   left: `${endX}%`,
-                  top: '60%'
+                  top: '50%'
                 }}
               >
                 <div className="relative group">
@@ -760,7 +839,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 text-2xl"
                 style={{ 
                   left: `${endX - 8}%`,
-                  top: '60%',
+                  top: '50%',
                   filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
                 }}
                 >
@@ -770,7 +849,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 text-2xl"
                 style={{ 
                   left: `${endX + 8}%`,
-                  top: '60%',
+                  top: '50%',
                   filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
                 }}
                 >
@@ -784,27 +863,34 @@ const FootballField: React.FC<FootballFieldProps> = ({
         if (playViz.animate === 'sack') {
           return (
             <div
-              className="absolute z-10 animate-sack-crash"
+              className="absolute z-10"
               style={{ 
                 left: `${startX}%`,
-                top: '60%',
-                '--distance': distance
-              } as React.CSSProperties}
+                top: '50%',
+                transform: 'translate(-50%, -50%)'
+              }}
             >
-              <div className="relative group">
-                <div 
-                  className="w-20 h-16 rounded-full flex items-center justify-center shadow-2xl"
-                  style={{
-                    backgroundColor: `${playViz.color}30`,
-                    boxShadow: `0 0 20px ${playViz.glowColor}`
-                  }}
-                >
-                  <img
-                    src={lastPlay.athletesInvolved[0].headshot}
-                    alt={lastPlay.athletesInvolved[0].displayName}
-                    className="w-14 h-14 rounded-full object-cover z-1 border-2"
-                    style={{ borderColor: playViz.color }}
-                  />
+              <div
+                className="animate-sack-crash"
+                style={{
+                  '--distance': distance
+                } as React.CSSProperties}
+              >
+                <div className="relative group">
+                  <div 
+                    className="w-20 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                    style={{
+                      backgroundColor: `${playViz.color}30`,
+                      boxShadow: `0 0 20px ${playViz.glowColor}`
+                    }}
+                  >
+                    <img
+                      src={lastPlay.athletesInvolved[0].headshot}
+                      alt={lastPlay.athletesInvolved[0].displayName}
+                      className="w-14 h-14 rounded-full object-cover z-1 border-2"
+                      style={{ borderColor: playViz.color }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -817,7 +903,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
             style={{ 
               left: `${endX}%`,
-              top: '60%'
+              top: '50%'
             }}
           >
             <div className="relative group">

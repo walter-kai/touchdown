@@ -440,9 +440,33 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
         : (selectedPlay.type as any)?.text || 'Play';
       
       // Calculate start and end yard lines for field visualization
-      const startYardLine = selectedPlay.yardLine || 50; // Default to midfield if not available
-      const yardage = selectedPlay.yardage || 0;
-      const endYardLine = Math.max(0, Math.min(100, startYardLine + yardage)); // Keep within 0-100
+      // Parse yardage from text if not available: "for X yards"
+      let yardage = selectedPlay.yardage || 0;
+      if (!yardage && selectedPlay.text) {
+        const match = selectedPlay.text.match(/for (-?\d+) yard/i);
+        if (match) {
+          yardage = parseInt(match[1]);
+        }
+      }
+      
+      // Parse end yard line from text if not available: "to TEAM XX"
+      let endYardLine = selectedPlay.yardLine || 50;
+      if (!selectedPlay.yardLine && selectedPlay.text) {
+        const match = selectedPlay.text.match(/to \w+ (\d+)/i);
+        if (match) {
+          endYardLine = parseInt(match[1]);
+        }
+      }
+      
+      const startYardLine = Math.max(0, Math.min(100, endYardLine - yardage)); // Work backwards from end
+      
+      console.log('Play yard calculation:', { 
+        text: selectedPlay.text,
+        yardage, 
+        endYardLine, 
+        startYardLine,
+        rawYardLine: selectedPlay.yardLine 
+      });
       
       const lastPlay = {
         id: `play-${selectedPlayIndex}`,
