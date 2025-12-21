@@ -1,0 +1,5380 @@
+{
+  "athlete": {
+    "id": "14876",
+    "uid": "s:20~l:28~a:14876",
+    "guid": "2d6af5dc-b3d3-e2d4-cf72-27d4a8eb93cd",
+    "type": "football",
+    "firstName": "Ryan",
+    "lastName": "Tannehill",
+    "displayName": "Ryan Tannehill",
+    "fullName": "Ryan Tannehill",
+    "debutYear": 2012,
+    "jersey": "17",
+    "links": [
+      {
+        "language": "en",
+        "rel": [
+          "playercard",
+          "desktop",
+          "athlete"
+        ],
+        "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill",
+        "text": "Player Card",
+        "shortText": "Player Card",
+        "isExternal": false,
+        "isPremium": false
+      },
+      {
+        "language": "en",
+        "rel": [
+          "stats",
+          "desktop",
+          "athlete"
+        ],
+        "href": "https://www.espn.com/nfl/player/stats/_/id/14876/ryan-tannehill",
+        "text": "Stats",
+        "shortText": "Stats",
+        "isExternal": false,
+        "isPremium": false
+      },
+      {
+        "language": "en",
+        "rel": [
+          "splits",
+          "desktop",
+          "athlete"
+        ],
+        "href": "https://www.espn.com/nfl/player/splits/_/id/14876/ryan-tannehill",
+        "text": "Splits",
+        "shortText": "Splits",
+        "isExternal": false,
+        "isPremium": false
+      },
+      {
+        "language": "en",
+        "rel": [
+          "gamelog",
+          "desktop",
+          "athlete"
+        ],
+        "href": "https://www.espn.com/nfl/player/gamelog/_/id/14876/ryan-tannehill",
+        "text": "Game Log",
+        "shortText": "Game Log",
+        "isExternal": false,
+        "isPremium": false
+      },
+      {
+        "language": "en",
+        "rel": [
+          "news",
+          "desktop",
+          "athlete"
+        ],
+        "href": "https://www.espn.com/nfl/player/news/_/id/14876/ryan-tannehill",
+        "text": "News",
+        "shortText": "News",
+        "isExternal": false,
+        "isPremium": false
+      },
+      {
+        "language": "en",
+        "rel": [
+          "bio",
+          "desktop",
+          "athlete"
+        ],
+        "href": "https://www.espn.com/nfl/player/bio/_/id/14876/ryan-tannehill",
+        "text": "Bio",
+        "shortText": "Bio",
+        "isExternal": false,
+        "isPremium": false
+      },
+      {
+        "language": "en",
+        "rel": [
+          "overview",
+          "desktop",
+          "athlete"
+        ],
+        "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill",
+        "text": "Overview",
+        "shortText": "Overview",
+        "isExternal": false,
+        "isPremium": false
+      }
+    ],
+    "college": {
+      "id": "245",
+      "mascot": "Aggies",
+      "name": "Texas A&M",
+      "shortName": "Texas A&M",
+      "abbrev": "TA&M"
+    },
+    "collegeTeam": {
+      "id": "245",
+      "uid": "s:20~l:23~t:245",
+      "guid": "014788cd-231c-e33e-32c3-7e8d9a1e530f",
+      "slug": "texas-am-aggies",
+      "location": "Texas A&M",
+      "name": "Aggies",
+      "nickname": "Texas A&M",
+      "abbreviation": "TA&M",
+      "displayName": "Texas A&M Aggies",
+      "shortDisplayName": "Texas A&M",
+      "color": "500000",
+      "alternateColor": "ffffff",
+      "isActive": true,
+      "isAllStar": false,
+      "logos": [
+        {
+          "href": "https://a.espncdn.com/i/teamlogos/ncaa/500/245.png",
+          "width": 500,
+          "height": 500,
+          "rel": [
+            "full",
+            "default"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/i/teamlogos/ncaa/500-dark/245.png",
+          "width": 500,
+          "height": 500,
+          "rel": [
+            "full",
+            "dark"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/014788cd-231c-e33e-32c3-7e8d9a1e530f/logos/primary_logo_on_white_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "primary_logo_on_white_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/014788cd-231c-e33e-32c3-7e8d9a1e530f/logos/primary_logo_on_black_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "primary_logo_on_black_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/014788cd-231c-e33e-32c3-7e8d9a1e530f/logos/primary_logo_on_primary_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "primary_logo_on_primary_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/014788cd-231c-e33e-32c3-7e8d9a1e530f/logos/primary_logo_on_secondary_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "primary_logo_on_secondary_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/014788cd-231c-e33e-32c3-7e8d9a1e530f/logos/secondary_logo_on_white_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "secondary_logo_on_white_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/014788cd-231c-e33e-32c3-7e8d9a1e530f/logos/secondary_logo_on_black_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "secondary_logo_on_black_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/014788cd-231c-e33e-32c3-7e8d9a1e530f/logos/secondary_logo_on_primary_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "secondary_logo_on_primary_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/014788cd-231c-e33e-32c3-7e8d9a1e530f/logos/secondary_logo_on_secondary_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "secondary_logo_on_secondary_color"
+          ]
+        }
+      ],
+      "links": [
+        {
+          "language": "en",
+          "rel": [
+            "clubhouse",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/college-football/team/_/id/245/texas-am-aggies",
+          "text": "Clubhouse",
+          "shortText": "Clubhouse",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "clubhouse",
+            "mobile",
+            "team"
+          ],
+          "href": "https://www.espn.com/college-football/team/_/id/245/texas-am-aggies",
+          "text": "Clubhouse",
+          "shortText": "Clubhouse",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "roster",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/college-football/team/roster/_/id/245",
+          "text": "Roster",
+          "shortText": "Roster",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "stats",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/college-football/team/stats/_/id/245",
+          "text": "Statistics",
+          "shortText": "Statistics",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "schedule",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/college-football/team/schedule/_/id/245",
+          "text": "Schedule",
+          "shortText": "Schedule",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "tickets",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.vividseats.com/texas-am-aggies-football-tickets--sports-ncaa-football/performer/851?wsUser=717",
+          "text": "Tickets",
+          "shortText": "Tickets",
+          "isExternal": true,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "awards",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/college-football/awards/_/team/245",
+          "text": "Awards",
+          "shortText": "Awards",
+          "isExternal": false,
+          "isPremium": false
+        }
+      ],
+      "groups": {
+
+      },
+      "college": {
+
+      },
+      "coaches": {
+
+      },
+      "venue": {
+        "id": "3795",
+        "fullName": "Kyle Field",
+        "address": {
+          "city": "College Station",
+          "state": "TX",
+          "zipCode": "77840",
+          "country": "USA"
+        },
+        "grass": true,
+        "indoor": false,
+        "images": [
+          {
+            "href": "https://a.espncdn.com/i/venues/college-football/day/3795.jpg",
+            "width": 2000,
+            "height": 1125,
+            "rel": [
+              "full",
+              "day"
+            ]
+          },
+          {
+            "href": "https://a.espncdn.com/i/venues/college-football/day/interior/3795.jpg",
+            "width": 2000,
+            "height": 1125,
+            "rel": [
+              "full",
+              "day",
+              "interior"
+            ]
+          }
+        ]
+      },
+      "record": {
+
+      },
+      "againstTheSpreadRecords": {
+
+      },
+      "ranks": {
+
+      },
+      "franchise": {
+
+      }
+    },
+    "collegeAthlete": {
+      "id": "232059"
+    },
+    "headshot": {
+      "href": "https://a.espncdn.com/i/headshots/nfl/players/full/14876.png",
+      "alt": "Ryan Tannehill"
+    },
+    "position": {
+      "id": "8",
+      "name": "Quarterback",
+      "displayName": "Quarterback",
+      "abbreviation": "QB",
+      "leaf": true,
+      "parent": {
+        "leaf": false
+      },
+      "slug": "quarterback"
+    },
+    "team": {
+      "id": "10",
+      "uid": "s:20~l:28~t:10",
+      "guid": "0a0aea59-9a5e-01b3-57a3-0151cf4bf393",
+      "slug": "tennessee-titans",
+      "location": "Tennessee",
+      "name": "Titans",
+      "nickname": "Titans",
+      "abbreviation": "TEN",
+      "displayName": "Tennessee Titans",
+      "shortDisplayName": "Titans",
+      "color": "4b92db",
+      "alternateColor": "002a5c",
+      "isActive": true,
+      "isAllStar": false,
+      "logos": [
+        {
+          "href": "https://a.espncdn.com/i/teamlogos/nfl/500/ten.png",
+          "width": 500,
+          "height": 500,
+          "rel": [
+            "full",
+            "default"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/ten.png",
+          "width": 500,
+          "height": 500,
+          "rel": [
+            "full",
+            "dark"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/ten.png",
+          "width": 500,
+          "height": 500,
+          "rel": [
+            "full",
+            "scoreboard"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/scoreboard/ten.png",
+          "width": 500,
+          "height": 500,
+          "rel": [
+            "full",
+            "scoreboard",
+            "dark"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/0a0aea59-9a5e-01b3-57a3-0151cf4bf393/logos/primary_logo_on_white_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "primary_logo_on_white_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/0a0aea59-9a5e-01b3-57a3-0151cf4bf393/logos/primary_logo_on_black_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "primary_logo_on_black_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/0a0aea59-9a5e-01b3-57a3-0151cf4bf393/logos/primary_logo_on_primary_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "primary_logo_on_primary_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/0a0aea59-9a5e-01b3-57a3-0151cf4bf393/logos/primary_logo_on_secondary_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "primary_logo_on_secondary_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/0a0aea59-9a5e-01b3-57a3-0151cf4bf393/logos/secondary_logo_on_white_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "secondary_logo_on_white_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/0a0aea59-9a5e-01b3-57a3-0151cf4bf393/logos/secondary_logo_on_black_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "secondary_logo_on_black_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/0a0aea59-9a5e-01b3-57a3-0151cf4bf393/logos/secondary_logo_on_primary_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "secondary_logo_on_primary_color"
+          ]
+        },
+        {
+          "href": "https://a.espncdn.com/guid/0a0aea59-9a5e-01b3-57a3-0151cf4bf393/logos/secondary_logo_on_secondary_color.png",
+          "width": 4096,
+          "height": 4096,
+          "rel": [
+            "full",
+            "secondary_logo_on_secondary_color"
+          ]
+        }
+      ],
+      "links": [
+        {
+          "language": "en",
+          "rel": [
+            "clubhouse",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans",
+          "text": "Clubhouse",
+          "shortText": "Clubhouse",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "roster",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/nfl/team/roster/_/name/ten/tennessee-titans",
+          "text": "Roster",
+          "shortText": "Roster",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "stats",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/nfl/team/stats/_/name/ten/tennessee-titans",
+          "text": "Statistics",
+          "shortText": "Statistics",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "schedule",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/nfl/team/schedule/_/name/ten",
+          "text": "Schedule",
+          "shortText": "Schedule",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "photos",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/nfl/team/photos/_/name/ten",
+          "text": "photos",
+          "shortText": "photos",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "tickets",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.vividseats.com/tennessee-titans-tickets--sports-nfl-football/performer/848?wsUser=717",
+          "text": "Tickets",
+          "shortText": "Tickets",
+          "isExternal": true,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "draftpicks",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/nfl/draft/teams/_/name/ten/tennessee-titans",
+          "text": "Draft Picks",
+          "shortText": "Draft Picks",
+          "isExternal": false,
+          "isPremium": true
+        },
+        {
+          "language": "en",
+          "rel": [
+            "transactions",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/nfl/team/transactions/_/name/ten",
+          "text": "Transactions",
+          "shortText": "Transactions",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "injuries",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/nfl/team/injuries/_/name/ten",
+          "text": "Injuries",
+          "shortText": "Injuries",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en",
+          "rel": [
+            "depthchart",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/nfl/team/depth/_/name/ten",
+          "text": "Depth Chart",
+          "shortText": "Depth Chart",
+          "isExternal": false,
+          "isPremium": false
+        }
+      ],
+      "groups": {
+        "uid": "s:20~l:28~g:13",
+        "id": "13",
+        "name": "AFC South",
+        "abbreviation": "SOUTH",
+        "slug": "afc-south",
+        "season": {
+          "year": 2025,
+          "startDate": "2025-07-31T07:00:00.000+00:00",
+          "endDate": "2026-02-12T07:59:00.000+00:00",
+          "type": {
+            "id": "2",
+            "type": 2,
+            "name": "Regular Season",
+            "abbreviation": "reg",
+            "slug": "regular-season",
+            "startDate": "2025-09-04T07:00:00.000+00:00",
+            "endDate": "2026-01-08T07:59:00.000+00:00",
+            "hasGroups": false,
+            "hasStandings": true,
+            "hasLegs": false,
+            "week": {
+              "number": 16,
+              "startDate": "2025-12-17T08:00:00.000+00:00",
+              "endDate": "2025-12-24T07:59:00.000+00:00",
+              "text": "Week 16",
+              "qbr": {
+
+              },
+              "talentpicks": {
+
+              }
+            },
+            "weeks": {
+
+            },
+            "year": 2025
+          },
+          "types": {
+            "count": 4,
+            "pageIndex": 1,
+            "pageSize": 4,
+            "pageCount": 1,
+            "items": [
+              {
+                "id": "1",
+                "type": 1,
+                "name": "Preseason",
+                "abbreviation": "pre",
+                "slug": "preseason",
+                "startDate": "2025-07-31T07:00:00.000+00:00",
+                "endDate": "2025-09-04T06:59:00.000+00:00",
+                "hasGroups": false,
+                "hasStandings": true,
+                "hasLegs": false,
+                "weeks": {
+
+                },
+                "year": 2025
+              },
+              {
+                "id": "2",
+                "type": 2,
+                "name": "Regular Season",
+                "abbreviation": "reg",
+                "slug": "regular-season",
+                "startDate": "2025-09-04T07:00:00.000+00:00",
+                "endDate": "2026-01-08T07:59:00.000+00:00",
+                "hasGroups": false,
+                "hasStandings": true,
+                "hasLegs": false,
+                "week": {
+                  "number": 16,
+                  "startDate": "2025-12-17T08:00:00.000+00:00",
+                  "endDate": "2025-12-24T07:59:00.000+00:00",
+                  "text": "Week 16",
+                  "qbr": {
+
+                  },
+                  "talentpicks": {
+
+                  }
+                },
+                "weeks": {
+
+                },
+                "year": 2025
+              },
+              {
+                "id": "3",
+                "type": 3,
+                "name": "Postseason",
+                "abbreviation": "post",
+                "slug": "post-season",
+                "startDate": "2026-01-08T08:00:00.000+00:00",
+                "endDate": "2026-02-12T07:59:00.000+00:00",
+                "hasGroups": false,
+                "hasStandings": false,
+                "hasLegs": false,
+                "weeks": {
+
+                },
+                "year": 2025
+              },
+              {
+                "id": "4",
+                "type": 4,
+                "name": "Off Season",
+                "abbreviation": "off",
+                "slug": "off-season",
+                "startDate": "2026-02-12T08:00:00.000+00:00",
+                "endDate": "2026-08-01T06:59:00.000+00:00",
+                "hasGroups": false,
+                "hasStandings": false,
+                "hasLegs": false,
+                "weeks": {
+
+                },
+                "year": 2025
+              }
+            ]
+          },
+          "displayName": "2025"
+        },
+        "parent": {
+          "uid": "s:20~l:28~g:8",
+          "id": "8",
+          "name": "American Football Conference",
+          "abbreviation": "AFC",
+          "slug": "american-football-conference",
+          "season": {
+
+          },
+          "parent": {
+
+          },
+          "standings": {
+
+          },
+          "isConference": true,
+          "teams": {
+
+          }
+        },
+        "standings": {
+
+        },
+        "isConference": false,
+        "teams": {
+
+        }
+      },
+      "coaches": {
+
+      },
+      "venue": {
+        "id": "3810",
+        "fullName": "Nissan Stadium",
+        "address": {
+          "city": "Nashville",
+          "state": "TN",
+          "zipCode": "37213",
+          "country": "USA"
+        },
+        "grass": false,
+        "indoor": false,
+        "images": [
+          {
+            "href": "https://a.espncdn.com/i/venues/nfl/day/3810.jpg",
+            "width": 2000,
+            "height": 1125,
+            "rel": [
+              "full",
+              "day"
+            ]
+          },
+          {
+            "href": "https://a.espncdn.com/i/venues/nfl/day/interior/3810.jpg",
+            "width": 2000,
+            "height": 1125,
+            "rel": [
+              "full",
+              "day",
+              "interior"
+            ]
+          }
+        ]
+      },
+      "record": {
+
+      },
+      "athletes": {
+
+      },
+      "againstTheSpreadRecords": {
+
+      },
+      "ranks": {
+
+      },
+      "franchise": {
+        "id": "10",
+        "uid": "s:20~l:28~f:10",
+        "slug": "tennessee-titans",
+        "abbreviation": "TEN",
+        "displayName": "Tennessee Titans",
+        "location": "Tennessee",
+        "name": "Titans",
+        "nickname": "Titans",
+        "shortDisplayName": "Titans"
+      }
+    },
+    "active": true,
+    "status": {
+      "id": "9",
+      "name": "Free Agent",
+      "type": "free-agent",
+      "abbreviation": "FA"
+    },
+    "statsSummary": {
+      "displayName": "2023 regular season stats",
+      "statistics": [
+        {
+          "name": "passingYards",
+          "displayName": "Passing Yards",
+          "shortDisplayName": "Pass Yards",
+          "description": "The total passing yards.",
+          "abbreviation": "YDS",
+          "value": 1616,
+          "displayValue": "1,616"
+        },
+        {
+          "name": "passingTouchdowns",
+          "displayName": "Passing Touchdowns",
+          "shortDisplayName": "Touchdowns",
+          "description": "The total number of passing touchdowns.",
+          "abbreviation": "TD",
+          "value": 4,
+          "displayValue": "4"
+        },
+        {
+          "name": "interceptions",
+          "displayName": "Interceptions",
+          "shortDisplayName": "INT",
+          "description": "The number of passes thrown that were intercepted by the opposing team.",
+          "abbreviation": "INT",
+          "value": 7,
+          "displayValue": "7"
+        },
+        {
+          "name": "adjQBR",
+          "displayName": "Adjusted QBR",
+          "shortDisplayName": "QBR",
+          "description": "Adjusted Quarterback Rating.",
+          "abbreviation": "QBR",
+          "value": 35.82,
+          "displayValue": "35.8"
+        }
+      ]
+    },
+    "displayBirthPlace": "Big Spring, TX",
+    "displayHeight": "6' 4\"",
+    "displayWeight": "217 lbs",
+    "displayDOB": "27/7/1988",
+    "age": 37,
+    "displayJersey": "#17",
+    "displayExperience": "12th Season",
+    "displayDraft": "2012: Rd 1, Pk 8 (MIA)"
+  },
+  "season": {
+    "year": 2025,
+    "startDate": "2025-07-31T07:00:00.000+00:00",
+    "endDate": "2026-02-12T07:59:00.000+00:00",
+    "type": {
+      "id": "2",
+      "type": 2,
+      "name": "Regular Season",
+      "abbreviation": "reg",
+      "slug": "regular-season",
+      "startDate": "2025-09-04T07:00:00.000+00:00",
+      "endDate": "2026-01-08T07:59:00.000+00:00",
+      "hasGroups": false,
+      "hasStandings": true,
+      "hasLegs": false,
+      "week": {
+        "number": 16,
+        "startDate": "2025-12-17T08:00:00.000+00:00",
+        "endDate": "2025-12-24T07:59:00.000+00:00",
+        "text": "Week 16",
+        "qbr": {
+
+        },
+        "talentpicks": {
+
+        }
+      },
+      "weeks": {
+
+      },
+      "year": 2025
+    },
+    "types": {
+      "count": 4,
+      "pageIndex": 1,
+      "pageSize": 4,
+      "pageCount": 1,
+      "items": [
+        {
+          "id": "1",
+          "type": 1,
+          "name": "Preseason",
+          "abbreviation": "pre",
+          "slug": "preseason",
+          "startDate": "2025-07-31T07:00:00.000+00:00",
+          "endDate": "2025-09-04T06:59:00.000+00:00",
+          "hasGroups": false,
+          "hasStandings": true,
+          "hasLegs": false,
+          "weeks": {
+
+          },
+          "year": 2025
+        },
+        {
+          "id": "2",
+          "type": 2,
+          "name": "Regular Season",
+          "abbreviation": "reg",
+          "slug": "regular-season",
+          "startDate": "2025-09-04T07:00:00.000+00:00",
+          "endDate": "2026-01-08T07:59:00.000+00:00",
+          "hasGroups": false,
+          "hasStandings": true,
+          "hasLegs": false,
+          "week": {
+            "number": 16,
+            "startDate": "2025-12-17T08:00:00.000+00:00",
+            "endDate": "2025-12-24T07:59:00.000+00:00",
+            "text": "Week 16",
+            "qbr": {
+
+            },
+            "talentpicks": {
+
+            }
+          },
+          "weeks": {
+
+          },
+          "year": 2025
+        },
+        {
+          "id": "3",
+          "type": 3,
+          "name": "Postseason",
+          "abbreviation": "post",
+          "slug": "post-season",
+          "startDate": "2026-01-08T08:00:00.000+00:00",
+          "endDate": "2026-02-12T07:59:00.000+00:00",
+          "hasGroups": false,
+          "hasStandings": false,
+          "hasLegs": false,
+          "weeks": {
+
+          },
+          "year": 2025
+        },
+        {
+          "id": "4",
+          "type": 4,
+          "name": "Off Season",
+          "abbreviation": "off",
+          "slug": "off-season",
+          "startDate": "2026-02-12T08:00:00.000+00:00",
+          "endDate": "2026-08-01T06:59:00.000+00:00",
+          "hasGroups": false,
+          "hasStandings": false,
+          "hasLegs": false,
+          "weeks": {
+
+          },
+          "year": 2025
+        }
+      ]
+    },
+    "displayName": "2025"
+  },
+  "league": {
+    "id": "28",
+    "uid": "s:20~l:28",
+    "name": "National Football League",
+    "abbreviation": "NFL",
+    "slug": "nfl",
+    "logos": [
+      {
+        "href": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
+        "width": 500,
+        "height": 500,
+        "rel": [
+          "full",
+          "default"
+        ]
+      },
+      {
+        "href": "https://a.espncdn.com/i/teamlogos/leagues/500-dark/nfl.png",
+        "width": 500,
+        "height": 500,
+        "rel": [
+          "full",
+          "dark"
+        ]
+      }
+    ],
+    "shortName": "NFL"
+  },
+  "playerSwitcher": {
+    "team": {
+      "id": "10",
+      "uid": "s:20~l:28~t:10",
+      "slug": "tennessee-titans",
+      "location": "Tennessee",
+      "alternateLocation": "Tennessee",
+      "name": "Titans",
+      "abbreviation": "TEN",
+      "displayName": "Tennessee Titans",
+      "shortDisplayName": "Titans",
+      "color": "4b92db",
+      "alternateColor": "002a5c",
+      "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ten.png",
+      "links": [
+        {
+          "language": "en",
+          "rel": [
+            "clubhouse",
+            "desktop",
+            "team"
+          ],
+          "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans",
+          "text": "Clubhouse",
+          "shortText": "Clubhouse",
+          "isExternal": false,
+          "isPremium": false
+        }
+      ]
+    },
+    "athletes": [
+      {
+        "id": "2574511",
+        "uid": "s:20~l:28~a:2574511",
+        "guid": "2ea2fede-1220-6125-2acf-b4ce3713c7f1",
+        "displayName": "Brandon Allen",
+        "jersey": "10",
+        "links": [
+          {
+            "language": "en",
+            "rel": [
+              "playercard",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/_/id/2574511/brandon-allen",
+            "text": "Player Card",
+            "shortText": "Player Card",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "stats",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/stats/_/id/2574511/brandon-allen",
+            "text": "Stats",
+            "shortText": "Stats",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "splits",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/splits/_/id/2574511/brandon-allen",
+            "text": "Splits",
+            "shortText": "Splits",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "gamelog",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/gamelog/_/id/2574511/brandon-allen",
+            "text": "Game Log",
+            "shortText": "Game Log",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "news",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/news/_/id/2574511/brandon-allen",
+            "text": "News",
+            "shortText": "News",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "bio",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/bio/_/id/2574511/brandon-allen",
+            "text": "Bio",
+            "shortText": "Bio",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "overview",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/_/id/2574511/brandon-allen",
+            "text": "Overview",
+            "shortText": "Overview",
+            "isExternal": false,
+            "isPremium": false
+          }
+        ],
+        "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/2574511.png",
+          "alt": "Brandon Allen"
+        },
+        "position": {
+          "id": "8",
+          "name": "Quarterback",
+          "displayName": "Quarterback",
+          "abbreviation": "QB",
+          "leaf": true,
+          "parent": {
+            "leaf": false
+          },
+          "slug": "quarterback"
+        },
+        "displayJersey": "#10"
+      },
+      {
+        "id": "4361418",
+        "uid": "s:20~l:28~a:4361418",
+        "guid": "31a5ae70-e664-9c6a-ec3e-c407bf56f321",
+        "displayName": "Will Levis",
+        "jersey": "8",
+        "links": [
+          {
+            "language": "en",
+            "rel": [
+              "playercard",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/_/id/4361418/will-levis",
+            "text": "Player Card",
+            "shortText": "Player Card",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "stats",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/stats/_/id/4361418/will-levis",
+            "text": "Stats",
+            "shortText": "Stats",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "splits",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/splits/_/id/4361418/will-levis",
+            "text": "Splits",
+            "shortText": "Splits",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "gamelog",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/gamelog/_/id/4361418/will-levis",
+            "text": "Game Log",
+            "shortText": "Game Log",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "news",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/news/_/id/4361418/will-levis",
+            "text": "News",
+            "shortText": "News",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "bio",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/bio/_/id/4361418/will-levis",
+            "text": "Bio",
+            "shortText": "Bio",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "overview",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/_/id/4361418/will-levis",
+            "text": "Overview",
+            "shortText": "Overview",
+            "isExternal": false,
+            "isPremium": false
+          }
+        ],
+        "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4361418.png",
+          "alt": "Will Levis"
+        },
+        "position": {
+          "id": "8",
+          "name": "Quarterback",
+          "displayName": "Quarterback",
+          "abbreviation": "QB",
+          "leaf": true,
+          "parent": {
+            "leaf": false
+          },
+          "slug": "quarterback"
+        },
+        "displayJersey": "#8"
+      },
+      {
+        "id": "2511109",
+        "uid": "s:20~l:28~a:2511109",
+        "guid": "4dae14bf-5100-094c-87f7-4ec55519c08f",
+        "displayName": "Trevor Siemian",
+        "jersey": "15",
+        "links": [
+          {
+            "language": "en",
+            "rel": [
+              "playercard",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/_/id/2511109/trevor-siemian",
+            "text": "Player Card",
+            "shortText": "Player Card",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "stats",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/stats/_/id/2511109/trevor-siemian",
+            "text": "Stats",
+            "shortText": "Stats",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "splits",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/splits/_/id/2511109/trevor-siemian",
+            "text": "Splits",
+            "shortText": "Splits",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "gamelog",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/gamelog/_/id/2511109/trevor-siemian",
+            "text": "Game Log",
+            "shortText": "Game Log",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "news",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/news/_/id/2511109/trevor-siemian",
+            "text": "News",
+            "shortText": "News",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "bio",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/bio/_/id/2511109/trevor-siemian",
+            "text": "Bio",
+            "shortText": "Bio",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "overview",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/_/id/2511109/trevor-siemian",
+            "text": "Overview",
+            "shortText": "Overview",
+            "isExternal": false,
+            "isPremium": false
+          }
+        ],
+        "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/2511109.png",
+          "alt": "Trevor Siemian"
+        },
+        "position": {
+          "id": "8",
+          "name": "Quarterback",
+          "displayName": "Quarterback",
+          "abbreviation": "QB",
+          "leaf": true,
+          "parent": {
+            "leaf": false
+          },
+          "slug": "quarterback"
+        },
+        "displayJersey": "#15"
+      },
+      {
+        "id": "4688380",
+        "uid": "s:20~l:28~a:4688380",
+        "guid": "9f4e87b5-5da8-38c0-9951-e3496b55b3c8",
+        "displayName": "Cam Ward",
+        "jersey": "1",
+        "links": [
+          {
+            "language": "en",
+            "rel": [
+              "playercard",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/_/id/4688380/cam-ward",
+            "text": "Player Card",
+            "shortText": "Player Card",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "stats",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/stats/_/id/4688380/cam-ward",
+            "text": "Stats",
+            "shortText": "Stats",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "splits",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/splits/_/id/4688380/cam-ward",
+            "text": "Splits",
+            "shortText": "Splits",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "gamelog",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/gamelog/_/id/4688380/cam-ward",
+            "text": "Game Log",
+            "shortText": "Game Log",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "news",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/news/_/id/4688380/cam-ward",
+            "text": "News",
+            "shortText": "News",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "bio",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/bio/_/id/4688380/cam-ward",
+            "text": "Bio",
+            "shortText": "Bio",
+            "isExternal": false,
+            "isPremium": false
+          },
+          {
+            "language": "en",
+            "rel": [
+              "overview",
+              "desktop",
+              "athlete"
+            ],
+            "href": "https://www.espn.com/nfl/player/_/id/4688380/cam-ward",
+            "text": "Overview",
+            "shortText": "Overview",
+            "isExternal": false,
+            "isPremium": false
+          }
+        ],
+        "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4688380.png",
+          "alt": "Cam Ward"
+        },
+        "position": {
+          "id": "8",
+          "name": "Quarterback",
+          "displayName": "Quarterback",
+          "abbreviation": "QB",
+          "leaf": true,
+          "parent": {
+            "leaf": false
+          },
+          "slug": "quarterback"
+        },
+        "displayJersey": "#1"
+      }
+    ],
+    "links": [
+      {
+        "language": "en",
+        "rel": [
+          "roster",
+          "desktop",
+          "team"
+        ],
+        "href": "https://www.espn.com/nfl/team/roster/_/name/ten/tennessee-titans",
+        "text": "Roster",
+        "shortText": "Roster",
+        "isExternal": false,
+        "isPremium": false
+      }
+    ],
+    "filters": [
+      {
+        "displayName": "Team",
+        "name": "team",
+        "value": "10",
+        "options": [
+          {
+            "value": "22",
+            "displayValue": "Arizona Cardinals"
+          },
+          {
+            "value": "1",
+            "displayValue": "Atlanta Falcons"
+          },
+          {
+            "value": "33",
+            "displayValue": "Baltimore Ravens"
+          },
+          {
+            "value": "2",
+            "displayValue": "Buffalo Bills"
+          },
+          {
+            "value": "29",
+            "displayValue": "Carolina Panthers"
+          },
+          {
+            "value": "3",
+            "displayValue": "Chicago Bears"
+          },
+          {
+            "value": "4",
+            "displayValue": "Cincinnati Bengals"
+          },
+          {
+            "value": "5",
+            "displayValue": "Cleveland Browns"
+          },
+          {
+            "value": "6",
+            "displayValue": "Dallas Cowboys"
+          },
+          {
+            "value": "7",
+            "displayValue": "Denver Broncos"
+          },
+          {
+            "value": "8",
+            "displayValue": "Detroit Lions"
+          },
+          {
+            "value": "9",
+            "displayValue": "Green Bay Packers"
+          },
+          {
+            "value": "34",
+            "displayValue": "Houston Texans"
+          },
+          {
+            "value": "11",
+            "displayValue": "Indianapolis Colts"
+          },
+          {
+            "value": "30",
+            "displayValue": "Jacksonville Jaguars"
+          },
+          {
+            "value": "12",
+            "displayValue": "Kansas City Chiefs"
+          },
+          {
+            "value": "13",
+            "displayValue": "Las Vegas Raiders"
+          },
+          {
+            "value": "24",
+            "displayValue": "Los Angeles Chargers"
+          },
+          {
+            "value": "14",
+            "displayValue": "Los Angeles Rams"
+          },
+          {
+            "value": "15",
+            "displayValue": "Miami Dolphins"
+          },
+          {
+            "value": "16",
+            "displayValue": "Minnesota Vikings"
+          },
+          {
+            "value": "17",
+            "displayValue": "New England Patriots"
+          },
+          {
+            "value": "18",
+            "displayValue": "New Orleans Saints"
+          },
+          {
+            "value": "19",
+            "displayValue": "New York Giants"
+          },
+          {
+            "value": "20",
+            "displayValue": "New York Jets"
+          },
+          {
+            "value": "21",
+            "displayValue": "Philadelphia Eagles"
+          },
+          {
+            "value": "23",
+            "displayValue": "Pittsburgh Steelers"
+          },
+          {
+            "value": "25",
+            "displayValue": "San Francisco 49ers"
+          },
+          {
+            "value": "26",
+            "displayValue": "Seattle Seahawks"
+          },
+          {
+            "value": "27",
+            "displayValue": "Tampa Bay Buccaneers"
+          },
+          {
+            "value": "10",
+            "displayValue": "Tennessee Titans"
+          },
+          {
+            "value": "28",
+            "displayValue": "Washington Commanders"
+          }
+        ]
+      },
+      {
+        "displayName": "Position",
+        "name": "position",
+        "value": "8",
+        "options": [
+          {
+            "value": "8",
+            "displayValue": "Quarterback"
+          },
+          {
+            "value": "1",
+            "displayValue": "Wide Receiver"
+          },
+          {
+            "value": "9",
+            "displayValue": "Running Back"
+          },
+          {
+            "value": "7",
+            "displayValue": "Tight End"
+          },
+          {
+            "value": "22",
+            "displayValue": "Place Kicker"
+          },
+          {
+            "value": "23",
+            "displayValue": "Punter"
+          },
+          {
+            "value": "35",
+            "displayValue": "Defensive Back"
+          },
+          {
+            "value": "30",
+            "displayValue": "Linebacker"
+          },
+          {
+            "value": "37",
+            "displayValue": "Defensive Lineman"
+          },
+          {
+            "value": "45",
+            "displayValue": "Offensive Lineman"
+          },
+          {
+            "value": "72",
+            "displayValue": "Special Teams"
+          }
+        ]
+      }
+    ]
+  },
+  "quicklinks": [
+    {
+      "text": "[team] Quick Links",
+      "title": "Player Quick Links - Team - Football - EN",
+      "items": [
+        {
+          "title": "Player Quick Link - Stats (Pro) - Shared - EN",
+          "links": [
+            {
+              "href": "http://www.espn.com/[leagueSlug]/team/stats/_/name/[abbrev]",
+              "text": "Stats",
+              "shortText": "Stats",
+              "isExternal": false,
+              "isPremium": false,
+              "attributes": {
+                "icon": "stats"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Player Quick Link - Schedule (Pro) - Shared - EN",
+          "links": [
+            {
+              "href": "https://www.espn.com/[leagueSlug]/team/schedule/_/name/[abbrev]",
+              "text": "Schedule",
+              "shortText": "Schedule",
+              "isExternal": false,
+              "isPremium": false,
+              "attributes": {
+                "icon": "calendar"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Player Quick Link - Depth Chart (Pro) - Shared - EN",
+          "links": [
+            {
+              "href": "http://www.espn.com/[leagueSlug]/team/depth/_/name/[abbrev]",
+              "text": "Depth Chart",
+              "shortText": "Depth Chart",
+              "isExternal": false,
+              "isPremium": false,
+              "attributes": {
+                "icon": "list__stars_solid"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "[leagueAbbrev] Quick Links",
+      "title": "Player Quick Links - League - Football - EN",
+      "items": [
+        {
+          "title": "Player Quick Link - Scores - Shared - EN",
+          "links": [
+            {
+              "href": "https://www.espn.com/[leagueSlug]/scoreboard",
+              "text": "Scores",
+              "shortText": "Scores",
+              "isExternal": false,
+              "isPremium": false,
+              "attributes": {
+                "icon": "scores__outline"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Player Quick Link - Standings - Shared - EN",
+          "links": [
+            {
+              "href": "https://www.espn.com/[leagueSlug]/standings",
+              "text": "Standings",
+              "shortText": "Standings",
+              "isExternal": false,
+              "isPremium": false,
+              "attributes": {
+                "icon": "list__ordered_solid"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Player Quick Link - Schedule - Shared - EN",
+          "links": [
+            {
+              "href": "https://www.espn.com/[leagueSlug]/schedule",
+              "text": "Schedule",
+              "shortText": "Schedule",
+              "isExternal": false,
+              "isPremium": false,
+              "attributes": {
+                "icon": "calendar"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "language": "en",
+      "rel": [
+        "overview",
+        "desktop",
+        "athlete"
+      ],
+      "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill",
+      "text": "Overview",
+      "shortText": "Overview",
+      "isExternal": false,
+      "isPremium": false
+    },
+    {
+      "language": "en",
+      "rel": [
+        "news",
+        "desktop",
+        "athlete"
+      ],
+      "href": "https://www.espn.com/nfl/player/news/_/id/14876/ryan-tannehill",
+      "text": "News",
+      "shortText": "News",
+      "isExternal": false,
+      "isPremium": false
+    },
+    {
+      "language": "en",
+      "rel": [
+        "stats",
+        "desktop",
+        "athlete"
+      ],
+      "href": "https://www.espn.com/nfl/player/stats/_/id/14876/ryan-tannehill",
+      "text": "Stats",
+      "shortText": "Stats",
+      "isExternal": false,
+      "isPremium": false
+    },
+    {
+      "language": "en",
+      "rel": [
+        "bio",
+        "desktop",
+        "athlete"
+      ],
+      "href": "https://www.espn.com/nfl/player/bio/_/id/14876/ryan-tannehill",
+      "text": "Bio",
+      "shortText": "Bio",
+      "isExternal": false,
+      "isPremium": false
+    },
+    {
+      "language": "en",
+      "rel": [
+        "splits",
+        "desktop",
+        "athlete"
+      ],
+      "href": "https://www.espn.com/nfl/player/splits/_/id/14876/ryan-tannehill",
+      "text": "Splits",
+      "shortText": "Splits",
+      "isExternal": false,
+      "isPremium": false
+    },
+    {
+      "language": "en",
+      "rel": [
+        "gamelog",
+        "desktop",
+        "athlete"
+      ],
+      "href": "https://www.espn.com/nfl/player/gamelog/_/id/14876/ryan-tannehill",
+      "text": "Game Log",
+      "shortText": "Game Log",
+      "isExternal": false,
+      "isPremium": false
+    }
+  ],
+  "ticketsInfo": {
+    "tickets": [
+      {
+        "name": "All NFL Tickets",
+        "link": "https://www.vividseats.com/nfl/?wsUser=717"
+      },
+      {
+        "name": "12/28 vs Saints 1,441 tickets left",
+        "link": "https://www.vividseats.com/tennessee-titans-tickets-nissan-stadium-3-9-2026--sports-nfl-football/production/5472072?wsUser=717"
+      },
+      {
+        "name": "1/4 @ Jaguars 1,177 tickets left",
+        "link": "https://www.vividseats.com/jacksonville-jaguars-tickets-everbank-stadium-3-3-2026--sports-nfl-football/production/5472000?wsUser=717"
+      }
+    ],
+    "seatSituation": {
+      "opponentTeamName": "Saints",
+      "currentTeamName": "Titans",
+      "venueName": "Nissan Stadium",
+      "summary": "Tickets as low as $28",
+      "date": "2025-12-28T18:00:00.000+00:00",
+      "dateShort": "12/28",
+      "dateDay": "Sun",
+      "homeAway": "home",
+      "eventLink": "https://www.vividseats.com/tennessee-titans-tickets-nissan-stadium-3-9-2026--sports-nfl-football/production/5472072?wsUser=717",
+      "venueLink": "https://www.vividseats.com/nissan-stadium-tickets/venue/19?wsUser=717",
+      "genericLink": "https://www.vividseats.com?wsUser=717",
+      "teamLink": "https://www.vividseats.com/tennessee-titans-tickets--sports-nfl-football/performer/848?wsUser=717",
+      "neutralSite": false
+    }
+  },
+  "standings": {
+    "groups": [
+      {
+        "header": "2025 AFC South Standings",
+        "groups": [
+          {
+            "standings": {
+              "header": "AFC South",
+              "href": "https://www.espn.com/nfl/standings/_/group/13",
+              "entries": [
+                {
+                  "id": "30",
+                  "uid": "s:20~l:28~t:30",
+                  "team": "Jacksonville",
+                  "link": "https://www.espn.com/nfl/team/_/name/jax/jacksonville-jaguars",
+                  "stats": [
+                    {
+                      "name": "differential",
+                      "type": "differential",
+                      "displayName": "Point Differential",
+                      "shortDisplayName": "DIFF",
+                      "description": "Point Differential",
+                      "abbreviation": "DIFF",
+                      "value": 84,
+                      "displayValue": "+84"
+                    },
+                    {
+                      "name": "gamesBehind",
+                      "type": "gamesbehind",
+                      "displayName": "Games Back",
+                      "shortDisplayName": "GB",
+                      "description": "Games Back",
+                      "abbreviation": "GB",
+                      "value": 0,
+                      "displayValue": "-"
+                    },
+                    {
+                      "name": "losses",
+                      "type": "losses",
+                      "displayName": "Losses",
+                      "shortDisplayName": "L",
+                      "description": "Losses",
+                      "abbreviation": "L",
+                      "value": 4,
+                      "displayValue": "4"
+                    },
+                    {
+                      "name": "playoffSeed",
+                      "type": "playoffseed",
+                      "displayName": "Position",
+                      "shortDisplayName": "POS",
+                      "description": "Playoff Seed",
+                      "abbreviation": "SEED",
+                      "value": 3,
+                      "displayValue": "3"
+                    },
+                    {
+                      "name": "pointDifferential",
+                      "type": "pointdifferential",
+                      "displayName": "Point Differential",
+                      "shortDisplayName": "DIFF",
+                      "description": "Point Differential",
+                      "abbreviation": "DIFF",
+                      "value": 84,
+                      "displayValue": "+84"
+                    },
+                    {
+                      "name": "pointsAgainst",
+                      "type": "pointsagainst",
+                      "displayName": "Points Against",
+                      "shortDisplayName": "PA",
+                      "description": "Total Points Against",
+                      "abbreviation": "PA",
+                      "value": 292,
+                      "displayValue": "292"
+                    },
+                    {
+                      "name": "pointsFor",
+                      "type": "pointsfor",
+                      "displayName": "Points For",
+                      "shortDisplayName": "PF",
+                      "description": "Total Points For",
+                      "abbreviation": "PF",
+                      "value": 376,
+                      "displayValue": "376"
+                    },
+                    {
+                      "name": "streak",
+                      "type": "streak",
+                      "displayName": "Streak",
+                      "shortDisplayName": "STRK",
+                      "description": "Current Streak",
+                      "abbreviation": "STRK",
+                      "value": 5,
+                      "displayValue": "W5"
+                    },
+                    {
+                      "name": "ties",
+                      "type": "ties",
+                      "displayName": "Ties",
+                      "shortDisplayName": "T",
+                      "description": "Ties",
+                      "abbreviation": "T",
+                      "value": 0,
+                      "displayValue": "0"
+                    },
+                    {
+                      "name": "winPercent",
+                      "type": "winpercent",
+                      "displayName": "Win Percentage",
+                      "shortDisplayName": "PCT",
+                      "description": "Winning Percentage",
+                      "abbreviation": "PCT",
+                      "value": 0.71428573,
+                      "displayValue": ".714"
+                    },
+                    {
+                      "name": "wins",
+                      "type": "wins",
+                      "displayName": "Wins",
+                      "shortDisplayName": "W",
+                      "description": "Wins",
+                      "abbreviation": "W",
+                      "value": 10,
+                      "displayValue": "10"
+                    },
+                    {
+                      "name": "divisionLosses",
+                      "type": "divisionlosses",
+                      "displayName": "Division Losses",
+                      "shortDisplayName": "DL",
+                      "description": "Division Losses",
+                      "abbreviation": "DL",
+                      "value": 1,
+                      "displayValue": "1"
+                    },
+                    {
+                      "name": "divisionRecord",
+                      "type": "divisionrecord",
+                      "displayName": "Division record",
+                      "shortDisplayName": "DIV",
+                      "description": "Division Record",
+                      "abbreviation": "DIV",
+                      "value": 0,
+                      "displayValue": "3-1"
+                    },
+                    {
+                      "name": "divisionTies",
+                      "type": "divisionties",
+                      "displayName": "Division Tie ",
+                      "shortDisplayName": "DT",
+                      "description": "Division Tie ",
+                      "abbreviation": "DT",
+                      "value": 0,
+                      "displayValue": "0.000"
+                    },
+                    {
+                      "name": "divisionWins",
+                      "type": "divisionwins",
+                      "displayName": "Division Wins ",
+                      "shortDisplayName": "DW",
+                      "description": "Division Winning ",
+                      "abbreviation": "DW",
+                      "value": 3,
+                      "displayValue": "3.000"
+                    },
+                    {
+                      "name": "overall",
+                      "type": "total",
+                      "abbreviation": "Any",
+                      "displayValue": "10-4"
+                    },
+                    {
+                      "name": "Home",
+                      "type": "home",
+                      "displayName": "Home",
+                      "shortDisplayName": "HOME",
+                      "description": "Home Record",
+                      "displayValue": "6-2"
+                    },
+                    {
+                      "name": "Road",
+                      "type": "road",
+                      "displayName": "Road",
+                      "shortDisplayName": "AWAY",
+                      "description": "Away Record",
+                      "displayValue": "4-2"
+                    },
+                    {
+                      "name": "vs. Div.",
+                      "type": "vsdiv",
+                      "displayName": "DIV",
+                      "shortDisplayName": "DIV",
+                      "description": "Division Record",
+                      "displayValue": "3-1"
+                    },
+                    {
+                      "name": "vs. Conf.",
+                      "type": "vsconf",
+                      "displayName": "CONF",
+                      "shortDisplayName": "CONF",
+                      "description": "Conference Record",
+                      "displayValue": "7-2"
+                    }
+                  ],
+                  "logo": {
+                    "href": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/scoreboard/jax.png",
+                    "width": 500,
+                    "height": 500,
+                    "rel": [
+                      "full",
+                      "scoreboard",
+                      "dark"
+                    ]
+                  }
+                },
+                {
+                  "id": "34",
+                  "uid": "s:20~l:28~t:34",
+                  "team": "Houston",
+                  "link": "https://www.espn.com/nfl/team/_/name/hou/houston-texans",
+                  "stats": [
+                    {
+                      "name": "differential",
+                      "type": "differential",
+                      "displayName": "Point Differential",
+                      "shortDisplayName": "DIFF",
+                      "description": "Point Differential",
+                      "abbreviation": "DIFF",
+                      "value": 95,
+                      "displayValue": "+95"
+                    },
+                    {
+                      "name": "gamesBehind",
+                      "type": "gamesbehind",
+                      "displayName": "Games Back",
+                      "shortDisplayName": "GB",
+                      "description": "Games Back",
+                      "abbreviation": "GB",
+                      "value": 1,
+                      "displayValue": "1"
+                    },
+                    {
+                      "name": "losses",
+                      "type": "losses",
+                      "displayName": "Losses",
+                      "shortDisplayName": "L",
+                      "description": "Losses",
+                      "abbreviation": "L",
+                      "value": 5,
+                      "displayValue": "5"
+                    },
+                    {
+                      "name": "playoffSeed",
+                      "type": "playoffseed",
+                      "displayName": "Position",
+                      "shortDisplayName": "POS",
+                      "description": "Playoff Seed",
+                      "abbreviation": "SEED",
+                      "value": 7,
+                      "displayValue": "7"
+                    },
+                    {
+                      "name": "pointDifferential",
+                      "type": "pointdifferential",
+                      "displayName": "Point Differential",
+                      "shortDisplayName": "DIFF",
+                      "description": "Point Differential",
+                      "abbreviation": "DIFF",
+                      "value": 95,
+                      "displayValue": "+95"
+                    },
+                    {
+                      "name": "pointsAgainst",
+                      "type": "pointsagainst",
+                      "displayName": "Points Against",
+                      "shortDisplayName": "PA",
+                      "description": "Total Points Against",
+                      "abbreviation": "PA",
+                      "value": 228,
+                      "displayValue": "228"
+                    },
+                    {
+                      "name": "pointsFor",
+                      "type": "pointsfor",
+                      "displayName": "Points For",
+                      "shortDisplayName": "PF",
+                      "description": "Total Points For",
+                      "abbreviation": "PF",
+                      "value": 323,
+                      "displayValue": "323"
+                    },
+                    {
+                      "name": "streak",
+                      "type": "streak",
+                      "displayName": "Streak",
+                      "shortDisplayName": "STRK",
+                      "description": "Current Streak",
+                      "abbreviation": "STRK",
+                      "value": 6,
+                      "displayValue": "W6"
+                    },
+                    {
+                      "name": "ties",
+                      "type": "ties",
+                      "displayName": "Ties",
+                      "shortDisplayName": "T",
+                      "description": "Ties",
+                      "abbreviation": "T",
+                      "value": 0,
+                      "displayValue": "0"
+                    },
+                    {
+                      "name": "winPercent",
+                      "type": "winpercent",
+                      "displayName": "Win Percentage",
+                      "shortDisplayName": "PCT",
+                      "description": "Winning Percentage",
+                      "abbreviation": "PCT",
+                      "value": 0.64285713,
+                      "displayValue": ".643"
+                    },
+                    {
+                      "name": "wins",
+                      "type": "wins",
+                      "displayName": "Wins",
+                      "shortDisplayName": "W",
+                      "description": "Wins",
+                      "abbreviation": "W",
+                      "value": 9,
+                      "displayValue": "9"
+                    },
+                    {
+                      "name": "divisionLosses",
+                      "type": "divisionlosses",
+                      "displayName": "Division Losses",
+                      "shortDisplayName": "DL",
+                      "description": "Division Losses",
+                      "abbreviation": "DL",
+                      "value": 1,
+                      "displayValue": "1"
+                    },
+                    {
+                      "name": "divisionRecord",
+                      "type": "divisionrecord",
+                      "displayName": "Division record",
+                      "shortDisplayName": "DIV",
+                      "description": "Division Record",
+                      "abbreviation": "DIV",
+                      "value": 0,
+                      "displayValue": "4-1"
+                    },
+                    {
+                      "name": "divisionTies",
+                      "type": "divisionties",
+                      "displayName": "Division Tie ",
+                      "shortDisplayName": "DT",
+                      "description": "Division Tie ",
+                      "abbreviation": "DT",
+                      "value": 0,
+                      "displayValue": "0.000"
+                    },
+                    {
+                      "name": "divisionWins",
+                      "type": "divisionwins",
+                      "displayName": "Division Wins ",
+                      "shortDisplayName": "DW",
+                      "description": "Division Winning ",
+                      "abbreviation": "DW",
+                      "value": 4,
+                      "displayValue": "4.000"
+                    },
+                    {
+                      "name": "overall",
+                      "type": "total",
+                      "abbreviation": "Any",
+                      "displayValue": "9-5"
+                    },
+                    {
+                      "name": "Home",
+                      "type": "home",
+                      "displayName": "Home",
+                      "shortDisplayName": "HOME",
+                      "description": "Home Record",
+                      "displayValue": "5-2"
+                    },
+                    {
+                      "name": "Road",
+                      "type": "road",
+                      "displayName": "Road",
+                      "shortDisplayName": "AWAY",
+                      "description": "Away Record",
+                      "displayValue": "4-3"
+                    },
+                    {
+                      "name": "vs. Div.",
+                      "type": "vsdiv",
+                      "displayName": "DIV",
+                      "shortDisplayName": "DIV",
+                      "description": "Division Record",
+                      "displayValue": "4-1"
+                    },
+                    {
+                      "name": "vs. Conf.",
+                      "type": "vsconf",
+                      "displayName": "CONF",
+                      "shortDisplayName": "CONF",
+                      "description": "Conference Record",
+                      "displayValue": "7-2"
+                    }
+                  ],
+                  "logo": {
+                    "href": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/scoreboard/hou.png",
+                    "width": 500,
+                    "height": 500,
+                    "rel": [
+                      "full",
+                      "scoreboard",
+                      "dark"
+                    ]
+                  }
+                },
+                {
+                  "id": "11",
+                  "uid": "s:20~l:28~t:11",
+                  "team": "Indianapolis",
+                  "link": "https://www.espn.com/nfl/team/_/name/ind/indianapolis-colts",
+                  "stats": [
+                    {
+                      "name": "differential",
+                      "type": "differential",
+                      "displayName": "Point Differential",
+                      "shortDisplayName": "DIFF",
+                      "description": "Point Differential",
+                      "abbreviation": "DIFF",
+                      "value": 89,
+                      "displayValue": "+89"
+                    },
+                    {
+                      "name": "gamesBehind",
+                      "type": "gamesbehind",
+                      "displayName": "Games Back",
+                      "shortDisplayName": "GB",
+                      "description": "Games Back",
+                      "abbreviation": "GB",
+                      "value": 2,
+                      "displayValue": "2"
+                    },
+                    {
+                      "name": "losses",
+                      "type": "losses",
+                      "displayName": "Losses",
+                      "shortDisplayName": "L",
+                      "description": "Losses",
+                      "abbreviation": "L",
+                      "value": 6,
+                      "displayValue": "6"
+                    },
+                    {
+                      "name": "playoffSeed",
+                      "type": "playoffseed",
+                      "displayName": "Position",
+                      "shortDisplayName": "POS",
+                      "description": "Playoff Seed",
+                      "abbreviation": "SEED",
+                      "value": 8,
+                      "displayValue": "8"
+                    },
+                    {
+                      "name": "pointDifferential",
+                      "type": "pointdifferential",
+                      "displayName": "Point Differential",
+                      "shortDisplayName": "DIFF",
+                      "description": "Point Differential",
+                      "abbreviation": "DIFF",
+                      "value": 89,
+                      "displayValue": "+89"
+                    },
+                    {
+                      "name": "pointsAgainst",
+                      "type": "pointsagainst",
+                      "displayName": "Points Against",
+                      "shortDisplayName": "PA",
+                      "description": "Total Points Against",
+                      "abbreviation": "PA",
+                      "value": 303,
+                      "displayValue": "303"
+                    },
+                    {
+                      "name": "pointsFor",
+                      "type": "pointsfor",
+                      "displayName": "Points For",
+                      "shortDisplayName": "PF",
+                      "description": "Total Points For",
+                      "abbreviation": "PF",
+                      "value": 392,
+                      "displayValue": "392"
+                    },
+                    {
+                      "name": "streak",
+                      "type": "streak",
+                      "displayName": "Streak",
+                      "shortDisplayName": "STRK",
+                      "description": "Current Streak",
+                      "abbreviation": "STRK",
+                      "value": -4,
+                      "displayValue": "L4"
+                    },
+                    {
+                      "name": "ties",
+                      "type": "ties",
+                      "displayName": "Ties",
+                      "shortDisplayName": "T",
+                      "description": "Ties",
+                      "abbreviation": "T",
+                      "value": 0,
+                      "displayValue": "0"
+                    },
+                    {
+                      "name": "winPercent",
+                      "type": "winpercent",
+                      "displayName": "Win Percentage",
+                      "shortDisplayName": "PCT",
+                      "description": "Winning Percentage",
+                      "abbreviation": "PCT",
+                      "value": 0.5714286,
+                      "displayValue": ".571"
+                    },
+                    {
+                      "name": "wins",
+                      "type": "wins",
+                      "displayName": "Wins",
+                      "shortDisplayName": "W",
+                      "description": "Wins",
+                      "abbreviation": "W",
+                      "value": 8,
+                      "displayValue": "8"
+                    },
+                    {
+                      "name": "divisionLosses",
+                      "type": "divisionlosses",
+                      "displayName": "Division Losses",
+                      "shortDisplayName": "DL",
+                      "description": "Division Losses",
+                      "abbreviation": "DL",
+                      "value": 2,
+                      "displayValue": "2"
+                    },
+                    {
+                      "name": "divisionRecord",
+                      "type": "divisionrecord",
+                      "displayName": "Division record",
+                      "shortDisplayName": "DIV",
+                      "description": "Division Record",
+                      "abbreviation": "DIV",
+                      "value": 0,
+                      "displayValue": "2-2"
+                    },
+                    {
+                      "name": "divisionTies",
+                      "type": "divisionties",
+                      "displayName": "Division Tie ",
+                      "shortDisplayName": "DT",
+                      "description": "Division Tie ",
+                      "abbreviation": "DT",
+                      "value": 0,
+                      "displayValue": "0.000"
+                    },
+                    {
+                      "name": "divisionWins",
+                      "type": "divisionwins",
+                      "displayName": "Division Wins ",
+                      "shortDisplayName": "DW",
+                      "description": "Division Winning ",
+                      "abbreviation": "DW",
+                      "value": 2,
+                      "displayValue": "2.000"
+                    },
+                    {
+                      "name": "overall",
+                      "type": "total",
+                      "abbreviation": "Any",
+                      "displayValue": "8-6"
+                    },
+                    {
+                      "name": "Home",
+                      "type": "home",
+                      "displayName": "Home",
+                      "shortDisplayName": "HOME",
+                      "description": "Home Record",
+                      "displayValue": "6-1"
+                    },
+                    {
+                      "name": "Road",
+                      "type": "road",
+                      "displayName": "Road",
+                      "shortDisplayName": "AWAY",
+                      "description": "Away Record",
+                      "displayValue": "2-5"
+                    },
+                    {
+                      "name": "vs. Div.",
+                      "type": "vsdiv",
+                      "displayName": "DIV",
+                      "shortDisplayName": "DIV",
+                      "description": "Division Record",
+                      "displayValue": "2-2"
+                    },
+                    {
+                      "name": "vs. Conf.",
+                      "type": "vsconf",
+                      "displayName": "CONF",
+                      "shortDisplayName": "CONF",
+                      "description": "Conference Record",
+                      "displayValue": "6-4"
+                    }
+                  ],
+                  "logo": {
+                    "href": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/scoreboard/ind.png",
+                    "width": 500,
+                    "height": 500,
+                    "rel": [
+                      "full",
+                      "scoreboard",
+                      "dark"
+                    ]
+                  }
+                },
+                {
+                  "id": "10",
+                  "uid": "s:20~l:28~t:10",
+                  "team": "Tennessee",
+                  "link": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans",
+                  "stats": [
+                    {
+                      "name": "clincher",
+                      "type": "clincher",
+                      "displayName": "Clincher",
+                      "shortDisplayName": "CLINCH",
+                      "description": "Eliminated from Playoff Contention",
+                      "abbreviation": "CLINCH",
+                      "value": 0,
+                      "displayValue": "e"
+                    },
+                    {
+                      "name": "differential",
+                      "type": "differential",
+                      "displayName": "Point Differential",
+                      "shortDisplayName": "DIFF",
+                      "description": "Point Differential",
+                      "abbreviation": "DIFF",
+                      "value": -152,
+                      "displayValue": "-152"
+                    },
+                    {
+                      "name": "gamesBehind",
+                      "type": "gamesbehind",
+                      "displayName": "Games Back",
+                      "shortDisplayName": "GB",
+                      "description": "Games Back",
+                      "abbreviation": "GB",
+                      "value": 7.5,
+                      "displayValue": "7.5"
+                    },
+                    {
+                      "name": "losses",
+                      "type": "losses",
+                      "displayName": "Losses",
+                      "shortDisplayName": "L",
+                      "description": "Losses",
+                      "abbreviation": "L",
+                      "value": 12,
+                      "displayValue": "12"
+                    },
+                    {
+                      "name": "playoffSeed",
+                      "type": "playoffseed",
+                      "displayName": "Position",
+                      "shortDisplayName": "POS",
+                      "description": "Playoff Seed",
+                      "abbreviation": "SEED",
+                      "value": 14,
+                      "displayValue": "14"
+                    },
+                    {
+                      "name": "pointDifferential",
+                      "type": "pointdifferential",
+                      "displayName": "Point Differential",
+                      "shortDisplayName": "DIFF",
+                      "description": "Point Differential",
+                      "abbreviation": "DIFF",
+                      "value": -152,
+                      "displayValue": "-152"
+                    },
+                    {
+                      "name": "pointsAgainst",
+                      "type": "pointsagainst",
+                      "displayName": "Points Against",
+                      "shortDisplayName": "PA",
+                      "description": "Total Points Against",
+                      "abbreviation": "PA",
+                      "value": 403,
+                      "displayValue": "403"
+                    },
+                    {
+                      "name": "pointsFor",
+                      "type": "pointsfor",
+                      "displayName": "Points For",
+                      "shortDisplayName": "PF",
+                      "description": "Total Points For",
+                      "abbreviation": "PF",
+                      "value": 251,
+                      "displayValue": "251"
+                    },
+                    {
+                      "name": "streak",
+                      "type": "streak",
+                      "displayName": "Streak",
+                      "shortDisplayName": "STRK",
+                      "description": "Current Streak",
+                      "abbreviation": "STRK",
+                      "value": 1,
+                      "displayValue": "W1"
+                    },
+                    {
+                      "name": "ties",
+                      "type": "ties",
+                      "displayName": "Ties",
+                      "shortDisplayName": "T",
+                      "description": "Ties",
+                      "abbreviation": "T",
+                      "value": 0,
+                      "displayValue": "0"
+                    },
+                    {
+                      "name": "winPercent",
+                      "type": "winpercent",
+                      "displayName": "Win Percentage",
+                      "shortDisplayName": "PCT",
+                      "description": "Winning Percentage",
+                      "abbreviation": "PCT",
+                      "value": 0.2,
+                      "displayValue": ".200"
+                    },
+                    {
+                      "name": "wins",
+                      "type": "wins",
+                      "displayName": "Wins",
+                      "shortDisplayName": "W",
+                      "description": "Wins",
+                      "abbreviation": "W",
+                      "value": 3,
+                      "displayValue": "3"
+                    },
+                    {
+                      "name": "divisionLosses",
+                      "type": "divisionlosses",
+                      "displayName": "Division Losses",
+                      "shortDisplayName": "DL",
+                      "description": "Division Losses",
+                      "abbreviation": "DL",
+                      "value": 5,
+                      "displayValue": "5"
+                    },
+                    {
+                      "name": "divisionRecord",
+                      "type": "divisionrecord",
+                      "displayName": "Division record",
+                      "shortDisplayName": "DIV",
+                      "description": "Division Record",
+                      "abbreviation": "DIV",
+                      "value": 0,
+                      "displayValue": "0-5"
+                    },
+                    {
+                      "name": "divisionTies",
+                      "type": "divisionties",
+                      "displayName": "Division Tie ",
+                      "shortDisplayName": "DT",
+                      "description": "Division Tie ",
+                      "abbreviation": "DT",
+                      "value": 0,
+                      "displayValue": "0.000"
+                    },
+                    {
+                      "name": "divisionWins",
+                      "type": "divisionwins",
+                      "displayName": "Division Wins ",
+                      "shortDisplayName": "DW",
+                      "description": "Division Winning ",
+                      "abbreviation": "DW",
+                      "value": 0,
+                      "displayValue": "0.000"
+                    },
+                    {
+                      "name": "overall",
+                      "type": "total",
+                      "abbreviation": "Any",
+                      "displayValue": "3-12"
+                    },
+                    {
+                      "name": "Home",
+                      "type": "home",
+                      "displayName": "Home",
+                      "shortDisplayName": "HOME",
+                      "description": "Home Record",
+                      "displayValue": "1-7"
+                    },
+                    {
+                      "name": "Road",
+                      "type": "road",
+                      "displayName": "Road",
+                      "shortDisplayName": "AWAY",
+                      "description": "Away Record",
+                      "displayValue": "2-5"
+                    },
+                    {
+                      "name": "vs. Div.",
+                      "type": "vsdiv",
+                      "displayName": "DIV",
+                      "shortDisplayName": "DIV",
+                      "description": "Division Record",
+                      "displayValue": "0-5"
+                    },
+                    {
+                      "name": "vs. Conf.",
+                      "type": "vsconf",
+                      "displayName": "CONF",
+                      "shortDisplayName": "CONF",
+                      "description": "Conference Record",
+                      "displayValue": "2-9"
+                    }
+                  ],
+                  "logo": {
+                    "href": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/scoreboard/ten.png",
+                    "width": 500,
+                    "height": 500,
+                    "rel": [
+                      "full",
+                      "scoreboard",
+                      "dark"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "videos": [
+    {
+      "source": "espn",
+      "id": 30147631,
+      "headline": "Why Stephen A. isn't sold on Tannehill as an MVP candidate",
+      "title": "Why Stephen A. isn't sold on Tannehill as an MVP candidate",
+      "caption": "Stephen A. isn't ready to acknowledge Ryan Tannehill as an MVP candidate because of the key role Derrick Henry plays in the Titans' success.",
+      "description": "Stephen A. isn't ready to acknowledge Ryan Tannehill as an MVP candidate because of the key role Derrick Henry plays in the Titans' success.",
+      "premium": false,
+      "ad": {
+        "sport": "nfl",
+        "bundle": "sportscenter"
+      },
+      "tracking": {
+        "sportName": "nfl",
+        "leagueName": "No League",
+        "coverageType": "Analysis",
+        "trackingName": "COM_NFL Analysis (Why Stephen A. isn't sold on Tannehill as an MVP candidate) 2020/10/19 FT",
+        "trackingId": "dm_201019_SAS_on_Tannehill_success"
+      },
+      "cerebroId": "5f8db429be6ab32d25511b67",
+      "lastModified": "2020-10-20T13:26:23.000+00:00",
+      "originalPublishDate": "2020-10-19T15:38:26.000+00:00",
+      "timeRestrictions": {
+        "embargoDate": "2020-10-19T15:38:26.000+00:00",
+        "expirationDate": "2037-11-30T16:38:26.000+00:00"
+      },
+      "deviceRestrictions": {
+        "type": "whitelist",
+        "devices": [
+          "desktop",
+          "ipad",
+          "settop",
+          "handset",
+          "tablet"
+        ]
+      },
+      "syndicatable": true,
+      "duration": 103,
+      "categories": [
+        {
+          "id": 103719,
+          "uid": "s:20~l:28~a:14876",
+          "description": "Ryan Tannehill",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 14876,
+          "athlete": {
+            "id": 14876,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 152901,
+          "uid": "s:20~l:28~a:3043078",
+          "description": "Derrick Henry",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 3043078,
+          "athlete": {
+            "id": 3043078,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/3043078/derrick-henry"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/3043078/derrick-henry"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2886,
+          "uid": "s:20~l:28~t:10",
+          "description": "Tennessee Titans",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 10,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 9572,
+          "uid": "s:20~l:28",
+          "description": "NFL",
+          "type": "league",
+          "sportId": 28,
+          "leagueId": 28,
+          "league": {
+            "id": 28,
+            "abbreviation": "NFL",
+            "links": {
+              "web": {
+
+              },
+              "mobile": {
+
+              }
+            }
+          }
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        }
+      ],
+      "posterImages": {
+        "square": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success_1x1.jpg"
+        },
+        "default": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success_default.jpg",
+          "width": 576,
+          "height": 324
+        },
+        "wide": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success_5x2.jpg"
+        },
+        "full": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success.jpg"
+        }
+      },
+      "images": [
+        {
+          "width": 576,
+          "height": 324,
+          "url": "https://media.video-cdn.espn.com/images/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success.jpg",
+          "name": "Poster Image"
+        }
+      ],
+      "thumbnail": "https://a.espncdn.com/media/motion/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success.jpg",
+      "links": {
+        "sportscenter": {
+          "href": "sportscenter://x-callback-url/showVideo?videoID=30147631&videoDSI=f9e47bad0eaa1"
+        },
+        "web": {
+          "href": "http://www.espn.com/video/clip?id=30147631",
+          "self": {
+            "href": "http://www.espn.com/video/clip?id=30147631"
+          }
+        },
+        "mobile": {
+          "href": "https://watch.auth.api.espn.com/video/auth/brightcove/2cd735a5-14b4-4761-a942-0ad351687d64/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=30147631",
+          "alert": {
+            "href": "https://m.espn.com/general/video/videoAlert?vid=30147631"
+          },
+          "progressiveDownload": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/2cd735a5-14b4-4761-a942-0ad351687d64/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=30147631"
+          },
+          "source": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success.mp4"
+          },
+          "streaming": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/2cd735a5-14b4-4761-a942-0ad351687d64/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=30147631"
+          }
+        },
+        "api": {
+          "artwork": {
+            "href": "https://artwork.api.espn.com/artwork/collections/media/2cd735a5-14b4-4761-a942-0ad351687d64"
+          },
+          "self": {
+            "href": "https://content.core.api.espn.com/v1/video/clips/30147631"
+          }
+        },
+        "source": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success_360p30_1464k.mp4",
+          "flash": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success.smil"
+          },
+          "full": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success_360p30_1464k.mp4"
+          },
+          "hds": {
+            "href": "https://hds.video-cdn.espn.com/z/motion/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success_rel.smil/manifest.f4m"
+          },
+          "mezzanine": {
+            "href": "https://media.video-origin.espn.com/espnvideo/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success.mp4"
+          },
+          "HD": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success_720p30_2896k.mp4"
+          },
+          "HLS": {
+            "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success/playlist.m3u8",
+            "HD": {
+              "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/1019/dm_201019_SAS_on_Tannehill_success/dm_201019_SAS_on_Tannehill_success/playlist.m3u8"
+            }
+          }
+        }
+      }
+    },
+    {
+      "source": "espn",
+      "id": 28939859,
+      "headline": "How does Tannehill's re-signing affect Titans free agency?",
+      "title": "How does Tannehill's re-signing affect Titans free agency?",
+      "caption": "Turron Davenport breaks down what the Titans have done in free agency so far and what they need to do in order to continue to improve.",
+      "description": "Turron Davenport breaks down what the Titans have done in free agency so far and what they need to do in order to continue to improve.",
+      "premium": false,
+      "ad": {
+        "sport": "nfl",
+        "bundle": "sportscenter"
+      },
+      "tracking": {
+        "sportName": "nfl",
+        "leagueName": "No League",
+        "coverageType": "Analysis",
+        "trackingName": "COM_NFL Analysis (How does Tannehill’s re-signing affect Titans free agency? ) 2020/3/22 NATIONSS",
+        "trackingId": "dm_200322_titans_vid_nfl_free_agency"
+      },
+      "cerebroId": "5e77ee9fca84b751fe643f53",
+      "lastModified": "2020-03-23T19:00:24.000+00:00",
+      "originalPublishDate": "2020-03-22T23:01:06.000+00:00",
+      "timeRestrictions": {
+        "embargoDate": "2020-03-22T23:01:06.000+00:00",
+        "expirationDate": "2037-12-01T00:01:06.000+00:00"
+      },
+      "deviceRestrictions": {
+        "type": "whitelist",
+        "devices": [
+          "desktop",
+          "ipad",
+          "settop",
+          "handset",
+          "tablet"
+        ]
+      },
+      "syndicatable": true,
+      "duration": 59,
+      "categories": [
+        {
+          "id": 103719,
+          "uid": "s:20~l:28~a:14876",
+          "description": "Ryan Tannehill",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 14876,
+          "athlete": {
+            "id": 14876,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2886,
+          "uid": "s:20~l:28~t:10",
+          "description": "Tennessee Titans",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 10,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 9572,
+          "uid": "s:20~l:28",
+          "description": "NFL",
+          "type": "league",
+          "sportId": 28,
+          "leagueId": 28,
+          "league": {
+            "id": 28,
+            "abbreviation": "NFL",
+            "links": {
+              "web": {
+
+              },
+              "mobile": {
+
+              }
+            }
+          }
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        }
+      ],
+      "posterImages": {
+        "square": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency_1x1.jpg"
+        },
+        "default": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency_default.jpg",
+          "width": 576,
+          "height": 324
+        },
+        "wide": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency_5x2.jpg"
+        },
+        "full": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency.jpg"
+        }
+      },
+      "images": [
+        {
+          "width": 576,
+          "height": 324,
+          "url": "https://media.video-cdn.espn.com/images/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency.jpg",
+          "name": "Poster Image"
+        }
+      ],
+      "thumbnail": "https://a.espncdn.com/media/motion/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency.jpg",
+      "links": {
+        "sportscenter": {
+          "href": "sportscenter://x-callback-url/showVideo?videoID=28939859&videoDSI=77f163ee05c70"
+        },
+        "web": {
+          "href": "http://www.espn.com/video/clip?id=28939859",
+          "self": {
+            "href": "http://www.espn.com/video/clip?id=28939859"
+          }
+        },
+        "mobile": {
+          "href": "https://watch.auth.api.espn.com/video/auth/brightcove/06567193-7abc-4998-a281-e470cc45c60a/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28939859",
+          "alert": {
+            "href": "https://m.espn.com/general/video/videoAlert?vid=28939859"
+          },
+          "progressiveDownload": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/06567193-7abc-4998-a281-e470cc45c60a/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28939859"
+          },
+          "source": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency.mp4"
+          },
+          "streaming": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/06567193-7abc-4998-a281-e470cc45c60a/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28939859"
+          }
+        },
+        "api": {
+          "artwork": {
+            "href": "https://artwork.api.espn.com/artwork/collections/media/06567193-7abc-4998-a281-e470cc45c60a"
+          },
+          "self": {
+            "href": "https://content.core.api.espn.com/v1/video/clips/28939859"
+          }
+        },
+        "source": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency_360p30_1464k.mp4",
+          "flash": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency.smil"
+          },
+          "full": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency_360p30_1464k.mp4"
+          },
+          "hds": {
+            "href": "https://hds.video-cdn.espn.com/z/motion/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency_rel.smil/manifest.f4m"
+          },
+          "mezzanine": {
+            "href": "https://media.video-origin.espn.com/espnvideo/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency.mp4"
+          },
+          "HD": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency_720p30_2896k.mp4"
+          },
+          "HLS": {
+            "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency/playlist.m3u8",
+            "HD": {
+              "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0322/dm_200322_titans_vid_nfl_free_agency/dm_200322_titans_vid_nfl_free_agency/playlist.m3u8"
+            }
+          }
+        }
+      }
+    },
+    {
+      "source": "espn",
+      "id": 28910740,
+      "headline": "Stephen A. lays out why the Titans chose Tannehill over Brady",
+      "title": "Stephen A. lays out why the Titans chose Tannehill over Brady",
+      "caption": "Stephen A. Smith says the Titans' decision to sign Ryan Tannehill instead of pursuing Tom Brady in free agency was based on age and longevity.",
+      "description": "Stephen A. Smith says the Titans' decision to sign Ryan Tannehill instead of pursuing Tom Brady in free agency was based on age and longevity.",
+      "premium": false,
+      "ad": {
+        "sport": "nfl",
+        "bundle": "no_show"
+      },
+      "tracking": {
+        "sportName": "nfl",
+        "leagueName": "No League",
+        "coverageType": "Analysis",
+        "trackingName": "COM_NFL Analysis (Stephen A. lays out why the Titans chose Tannehill over Brady) 2020/3/16 FT",
+        "trackingId": "dm_200316_sas_brady"
+      },
+      "cerebroId": "5e6f925fca84b751fe5336ad",
+      "lastModified": "2020-03-17T04:01:23.000+00:00",
+      "originalPublishDate": "2020-03-16T14:47:39.000+00:00",
+      "timeRestrictions": {
+        "embargoDate": "2020-03-16T14:47:39.000+00:00",
+        "expirationDate": "2037-11-30T15:47:39.000+00:00"
+      },
+      "deviceRestrictions": {
+        "type": "whitelist",
+        "devices": [
+          "desktop",
+          "ipad",
+          "settop",
+          "handset",
+          "tablet"
+        ]
+      },
+      "syndicatable": true,
+      "duration": 124,
+      "categories": [
+        {
+          "id": 103719,
+          "uid": "s:20~l:28~a:14876",
+          "description": "Ryan Tannehill",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 14876,
+          "athlete": {
+            "id": 14876,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2360,
+          "uid": "s:20~l:28~a:2330",
+          "description": "Tom Brady",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 2330,
+          "athlete": {
+            "id": 2330,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/2330/tom-brady"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/2330/tom-brady"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 124385,
+          "description": "nfl free agency",
+          "type": "topic",
+          "sportId": 0
+        },
+        {
+          "id": 2321,
+          "uid": "s:20~l:28~t:17",
+          "description": "New England Patriots",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 17,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2886,
+          "uid": "s:20~l:28~t:10",
+          "description": "Tennessee Titans",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 10,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 9572,
+          "uid": "s:20~l:28",
+          "description": "NFL",
+          "type": "league",
+          "sportId": 28,
+          "leagueId": 28,
+          "league": {
+            "id": 28,
+            "abbreviation": "NFL",
+            "links": {
+              "web": {
+
+              },
+              "mobile": {
+
+              }
+            }
+          }
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        }
+      ],
+      "posterImages": {
+        "square": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady_1x1.jpg"
+        },
+        "default": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady_default.jpg",
+          "width": 576,
+          "height": 324
+        },
+        "wide": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady_5x2.jpg"
+        },
+        "full": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady.jpg"
+        }
+      },
+      "images": [
+        {
+          "width": 576,
+          "height": 324,
+          "url": "https://media.video-cdn.espn.com/images/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady.jpg",
+          "name": "Poster Image"
+        }
+      ],
+      "thumbnail": "https://a.espncdn.com/media/motion/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady.jpg",
+      "links": {
+        "sportscenter": {
+          "href": "sportscenter://x-callback-url/showVideo?videoID=28910740&videoDSI=88ce1bb74d94a"
+        },
+        "web": {
+          "href": "http://www.espn.com/video/clip?id=28910740",
+          "self": {
+            "href": "http://www.espn.com/video/clip?id=28910740"
+          }
+        },
+        "mobile": {
+          "href": "https://watch.auth.api.espn.com/video/auth/brightcove/063377e0-3559-4fbf-acda-5856aa1403e1/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28910740",
+          "alert": {
+            "href": "https://m.espn.com/general/video/videoAlert?vid=28910740"
+          },
+          "progressiveDownload": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/063377e0-3559-4fbf-acda-5856aa1403e1/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28910740"
+          },
+          "source": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady.mp4"
+          },
+          "streaming": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/063377e0-3559-4fbf-acda-5856aa1403e1/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28910740"
+          }
+        },
+        "api": {
+          "artwork": {
+            "href": "https://artwork.api.espn.com/artwork/collections/media/063377e0-3559-4fbf-acda-5856aa1403e1"
+          },
+          "self": {
+            "href": "https://content.core.api.espn.com/v1/video/clips/28910740"
+          }
+        },
+        "source": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady_360p30_1464k.mp4",
+          "flash": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady.smil"
+          },
+          "full": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady_360p30_1464k.mp4"
+          },
+          "hds": {
+            "href": "https://hds.video-cdn.espn.com/z/motion/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady_rel.smil/manifest.f4m"
+          },
+          "mezzanine": {
+            "href": "https://media.video-origin.espn.com/espnvideo/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady.mp4"
+          },
+          "HD": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady_720p30_2896k.mp4"
+          },
+          "HLS": {
+            "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady/playlist.m3u8",
+            "HD": {
+              "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0316/dm_200316_sas_brady/dm_200316_sas_brady/playlist.m3u8"
+            }
+          }
+        }
+      }
+    },
+    {
+      "source": "espn",
+      "id": 28907922,
+      "headline": "What Tannehill's deal with Titans means to QB market",
+      "title": "What Tannehill's deal with Titans means to QB market",
+      "caption": "Jeff Darlington details the Titans' 4-year deal with Ryan Tannehill and what it means for Tom Brady and other quarterbacks in free agency.",
+      "description": "Jeff Darlington details the Titans' 4-year deal with Ryan Tannehill and what it means for Tom Brady and other quarterbacks in free agency.",
+      "premium": false,
+      "ad": {
+        "sport": "nfl",
+        "bundle": "sportscenter"
+      },
+      "tracking": {
+        "sportName": "nfl",
+        "leagueName": "No League",
+        "coverageType": "Analysis",
+        "trackingName": "COM_NFL Analysis (What Tannehill’s deal with Titans means to QB market) 2020/03/15 DVNR",
+        "trackingId": "dm_200315_darlington_on_titans"
+      },
+      "cerebroId": "5e6e90a2ca84b751fe4fd5bc",
+      "lastModified": "2020-03-15T20:39:35.000+00:00",
+      "originalPublishDate": "2020-03-15T20:17:59.000+00:00",
+      "timeRestrictions": {
+        "embargoDate": "2020-03-15T20:17:59.000+00:00",
+        "expirationDate": "2037-11-30T21:17:59.000+00:00"
+      },
+      "deviceRestrictions": {
+        "type": "whitelist",
+        "devices": [
+          "desktop",
+          "ipad",
+          "settop",
+          "handset",
+          "tablet"
+        ]
+      },
+      "syndicatable": true,
+      "duration": 82,
+      "categories": [
+        {
+          "id": 103719,
+          "uid": "s:20~l:28~a:14876",
+          "description": "Ryan Tannehill",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 14876,
+          "athlete": {
+            "id": 14876,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2360,
+          "uid": "s:20~l:28~a:2330",
+          "description": "Tom Brady",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 2330,
+          "athlete": {
+            "id": 2330,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/2330/tom-brady"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/2330/tom-brady"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2886,
+          "uid": "s:20~l:28~t:10",
+          "description": "Tennessee Titans",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 10,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 9572,
+          "uid": "s:20~l:28",
+          "description": "NFL",
+          "type": "league",
+          "sportId": 28,
+          "leagueId": 28,
+          "league": {
+            "id": 28,
+            "abbreviation": "NFL",
+            "links": {
+              "web": {
+
+              },
+              "mobile": {
+
+              }
+            }
+          }
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        }
+      ],
+      "posterImages": {
+        "square": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans_1x1.jpg"
+        },
+        "default": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans_default.jpg",
+          "width": 576,
+          "height": 324
+        },
+        "wide": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans_5x2.jpg"
+        },
+        "full": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans.jpg"
+        }
+      },
+      "images": [
+        {
+          "width": 576,
+          "height": 324,
+          "url": "https://media.video-cdn.espn.com/images/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans.jpg",
+          "name": "Poster Image"
+        }
+      ],
+      "thumbnail": "https://a.espncdn.com/media/motion/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans.jpg",
+      "links": {
+        "sportscenter": {
+          "href": "sportscenter://x-callback-url/showVideo?videoID=28907922&videoDSI=a1a5f8e6bc8e9"
+        },
+        "web": {
+          "href": "http://www.espn.com/video/clip?id=28907922",
+          "self": {
+            "href": "http://www.espn.com/video/clip?id=28907922"
+          }
+        },
+        "mobile": {
+          "href": "https://watch.auth.api.espn.com/video/auth/brightcove/c87b7515-53e0-49a2-9eb9-d0d0237a18b8/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28907922",
+          "alert": {
+            "href": "https://m.espn.com/general/video/videoAlert?vid=28907922"
+          },
+          "progressiveDownload": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/c87b7515-53e0-49a2-9eb9-d0d0237a18b8/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28907922"
+          },
+          "source": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans.mp4"
+          },
+          "streaming": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/c87b7515-53e0-49a2-9eb9-d0d0237a18b8/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28907922"
+          }
+        },
+        "api": {
+          "artwork": {
+            "href": "https://artwork.api.espn.com/artwork/collections/media/c87b7515-53e0-49a2-9eb9-d0d0237a18b8"
+          },
+          "self": {
+            "href": "https://content.core.api.espn.com/v1/video/clips/28907922"
+          }
+        },
+        "source": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans_360p30_1464k.mp4",
+          "flash": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans.smil"
+          },
+          "full": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans_360p30_1464k.mp4"
+          },
+          "hds": {
+            "href": "https://hds.video-cdn.espn.com/z/motion/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans_rel.smil/manifest.f4m"
+          },
+          "mezzanine": {
+            "href": "https://media.video-origin.espn.com/espnvideo/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans.mp4"
+          },
+          "HD": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans_720p30_2896k.mp4"
+          },
+          "HLS": {
+            "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans/playlist.m3u8",
+            "HD": {
+              "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0315/dm_200315_darlington_on_titans/dm_200315_darlington_on_titans/playlist.m3u8"
+            }
+          }
+        }
+      }
+    },
+    {
+      "source": "espn",
+      "id": 28842587,
+      "headline": "Here's why Tom Brady's replacement in New England could potentially be ... Ryan Tannehill?",
+      "title": "Here's why Tom Brady's replacement in New England could potentially be ... Ryan Tannehill?",
+      "caption": "Dan Graziano and Bobby Carpenter break down whether Ryan Tannehill could fit with the Patriots' offense.",
+      "description": "Dan Graziano and Bobby Carpenter break down whether Ryan Tannehill could fit with the Patriots' offense.",
+      "premium": false,
+      "ad": {
+        "sport": "nfl",
+        "bundle": "no_show"
+      },
+      "tracking": {
+        "sportName": "nfl",
+        "leagueName": "No League",
+        "coverageType": "Analysis",
+        "trackingName": "COM_NFL Analysis (Here's why Tom Brady's replacement in New England could potentially be ... Ryan Tannehill?) 2020/03/05 GetUp",
+        "trackingId": "dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots"
+      },
+      "cerebroId": "5e6104d9ca84b779423b935e",
+      "lastModified": "2020-03-10T05:44:30.000+00:00",
+      "originalPublishDate": "2020-03-05T13:53:40.000+00:00",
+      "timeRestrictions": {
+        "embargoDate": "2020-03-05T13:53:40.000+00:00",
+        "expirationDate": "2037-11-30T13:53:40.000+00:00"
+      },
+      "deviceRestrictions": {
+        "type": "whitelist",
+        "devices": [
+          "desktop",
+          "ipad",
+          "settop",
+          "handset",
+          "tablet"
+        ]
+      },
+      "syndicatable": true,
+      "duration": 110,
+      "categories": [
+        {
+          "id": 133851,
+          "description": "news - uk frontpage",
+          "type": "topic",
+          "sportId": 0
+        },
+        {
+          "id": 103719,
+          "uid": "s:20~l:28~a:14876",
+          "description": "Ryan Tannehill",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 14876,
+          "athlete": {
+            "id": 14876,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2360,
+          "uid": "s:20~l:28~a:2330",
+          "description": "Tom Brady",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 2330,
+          "athlete": {
+            "id": 2330,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/2330/tom-brady"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/2330/tom-brady"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 128110,
+          "description": "news - frontpage",
+          "type": "topic",
+          "sportId": 0
+        },
+        {
+          "id": 2321,
+          "uid": "s:20~l:28~t:17",
+          "description": "New England Patriots",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 17,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 129297,
+          "description": "news - nfl",
+          "type": "topic",
+          "sportId": 0
+        },
+        {
+          "id": 9572,
+          "uid": "s:20~l:28",
+          "description": "NFL",
+          "type": "league",
+          "sportId": 28,
+          "leagueId": 28,
+          "league": {
+            "id": 28,
+            "abbreviation": "NFL",
+            "links": {
+              "web": {
+
+              },
+              "mobile": {
+
+              }
+            }
+          }
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        }
+      ],
+      "posterImages": {
+        "square": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots_1x1.jpg"
+        },
+        "default": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots_default.jpg",
+          "width": 576,
+          "height": 324
+        },
+        "wide": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots_5x2.jpg"
+        },
+        "full": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots.jpg"
+        }
+      },
+      "images": [
+        {
+          "width": 576,
+          "height": 324,
+          "url": "https://media.video-cdn.espn.com/images/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots.jpg",
+          "name": "Poster Image"
+        }
+      ],
+      "thumbnail": "https://a.espncdn.com/media/motion/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots.jpg",
+      "links": {
+        "sportscenter": {
+          "href": "sportscenter://x-callback-url/showVideo?videoID=28842587&videoDSI=ec513367d4992"
+        },
+        "web": {
+          "href": "http://www.espn.com/video/clip?id=28842587",
+          "self": {
+            "href": "http://www.espn.com/video/clip?id=28842587"
+          }
+        },
+        "mobile": {
+          "href": "https://watch.auth.api.espn.com/video/auth/brightcove/12ba5095-e8fb-4f48-8bcb-2f10255df9cd/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28842587",
+          "alert": {
+            "href": "https://m.espn.com/general/video/videoAlert?vid=28842587"
+          },
+          "progressiveDownload": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/12ba5095-e8fb-4f48-8bcb-2f10255df9cd/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28842587"
+          },
+          "source": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots.mp4"
+          },
+          "streaming": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/12ba5095-e8fb-4f48-8bcb-2f10255df9cd/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28842587"
+          }
+        },
+        "api": {
+          "artwork": {
+            "href": "https://artwork.api.espn.com/artwork/collections/media/12ba5095-e8fb-4f48-8bcb-2f10255df9cd"
+          },
+          "self": {
+            "href": "https://content.core.api.espn.com/v1/video/clips/28842587"
+          }
+        },
+        "source": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots_360p30_1464k.mp4",
+          "flash": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots.smil"
+          },
+          "full": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots_360p30_1464k.mp4"
+          },
+          "hds": {
+            "href": "https://hds.video-cdn.espn.com/z/motion/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots_rel.smil/manifest.f4m"
+          },
+          "mezzanine": {
+            "href": "https://media.video-origin.espn.com/espnvideo/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots.mp4"
+          },
+          "HD": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots_720p30_2896k.mp4"
+          },
+          "HLS": {
+            "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/playlist.m3u8",
+            "HD": {
+              "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0305/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/dm_200305_NFL_Analysis_Get_up_on_Tannehill_Patriots/playlist.m3u8"
+            }
+          }
+        }
+      }
+    },
+    {
+      "source": "espn",
+      "id": 28780200,
+      "headline": "Are the Bears committed to Trubisky?",
+      "title": "Are the Bears committed to Trubisky?",
+      "caption": "Jeremy Fowler, Emmanuel Acho and Mike Tannenbaum discuss the possibility of the Bears signing a veteran quarterback to supplement, or possibly replace, Mitchell Trubisky.",
+      "description": "Jeremy Fowler, Emmanuel Acho and Mike Tannenbaum discuss the possibility of the Bears signing a veteran quarterback to supplement, or possibly replace, Mitchell Trubisky.",
+      "premium": false,
+      "ad": {
+        "sport": "nfl",
+        "bundle": "no_show"
+      },
+      "tracking": {
+        "sportName": "nfl",
+        "leagueName": "No League",
+        "coverageType": "Analysis",
+        "trackingName": "COM_NFL Analysis (Are the Bears committed to Trubisky?) 2020/02/25 GET UP",
+        "trackingId": "dm_200225_NFL_Bears_vet_qb"
+      },
+      "cerebroId": "5e55783fca84b7794220c070",
+      "lastModified": "2020-02-26T18:53:47.000+00:00",
+      "originalPublishDate": "2020-02-25T19:35:57.000+00:00",
+      "timeRestrictions": {
+        "embargoDate": "2020-02-25T19:35:57.000+00:00",
+        "expirationDate": "2037-11-30T19:35:57.000+00:00"
+      },
+      "deviceRestrictions": {
+        "type": "whitelist",
+        "devices": [
+          "desktop",
+          "ipad",
+          "settop",
+          "handset",
+          "tablet"
+        ]
+      },
+      "syndicatable": true,
+      "duration": 95,
+      "categories": [
+        {
+          "id": 126395,
+          "uid": "s:20~l:28~a:16728",
+          "description": "Teddy Bridgewater",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 16728,
+          "athlete": {
+            "id": 16728,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/16728/teddy-bridgewater"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/16728/teddy-bridgewater"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 1750,
+          "uid": "s:20~l:28~t:3",
+          "description": "Chicago Bears",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 3,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/chi/chicago-bears"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/chi/chicago-bears"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 126463,
+          "uid": "s:20~l:28~a:16757",
+          "description": "Derek Carr",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 16757,
+          "athlete": {
+            "id": 16757,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/16757/derek-carr"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/16757/derek-carr"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 166851,
+          "uid": "s:20~l:28~a:3039707",
+          "description": "Mitchell Trubisky",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 3039707,
+          "athlete": {
+            "id": 3039707,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/3039707/mitchell-trubisky"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/3039707/mitchell-trubisky"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 103719,
+          "uid": "s:20~l:28~a:14876",
+          "description": "Ryan Tannehill",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 14876,
+          "athlete": {
+            "id": 14876,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2553,
+          "uid": "s:20~l:28~t:13",
+          "description": "Las Vegas Raiders",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 13,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/lv/las-vegas-raiders"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/lv/las-vegas-raiders"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2035,
+          "uid": "s:20~l:28~t:18",
+          "description": "New Orleans Saints",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 18,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/no/new-orleans-saints"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/no/new-orleans-saints"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 138755,
+          "uid": "s:20~l:28~a:2576980",
+          "description": "Marcus Mariota",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 2576980,
+          "athlete": {
+            "id": 2576980,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/2576980/marcus-mariota"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/2576980/marcus-mariota"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2886,
+          "uid": "s:20~l:28~t:10",
+          "description": "Tennessee Titans",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 10,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 9572,
+          "uid": "s:20~l:28",
+          "description": "NFL",
+          "type": "league",
+          "sportId": 28,
+          "leagueId": 28,
+          "league": {
+            "id": 28,
+            "abbreviation": "NFL",
+            "links": {
+              "web": {
+
+              },
+              "mobile": {
+
+              }
+            }
+          }
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        }
+      ],
+      "posterImages": {
+        "square": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb_1x1.jpg"
+        },
+        "default": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb_default.jpg",
+          "width": 576,
+          "height": 324
+        },
+        "wide": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb_5x2.jpg"
+        },
+        "full": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb.jpg"
+        }
+      },
+      "images": [
+        {
+          "width": 576,
+          "height": 324,
+          "url": "https://media.video-cdn.espn.com/images/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb.jpg",
+          "name": "Poster Image"
+        }
+      ],
+      "thumbnail": "https://a.espncdn.com/media/motion/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb.jpg",
+      "links": {
+        "sportscenter": {
+          "href": "sportscenter://x-callback-url/showVideo?videoID=28780200&videoDSI=0913eb8dc46a9"
+        },
+        "web": {
+          "href": "http://www.espn.com/video/clip?id=28780200",
+          "self": {
+            "href": "http://www.espn.com/video/clip?id=28780200"
+          }
+        },
+        "mobile": {
+          "href": "https://watch.auth.api.espn.com/video/auth/brightcove/642f21f2-21ff-4aa9-89cb-28ef94312e9b/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28780200",
+          "alert": {
+            "href": "https://m.espn.com/general/video/videoAlert?vid=28780200"
+          },
+          "progressiveDownload": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/642f21f2-21ff-4aa9-89cb-28ef94312e9b/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28780200"
+          },
+          "source": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb.mp4"
+          },
+          "streaming": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/642f21f2-21ff-4aa9-89cb-28ef94312e9b/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28780200"
+          }
+        },
+        "api": {
+          "artwork": {
+            "href": "https://artwork.api.espn.com/artwork/collections/media/642f21f2-21ff-4aa9-89cb-28ef94312e9b"
+          },
+          "self": {
+            "href": "https://content.core.api.espn.com/v1/video/clips/28780200"
+          }
+        },
+        "source": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb_360p30_1464k.mp4",
+          "flash": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb.smil"
+          },
+          "full": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb_360p30_1464k.mp4"
+          },
+          "hds": {
+            "href": "https://hds.video-cdn.espn.com/z/motion/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb_rel.smil/manifest.f4m"
+          },
+          "mezzanine": {
+            "href": "https://media.video-origin.espn.com/espnvideo/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb.mp4"
+          },
+          "HD": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb_720p30_2896k.mp4"
+          },
+          "HLS": {
+            "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb/playlist.m3u8",
+            "HD": {
+              "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0225/dm_200225_NFL_Bears_vet_qb/dm_200225_NFL_Bears_vet_qb/playlist.m3u8"
+            }
+          }
+        }
+      }
+    },
+    {
+      "source": "espn",
+      "id": 28497925,
+      "headline": "Ninkovich: Chiefs must force Tannehill to beat them",
+      "title": "Ninkovich: Chiefs must force Tannehill to beat them",
+      "caption": "Rob Ninkovich expects the Chiefs will take down the Titans if they contain Derrick Henry and force Ryan Tannehill to throw the ball.",
+      "description": "Rob Ninkovich expects the Chiefs will take down the Titans if they contain Derrick Henry and force Ryan Tannehill to throw the ball.",
+      "premium": false,
+      "ad": {
+        "sport": "nfl",
+        "bundle": "no_show"
+      },
+      "tracking": {
+        "sportName": "nfl",
+        "leagueName": "No League",
+        "coverageType": "Analysis",
+        "trackingName": "COM_NFL Analysis (Ninkovich: Chiefs must force Tannehill to beat them) 2020/01/16 NFLLive",
+        "trackingId": "dm_200116_NFLLive_titans_v_chiefs"
+      },
+      "cerebroId": "5e20de24ca84b713ed089b72",
+      "lastModified": "2020-01-16T22:06:25.000+00:00",
+      "originalPublishDate": "2020-01-16T22:03:33.000+00:00",
+      "timeRestrictions": {
+        "embargoDate": "2020-01-16T22:03:33.000+00:00",
+        "expirationDate": "2037-11-30T22:03:33.000+00:00"
+      },
+      "deviceRestrictions": {
+        "type": "whitelist",
+        "devices": [
+          "desktop",
+          "ipad",
+          "settop",
+          "handset",
+          "tablet"
+        ]
+      },
+      "syndicatable": true,
+      "duration": 101,
+      "categories": [
+        {
+          "id": 2496,
+          "uid": "s:20~l:28~t:12",
+          "description": "Kansas City Chiefs",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 12,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/kc/kansas-city-chiefs"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/kc/kansas-city-chiefs"
+                }
+              }
+            }
+          }
+        },
+        {
+          "uid": "s:20~l:28~e:401131044",
+          "description": "Tennessee Titans @ Kansas City Chiefs",
+          "type": "event"
+        },
+        {
+          "id": 103719,
+          "uid": "s:20~l:28~a:14876",
+          "description": "Ryan Tannehill",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 14876,
+          "athlete": {
+            "id": 14876,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2886,
+          "uid": "s:20~l:28~t:10",
+          "description": "Tennessee Titans",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 10,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 9572,
+          "uid": "s:20~l:28",
+          "description": "NFL",
+          "type": "league",
+          "sportId": 28,
+          "leagueId": 28,
+          "league": {
+            "id": 28,
+            "abbreviation": "NFL",
+            "links": {
+              "web": {
+
+              },
+              "mobile": {
+
+              }
+            }
+          }
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        }
+      ],
+      "posterImages": {
+        "square": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs_1x1.jpg"
+        },
+        "default": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs_default.jpg",
+          "width": 576,
+          "height": 324
+        },
+        "wide": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs_5x2.jpg"
+        },
+        "full": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs.jpg"
+        }
+      },
+      "images": [
+        {
+          "width": 576,
+          "height": 324,
+          "url": "https://media.video-cdn.espn.com/images/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs.jpg",
+          "name": "Poster Image"
+        }
+      ],
+      "thumbnail": "https://a.espncdn.com/media/motion/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs.jpg",
+      "links": {
+        "sportscenter": {
+          "href": "sportscenter://x-callback-url/showVideo?videoID=28497925&videoDSI=69d79ae6b4217"
+        },
+        "web": {
+          "href": "http://www.espn.com/video/clip?id=28497925",
+          "self": {
+            "href": "http://www.espn.com/video/clip?id=28497925"
+          }
+        },
+        "mobile": {
+          "href": "https://watch.auth.api.espn.com/video/auth/brightcove/1a61b7a4-4cf9-4575-8224-a74d4c5ca547/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28497925",
+          "alert": {
+            "href": "https://m.espn.com/general/video/videoAlert?vid=28497925"
+          },
+          "progressiveDownload": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/1a61b7a4-4cf9-4575-8224-a74d4c5ca547/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28497925"
+          },
+          "source": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs.mp4"
+          },
+          "streaming": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/1a61b7a4-4cf9-4575-8224-a74d4c5ca547/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28497925"
+          }
+        },
+        "api": {
+          "artwork": {
+            "href": "https://artwork.api.espn.com/artwork/collections/media/1a61b7a4-4cf9-4575-8224-a74d4c5ca547"
+          },
+          "self": {
+            "href": "https://content.core.api.espn.com/v1/video/clips/28497925"
+          }
+        },
+        "source": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs_360p30_1464k.mp4",
+          "flash": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs.smil"
+          },
+          "full": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs_360p30_1464k.mp4"
+          },
+          "hds": {
+            "href": "https://hds.video-cdn.espn.com/z/motion/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs_rel.smil/manifest.f4m"
+          },
+          "mezzanine": {
+            "href": "https://media.video-origin.espn.com/espnvideo/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs.mp4"
+          },
+          "HD": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs_720p30_2896k.mp4"
+          },
+          "HLS": {
+            "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs/playlist.m3u8",
+            "HD": {
+              "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0116/dm_200116_NFLLive_titans_v_chiefs/dm_200116_NFLLive_titans_v_chiefs/playlist.m3u8"
+            }
+          }
+        }
+      }
+    },
+    {
+      "source": "espn",
+      "id": 28491331,
+      "headline": "Orlovsky: Titans trading for Tannehill was most impactful deal",
+      "title": "Orlovsky: Titans trading for Tannehill was most impactful deal",
+      "caption": "Dan Orlovsky and Marcus Spears debate the most impactful trades of the NFL season, including Ryan Tannehill to the Titans and Marcus Peters to the Ravens.",
+      "description": "Dan Orlovsky and Marcus Spears debate the most impactful trades of the NFL season, including Ryan Tannehill to the Titans and Marcus Peters to the Ravens.",
+      "premium": false,
+      "ad": {
+        "sport": "nfl",
+        "bundle": "no_show"
+      },
+      "tracking": {
+        "sportName": "nfl",
+        "leagueName": "No League",
+        "coverageType": "Analysis",
+        "trackingName": "COM_NFL Analysis (Orlovsky: Titans trading for Tannehill was most impactful deal) 2020/01/15 NFL Live",
+        "trackingId": "dm_200115_nfl_live_trade_talk"
+      },
+      "cerebroId": "5e1f867dca84b713ed059734",
+      "lastModified": "2020-01-16T06:13:40.000+00:00",
+      "originalPublishDate": "2020-01-15T21:25:00.000+00:00",
+      "timeRestrictions": {
+        "embargoDate": "2020-01-15T21:25:00.000+00:00",
+        "expirationDate": "2037-11-30T21:25:00.000+00:00"
+      },
+      "deviceRestrictions": {
+        "type": "whitelist",
+        "devices": [
+          "desktop",
+          "ipad",
+          "settop",
+          "handset",
+          "tablet"
+        ]
+      },
+      "syndicatable": true,
+      "duration": 70,
+      "categories": [
+        {
+          "id": 138762,
+          "uid": "s:20~l:28~a:2578378",
+          "description": "Marcus Peters",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 2578378,
+          "athlete": {
+            "id": 2578378,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/2578378/marcus-peters"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/2578378/marcus-peters"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 103719,
+          "uid": "s:20~l:28~a:14876",
+          "description": "Ryan Tannehill",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 14876,
+          "athlete": {
+            "id": 14876,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 9572,
+          "uid": "s:20~l:28",
+          "description": "NFL",
+          "type": "league",
+          "sportId": 28,
+          "leagueId": 28,
+          "league": {
+            "id": 28,
+            "abbreviation": "NFL",
+            "links": {
+              "web": {
+
+              },
+              "mobile": {
+
+              }
+            }
+          }
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        }
+      ],
+      "posterImages": {
+        "square": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk_1x1.jpg"
+        },
+        "default": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk_default.jpg",
+          "width": 576,
+          "height": 324
+        },
+        "wide": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk_5x2.jpg"
+        },
+        "full": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk.jpg"
+        }
+      },
+      "images": [
+        {
+          "width": 576,
+          "height": 324,
+          "url": "https://media.video-cdn.espn.com/images/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk.jpg",
+          "name": "Poster Image"
+        }
+      ],
+      "thumbnail": "https://a.espncdn.com/media/motion/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk.jpg",
+      "links": {
+        "sportscenter": {
+          "href": "sportscenter://x-callback-url/showVideo?videoID=28491331&videoDSI=f6b0461a38a58"
+        },
+        "web": {
+          "href": "http://www.espn.com/video/clip?id=28491331",
+          "self": {
+            "href": "http://www.espn.com/video/clip?id=28491331"
+          }
+        },
+        "mobile": {
+          "href": "https://watch.auth.api.espn.com/video/auth/brightcove/a3bd9941-0a65-4225-bacf-519a292462be/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28491331",
+          "alert": {
+            "href": "https://m.espn.com/general/video/videoAlert?vid=28491331"
+          },
+          "progressiveDownload": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/a3bd9941-0a65-4225-bacf-519a292462be/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28491331"
+          },
+          "source": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk.mp4"
+          },
+          "streaming": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/a3bd9941-0a65-4225-bacf-519a292462be/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28491331"
+          }
+        },
+        "api": {
+          "artwork": {
+            "href": "https://artwork.api.espn.com/artwork/collections/media/a3bd9941-0a65-4225-bacf-519a292462be"
+          },
+          "self": {
+            "href": "https://content.core.api.espn.com/v1/video/clips/28491331"
+          }
+        },
+        "source": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk_360p30_1464k.mp4",
+          "flash": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk.smil"
+          },
+          "full": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk_360p30_1464k.mp4"
+          },
+          "hds": {
+            "href": "https://hds.video-cdn.espn.com/z/motion/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk_rel.smil/manifest.f4m"
+          },
+          "mezzanine": {
+            "href": "https://media.video-origin.espn.com/espnvideo/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk.mp4"
+          },
+          "HD": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk_720p30_2896k.mp4"
+          },
+          "HLS": {
+            "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk/playlist.m3u8",
+            "HD": {
+              "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0115/dm_200115_nfl_live_trade_talk/dm_200115_nfl_live_trade_talk/playlist.m3u8"
+            }
+          }
+        }
+      }
+    },
+    {
+      "source": "espn",
+      "id": 28482338,
+      "headline": "'I Don't Give a Damn' with Domonique Foxworth: Divisional weekend",
+      "title": "'I Don't Give a Damn' with Domonique Foxworth: Divisional weekend",
+      "caption": "Former NFL linebacker D'Qwell Jackson joins the show to discuss nepotism in coaching and its impact on diversity",
+      "description": "Former NFL linebacker D'Qwell Jackson joins the show to discuss nepotism in coaching and its impact on diversity",
+      "premium": false,
+      "ad": {
+        "sport": "Other",
+        "bundle": "theundefeated"
+      },
+      "tracking": {
+        "sportName": "Other",
+        "leagueName": "No League",
+        "coverageType": "Analysis",
+        "trackingName": "the undefeated: idgad divisional final fix",
+        "trackingId": "dm_200114_theundefeated_idgad_divisional_final_fix"
+      },
+      "cerebroId": "5e1dd072ca84b713ed025596",
+      "lastModified": "2020-01-15T06:38:03.000+00:00",
+      "originalPublishDate": "2020-01-14T14:24:28.000+00:00",
+      "timeRestrictions": {
+        "embargoDate": "2020-01-14T14:24:28.000+00:00",
+        "expirationDate": "2030-01-17T14:24:28.000+00:00"
+      },
+      "deviceRestrictions": {
+        "type": "whitelist",
+        "devices": [
+          "desktop",
+          "ipad",
+          "settop",
+          "handset",
+          "tablet"
+        ]
+      },
+      "syndicatable": true,
+      "duration": 551,
+      "categories": [
+        {
+          "id": 166867,
+          "uid": "s:20~l:28~a:3139477",
+          "description": "Patrick Mahomes",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 3139477,
+          "athlete": {
+            "id": 3139477,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/3139477/patrick-mahomes"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/3139477/patrick-mahomes"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 1637,
+          "uid": "s:20~l:28~t:25",
+          "description": "San Francisco 49ers",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 25,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/sf/san-francisco-49ers"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/sf/san-francisco-49ers"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 17303,
+          "uid": "s:20~l:28~a:8439",
+          "description": "Aaron Rodgers",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 8439,
+          "athlete": {
+            "id": 8439,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/8439/aaron-rodgers"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/8439/aaron-rodgers"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 103719,
+          "uid": "s:20~l:28~a:14876",
+          "description": "Ryan Tannehill",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 14876,
+          "athlete": {
+            "id": 14876,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 184545,
+          "uid": "s:20~l:28~a:3916387",
+          "description": "Lamar Jackson",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 3916387,
+          "athlete": {
+            "id": 3916387,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/3916387/lamar-jackson"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/3916387/lamar-jackson"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2496,
+          "uid": "s:20~l:28~t:12",
+          "description": "Kansas City Chiefs",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 12,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/kc/kansas-city-chiefs"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/kc/kansas-city-chiefs"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 1861,
+          "uid": "s:20~l:28~t:9",
+          "description": "Green Bay Packers",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 9,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/gb/green-bay-packers"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/gb/green-bay-packers"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2830,
+          "uid": "s:20~l:28~t:33",
+          "description": "Baltimore Ravens",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 33,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/bal/baltimore-ravens"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/bal/baltimore-ravens"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2886,
+          "uid": "s:20~l:28~t:10",
+          "description": "Tennessee Titans",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 10,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 162087,
+          "description": "the undefeated",
+          "type": "topic",
+          "sportId": 0
+        },
+        {
+          "id": 9572,
+          "uid": "s:20~l:28",
+          "description": "NFL",
+          "type": "league",
+          "sportId": 28,
+          "leagueId": 28,
+          "league": {
+            "id": 28,
+            "abbreviation": "NFL",
+            "links": {
+              "web": {
+
+              },
+              "mobile": {
+
+              }
+            }
+          }
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        }
+      ],
+      "posterImages": {
+        "square": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix_1x1.jpg"
+        },
+        "default": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix_default.jpg",
+          "width": 576,
+          "height": 324
+        },
+        "wide": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix_5x2.jpg"
+        },
+        "full": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix.jpg"
+        }
+      },
+      "images": [
+        {
+          "width": 576,
+          "height": 324,
+          "url": "https://media.video-cdn.espn.com/images/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix.jpg",
+          "name": "Poster Image"
+        }
+      ],
+      "thumbnail": "https://a.espncdn.com/media/motion/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix.jpg",
+      "links": {
+        "sportscenter": {
+          "href": "sportscenter://x-callback-url/showVideo?videoID=28482338&videoDSI=6b06798dc7503"
+        },
+        "web": {
+          "href": "http://www.espn.com/video/clip?id=28482338",
+          "self": {
+            "href": "http://www.espn.com/video/clip?id=28482338"
+          }
+        },
+        "mobile": {
+          "href": "https://watch.auth.api.espn.com/video/auth/brightcove/ed9df214-9a02-4f9f-8e36-07b01ce23644/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28482338",
+          "alert": {
+            "href": "https://m.espn.com/general/video/videoAlert?vid=28482338"
+          },
+          "progressiveDownload": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/ed9df214-9a02-4f9f-8e36-07b01ce23644/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28482338"
+          },
+          "source": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix.mp4"
+          },
+          "streaming": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/ed9df214-9a02-4f9f-8e36-07b01ce23644/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28482338"
+          }
+        },
+        "api": {
+          "artwork": {
+            "href": "https://artwork.api.espn.com/artwork/collections/media/ed9df214-9a02-4f9f-8e36-07b01ce23644"
+          },
+          "self": {
+            "href": "https://content.core.api.espn.com/v1/video/clips/28482338"
+          }
+        },
+        "source": {
+          "href": "https://media.video-cdn.espn.com/motion/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix_360p30_1464k.mp4",
+          "flash": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix.smil"
+          },
+          "full": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix_360p30_1464k.mp4"
+          },
+          "hds": {
+            "href": "https://hds.video-cdn.espn.com/z/motion/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix_rel.smil/manifest.f4m"
+          },
+          "mezzanine": {
+            "href": "https://media.video-origin.espn.com/espnvideo/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix.mp4"
+          },
+          "HD": {
+            "href": "https://media.video-cdn.espn.com/motion/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix_720p30_2896k.mp4"
+          },
+          "HLS": {
+            "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix/playlist.m3u8",
+            "HD": {
+              "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2020/0114/dm_200114_theundefeated_idgad_divisional_final_fix/dm_200114_theundefeated_idgad_divisional_final_fix/playlist.m3u8"
+            }
+          }
+        }
+      }
+    },
+    {
+      "source": "espn",
+      "id": 28286833,
+      "headline": "Tannehill, Titans are on a roll",
+      "title": "Tannehill, Titans are on a roll",
+      "caption": "Wendi Nix, Dan Orlovsky and Rob Ninkovich believe Ryan Tannehill and the Titans' run game will be too much for the Texans.",
+      "description": "Wendi Nix, Dan Orlovsky and Rob Ninkovich believe Ryan Tannehill and the Titans' run game will be too much for the Texans.",
+      "premium": false,
+      "ad": {
+        "sport": "nfl",
+        "bundle": "no_show"
+      },
+      "tracking": {
+        "sportName": "nfl",
+        "leagueName": "No League",
+        "coverageType": "Analysis",
+        "trackingName": "COM_NFL Analysis (Tannehill, Titans are on a roll) 2019/12/12 NFL Live",
+        "trackingId": "dm_191212_Titans_vs_Texans"
+      },
+      "cerebroId": "5df2f0b7be6ab31fb3d75e78",
+      "lastModified": "2019-12-15T15:53:14.000+00:00",
+      "originalPublishDate": "2019-12-13T01:57:42.000+00:00",
+      "timeRestrictions": {
+        "embargoDate": "2019-12-13T01:57:42.000+00:00",
+        "expirationDate": "2037-12-01T01:57:42.000+00:00"
+      },
+      "deviceRestrictions": {
+        "type": "whitelist",
+        "devices": [
+          "desktop",
+          "ipad",
+          "settop",
+          "handset",
+          "tablet"
+        ]
+      },
+      "syndicatable": true,
+      "duration": 53,
+      "categories": [
+        {
+          "uid": "s:20~l:28~e:401128068",
+          "description": "Houston Texans @ Tennessee Titans",
+          "type": "event"
+        },
+        {
+          "id": 103719,
+          "uid": "s:20~l:28~a:14876",
+          "description": "Ryan Tannehill",
+          "type": "athlete",
+          "sportId": 28,
+          "athleteId": 14876,
+          "athlete": {
+            "id": 14876,
+            "links": {
+              "web": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              },
+              "mobile": {
+                "athletes": {
+                  "href": "https://www.espn.com/nfl/player/_/id/14876/ryan-tannehill"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 2886,
+          "uid": "s:20~l:28~t:10",
+          "description": "Tennessee Titans",
+          "type": "team",
+          "sportId": 28,
+          "team": {
+            "id": 10,
+            "links": {
+              "web": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              },
+              "mobile": {
+                "teams": {
+                  "href": "https://www.espn.com/nfl/team/_/name/ten/tennessee-titans"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": 9572,
+          "uid": "s:20~l:28",
+          "description": "NFL",
+          "type": "league",
+          "sportId": 28,
+          "leagueId": 28,
+          "league": {
+            "id": 28,
+            "abbreviation": "NFL",
+            "links": {
+              "web": {
+
+              },
+              "mobile": {
+
+              }
+            }
+          }
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        },
+        {
+          "type": "guid"
+        }
+      ],
+      "posterImages": {
+        "square": {
+          "href": "https://media.video-cdn.espn.com/motion/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans_1x1.jpg"
+        },
+        "default": {
+          "href": "https://media.video-cdn.espn.com/motion/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans_default.jpg",
+          "width": 576,
+          "height": 324
+        },
+        "wide": {
+          "href": "https://media.video-cdn.espn.com/motion/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans_5x2.jpg"
+        },
+        "full": {
+          "href": "https://media.video-cdn.espn.com/motion/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans.jpg"
+        }
+      },
+      "images": [
+        {
+          "width": 576,
+          "height": 324,
+          "url": "https://media.video-cdn.espn.com/images/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans.jpg",
+          "name": "Poster Image"
+        }
+      ],
+      "thumbnail": "https://a.espncdn.com/media/motion/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans.jpg",
+      "links": {
+        "sportscenter": {
+          "href": "sportscenter://x-callback-url/showVideo?videoID=28286833&videoDSI=389db18b4108c"
+        },
+        "web": {
+          "href": "http://www.espn.com/video/clip?id=28286833",
+          "self": {
+            "href": "http://www.espn.com/video/clip?id=28286833"
+          }
+        },
+        "mobile": {
+          "href": "https://watch.auth.api.espn.com/video/auth/brightcove/db5fdc52-4bf1-4cc2-9ae8-7e63b2f077ed/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28286833",
+          "alert": {
+            "href": "https://m.espn.com/general/video/videoAlert?vid=28286833"
+          },
+          "progressiveDownload": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/db5fdc52-4bf1-4cc2-9ae8-7e63b2f077ed/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28286833"
+          },
+          "source": {
+            "href": "https://media.video-cdn.espn.com/motion/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans.mp4"
+          },
+          "streaming": {
+            "href": "https://watch.auth.api.espn.com/video/auth/brightcove/db5fdc52-4bf1-4cc2-9ae8-7e63b2f077ed/asset?UMADPARAMreferer=http://www.espn.com/video/clip?id=28286833"
+          }
+        },
+        "api": {
+          "artwork": {
+            "href": "https://artwork.api.espn.com/artwork/collections/media/db5fdc52-4bf1-4cc2-9ae8-7e63b2f077ed"
+          },
+          "self": {
+            "href": "https://content.core.api.espn.com/v1/video/clips/28286833"
+          }
+        },
+        "source": {
+          "href": "https://media.video-cdn.espn.com/motion/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans_360p30_1464k.mp4",
+          "flash": {
+            "href": "https://media.video-cdn.espn.com/motion/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans.smil"
+          },
+          "full": {
+            "href": "https://media.video-cdn.espn.com/motion/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans_360p30_1464k.mp4"
+          },
+          "hds": {
+            "href": "https://hds.video-cdn.espn.com/z/motion/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans_rel.smil/manifest.f4m"
+          },
+          "mezzanine": {
+            "href": "https://media.video-origin.espn.com/espnvideo/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans.mp4"
+          },
+          "HD": {
+            "href": "https://media.video-cdn.espn.com/motion/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans_720p30_2896k.mp4"
+          },
+          "HLS": {
+            "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans/playlist.m3u8",
+            "HD": {
+              "href": "https://service-pkgespn.akamaized.net/opp/hls/espn/2019/1212/dm_191212_Titans_vs_Texans/dm_191212_Titans_vs_Texans/playlist.m3u8"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

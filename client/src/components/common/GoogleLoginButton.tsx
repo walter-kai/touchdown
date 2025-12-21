@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../providers/AuthContext';
 import { useScoreboard } from '../../providers/ScoreboardContext';
 import { FaExclamationCircle, FaChevronDown, FaSignOutAlt, FaUser } from 'react-icons/fa';
-import { debugLog } from '../../utils/debugLog';
+import { debugLog } from '@/utils/debugLog';
 
 const GoogleLoginButton: React.FC = () => {
   const { login, isAuthenticated, user, logout } = useAuth();

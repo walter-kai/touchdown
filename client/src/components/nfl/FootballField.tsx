@@ -3,6 +3,7 @@ import { FaFootballBall } from 'react-icons/fa';
 import { Play, PlayType } from '@/types/espn/playByplay';
 import '@/styles/football.css';
 import { useScoreboard } from '@/providers/ScoreboardContext';
+import { getHeadshotUrl } from '@/utils/headshot';
 
 interface FootballFieldProps {
   homeTeam?: any;
@@ -343,6 +344,28 @@ const FootballField: React.FC<FootballFieldProps> = ({
   
   // Get visualization config for this play type - handle both string and object
   const playViz = getPlayVisualization(lastPlay.type?.text ?? '');
+
+  const normalizeName = (v?: string) => v?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
+
+  // Choose the QB involved in the sack from play data, favoring explicit position tagging
+  const qbCandidate = React.useMemo(() => {
+    const athletes = lastPlay.athletesInvolved || [];
+    const byPosition = athletes.find(a => a.position?.toUpperCase?.() === 'QB');
+    if (byPosition) return byPosition;
+
+    const qbNameRegex = /([A-Z]\.[A-Za-z'\-]+)/i;
+    const qbNameCompact = normalizeName(lastPlay.text?.match(qbNameRegex)?.[1]);
+    if (qbNameCompact) {
+      const byShort = athletes.find(a => normalizeName(a.shortName) === qbNameCompact);
+      if (byShort) return byShort;
+      const byDisplay = athletes.find(a => normalizeName(a.displayName).includes(qbNameCompact));
+      if (byDisplay) return byDisplay;
+    }
+
+    return athletes[1] || athletes[0];
+  }, [lastPlay.athletesInvolved, lastPlay.text]);
+
+  const qbHeadshot = getHeadshotUrl({ id: qbCandidate?.id, headshot: qbCandidate?.headshot });
 
   // For kickoffs/punts, extract accurate yard lines from text since start/end data is unreliable
   let kickStartYard: number | null = null;
@@ -880,7 +903,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                       }}
                     >
                       <img
-                        src={lastPlay.athletesInvolved[0].headshot}
+                        src={getHeadshotUrl({ id: lastPlay.athletesInvolved[0].id, headshot: lastPlay.athletesInvolved[0].headshot })}
                         alt={lastPlay.athletesInvolved[0].displayName}
                         className="w-12 h-12 rounded-full object-cover z-1 border-2"
                         style={{ borderColor: playViz.color }}
@@ -1300,62 +1323,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
           const hitRollSigned = (Math.sign(distancePercent) || 1) * hitRollPx;
 
           const rusherAthlete = lastPlay.athletesInvolved[0];
-          // Offense identifiers: prefer athlete id from play, fall back to team possession
-          const offenseIdForSack = offenseAthleteId;
-
-          // Parse QB name from text (e.g., "S.Darnold sacked") to improve matching to scoreboard shortName
-          const qbNameRegex = /(\b[A-Z]\.[A-Za-z'\-]+)\s+sacked/i;
-          const textMatch = lastPlay.text?.match(qbNameRegex);
-          const qbNameMatch = textMatch ? textMatch[1].toLowerCase() : undefined;
-          const qbNameCompact = qbNameMatch?.replace(/[.\s]/g, '');
-          const normalizeName = (v?: string) => v?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
-
-          // Pull passing leader: first try to match athlete id, then fall back to team possession
-          const offenseIdStr = offenseIdForSack ? String(offenseIdForSack) : undefined;
-          const leaderGame = scoreboard?.games?.find((g) => {
-            const competitors = (g.competitions?.[0]?.competitors) || [];
-            // match athlete id inside leaders
-            const hasAthlete = competitors.some((c: any) => c?.leaders?.some((l: any) => l?.leaders?.some((p: any) => String(p?.athlete?.id) === offenseIdStr)));
-            if (hasAthlete) return true;
-            // fallback: match team id
-            return competitors.some((c: any) => String(c?.team?.id || c?.id) === offenseTeamId);
-          });
-          const leaderCompetitor = leaderGame?.competitions?.[0]?.competitors?.find((c: any) => {
-            const hasAthlete = c?.leaders?.some((l: any) => l?.leaders?.some((p: any) => String(p?.athlete?.id) === offenseIdStr));
-            if (hasAthlete) return true;
-            return offenseTeamId ? String(c?.team?.id || c?.id) === String(offenseTeamId) : false;
-          });
-          const passingLeader = leaderCompetitor?.leaders?.find((l: any) => l?.name === 'passingLeader');
-          const leaderAthlete = passingLeader?.leaders?.[0]?.athlete;
-
-          const leaderShort = normalizeName(leaderAthlete?.shortName);
-          const leaderHeadshotRaw = leaderAthlete?.headshot?.href || leaderAthlete?.headshot;
-          const leaderHeadshot = typeof leaderHeadshotRaw === 'string' ? leaderHeadshotRaw : undefined;
-          // const leaderHeadshotUrl = typeof leaderHeadshot === 'string' ? leaderHeadshot : leaderHeadshot?.;
-
-          const matchesLeader = qbNameCompact && leaderShort && leaderShort === qbNameCompact;
-
-          // Prefer scoreboard passing leader when it matches the parsed QB short name; otherwise fall back to play data
-          type QBPick = { headshot?: string; displayName?: string; shortName?: string; position?: string };
-          let qbAthlete: QBPick | undefined = (matchesLeader && leaderHeadshot)
-            ? { headshot: leaderHeadshot, displayName: leaderAthlete?.displayName || leaderAthlete?.fullName || leaderAthlete?.shortName, shortName: leaderAthlete?.shortName, position: leaderAthlete?.position?.abbreviation || leaderAthlete?.position?.displayName || 'QB' }
-            : undefined;
-
-          if (!qbAthlete) {
-            const fallbackCandidates = lastPlay.athletesInvolved || [];
-            qbAthlete = fallbackCandidates.find((a) => qbNameCompact && normalizeName(a.shortName) === qbNameCompact && a.headshot)
-            const candidate = fallbackCandidates.find((a) => qbNameCompact && normalizeName(a.shortName) === qbNameCompact && a.headshot)
-              || fallbackCandidates.find((a) => qbNameCompact && normalizeName(a.displayName).includes(qbNameCompact) && a.headshot)
-              || fallbackCandidates.find((a) => a.headshot && a.position?.toUpperCase() === 'QB');
-            // Only accept candidate if headshot differs from rusher
-            qbAthlete = candidate && candidate.headshot !== rusherAthlete.headshot ? candidate : undefined;
-          }
-
-          // Ensure rusher and QB show distinct headshots when possible
-          if (qbAthlete?.headshot && rusherAthlete?.headshot && qbAthlete.headshot === rusherAthlete.headshot) {
-            const alt = (lastPlay.athletesInvolved || []).find((a) => a.headshot && a.headshot !== rusherAthlete.headshot);
-            qbAthlete = alt && alt.headshot !== rusherAthlete.headshot ? alt : undefined;
-          }
+          const qbAthlete = qbCandidate;
+          const qbHeadshotUrl = qbHeadshot;
 
           return (
             <>
@@ -1414,9 +1383,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
                         boxShadow: `0 0 14px ${playViz.glowColor}`
                       }}
                     >
-                      {qbAthlete?.headshot ? (
+                      {qbHeadshotUrl ? (
                         <img
-                          src={qbAthlete.headshot}
+                          src={qbHeadshotUrl}
                           alt={qbAthlete?.displayName || 'QB'}
                           className="w-12 h-12 rounded-full object-cover z-1 border-2"
                           style={{ borderColor: playViz.color }}
@@ -1452,7 +1421,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 }}
               >
                 <img
-                  src={lastPlay.athletesInvolved[0].headshot}
+                  src={getHeadshotUrl({ id: lastPlay.athletesInvolved[0].id, headshot: lastPlay.athletesInvolved[0].headshot })}
                   alt={lastPlay.athletesInvolved[0].displayName}
                   className="w-14 h-14 rounded-full object-cover z-1 border-2"
                   style={{ borderColor: playViz.color }}

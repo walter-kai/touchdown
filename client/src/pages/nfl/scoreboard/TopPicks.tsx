@@ -5,6 +5,7 @@ import { jwtStorage } from '../../../utils/jwtStorage';
 import { usePicks } from '../../../providers/PicksContext';
 import { debugLog } from '@/utils/debugLog';
 import { Play } from '@/types/espn/playByplay';
+import { getHeadshotUrl } from '@/utils/headshot';
 
 interface TopPicksProps {
   gameId: string;
@@ -162,7 +163,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
               fullName: athlete.fullName || athlete.displayName,
               displayName: athlete.displayName,
               shortName: athlete.shortName || athlete.displayName,
-              headshot: athlete.headshot || '',
+              headshot: getHeadshotUrl({ id: athlete.id, headshot: athlete.headshot }),
               jersey: athlete.jersey || '',
               position: athlete.position || '',
               teamId: athlete.team?.id || '',

@@ -12,6 +12,7 @@ import { useAuth } from '@/providers/AuthContext';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
 import { Play } from '@/types/espn/playByplay';
+import { getHeadshotUrl } from '@/utils/headshot';
 
 interface SummaryViewProps {
   event: Event;
@@ -52,9 +53,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     players.forEach(teamData => {
       teamData.statistics.forEach(cat => {
         cat.athletes.forEach(a => {
-          const hs = (a.athlete as any)?.headshot;
-          const url = typeof hs === 'string' ? hs : hs?.href;
-          if (a.athlete.id && url) {
+          const url = getHeadshotUrl({ id: a.athlete?.id, headshot: (a.athlete as any)?.headshot });
+          if (a.athlete?.id && url) {
             map.set(a.athlete.id, url);
           }
         });
@@ -88,8 +88,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                   fullName: a.athlete?.displayName || a.fullName || a.displayName,
                   displayName: a.athlete?.displayName || a.displayName,
                   shortName: a.athlete?.shortName || a.shortName || a.displayName,
-                  headshot:
-                    a.athlete?.headshot?.href || a.headshot || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : '') || '',
+                  headshot: getHeadshotUrl({ id: a.athlete?.id || a.id, headshot: a.athlete?.headshot || a.headshot }) || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : ''),
                   jersey: a.athlete?.jersey || a.jersey || '',
                   position: a.athlete?.position?.abbreviation || a.position || '',
                   team: { id: a.athlete?.team?.id || (p.start?.team?.id) || possessionTeamId },
@@ -112,8 +111,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 fullName: a.athlete?.displayName || a.fullName || a.displayName,
                 displayName: a.athlete?.displayName || a.displayName,
                 shortName: a.athlete?.shortName || a.shortName || a.displayName,
-                headshot:
-                  a.athlete?.headshot?.href || a.headshot || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : '') || '',
+                headshot: getHeadshotUrl({ id: a.athlete?.id || a.id, headshot: a.athlete?.headshot || a.headshot }) || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : ''),
                 jersey: a.athlete?.jersey || a.jersey || '',
                 position: a.athlete?.position?.abbreviation || a.position || '',
                 team: { id: a.athlete?.team?.id || (p.start?.team?.id) || p.teamId || '' },
@@ -155,7 +153,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 fullName: a.athlete?.displayName || a.fullName || a.displayName,
                 displayName: a.athlete?.displayName || a.displayName,
                 shortName: a.athlete?.shortName || a.shortName || a.displayName,
-                headshot: a.athlete?.headshot?.href || a.headshot || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : '') || '',
+                headshot: getHeadshotUrl({ id: a.athlete?.id || a.id, headshot: a.athlete?.headshot || a.headshot }) || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : ''),
                 jersey: a.athlete?.jersey || a.jersey || '',
                 position: a.athlete?.position?.abbreviation || a.position || '',
                 team: { id: a.athlete?.team?.id || (p.start?.team?.id) || possessionTeamId },
@@ -326,7 +324,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                         color: awayTeam?.team.color || 'faafe8'
                       }}
                       scoringPlays={scoringPlays}
-                      gameStatus={competition.status.type.state}
+                      gameStatus={competition.status.type.state || ''}
                     />
                   </div>
                 </div>
@@ -455,7 +453,18 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                       isExpanded={isPickExpanded}
                       onToggle={() => setIsPickExpanded(!isPickExpanded)}
                       playLog={playLog}
-                      situation={competition.situation}
+                      situation={competition.situation ? {
+                        ...competition.situation,
+                        lastPlay: competition.situation.lastPlay ? {
+                          start: competition.situation.lastPlay.start?.yardLine !== undefined ? { yardLine: competition.situation.lastPlay.start.yardLine } : undefined,
+                          end: competition.situation.lastPlay.end?.yardLine !== undefined ? { yardLine: competition.situation.lastPlay.end.yardLine } : undefined,
+                          athletesInvolved: competition.situation.lastPlay.athletesInvolved?.map((a: any) => ({
+                            displayName: a.displayName || a.fullName || '',
+                            headshot: getHeadshotUrl({ id: a.id, headshot: a.headshot }),
+                            position: typeof a.position === 'string' ? a.position : a.position?.abbreviation || '',
+                          })),
+                        } : undefined,
+                      } : undefined}
                       homeTeam={homeTeam}
                       awayTeam={awayTeam}
                       getTeamLogo={getTeamLogo}
