@@ -7,6 +7,7 @@ import LoadingFootball from '../../../components/common/LoadingFootball';
 import { CountUpScore } from '../../../components/common/CountUpScore';
 import { useAuth } from '../../../providers/AuthContext';
 import TelegramCard from './TelegramCard';
+import { debugLog } from '@/utils/debugLog';
 
 interface Player {
   id: string;
@@ -89,12 +90,12 @@ const Dashboard: React.FC = () => {
             
             // Use cached data if less than 3 minutes old
             if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
-              console.log(`✅ Using cached dashboard data (${Math.round(cacheAge / 1000)}s old)`);
+              debugLog(`✅ Using cached dashboard data (${Math.round(cacheAge / 1000)}s old)`);
               setGamesWithPicks(data);
               setLoading(false);
               return;
             } else {
-              console.log('Cache expired, fetching fresh data...');
+              debugLog('Cache expired, fetching fresh data...');
               localStorage.removeItem(cacheKey);
             }
           } catch (error) {
@@ -103,7 +104,7 @@ const Dashboard: React.FC = () => {
           }
         }
 
-        console.log('🔄 Fetching fresh dashboard data from API...');
+        debugLog('🔄 Fetching fresh dashboard data from API...');
 
         // Fetch all user picks WITH scores in a single optimized call!
         const picksResponse = await axios.get('/api/picks/user/all-with-scores', {
@@ -115,7 +116,7 @@ const Dashboard: React.FC = () => {
         }
 
         const userGames: GamePickWithScores[] = picksResponse.data.games || [];
-        console.log('📊 User games with picks and scores:', userGames);
+        debugLog('📊 User games with picks and scores:', userGames);
 
         if (userGames.length === 0) {
           setGamesWithPicks([]);
@@ -139,7 +140,7 @@ const Dashboard: React.FC = () => {
               // Use stored team logos from the game pick document
               homeTeam = { team: { logo: gamePick.teamLogos.homeLogo } };
               awayTeam = { team: { logo: gamePick.teamLogos.awayLogo } };
-              console.log(`Using stored logos for game ${gamePick.gameId}`);
+              debugLog(`Using stored logos for game ${gamePick.gameId}`);
             }
 
             try {

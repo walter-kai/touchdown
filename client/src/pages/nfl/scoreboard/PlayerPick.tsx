@@ -10,6 +10,7 @@ import { usePreview } from 'react-dnd-preview';
 import FootballField from '@/components/nfl/FootballField';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
 import { useAuth } from '@/providers/AuthContext';
+import { debugLog } from '@/utils/debugLog';
 import type { Athlete } from '@/types/espn/athlete';
 import { Play } from '@/types/espn/playByplay';
 
@@ -542,9 +543,9 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   const handlePlayerSelect = (player: Athlete) => {
     if (isLocked) return;
 
-    console.log('Raw player object:', player);
-    console.log('Player headshot type:', typeof player.headshot);
-    console.log('Player headshot value:', player.headshot);
+    debugLog('Raw player object:', player);
+    debugLog('Player headshot type:', typeof player.headshot);
+    debugLog('Player headshot value:', player.headshot);
 
     // Get the actual headshot URL - ESPN API provides it in player.headshot.href
     const isHome = homeRoster.some(p => p.id === player.id);
@@ -554,14 +555,14 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     if (player.headshot) {
       if (typeof player.headshot === 'object' && 'href' in player.headshot) {
         headshotUrl = player.headshot.href;
-        console.log('Extracted from object:', headshotUrl);
+        debugLog('Extracted from object:', headshotUrl);
       } else if (typeof player.headshot === 'string') {
         headshotUrl = player.headshot;
-        console.log('Already string:', headshotUrl);
+        debugLog('Already string:', headshotUrl);
       }
     }
     
-    console.log('Final headshot URL to save:', headshotUrl);
+    debugLog('Final headshot URL to save:', headshotUrl);
     
     const normalizedPlayer: any = {
       id: player.id,
@@ -578,7 +579,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       }
     };
 
-    console.log('Normalized player to add:', normalizedPlayer);
+    debugLog('Normalized player to add:', normalizedPlayer);
 
     // Check if player is already in current picks or new picks
     const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
@@ -646,7 +647,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     
     if (swappedPicks.length > 0) {
       setIsLockingIn(true);
-      console.log('Locking in picks:', swappedPicks);
+      debugLog('Locking in picks:', swappedPicks);
       
       // Track which players are new vs kept and update player history
       const currentTime = Date.now();
@@ -708,7 +709,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
         }
       };
       localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(state));
-      console.log('Saved to localStorage:', state);
+      debugLog('Saved to localStorage:', state);
       
       // Send to backend API
       try {
@@ -729,7 +730,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
         
         if (response.ok) {
           const result = await response.json();
-          console.log('Picks saved to backend:', result);
+          debugLog('Picks saved to backend:', result);
         } else {
           console.error('Failed to save picks to backend:', response.status, await response.text());
         }

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import axios from 'axios';
 import { jwtStorage } from '../utils/jwtStorage';
+import { debugLog } from '@/utils/debugLog';
 
 interface Player {
   id: string;
@@ -104,7 +105,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           console.error('Failed to persist pick lock-in:', resp.status, detail);
         } else {
           const json = await resp.json().catch(() => ({} as any));
-          console.log('Persisted pick lock-in:', json);
+          debugLog('Persisted pick lock-in:', json);
         }
       } catch (e) {
         console.error('Error persisting pick lock-in:', e);
@@ -177,7 +178,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const fetchScores = useCallback(async (gameId: string): Promise<AthleteScores | null> => {
     // Prevent duplicate fetches
     if (fetchingRef.current.has(gameId)) {
-      console.log(`⏳ Already fetching scores for game ${gameId}, skipping...`);
+      debugLog(`⏳ Already fetching scores for game ${gameId}, skipping...`);
       return null;
     }
 
@@ -191,7 +192,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         return null;
       }
 
-      console.log(`📊 Fetching scores for game ${gameId} from API...`);
+      debugLog(`📊 Fetching scores for game ${gameId} from API...`);
       const response = await axios.get(`/api/picks/game/${gameId}/user/scores`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -208,7 +209,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         
         // Cache the scores
         setScoresCache(prev => ({ ...prev, [gameId]: scores }));
-        console.log(`✅ Scores cached for game ${gameId}:`, scores);
+        debugLog(`✅ Scores cached for game ${gameId}:`, scores);
         
         fetchingRef.current.delete(gameId);
         return scores;

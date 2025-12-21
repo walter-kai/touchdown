@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall } from 'react-icons/fa';
+import { debugLog } from '@/utils/debugLog';
 
 interface GameNavBarProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'dashboard' | 'games';
@@ -44,7 +45,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
   const isUpcomingGame = gameStatus === 'pre';
   const tabsToHide = isUpcomingGame ? ['player', 'plays'] : [];
   
-  console.log('MainNavBar - gameStatus:', gameStatus, 'preset:', preset, 'isUpcomingGame:', isUpcomingGame, 'tabsToHide:', tabsToHide);
+  debugLog('MainNavBar - gameStatus:', gameStatus, 'preset:', preset, 'isUpcomingGame:', isUpcomingGame, 'tabsToHide:', tabsToHide);
 
   // Filter nav items based on preset and maintain the order from presetConfig
   const navItems = presetConfig[preset]

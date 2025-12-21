@@ -1,4 +1,5 @@
 // JWT token management utility
+import { debugLog } from './debugLog';
 
 const JWT_STORAGE_KEY = 'dexter_access_token';
 const JWT_EXPIRY_KEY = 'dexter_token_expiry';
@@ -39,7 +40,7 @@ export const jwtStorage = {
   forceLogout: () => {
     localStorage.removeItem(JWT_STORAGE_KEY);
     localStorage.removeItem(JWT_EXPIRY_KEY);
-    console.log('JWT tokens cleared during force logout');
+    debugLog('JWT tokens cleared during force logout');
   },
 
   // Check if user is authenticated

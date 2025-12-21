@@ -4,6 +4,7 @@ import { FaFootballBall, FaArrowLeft, FaHome, FaRoad, FaTrophy, FaUsers, FaChart
 import axios from "axios";
 import type { TeamApiResponse, TeamRecord, NextEvent, Competitor, Leader } from "@/types/espn/team";
 import type { NewsResponse, NewsArticle } from '@/types/espn/news';
+import { debugLog } from '@/utils/debugLog';
 import NewsTicker from '@/components/nfl/NewsTicker';
 
 interface ProjectionData {
@@ -126,7 +127,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
           const projectionResponse = await axios.get(`https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2025/teams/${teamId}/projection`);
           setProjectionData(projectionResponse.data);
         } catch (projErr) {
-          console.log('Projection data not available:', projErr);
+          debugLog('Projection data not available:', projErr);
         }
 
         // Fetch detailed records
@@ -134,7 +135,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
           const recordsResponse = await axios.get(`https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2025/types/2/teams/${teamId}/record`);
           setDetailedRecords(recordsResponse.data);
         } catch (recErr) {
-          console.log('Detailed records not available:', recErr);
+          debugLog('Detailed records not available:', recErr);
         }
 
         // Fetch schedule
@@ -142,7 +143,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
           const scheduleResponse = await axios.get(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamId}/schedule`);
           setScheduleData(scheduleResponse.data);
         } catch (schedErr) {
-          console.log('Schedule not available:', schedErr);
+          debugLog('Schedule not available:', schedErr);
         }
         
         setLoading(false);

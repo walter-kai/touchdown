@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { authenticateWithGoogle, getGoogleAuthUrl, handleGoogleCallback, testAutoLogin } from './auth.service';
 import catchAsync from '../utils/catch-async';
 import ApiError from '../utils/api-error';
+import logger from '../utils/logger';
 
 interface GoogleAuthRequest {
   idToken: string;
@@ -31,10 +32,10 @@ export const authenticateGoogle = catchAsync(async (req: Request, res: Response,
  * Redirect to Google OAuth consent screen
  */
 export const initiateGoogleLogin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  console.log('=== INITIATE GOOGLE LOGIN ===');
+  logger.info('=== INITIATE GOOGLE LOGIN ===');
   const authUrl = getGoogleAuthUrl();
-  console.log('Auth URL:', authUrl);
-  console.log('============================');
+  logger.info({ authUrl }, 'Auth URL generated');
+  logger.info('============================');
   res.redirect(authUrl);
   return res as any;
 });
@@ -123,7 +124,15 @@ export const googleCallback = catchAsync(async (req: Request, res: Response, nex
         </div>
         <script>
           (function() {
-            console.log('[AUTH] Callback page loaded');
+            const shouldDebug = window.location.search.includes('debug=true');
+            const debugLog = (...args) => {
+              if (!shouldDebug) return;
+              if (typeof console !== 'undefined' && console.info) {
+                console.info(...args);
+              }
+            };
+
+            debugLog('[AUTH] Callback page loaded');
             var authData = {
               type: 'GOOGLE_AUTH_SUCCESS',
               token: '${result.accessToken}',
@@ -134,7 +143,7 @@ export const googleCallback = catchAsync(async (req: Request, res: Response, nex
             try {
               // Show success message
               document.getElementById('status').textContent = 'Login successful!';
-              console.log('[AUTH] Attempting to communicate with parent window');
+              debugLog('[AUTH] Attempting to communicate with parent window');
               
               // Method 1: localStorage (works cross-tab)
               try {
@@ -144,7 +153,7 @@ export const googleCallback = catchAsync(async (req: Request, res: Response, nex
                 localStorage.setItem('dexter_token_expiry', String(expiryTime));
                 localStorage.setItem('dexter_user', '${JSON.stringify(result.user).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}');
                 localStorage.setItem('dexter_oauth_result', JSON.stringify(authData));
-                console.log('[AUTH] Stored auth data in localStorage');
+                debugLog('[AUTH] Stored auth data in localStorage');
               } catch (e) { 
                 console.error('[AUTH] Error storing to localStorage:', e);
               }
@@ -156,29 +165,29 @@ export const googleCallback = catchAsync(async (req: Request, res: Response, nex
                   window.opener.localStorage.setItem('dexter_token_expiry', String(expiryTime));
                   window.opener.localStorage.setItem('dexter_user', '${JSON.stringify(result.user).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}');
                   window.opener.localStorage.setItem('dexter_oauth_result', JSON.stringify(authData));
-                  console.log('[AUTH] Stored auth data in opener localStorage');
+                  debugLog('[AUTH] Stored auth data in opener localStorage');
                 }
               } catch (e) {
-                console.log('[AUTH] Could not access opener localStorage (expected in production):', e.message);
+                debugLog('[AUTH] Could not access opener localStorage (expected in production):', e.message);
               }
               
               // Method 3: BroadcastChannel API (modern browsers)
               try {
                 var channel = new BroadcastChannel('google_auth_channel');
                 channel.postMessage(authData);
-                console.log('[AUTH] Sent via BroadcastChannel');
+                debugLog('[AUTH] Sent via BroadcastChannel');
                 channel.close();
               } catch (e) {
-                console.log('[AUTH] BroadcastChannel not supported:', e.message);
+                debugLog('[AUTH] BroadcastChannel not supported:', e.message);
               }
               
               // Method 4: postMessage to opener (traditional method)
               try {
                 if (window.opener && !window.opener.closed) {
-                  console.log('[AUTH] Sending postMessage to opener');
+                  debugLog('[AUTH] Sending postMessage to opener');
                   window.opener.postMessage(authData, window.location.origin);
                   window.opener.postMessage(authData, '*');
-                  console.log('[AUTH] postMessage sent');
+                  debugLog('[AUTH] postMessage sent');
                 }
               } catch (e) {
                 console.error('[AUTH] Error sending postMessage:', e);
@@ -190,7 +199,7 @@ export const googleCallback = catchAsync(async (req: Request, res: Response, nex
             
             // Close window - try multiple methods
             var attemptClose = function() {
-              console.log('[AUTH] Attempting to close window');
+              debugLog('[AUTH] Attempting to close window');
               try {
                 // Update UI
                 document.getElementById('status').textContent = 'Closing window...';
@@ -201,25 +210,25 @@ export const googleCallback = catchAsync(async (req: Request, res: Response, nex
                 // Method 2: If still open, try alternative approaches
                 setTimeout(function() {
                   if (!window.closed) {
-                    console.log('[AUTH] Window still open, trying alternative methods');
+                    debugLog('[AUTH] Window still open, trying alternative methods');
                     try {
                       // Clear opener reference and try again
                       window.opener = null;
                       window.close();
                     } catch (e) {
-                      console.log('[AUTH] Alt method 1 failed:', e.message);
+                      debugLog('[AUTH] Alt method 1 failed:', e.message);
                     }
                     
                     // Last resort: navigate to blank
                     setTimeout(function() {
                       if (!window.closed) {
-                        console.log('[AUTH] Auto-close failed, showing manual close message');
+                        debugLog('[AUTH] Auto-close failed, showing manual close message');
                         document.getElementById('status').textContent = 'You can close this window now';
                         document.querySelector('.message').textContent = 'Authentication Complete';
                       }
                     }, 500);
                   } else {
-                    console.log('[AUTH] Window closed successfully');
+                    debugLog('[AUTH] Window closed successfully');
                   }
                 }, 100);
               } catch (e) {

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { FaRedo, FaArrowRight } from 'react-icons/fa';
 import LoadingScreenDots from '../../common/LoadingDots';
+import { debugLog } from '@/utils/debugLog';
 
 interface SliderCaptchaProps {
   width?: number;
@@ -208,7 +209,7 @@ const SliderCaptcha: React.FC<SliderCaptchaProps> = ({
     // Very simple bot detection - just check if there's any movement data
     const verified = trail.length > 0;
     
-    console.log('Verify Debug:', {
+    debugLog('Verify Debug:', {
       sliderLeft,
       blockLeft,
       puzzleX,

@@ -266,11 +266,11 @@ async function main() {
       break;
       
     default:
-      console.log('Usage:');
-      console.log('  npm run migrate:picks-to-user migrate           # Dry run (preview changes)');
-      console.log('  npm run migrate:picks-to-user migrate-live      # Actually perform migration');
-      console.log('  npm run migrate:picks-to-user -- migrate --live # Alternative live mode');
-      console.log('  npm run migrate:picks-to-user verify            # Verify migration completed correctly');
+      logger.info('Usage:');
+      logger.info('  npm run migrate:picks-to-user migrate           # Dry run (preview changes)');
+      logger.info('  npm run migrate:picks-to-user migrate-live      # Actually perform migration');
+      logger.info('  npm run migrate:picks-to-user -- migrate --live # Alternative live mode');
+      logger.info('  npm run migrate:picks-to-user verify            # Verify migration completed correctly');
       process.exit(1);
   }
   

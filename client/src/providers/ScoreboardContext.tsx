@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import axios from 'axios';
+import { debugLog } from '@/utils/debugLog';
 import type { Event, TeamOnBye } from '@/types/espn/scoreboard';
 import type { NewsArticle } from '@/types/espn/news';
 
@@ -93,7 +94,7 @@ export const ScoreboardProvider: React.FC<{ children: ReactNode }> = ({ children
       // Get games from events array
       const events = data.events || [];
       if (events) {
-        console.log('Fetched games:', events.length);
+        debugLog('Fetched games:', events.length);
         setGames(events);
       }
       

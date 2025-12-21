@@ -11,14 +11,14 @@ export interface ScoreboardResponse {
 }
 
 export interface League {
-  id: string;
-  uid: string;
-  name: string;
-  abbreviation: string;
-  slug: string;
-  season: Season;
-  logos: Logo[];
-  calendarType: string;
+  id?: string;
+  fullName?: string;
+  address?: {
+    city?: string;
+    state?: string;
+  };
+  capacity?: number;
+  indoor?: boolean;
   calendarIsWhitelist: boolean;
   calendarStartDate: string;
   calendarEndDate: string;
@@ -81,8 +81,8 @@ export interface Event {
   id: string;
   uid: string;
   date: string;
-  name: string;
-  shortName: string;
+  name?: string;
+  shortName?: string;
   season: {
     year: number;
     type: number;
@@ -92,7 +92,7 @@ export interface Event {
     number: number;
   };
   competitions: Competition[];
-  links: Link[];
+  links?: Link[];
   status: Status;
   weather?: Weather;
 }
@@ -101,28 +101,28 @@ export interface Competition {
   id: string;
   uid: string;
   date: string;
-  attendance: number;
-  type: {
-    id: string;
-    abbreviation: string;
+  attendance?: number;
+  type?: {
+    id?: string;
+    abbreviation?: string;
   };
-  timeValid: boolean;
-  neutralSite: boolean;
-  conferenceCompetition: boolean;
-  playByPlayAvailable: boolean;
-  recent: boolean;
-  venue: Venue;
+  timeValid?: boolean;
+  neutralSite?: boolean;
+  conferenceCompetition?: boolean;
+  playByPlayAvailable?: boolean;
+  recent?: boolean;
+  venue?: Venue;
   competitors: Competitor[];
-  notes: Note[];
+  notes?: Note[];
   status: Status;
-  broadcasts: Broadcast[];
-  format: {
-    regulation: {
-      periods: number;
+  broadcasts?: Broadcast[];
+  format?: {
+    regulation?: {
+      periods?: number;
     };
   };
-  startDate: string;
-  geoBroadcasts: GeoBroadcast[];
+  startDate?: string;
+  geoBroadcasts?: GeoBroadcast[];
   odds?: Odds[];
   situation?: Situation;
   leaders?: Leader[];
@@ -135,27 +135,27 @@ export interface Competition {
 }
 
 export interface Venue {
-  id: string;
-  fullName: string;
-  address: {
-    city: string;
+  id?: string;
+  fullName?: string;
+  address?: {
+    city?: string;
     state?: string;
-    country: string;
+    country?: string;
   };
-  indoor: boolean;
+  indoor?: boolean;
 }
 
 export interface Competitor {
   id: string;
-  uid: string;
-  type: string;
-  order: number;
-  homeAway: string;
+  uid?: string;
+  type?: string;
+  order?: number;
+  homeAway?: string;
   winner?: boolean;
   team: Team;
-  score: string;
+  score?: string;
   linescores?: Linescore[];
-  statistics: any[];
+  statistics?: any[];
   records?: Record[];
   leaders?: Leader[];
 }
@@ -164,23 +164,24 @@ export interface Team {
   id: string;
   uid: string;
   location: string;
-  name: string;
+  name?: string;
   abbreviation: string;
   displayName: string;
-  shortDisplayName: string;
-  color: string;
-  alternateColor: string;
-  isActive: boolean;
-  venue: {
-    id: string;
+  shortDisplayName?: string;
+  color?: string;
+  alternateColor?: string;
+  isActive?: boolean;
+  venue?: {
+    id?: string;
   };
-  links: Link[];
+  links?: Link[];
   logo: string;
 }
 
 export interface Linescore {
-  value: number;
-  displayValue: string;
+  value?: number;
+  displayValue?: string;
+  period?: number;
 }
 
 export interface Record {
@@ -208,26 +209,26 @@ export interface LeaderDetail {
 }
 
 export interface Status {
-  clock: number;
-  displayClock: string;
-  period: number;
+  clock?: number;
+  displayClock?: string;
+  period?: number;
   type: {
-    id: string;
-    name: string;
-    state: string;
-    completed: boolean;
-    description: string;
-    detail: string;
-    shortDetail: string;
+    id?: string;
+    name?: string;
+    state?: string;
+    completed?: boolean;
+    description?: string;
+    detail?: string;
+    shortDetail?: string;
   };
 }
 
 export interface Weather {
-  displayValue: string;
-  temperature: number;
-  highTemperature: number;
-  conditionId: string;
-  link: Link;
+  displayValue?: string;
+  temperature?: number;
+  highTemperature?: number;
+  conditionId?: string;
+  link?: Link;
 }
 
 export interface Broadcast {
@@ -257,40 +258,40 @@ export interface Note {
 }
 
 export interface Odds {
-  provider: {
-    id: string;
-    name: string;
-    priority: number;
+  provider?: {
+    id?: string;
+    name?: string;
+    priority?: number;
   };
-  details: string;
-  overUnder: number;
-  spread: number;
+  details?: string;
+  overUnder?: number;
+  spread?: number;
   overOdds?: number;
   underOdds?: number;
-  awayTeamOdds: TeamOdds;
-  homeTeamOdds: TeamOdds;
-  links: Link[];
+  awayTeamOdds?: TeamOdds;
+  homeTeamOdds?: TeamOdds;
+  links?: Link[];
   moneyline?: OddsLine;
   pointSpread?: OddsLine;
   total?: OddsLine;
 }
 
 export interface TeamOdds {
-  favorite: boolean;
-  underdog: boolean;
-  moneyLine: number;
-  spreadOdds: number;
+  favorite?: boolean;
+  underdog?: boolean;
+  moneyLine?: number;
+  spreadOdds?: number;
   team: {
-    id: string;
-    abbreviation: string;
-    displayName: string;
-    shortDisplayName: string;
+    id?: string;
+    abbreviation?: string;
+    displayName?: string;
+    shortDisplayName?: string;
   };
 }
 
 export interface OddsLine {
-  displayName: string;
-  shortDisplayName: string;
+  displayName?: string;
+  shortDisplayName?: string;
   home?: {
     open?: {
       line: string;
@@ -329,46 +330,52 @@ export interface Situation {
 
 export interface LastPlay {
   id: string;
-  type: {
-    id: string;
-    text: string;
+  text?: string;
+  type?: {
+    id?: string;
+    text?: string;
     abbreviation?: string;
   };
-  text: string;
-  scoreValue: number;
-  team: {
-    id: string;
+  team?: {
+    id?: string;
   };
+  scoreValue?: number;
   probability?: {
-    tiePercentage: number;
-    homeWinPercentage: number;
-    awayWinPercentage: number;
-    secondsLeft: number;
+    tiePercentage?: number;
+    homeWinPercentage?: number;
+    awayWinPercentage?: number;
+    secondsLeft?: number;
   };
   drive?: {
-    description: string;
-    start: {
-      yardLine: number;
-      text: string;
+    description?: string;
+    start?: {
+      yardLine?: number;
+      text?: string;
     };
-    timeElapsed: {
-      displayValue: string;
+    end?: {
+      yardLine?: number;
+      text?: string;
     };
+    timeElapsed?: {
+      displayValue?: string;
+    };
+    result?: string;
   };
   start?: {
-    yardLine: number;
-    team: {
-      id: string;
+    yardLine?: number;
+    team?: {
+      id?: string;
     };
   };
   end?: {
-    yardLine: number;
-    team: {
-      id: string;
+    yardLine?: number;
+    team?: {
+      id?: string;
     };
   };
   statYardage?: number;
   athletesInvolved?: AthleteInvolved[];
+  possession?: string;
 }
 
 export interface AthleteInvolved {
@@ -394,11 +401,11 @@ export interface Headline {
 
 export interface Link {
   language?: string;
-  rel: string[];
-  href: string;
-  text: string;
+  rel?: string[];
+  href?: string;
+  text?: string;
   shortText?: string;
-  isExternal: boolean;
-  isPremium: boolean;
+  isExternal?: boolean;
+  isPremium?: boolean;
 }
 

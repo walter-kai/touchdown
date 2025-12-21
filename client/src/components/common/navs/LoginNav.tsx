@@ -21,7 +21,7 @@ const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
 						/>
 						<div className="flex  leading-tight">
 							<span className="text-text-light font-semibold tracking-wide">NFL Drive</span>
-							<span className="ml-2 text-xs text-neon-cyan">v1.5</span>
+							<span className="ml-2 text-xs text-neon-cyan">v1.6</span>
 						</div>
 					</button>
 

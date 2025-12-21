@@ -12,10 +12,11 @@ import { Server as WebSocketServer } from 'ws'; // WebSocket library
 import './utils/firebase';
 import routes from './api';
 import authRoute from './auth/auth.route';
+import logger from './utils/logger';
 
 // Validate required environment variable
 if (!process.env.BACKEND_PORT) {
-  console.error('FATAL: BACKEND_PORT environment variable is not set');
+  logger.error('FATAL: BACKEND_PORT environment variable is not set');
   process.exit(1);
 }
 
@@ -58,11 +59,11 @@ app.get('*', (req, res) => {
 
 // Start HTTP server
 const server = app.listen(port, () => {
-  console.log(`=== SERVER STARTED ===`);
-  console.log(`Server is running on http://localhost:${port}`);
-  console.log(`PORT: ${port}`);
-  console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
-  console.log(`HOST_URL: ${process.env.HOST_URL}`);
-  console.log(`======================`);
+  logger.info(`=== SERVER STARTED ===`);
+  logger.info(`Server is running on http://localhost:${port}`);
+  logger.info(`PORT: ${port}`);
+  logger.info(`NODE_ENV: ${process.env.NODE_ENV}`);
+  logger.info(`HOST_URL: ${process.env.HOST_URL}`);
+  logger.info(`======================`);
 });
 

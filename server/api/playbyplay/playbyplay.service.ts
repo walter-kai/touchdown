@@ -1,4 +1,5 @@
 import admin from '../../utils/firebase';
+import logger from '../../utils/logger';
 import { Play, PlayByPlayData, ActiveGame } from '../../../types/espn/playByplay';
 
 const db = admin.firestore();
@@ -100,7 +101,7 @@ export const saveGamePlayByPlay = async (gameId: string, plays: any[]): Promise<
       totalPlays: simplifiedPlays.length
     }, { merge: true });
 
-    console.log(`Saved ${simplifiedPlays.length} plays for game ${gameId}`);
+    logger.info(`Saved ${simplifiedPlays.length} plays for game ${gameId}`);
     
     return {
       gameId,
@@ -153,7 +154,7 @@ export const addPlayToGame = async (gameId: string, play: any): Promise<{ gameId
       totalPlays: updatedPlays.length
     }, { merge: true });
 
-    console.log(`Added play to game ${gameId}`);
+    logger.info(`Added play to game ${gameId}`);
     
     return {
       gameId,

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../providers/AuthContext';
 import { useScoreboard } from '../../providers/ScoreboardContext';
 import { FaExclamationCircle, FaChevronDown, FaSignOutAlt, FaUser } from 'react-icons/fa';
+import { debugLog } from '../../utils/debugLog';
 
 const GoogleLoginButton: React.FC = () => {
   const { login, isAuthenticated, user, logout } = useAuth();
@@ -75,7 +76,7 @@ const GoogleLoginButton: React.FC = () => {
         // if (event.origin !== window.location.origin) return;
 
         if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-          console.log('[AUTH] Received postMessage:', event.data);
+          debugLog('[AUTH] Received postMessage:', event.data);
           cleanupListeners();
           
           const { token, user } = event.data;
@@ -92,7 +93,7 @@ const GoogleLoginButton: React.FC = () => {
       try {
         broadcastChannel = new BroadcastChannel('google_auth_channel');
         broadcastChannel.onmessage = (event) => {
-          console.log('[AUTH] Received BroadcastChannel message:', event.data);
+          debugLog('[AUTH] Received BroadcastChannel message:', event.data);
           if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
             const { token, user } = event.data;
             if (token && user) {
@@ -103,14 +104,14 @@ const GoogleLoginButton: React.FC = () => {
           }
         };
       } catch (e) {
-        console.log('[AUTH] BroadcastChannel not supported');
+        debugLog('[AUTH] BroadcastChannel not supported');
       }
 
       // Method 3: Listen for storage events (fallback mechanism from auth callback)
       const storageHandler = (event: StorageEvent) => {
         if (event.key === 'dexter_oauth_result' && event.newValue) {
           try {
-            console.log('[AUTH] Received storage event');
+            debugLog('[AUTH] Received storage event');
             const result = JSON.parse(event.newValue);
             if (result.type === 'GOOGLE_AUTH_SUCCESS' && result.token && result.user) {
               cleanupListeners();
@@ -132,7 +133,7 @@ const GoogleLoginButton: React.FC = () => {
         try {
           const oauthResult = localStorage.getItem('dexter_oauth_result');
           if (oauthResult) {
-            console.log('[AUTH] Found auth result via polling');
+            debugLog('[AUTH] Found auth result via polling');
             const result = JSON.parse(oauthResult);
             if (result.type === 'GOOGLE_AUTH_SUCCESS' && result.token && result.user) {
               cleanupListeners();
@@ -142,7 +143,7 @@ const GoogleLoginButton: React.FC = () => {
             }
           }
         } catch (e) {
-          console.error('[AUTH] Error in polling:', e);
+            console.error('[AUTH] Error in polling:', e);
         }
       }, 500);
 

@@ -12,6 +12,7 @@ import FootballField from '@/components/nfl/FootballField';
 import type { Athlete } from '@/types/espn/athlete';
 import { usePicks } from '../../../providers/PicksContext';
 import { Play } from '@/types/espn/playByplay';
+import { debugLog } from '@/utils/debugLog';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {
@@ -395,7 +396,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                 playerHistory: latestPick.playerHistory || {}
               };
               localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(backendState));
-              console.log('💾 Saved backend picks to localStorage:', backendState);
+              debugLog('💾 Saved backend picks to localStorage:', backendState);
               
               return; // Skip localStorage fallback if we got backend data
             }
@@ -444,7 +445,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
       return;
     }
 
-    console.log('📊 YourPicks: Using scores from context:', scores);
+    debugLog('📊 YourPicks: Using scores from context:', scores);
 
     // Set game scores for all roster players (always set this for roster display)
     setAllPlayerScores(scores.gameScores);
@@ -537,9 +538,9 @@ const YourPicks: React.FC<PlayerPickProps> = ({
   const handlePlayerSelect = (player: Athlete) => {
     if (isLocked) return;
 
-    console.log('Raw player object:', player);
-    console.log('Player headshot type:', typeof player.headshot);
-    console.log('Player headshot value:', player.headshot);
+    debugLog('Raw player object:', player);
+    debugLog('Player headshot type:', typeof player.headshot);
+    debugLog('Player headshot value:', player.headshot);
 
     // Get the actual headshot URL - ESPN API provides it in player.headshot.href
     const isHome = homeRoster.some(p => p.id === player.id);
@@ -549,14 +550,14 @@ const YourPicks: React.FC<PlayerPickProps> = ({
     if (player.headshot) {
       if (typeof player.headshot === 'object' && 'href' in player.headshot) {
         headshotUrl = player.headshot.href;
-        console.log('Extracted from object:', headshotUrl);
+        debugLog('Extracted from object:', headshotUrl);
       } else if (typeof player.headshot === 'string') {
         headshotUrl = player.headshot;
-        console.log('Already string:', headshotUrl);
+        debugLog('Already string:', headshotUrl);
       }
     }
     
-    console.log('Final headshot URL to save:', headshotUrl);
+    debugLog('Final headshot URL to save:', headshotUrl);
     
     const normalizedPlayer: any = {
       id: player.id,
@@ -573,7 +574,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
       }
     };
 
-    console.log('Normalized player to add:', normalizedPlayer);
+    debugLog('Normalized player to add:', normalizedPlayer);
 
     // Check if player is already in current picks or new picks
     const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
@@ -641,7 +642,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
     
     if (swappedPicks.length > 0) {
       setIsLockingIn(true);
-      console.log('Locking in picks:', swappedPicks);
+      debugLog('Locking in picks:', swappedPicks);
       
       // Track which players are new vs kept and update player history
       const currentTime = Date.now();
@@ -703,7 +704,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
         }
       };
       localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(state));
-      console.log('Saved to localStorage:', state);
+      debugLog('Saved to localStorage:', state);
       
       // Send to backend API
       try {
@@ -724,7 +725,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
         
         if (response.ok) {
           const result = await response.json();
-          console.log('Picks saved to backend:', result);
+          debugLog('Picks saved to backend:', result);
         } else {
           console.error('Failed to save picks to backend:', response.status, await response.text());
         }

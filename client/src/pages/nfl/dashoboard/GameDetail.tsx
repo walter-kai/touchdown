@@ -6,6 +6,7 @@ import ScoreboardView from '../scoreboard/Scoreboard';
 import SummaryView from '../summary/Summary';
 import FootballField from '@/components/nfl/FootballField';
 import { useLoading } from '@/providers/LoadingContext';
+import { debugLog } from '@/utils/debugLog';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
@@ -56,7 +57,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
           
           // Use cached data if less than 1 minute old
           if (cacheAge < CACHE_DURATION && Array.isArray(plays)) {
-            console.log(`✅ Using cached plays (${plays.length} plays, ${Math.round(cacheAge / 1000)}s old)`);
+            debugLog(`✅ Using cached plays (${plays.length} plays, ${Math.round(cacheAge / 1000)}s old)`);
             const historicalPlays = plays.map((play: any) => ({
               ...play,
               timestamp: new Date(play.timestamp)
@@ -65,7 +66,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
             setPlaysLoaded(true);
             return;
           } else {
-            console.log('Cache expired, fetching fresh data...');
+            debugLog('Cache expired, fetching fresh data...');
           }
         } catch (error) {
           console.error('Error parsing cached plays:', error);
@@ -78,7 +79,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
         const actualGameId = gameId === 'test' ? testGameId : gameId;
         
         showLoading('Loading play history...');
-        console.log(`Loading previous plays for game ${actualGameId} from backend API...`);
+        debugLog(`Loading previous plays for game ${actualGameId} from backend API...`);
         
         // Fetch from your backend API that connects to Firebase
         const response = await axios.get(`${FIRESTORE_API}/${actualGameId}`);
@@ -119,9 +120,9 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
           
           setPlayLog(historicalPlays);
           setPlaysLoaded(true);
-          console.log(`✅ Loaded ${historicalPlays.length} historical plays from backend`);
+          debugLog(`✅ Loaded ${historicalPlays.length} historical plays from backend`);
         } else {
-          console.log('No plays found in backend for this game');
+          debugLog('No plays found in backend for this game');
           setPlaysLoaded(true);
         }
       } catch (error: any) {
@@ -142,7 +143,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     if (event && onGameStatusChange) {
       const gameState = event.competitions[0]?.status?.type?.state;
       if (gameState) {
-        console.log('Game status being sent to parent:', gameState);
+        debugLog('Game status being sent to parent:', gameState);
         onGameStatusChange(gameState as 'pre' | 'in' | 'post');
       }
     }
@@ -157,35 +158,40 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     const previousPlayText = previousEvent?.competitions?.[0]?.situation?.lastPlay?.text;
 
     if (currentPlayText !== previousPlayText) {
-      console.log('🆕 New play detected:', currentPlayText);
+      debugLog('🆕 New play detected:', currentPlayText);
       setPlayLog(prev => {
+        const period = comp.status.period ?? 0;
+        const clock = comp.status.displayClock ?? '';
+        const playText = currentPlayText ?? '';
+        if (!playText) return prev;
+
         const isDuplicate = prev.some(p =>
-          p.text === currentPlayText &&
-          p.quarter === comp.status.period &&
-          p.clock === comp.status.displayClock
+          p.text === playText &&
+          p.quarter === period &&
+          p.clock === clock
         );
 
         if (!isDuplicate) {
           const possession = comp.situation?.possession;
           const newPlay: Play = {
-            text: currentPlayText,
-            quarter: comp.status.period,
-            clock: comp.status.displayClock,
+            text: playText,
+            quarter: period,
+            clock,
             timestamp: new Date(),
             yardage: comp.situation?.lastPlay?.statYardage,
             possession: typeof possession === 'object' && possession !== null && 'id' in possession ? (possession as any).id : possession,
             athletesInvolved: comp.situation?.lastPlay?.athletesInvolved,
             type: comp.situation?.lastPlay?.type?.text || 'Play'
           };
-          console.log('➕ Adding new play to log:', newPlay);
+          debugLog('➕ Adding new play to log:', newPlay);
           return [newPlay, ...prev];
         } else {
-          console.log('⏭️ Duplicate play, skipping');
+          debugLog('⏭️ Duplicate play, skipping');
         }
         return prev;
       });
     } else {
-      console.log('⏸️ No new plays since last refresh');
+      debugLog('⏸️ No new plays since last refresh');
     }
   };
 
@@ -294,7 +300,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     
     // Handle countdown reaching 0
     if (countdown === 0) {
-      console.log('⏰ Countdown reached 0, triggering auto-refresh...');
+      debugLog('⏰ Countdown reached 0, triggering auto-refresh...');
       
       const fetchGameData = async () => {
         if (!gameId) return;
@@ -303,12 +309,12 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
           setIsRefreshing(true);
           setError(null);
 
-          console.log('🔄 Fetching fresh game data from API...');
+          debugLog('🔄 Fetching fresh game data from API...');
           const { game, usedSummaryApi } = await getGameData(gameId);
           
           if (game) {
-            console.log('✅ Game data refreshed, updating state...');
-            console.log('📊 Latest play:', game.competitions[0]?.situation?.lastPlay?.text);
+            debugLog('✅ Game data refreshed, updating state...');
+            debugLog('📊 Latest play:', game.competitions[0]?.situation?.lastPlay?.text);
             mergeLatestPlay(game, event);
             
             const preset = usedSummaryApi ? 'summary' : 'scoreboard';
@@ -318,7 +324,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
             setLastUpdated(new Date());
           }
           
-          console.log('✅ Refresh complete, countdown will reset to 30s');
+          debugLog('✅ Refresh complete, countdown will reset to 30s');
         } catch (err) {
           console.error('❌ Error refreshing game data:', err);
         } finally {
@@ -336,7 +342,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     const timer = setInterval(() => {
       setCountdown((prev) => {
         const next = prev - 1;
-        console.log(`⏱️ Countdown: ${next}s`);
+        debugLog(`⏱️ Countdown: ${next}s`);
         return next;
       });
     }, 1000);
@@ -460,7 +466,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
       
       const startYardLine = Math.max(0, Math.min(100, endYardLine - yardage)); // Work backwards from end
       
-      console.log('Play yard calculation:', { 
+      debugLog('Play yard calculation:', { 
         text: selectedPlay.text,
         yardage, 
         endYardLine, 
@@ -496,6 +502,20 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     })
   } as Event : event;
 
+  // Narrow situation shape for FootballField (it only needs possession + down/distance + timeouts)
+  const competition = effectiveEvent?.competitions?.[0];
+  const situationForField = competition?.situation
+    ? {
+        downDistanceText: competition.situation.downDistanceText,
+        possession: competition.situation.possession as any,
+        awayTimeouts: competition.situation.awayTimeouts,
+        homeTimeouts: competition.situation.homeTimeouts,
+        lastPlay: competition.situation.lastPlay
+          ? { possession: (competition.situation.lastPlay as any).possession }
+          : undefined,
+      }
+    : undefined;
+
   // Test mode football field visualization - must be after effectiveEvent is defined
   const testFieldVisualization = isTestMode && event && playLog.length > 0 && effectiveEvent ? (
     <div className="mx-2 my-4">
@@ -505,7 +525,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
           homeTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'home')}
           awayTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'away')}
           lastPlay={effectiveEvent.competitions[0].situation?.lastPlay}
-          situation={effectiveEvent.competitions[0].situation}
+          situation={situationForField}
           getTeamLogo={getTeamLogo}
         />
       </div>

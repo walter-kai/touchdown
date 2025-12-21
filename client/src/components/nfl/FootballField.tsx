@@ -2,23 +2,29 @@ import React from 'react';
 import { FaFootballBall } from 'react-icons/fa';
 import { Play, PlayType } from '@/types/espn/playByplay';
 import '@/styles/football.css';
+import { useScoreboard } from '@/providers/ScoreboardContext';
 
 interface FootballFieldProps {
-  homeTeam: any;
-  awayTeam: any;
+  homeTeam?: any;
+  awayTeam?: any;
   lastPlay?: {
     id?: string;
-    start?: { yardLine: number };
-    end?: { yardLine: number };
+    possession?: string;
+    start?: { yardLine?: number };
+    end?: { yardLine?: number };
+    team?: { id?: string };
     type?: {
-      id: string;
-      text: string;
+      id?: string;
+      text?: string;
       abbreviation?: string;
     };
     athletesInvolved?: Array<{
-      displayName: string;
-      headshot: string;
-      position: string;
+      id?: string;
+      displayName?: string;
+      headshot?: string;
+      shortName?: string;
+      position?: string;
+      team?: { id?: string };
     }>;
     text?: string;
   };
@@ -27,6 +33,9 @@ interface FootballFieldProps {
     possession?: string;
     awayTimeouts?: number;
     homeTimeouts?: number;
+    lastPlay?: {
+      possession?: string;
+    };
   };
   playLog?: Play[];
   getTeamLogo: (team: any) => string;
@@ -45,8 +54,30 @@ const getPlayVisualization = (playType?: PlayType | string | { text: string }) =
   // Force to string and lowercase
   const type = String(typeStr || '').toLowerCase();
   
-  // Touchdowns - Gold/Yellow
+  // Touchdowns - animate like underlying play
   if (type.includes('touchdown')) {
+    const isPassTd = type.includes('pass') || type.includes('reception');
+    const isRushTd = type.includes('rush') || type.includes('run');
+    if (isPassTd) {
+      return {
+        color: '#00FFE7',
+        glowColor: 'rgba(0, 255, 231, 0.6)',
+        icon: '🏆',
+        pattern: 'solid',
+        width: 2,
+        animate: 'pass-complete'
+      };
+    }
+    if (isRushTd) {
+      return {
+        color: '#FAAFE8',
+        glowColor: 'rgba(250, 175, 232, 0.6)',
+        icon: '🏆',
+        pattern: 'solid',
+        width: 2,
+        animate: 'rush'
+      };
+    }
     return {
       color: '#FFD700',
       glowColor: 'rgba(255, 215, 0, 0.6)',
@@ -217,20 +248,60 @@ const getPlayVisualization = (playType?: PlayType | string | { text: string }) =
 };
 
 const FootballField: React.FC<FootballFieldProps> = ({
-  homeTeam,
-  awayTeam,
-  lastPlay,
-  situation,
-  playLog = [],
+  homeTeam: homeTeamProp,
+  awayTeam: awayTeamProp,
+  lastPlay: lastPlayProp,
+  situation: situationProp,
+  playLog: playLogProp = [],
   getTeamLogo,
   showGameInfo = false,
 }) => {
+  const scoreboard = useScoreboard?.();
+  const games = scoreboard?.games || [];
+
+  // Try to match the game from context when explicit props are missing
+  const getTeamId = (team: any) => team?.team?.id ?? team?.id;
+  const homeId = getTeamId(homeTeamProp);
+  const awayId = getTeamId(awayTeamProp);
+
+  const matchedGame = games.find((g: any) => {
+    const competitors = g?.competitions?.[0]?.competitors || [];
+    const ids = competitors.map((c: any) => String(getTeamId(c)));
+    if (homeId && awayId) return ids.includes(String(homeId)) && ids.includes(String(awayId));
+    if (homeId) return ids.includes(String(homeId));
+    if (awayId) return ids.includes(String(awayId));
+    return false;
+  }) || games.find((g: any) => g?.competitions?.[0]?.situation?.lastPlay);
+
+  const competition = matchedGame?.competitions?.[0];
+  const homeTeam = homeTeamProp ?? competition?.competitors?.find((c: any) => c.homeAway === 'home');
+  const awayTeam = awayTeamProp ?? competition?.competitors?.find((c: any) => c.homeAway === 'away');
+  const situation = situationProp ?? competition?.situation;
+  const lastPlay = lastPlayProp ?? competition?.situation?.lastPlay;
+  const playLog = playLogProp?.length
+    ? playLogProp
+    : competition?.situation?.lastPlay
+      ? [competition.situation.lastPlay as any]
+      : [];
+
+
+
+  // If we still don't have core data from context or props, don't render an empty shell
+  if (!homeTeam || !awayTeam || !situation) return null;
   const fieldRef = React.useRef<HTMLDivElement>(null);
   const [kickPhaseComplete, setKickPhaseComplete] = React.useState(false);
   const [kickDone, setKickDone] = React.useState(false);
+  const offenseAthleteId = lastPlay?.athletesInvolved?.[0]?.id;
+  const offenseTeamId = situation?.possession
+    || (situation?.lastPlay as any)?.possession
+    || lastPlay?.team?.id
+    || (lastPlay as any)?.possession
+    || (playLog[0] as any)?.possession
+    || lastPlay?.athletesInvolved?.[0]?.team?.id;
   const [returnStarted, setReturnStarted] = React.useState(false);
   const [ballFade, setBallFade] = React.useState(false);
   const [loopCycle, setLoopCycle] = React.useState(0);
+  const debugLogs = false;
 
   // Normalize team abbreviations for yard conversions
   const awayAbbr = awayTeam?.team?.abbreviation?.toUpperCase() || awayTeam?.abbreviation?.toUpperCase() || awayTeam?.shortDisplayName?.toUpperCase();
@@ -247,6 +318,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   };
   const convertToFieldYard = (abbr?: string, yard?: number) => {
     if (yard === undefined || yard < 0 || yard > 100) return undefined;
+    if (yard === 0 || yard === 100) return yard; // end zones stay at their absolute edges
     if (!abbr) return yard; // unknown team, assume left-to-right as-is
     if (abbrMatches(abbr, awayAbbr)) return yard; // left team keeps yard as-is
     if (abbrMatches(abbr, homeAbbr)) return 100 - yard; // flip for right team
@@ -261,6 +333,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   // Duration of rush animation (matches rush-slide timing)
   const RUSH_ANIMATION_MS = 3000;
   const PLAY_LOOP_MS = KICK_ANIMATION_MS + RUSH_ANIMATION_MS + 600; // small buffer
+  const clampYard = (yard: number) => Math.max(0, Math.min(100, yard));
   
   if (!lastPlay) return null;
 
@@ -269,7 +342,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const rightTeam = homeTeam;
   
   // Get visualization config for this play type - handle both string and object
-  const playViz = getPlayVisualization(lastPlay.type);
+  const playViz = getPlayVisualization(lastPlay.type?.text ?? '');
 
   // For kickoffs/punts, extract accurate yard lines from text since start/end data is unreliable
   let kickStartYard: number | null = null;
@@ -278,7 +351,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   let returnEndYard: number | null = null; // Final position after return
   const isKickPlay = playViz.animate === 'punt' || playViz.animate === 'kickoff' || playViz.animate === 'kickoff-fail';
   
-  console.log('🏈 Is kick play?', isKickPlay, 'playViz.animate:', playViz.animate);
+  if (debugLogs) console.log('🏈 Is kick play?', isKickPlay, 'playViz.animate:', playViz.animate);
 
   // Gate the return animation until the kick arc finishes
   const playKey = lastPlay?.id ?? lastPlay?.text ?? lastPlay?.type?.id ?? lastPlay?.type?.text ?? '';
@@ -296,10 +369,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
         setReturnStarted(true);
         setBallFade(true);
       }, KICK_ANIMATION_MS);
-      console.log('⏱️ Kick phase reset; will complete after', KICK_ANIMATION_MS, 'ms');
+      if (debugLogs) console.log('⏱️ Kick phase reset; will complete after', KICK_ANIMATION_MS, 'ms');
     } else {
       setKickPhaseComplete(true);
-      setKickDone(true);
+      setKickDone(false);
       setReturnStarted(true);
       setBallFade(true);
     }
@@ -382,22 +455,74 @@ const FootballField: React.FC<FootballFieldProps> = ({
       returnEndYard = returnStartYard;
     }
     
-    console.log('🏈 KICK YARD LINE PARSING:', {
-      text: lastPlay.text,
-      kickStartYard,
-      kickEndYard,
-      returnStartYard,
-      returnEndYard,
-      awayTeam: awayTeam?.abbreviation,
-      homeTeam: homeTeam?.abbreviation,
-      hasAthletes: !!lastPlay.athletesInvolved,
-      athleteCount: lastPlay.athletesInvolved?.length || 0
-    });
+    if (debugLogs) {
+      console.log('🏈 KICK YARD LINE PARSING:', {
+        text: lastPlay.text,
+        kickStartYard,
+        kickEndYard,
+        returnStartYard,
+        returnEndYard,
+        awayTeam: awayTeam?.abbreviation,
+        homeTeam: homeTeam?.abbreviation,
+        hasAthletes: !!lastPlay.athletesInvolved,
+        athleteCount: lastPlay.athletesInvolved?.length || 0
+      });
+    }
   }
   
-  // Use kick yards if available, otherwise use lastPlay data
-  const effectiveStartYard = isKickPlay && kickStartYard !== null ? kickStartYard : lastPlay.start?.yardLine;
-  const effectiveEndYard = isKickPlay && returnEndYard !== null ? returnEndYard : lastPlay.end?.yardLine;
+  // Possession-based normalization: away (left) drives left->right, home (right) drives right->left
+  const possessionIsHome = situation?.possession === homeTeam?.id;
+  const possessionAbbr = possessionIsHome ? homeAbbr : awayAbbr;
+  const possessionDirection = possessionIsHome ? -1 : 1; // home drives right-to-left on this field layout
+  const normalizedStartYard = isKickPlay ? undefined : convertToFieldYard(possessionAbbr, lastPlay.start?.yardLine);
+  const normalizedEndYard = isKickPlay ? undefined : convertToFieldYard(possessionAbbr, lastPlay.end?.yardLine);
+
+  // Use kick yards if available, otherwise use normalized-by-possession yard data
+  let playStartYard = isKickPlay && kickStartYard !== null
+    ? kickStartYard
+    : (normalizedStartYard ?? lastPlay.start?.yardLine);
+  let playEndYard = isKickPlay && returnEndYard !== null
+    ? returnEndYard
+    : (normalizedEndYard ?? lastPlay.end?.yardLine);
+
+  // Force scoring plays to end at the correct goal line so touchdowns reach the end zone, and backfill a reasonable start if distance is known
+  const isTouchdownPlay = ((lastPlay.type?.text || '').toLowerCase().includes('touchdown')) || ((lastPlay.text || '').toLowerCase().includes('touchdown'));
+  const distanceMatch = lastPlay.text?.match(/for\s+(\d+)\s+yards/i);
+  const distanceYards = distanceMatch ? parseInt(distanceMatch[1], 10) : undefined;
+  if (!isKickPlay && isTouchdownPlay) {
+    const goalCenter = possessionIsHome ? -5 : 105; // middle of end zone (inside)
+    playEndYard = goalCenter;
+    if (distanceYards && distanceYards > 0) {
+      const inferredStart = clampYard(goalCenter - possessionDirection * distanceYards);
+      const currentSpan = (playStartYard !== undefined && playEndYard !== undefined)
+        ? Math.abs(playEndYard - playStartYard)
+        : 0;
+      // If start is missing or clearly inconsistent with the stated gain, use inferred start
+      if (playStartYard === undefined || currentSpan < distanceYards - 3 || currentSpan > distanceYards + 10) {
+        playStartYard = inferredStart;
+      }
+    }
+  }
+
+  // Normalize pass direction to possession so incompletions can target a reasonable depth
+  const observedPassDirection = playStartYard !== undefined && playEndYard !== undefined && playEndYard !== playStartYard
+    ? Math.sign(playEndYard - playStartYard)
+    : 0;
+  const passDirection = observedPassDirection !== 0 ? observedPassDirection : possessionDirection;
+  let normalizedPassStart = playStartYard;
+  let normalizedPassEnd = playEndYard;
+  let estimatedIncompleteTarget = false;
+
+  if (playViz.animate === 'pass-incomplete' && lastPlay.text && normalizedPassStart !== undefined) {
+    const depthDirMatch = lastPlay.text.match(/(short|deep)\s+(left|middle|right)/i);
+    if (depthDirMatch) {
+      const depthBucket = depthDirMatch[1].toLowerCase();
+      const depthYards = depthBucket === 'short' ? 8 : 18;
+      normalizedPassEnd = clampYard(normalizedPassStart + passDirection * depthYards);
+      estimatedIncompleteTarget = true;
+      console.log('🎯 Estimated incomplete target', { depthBucket, normalizedPassStart, normalizedPassEnd, passDirection, text: lastPlay.text });
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -511,11 +636,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
       <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-yellow-400/30" />
 
       {/* Start position dot - positioned at arrow/football level */}
-      {effectiveStartYard !== undefined && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
+      {playStartYard !== undefined && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
         <div
           className="absolute transform -translate-x-1/2 -translate-y-1/2"
           style={{ 
-            left: `${10 + (effectiveStartYard * 0.8)}%`,
+            left: `${10 + (playStartYard * 0.8)}%`,
             top: HEADSHOT_VERTICAL_POSITION
           }}
         >
@@ -530,7 +655,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       )}
 
       {/* Arrow showing play direction - positioned at 50% (middle) */}
-      {effectiveStartYard !== undefined && effectiveEndYard !== undefined && effectiveStartYard !== effectiveEndYard && (
+      {playStartYard !== undefined && playEndYard !== undefined && playStartYard !== playEndYard && (
         <>
           <svg
             className={`absolute left-0 top-0 w-full h-full pointer-events-none ${
@@ -562,9 +687,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
             </defs>
             
             <line
-              x1={`${10 + (effectiveStartYard * 0.8)}%`}
+              x1={`${10 + (playStartYard * 0.8)}%`}
               y1={HEADSHOT_VERTICAL_POSITION}
-              x2={`${10 + (effectiveEndYard * 0.8)}%`}
+              x2={`${10 + (playEndYard * 0.8)}%`}
               y2={HEADSHOT_VERTICAL_POSITION}
               stroke={playViz.color}
               strokeWidth={playViz.width}
@@ -575,9 +700,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
             />
             
             {/* Arc path for punts/kickoffs */}
-            {playViz.animate === 'arc' && effectiveStartYard !== undefined && effectiveEndYard !== undefined && (
+            {playViz.animate === 'arc' && playStartYard !== undefined && playEndYard !== undefined && (
               <path
-                d={`M ${10 + (effectiveStartYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION} Q ${10 + ((effectiveStartYard + effectiveEndYard) / 2 * 0.8)}%,13% ${10 + (effectiveEndYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION}`}
+                d={`M ${10 + (playStartYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION} Q ${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%,13% ${10 + (playEndYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION}`}
                 stroke={playViz.color}
                 strokeWidth={playViz.width}
                 fill="none"
@@ -588,11 +713,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
           </svg>
           
           {/* Play type icon at midpoint - only show for fail cases */}
-          {playViz.icon === '🚫' && effectiveStartYard !== undefined && effectiveEndYard !== undefined && (
+            {playViz.icon === '🚫' && playStartYard !== undefined && playEndYard !== undefined && (
             <div
               className="absolute transform -translate-x-1/2 -translate-y-1/2 text-2xl z-20"
               style={{
-                left: `${10 + ((effectiveStartYard + effectiveEndYard) / 2 * 0.8)}%`,
+                  left: `${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%`,
                 top: '50%',
                 filter: `drop-shadow(0 0 8px ${playViz.glowColor})`
               }}
@@ -695,13 +820,16 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
       {/* Animated play elements */}
       {lastPlay.start && lastPlay.end && lastPlay.athletesInvolved && lastPlay.athletesInvolved.length > 0 && (() => {
-        console.log('Play data:', lastPlay);
-        const baseStartX = 10 + (lastPlay.start.yardLine * 0.8);
-        const baseEndX = 10 + (lastPlay.end.yardLine * 0.8);
-        // Use raw start/end yard lines to keep arrow and animation aligned
-        const passStartYard = lastPlay.start.yardLine;
-        const passEndYard = lastPlay.end.yardLine;
+        if (debugLogs) console.log('Play data:', lastPlay);
+        const resolvedStartYard = normalizedPassStart ?? playStartYard ?? lastPlay.start?.yardLine;
+        const resolvedEndYard = normalizedPassEnd ?? playEndYard ?? lastPlay.end?.yardLine;
+        if (resolvedStartYard === undefined || resolvedEndYard === undefined) return null;
 
+        const passStartYard = resolvedStartYard;
+        const passEndYard = resolvedEndYard;
+        const baseStartX = 10 + (resolvedStartYard * 0.8);
+        const baseEndX = 10 + (resolvedEndYard * 0.8);
+        // Use raw start/end yard lines to keep arrow and animation aligned
         const passStartX = 10 + (passStartYard * 0.8);
         const passEndX = 10 + (passEndYard * 0.8);
         const distance = passEndX - passStartX;
@@ -720,7 +848,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           // Add approximately 24px (half headshot radius + half football width) to reach the end position with the football
           const distancePixels = (distancePercent / 100) * fieldWidth + 12;
           // Check if there's actual yardage gain (not just pixel distance)
-          const hasGain = lastPlay.end.yardLine > lastPlay.start.yardLine;
+          const hasGain = (playEndYard ?? lastPlay.end?.yardLine ?? 0) > (playStartYard ?? lastPlay.start?.yardLine ?? 0);
           
           console.log('Rush animation:', { startX: baseStartX, endX: baseEndX, distancePercent, fieldWidth, distancePixels, hasGain });
           
@@ -757,6 +885,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
                         className="w-12 h-12 rounded-full object-cover z-1 border-2"
                         style={{ borderColor: playViz.color }}
                       />
+                      {isTouchdownPlay && (
+                        <img
+                          src="/assets/football_dance.gif"
+                          alt="Football Dance"
+                          className="w-16 h-full object-contain absolute top-2/3 td-dance"
+                          style={{ animationDuration: `${RUSH_ANIMATION_MS}ms` }}
+                        />
+                      )}
                     </div>
                     {/* Football being carried - only show if has gain */}
                     {hasGain && (
@@ -852,9 +988,19 @@ const FootballField: React.FC<FootballFieldProps> = ({
                       <img
                         src={lastPlay.athletesInvolved[0].headshot}
                         alt={lastPlay.athletesInvolved[0].displayName}
-                        className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                        className="w-12 h-12 rounded-full object-cover z-10 border-2"
                         style={{ borderColor: playViz.color }}
                       />
+                      {isTouchdownPlay && (
+                        <img
+                          src="/assets/football_dance.gif"
+                          alt="Football Dance"
+                          className="w-16 h-full object-contain absolute top-2/3 td-dance"
+                          style={{
+                            animationDuration: `${passDurationMs + PASS_PAUSE_MS}ms`
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1145,41 +1291,146 @@ const FootballField: React.FC<FootballFieldProps> = ({
           );
         }
         
-        // Sack - headshot of the sacker with crash animation
+        // Sack - rusher slides in, QB sits at spot and gets bumped/rolled on impact
         if (playViz.animate === 'sack') {
+          const distancePercent = baseEndX - baseStartX;
+          const fieldWidth = fieldRef.current?.offsetWidth || 1000;
+          const distancePixels = (distancePercent / 100) * fieldWidth;
+          const hitRollPx = Math.max(40, Math.min(Math.abs(distancePixels) * 0.35, 120));
+          const hitRollSigned = (Math.sign(distancePercent) || 1) * hitRollPx;
+
+          const rusherAthlete = lastPlay.athletesInvolved[0];
+          // Offense identifiers: prefer athlete id from play, fall back to team possession
+          const offenseIdForSack = offenseAthleteId || offenseTeamId;
+
+          // Parse QB name from text (e.g., "S.Darnold sacked") to improve matching to scoreboard shortName
+          const qbNameRegex = /(\b[A-Z]\.[A-Za-z'\-]+)\s+sacked/i;
+          const textMatch = lastPlay.text?.match(qbNameRegex);
+          const qbNameMatch = textMatch ? textMatch[1].toLowerCase() : undefined;
+          const qbNameCompact = qbNameMatch?.replace(/[.\s]/g, '');
+          const normalizeName = (v?: string) => v?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
+
+          // Pull passing leader: first try to match athlete id, then fall back to team possession
+          const offenseIdStr = offenseIdForSack ? String(offenseIdForSack) : undefined;
+          const leaderGame = scoreboard?.games?.find((g) => {
+            const competitors = (g.competitions?.[0]?.competitors) || [];
+            // match athlete id inside leaders
+            const hasAthlete = competitors.some((c: any) => c?.leaders?.some((l: any) => l?.leaders?.some((p: any) => String(p?.athlete?.id) === offenseIdStr)));
+            if (hasAthlete) return true;
+            // fallback: match team id
+            return competitors.some((c: any) => String(c?.team?.id || c?.id) === offenseTeamId);
+          });
+          const leaderCompetitor = leaderGame?.competitions?.[0]?.competitors?.find((c: any) => {
+            const hasAthlete = c?.leaders?.some((l: any) => l?.leaders?.some((p: any) => String(p?.athlete?.id) === offenseIdStr));
+            if (hasAthlete) return true;
+            return offenseTeamId ? String(c?.team?.id || c?.id) === String(offenseTeamId) : false;
+          });
+          const passingLeader = leaderCompetitor?.leaders?.find((l: any) => l?.name === 'passingLeader');
+          const leaderAthlete = passingLeader?.leaders?.[0]?.athlete;
+
+          const leaderShort = normalizeName(leaderAthlete?.shortName);
+          const leaderHeadshotRaw = leaderAthlete?.headshot?.href || leaderAthlete?.headshot;
+          const leaderHeadshot = typeof leaderHeadshotRaw === 'string' ? leaderHeadshotRaw : undefined;
+          // const leaderHeadshotUrl = typeof leaderHeadshot === 'string' ? leaderHeadshot : leaderHeadshot?.;
+
+          const matchesLeader = qbNameCompact && leaderShort && leaderShort === qbNameCompact;
+
+          // Prefer scoreboard passing leader when it matches the parsed QB short name; otherwise fall back to play data
+          type QBPick = { headshot?: string; displayName?: string; shortName?: string; position?: string };
+          let qbAthlete: QBPick | undefined = (matchesLeader && leaderHeadshot)
+            ? { headshot: leaderHeadshot, displayName: leaderAthlete?.displayName || leaderAthlete?.fullName || leaderAthlete?.shortName, shortName: leaderAthlete?.shortName, position: leaderAthlete?.position?.abbreviation || leaderAthlete?.position?.displayName || 'QB' }
+            : undefined;
+
+          if (!qbAthlete) {
+            const fallbackCandidates = lastPlay.athletesInvolved || [];
+            qbAthlete = fallbackCandidates.find((a) => qbNameCompact && normalizeName(a.shortName) === qbNameCompact && a.headshot)
+            const candidate = fallbackCandidates.find((a) => qbNameCompact && normalizeName(a.shortName) === qbNameCompact && a.headshot)
+              || fallbackCandidates.find((a) => qbNameCompact && normalizeName(a.displayName).includes(qbNameCompact) && a.headshot)
+              || fallbackCandidates.find((a) => a.headshot && a.position?.toUpperCase() === 'QB');
+            // Only accept candidate if headshot differs from rusher
+            qbAthlete = candidate && candidate.headshot !== rusherAthlete.headshot ? candidate : undefined;
+          }
+
+          // Ensure rusher and QB show distinct headshots when possible
+          if (qbAthlete?.headshot && rusherAthlete?.headshot && qbAthlete.headshot === rusherAthlete.headshot) {
+            const alt = (lastPlay.athletesInvolved || []).find((a) => a.headshot && a.headshot !== rusherAthlete.headshot);
+            qbAthlete = alt && alt.headshot !== rusherAthlete.headshot ? alt : undefined;
+          }
+
           return (
-            <div
-              className="absolute z-10"
-              style={{ 
-                left: `${baseStartX}%`,
-                top: HEADSHOT_VERTICAL_POSITION,
-                transform: 'translate(-50%, -50%)'
-              }}
-            >
+            <>
+              {/* Rusher sliding in */}
               <div
-                className="animate-sack-crash"
-                style={{
-                  '--distance': distance
-                } as React.CSSProperties}
+                className="absolute z-20"
+                style={{ 
+                  left: `${baseStartX}%`,
+                  top: HEADSHOT_VERTICAL_POSITION,
+                  transform: 'translate(-50%, -50%)'
+                }}
               >
-                <div className="relative group">
-                  <div 
-                    className="w-20 h-16 rounded-full flex items-center justify-center shadow-2xl"
-                    style={{
-                      backgroundColor: `${playViz.color}30`,
-                      boxShadow: `0 0 20px ${playViz.glowColor}`
-                    }}
-                  >
-                    <img
-                      src={lastPlay.athletesInvolved[0].headshot}
-                      alt={lastPlay.athletesInvolved[0].displayName}
-                      className="w-14 h-14 rounded-full object-cover z-1 border-2"
-                      style={{ borderColor: playViz.color }}
-                    />
+                <div
+                  className="animate-sack-rush"
+                  style={{
+                    '--distance': `${distancePixels}px`
+                  } as React.CSSProperties}
+                >
+                  <div className="relative group">
+                    <div 
+                      className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                      style={{
+                        backgroundColor: `${playViz.color}30`,
+                        boxShadow: `0 0 20px ${playViz.glowColor}`
+                      }}
+                    >
+                      <img
+                        src={lastPlay.athletesInvolved[0].headshot}
+                        alt={lastPlay.athletesInvolved[0].displayName}
+                        className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                        style={{ borderColor: playViz.color }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+
+              {/* QB waiting and getting bumped */}
+              <div
+                className="absolute z-10"
+                style={{ 
+                  left: `${baseEndX}%`,
+                  top: HEADSHOT_VERTICAL_POSITION,
+                  transform: 'translate(-50%, -50%)'
+                }}
+              >
+                <div
+                  className="animate-qb-sacked"
+                  style={{ '--hit-x': `${hitRollSigned}px` } as React.CSSProperties}
+                >
+                  <div className="relative group">
+                    <div 
+                      className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl bg-black/30"
+                      style={{
+                        backgroundColor: `${playViz.color}20`,
+                        boxShadow: `0 0 14px ${playViz.glowColor}`
+                      }}
+                    >
+                      {qbAthlete?.headshot ? (
+                        <img
+                          src={qbAthlete.headshot}
+                          alt={qbAthlete?.displayName || 'QB'}
+                          className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                          style={{ borderColor: playViz.color }}
+                        />
+                      ) : (
+                        <div className="text-2xl" style={{ color: playViz.color }}>
+                          🤕
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
           );
         }
         
@@ -1240,9 +1491,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
       )}
 
       {/* Latest Play - Only show if showGameInfo is true */}
-      {showGameInfo && playLog.length > 0 && (() => {
-        const latestPlay = playLog[0];
+      {showGameInfo && lastPlay && (() => {
+        const latestPlay = lastPlay;
         const team = latestPlay.possession === homeTeam?.id ? homeTeam : awayTeam;
+        const quarter = (latestPlay as any).quarter;
+        const clock = (latestPlay as any).clock;
         const isHome = team?.id === homeTeam?.id;
 
         return (
@@ -1255,14 +1508,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
               <div className="flex items-center gap-2 mb-2">
                 <img src={getTeamLogo(team?.team)} alt="" className="w-5 h-5" />
                 <span className={`text-xs font-bold ${isHome ? 'text-neon-pink' : 'text-neon-cyan'}`}>
-                  Q{latestPlay.quarter} {latestPlay.clock}
+                  {quarter ? `Q${quarter}` : ''} {clock || ''}
                 </span>
               </div>
               
               {/* Player headshots */}
               {latestPlay.athletesInvolved && latestPlay.athletesInvolved.length > 0 && (
                 <div className="flex gap-2 mb-2">
-                  {latestPlay.athletesInvolved.slice(0, 3).map((athlete, idx) => (
+                  {latestPlay.athletesInvolved.slice(0, 3).map((athlete: any, idx: number) => (
                     athlete.headshot && (
                       <div key={idx} className="flex items-center gap-1">
                         <img

@@ -3,6 +3,7 @@ import { FaTrophy, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import axios from 'axios';
 import { jwtStorage } from '../../../utils/jwtStorage';
 import { usePicks } from '../../../providers/PicksContext';
+import { debugLog } from '@/utils/debugLog';
 import { Play } from '@/types/espn/playByplay';
 
 interface TopPicksProps {
@@ -58,13 +59,13 @@ const TopPicks: React.FC<TopPicksProps> = ({
         
         // Only fetch if user is authenticated
         if (!token) {
-          console.log('⚠️ No JWT token found - user not authenticated');
+          debugLog('⚠️ No JWT token found - user not authenticated');
           setUserPickIds(new Set());
           setIsLoading(false);
           return;
         }
 
-        console.log(`🔍 Fetching user picks and scores for game ${gameId}...`);
+        debugLog(`🔍 Fetching user picks and scores for game ${gameId}...`);
         
         // Fetch user picks
         const picksResponse = await axios.get(`/api/picks/game/${gameId}/user`, {
@@ -73,7 +74,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
           }
         });
         
-        console.log('📦 Raw picks response:', picksResponse.data);
+        debugLog('📦 Raw picks response:', picksResponse.data);
         
         // Extract players from the most recent pick submission
         let athleteIds: string[] = [];
@@ -105,16 +106,16 @@ const TopPicks: React.FC<TopPicksProps> = ({
           
           athleteIds = Array.from(allPlayerIds);
           
-          console.log(`✅ Found ${allPlayerIds.size} total unique players across ${allPickSubmissions.length} pick submissions`);
-          console.log('📚 All player IDs ever picked:', athleteIds);
-          console.log('🎯 Current active picks:', Array.from(currentIds));
+          debugLog(`✅ Found ${allPlayerIds.size} total unique players across ${allPickSubmissions.length} pick submissions`);
+          debugLog('📚 All player IDs ever picked:', athleteIds);
+          debugLog('🎯 Current active picks:', Array.from(currentIds));
           
           setCurrentPickIds(currentIds);
         } else {
-          console.log('⚠️ No picks found in response');
+          debugLog('⚠️ No picks found in response');
         }
         
-        console.log('🎯 Athlete IDs from picks:', athleteIds);
+        debugLog('🎯 Athlete IDs from picks:', athleteIds);
         setUserPickIds(new Set(athleteIds));
         
         // Fetch scores from API
@@ -132,9 +133,9 @@ const TopPicks: React.FC<TopPicksProps> = ({
 
   // Calculate top picks from play log using context scores
   const topPicks = useMemo(() => {
-    console.log('🔄 Recalculating top picks using context scores...');
-    console.log('📊 User pick IDs:', Array.from(userPickIds));
-    console.log('📝 Total plays in log:', playLog.length);
+    debugLog('🔄 Recalculating top picks using context scores...');
+    debugLog('📊 User pick IDs:', Array.from(userPickIds));
+    debugLog('📝 Total plays in log:', playLog.length);
 
     // Get scores from context
     const scores = getScores(gameId);
@@ -144,7 +145,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
       return [];
     }
 
-    console.log('📊 Scores from context:', scores);
+    debugLog('📊 Scores from context:', scores);
 
     // Build a map of all athletes with scores
     const athleteScores = new Map<string, PlayerScore>();
@@ -180,7 +181,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
       .sort((a, b) => b.gameScore - a.gameScore);
     
     const userPicks = sorted.filter(p => p.isUserPick);
-    console.log(`✅ Total players with scores: ${sorted.length}, User picks: ${userPicks.length}`);
+    debugLog(`✅ Total players with scores: ${sorted.length}, User picks: ${userPicks.length}`);
     
     return sorted;
   }, [playLog, userPickIds, currentPickIds, gameId, getScores]);

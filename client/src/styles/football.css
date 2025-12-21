@@ -383,6 +383,77 @@
   animation: headshot-follow 5s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
 }
 
+/* QB gets bumped then rolls away when sacked */
+@keyframes qb-sacked {
+  0% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  12% {
+    transform: translateX(0) scale(0.98);
+    opacity: 1;
+  }
+  28% {
+    transform: translateX(var(--hit-x)) rotate(-8deg) scale(0.92);
+    opacity: 1;
+  }
+  46% {
+    transform: translateX(var(--hit-x)) rotate(-12deg) scale(0.88);
+    opacity: 0.92;
+  }
+  70% {
+    transform: translateX(var(--hit-x)) rotate(-15deg) scale(0.85);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(var(--hit-x)) rotate(-18deg) scale(0.82);
+    opacity: 0.75;
+  }
+}
+
+.animate-qb-sacked {
+  animation: qb-sacked 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+}
+
+/* Sack rusher hits immediately (no long lead-in) */
+@keyframes sack-rush-hit {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  12% {
+    transform: translateX(var(--distance));
+    opacity: 1;
+  }
+  45% {
+    transform: translateX(var(--distance));
+    opacity: 1;
+  }
+  65% {
+    transform: translateX(var(--distance));
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 0.3;
+  }
+}
+
+.animate-sack-rush {
+  animation: sack-rush-hit 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+}
+
+/* Touchdown dance: hidden until late in the cycle, then pops in at end zone */
+@keyframes td-dance {
+  0%, 68% { opacity: 0; transform: translateY(2px) scale(0.9); }
+  90% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.td-dance {
+  animation: td-dance var(--td-duration, 3000ms) ease-in-out infinite;
+}
+
 .animate-punt-trajectory {
   animation: punt-trajectory 4s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
 }

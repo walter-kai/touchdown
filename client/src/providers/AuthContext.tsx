@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useLocation } from 'react-router-dom';
 import { jwtStorage } from '../utils/jwtStorage';
 import { userStorage } from '../utils/userStorage';
+import { debugLog } from '@/utils/debugLog';
 import { User } from '../../../types/User';
 
 interface AuthContextType {
@@ -45,7 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         // Check if user has valid JWT token
         if (jwtStorage.isAuthenticated()) {
-          console.log('Found existing JWT token - user session restored');
+          debugLog('Found existing JWT token - user session restored');
           // Optimistically hydrate from localStorage
           const cached = userStorage.getUser();
           if (cached) {
@@ -64,11 +65,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               const { user: userData } = await response.json();
               setUser(userData);
               userStorage.setUser(userData);
-              console.log('User session restored:', userData.email || userData.walletAddress);
+              debugLog('User session restored:', userData.email || userData.walletAddress);
 
               // No extra upsert/verification call; rely on `/auth/google/*` flow
             } else {
-              console.log('Failed to restore user session, clearing token');
+              debugLog('Failed to restore user session, clearing token');
               jwtStorage.clearToken();
               userStorage.clear();
             }
@@ -78,7 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             userStorage.clear();
           }
         } else {
-          console.log('No valid JWT token found');
+          debugLog('No valid JWT token found');
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -103,7 +104,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         userStorage.setUser(userData);
         setUser(userData);
         setShowLoginModal(false);
-        console.log('Google auth success via postMessage (minimal listener)');
+        debugLog('Google auth success via postMessage (minimal listener)');
       }
       if (data.type === 'GOOGLE_AUTH_ERROR') {
         console.warn('Google auth error:', data.error);
@@ -117,7 +118,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     jwtStorage.setToken(token, expiresIn);
     userStorage.setUser(userData);
     setUser(userData);
-    console.log('User logged in:', userData.email);
+    debugLog('User logged in:', userData.email);
   };
 
   const logout = async () => {
@@ -129,7 +130,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Clear user state
       setUser(null);
       
-      console.log('User logged out successfully');
+      debugLog('User logged out successfully');
     } catch (error) {
       console.error('Error during logout:', error);
     }

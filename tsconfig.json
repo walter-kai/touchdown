@@ -12,6 +12,16 @@
       "outDir": "./dist",
       "rootDir": ".",
       "baseUrl": ".",
+      "paths": {
+        "@/*": ["client/src/*"],
+        "@/components/*": ["client/src/components/*"],
+        "@/hooks/*": ["client/src/hooks/*"],
+        "@/types/*": ["client/types/*", "types/*"],
+        "@/pages/*": ["client/src/pages/*"],
+        "@/styles/*": ["client/src/styles/*"],
+        "@/utils/*": ["client/src/utils/*"],
+        "@/contexts/*": ["client/src/contexts/*"]
+      },
       "sourceMap": true,
       "inlineSourceMap": false,
       "inlineSources": true,
