@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaFootballBall, FaListUl } from 'react-icons/fa';
 import { Play } from '@/types/espn/playByplay';
 
 interface PlayLogProps {
@@ -185,9 +184,17 @@ const PlayLog: React.FC<PlayLogProps> = ({
               {/* Plays in this possession */}
               <div className="space-y-3">
                 {group.plays.map((play, playIdx) => {
-                  const primaryAthlete = play.athletesInvolved && play.athletesInvolved.length > 0 ? play.athletesInvolved[0] : null;
-                  const headshotUrl = primaryAthlete?.headshot;
+                  const participants = play.athletesInvolved || [];
+                  const primaryAthlete = participants.length > 0 ? participants[0] : null;
+                  const headshots = participants.filter(a => a.headshot).slice(0, 4);
                   const isSelected = selectedPlayers.some(p => p.id === primaryAthlete?.id);
+                       const typeText = typeof play.type === 'string' ? play.type : (play.type as any)?.text || (play.type as any)?.displayName || '';
+                       const participantCountLabel = (() => {
+                         const count = headshots.length || participants.length;
+                         if (count === 1) return '1 player involved';
+                         if (count > 1) return `${count} players involved`;
+                         return '';
+                       })();
                   const playId = `${play.text}-${play.quarter}-${play.clock}`;
                   const isNewPlay = newPlayIds.has(playId);
 
@@ -199,70 +206,40 @@ const PlayLog: React.FC<PlayLogProps> = ({
                         animationDelay: isNewPlay ? `${(groupIdx * 50) + (playIdx * 100)}ms` : '0ms'
                       }}
                     >
-                      {/* Player Header with Large Headshot */}
-                      {headshotUrl && primaryAthlete && (
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={headshotUrl}
-                            alt={primaryAthlete.displayName}
-                            className={`rounded-lg object-cover border-2 flex-shrink-0 ${
-                              isSelected ? 'border-neon-cyan' : 'border-white/30'
-                            }`}
-                            style={{ width: '69px', height: '60px' }}
-                          />
-                          <div className="flex-1">
-                            <div className={`font-bold ${isSelected ? 'text-neon-cyan' : 'text-white'}`}>
-                              {primaryAthlete.displayName}
-                            </div>
-                            <div className="text-text-muted text-xs">
-                              {primaryAthlete.position} • #{primaryAthlete.jersey}
-                            </div>
+                      <div className="flex items-center gap-3">
+                        {headshots.length > 0 && (
+                          <div className="flex -space-x-2">
+                            {headshots.map((athlete, idx) => (
+                              <img
+                                key={athlete.id || idx}
+                                src={athlete.headshot}
+                                alt={athlete.shortName || athlete.displayName}
+                                className={`w-10 h-10 rounded-full border-2 object-cover ${
+                                  selectedPlayers.some(p => p.id === athlete.id) ? 'border-neon-cyan' : 'border-white/30'
+                                } ${idx > 0 ? 'shadow-inner' : ''}`}
+                              />
+                            ))}
                           </div>
-                          <div className="text-right">
+                        )}
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className={`text-sm text-neon-cyan font-bold'}`}>
+                              {typeText || 'Play'}
+                            </span>
                             <span className={`${textColor} text-xs font-bold`}>
                               Q{play.quarter} - {play.clock}
                             </span>
                           </div>
+                          {participantCountLabel && (
+                            <span className="text-text-muted text-[11px] font-semibold">
+                              {participantCountLabel}
+                            </span>
+                          )}
                         </div>
-                      )}
-
-                      {/* Play without primary athlete */}
-                      {!headshotUrl && (
-                        <div className="flex items-center justify-between mb-1">
-                          <span className={`${textColor} text-xs font-bold`}>
-                            Q{play.quarter} - {play.clock}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Play Description */}
-                      <p className="text-text-light text-sm leading-snug pl-0">
-                        {play.text}
-                      </p>
-
-                      {/* Additional Athletes Involved */}
-                      {play.athletesInvolved && play.athletesInvolved.length > 1 && (
-                        <div className="flex flex-wrap gap-2">
-                          {play.athletesInvolved.slice(1).map((athlete, aIdx) => {
-                            const isAthleteSelected = selectedPlayers.some(p => p.id === athlete.id);
-                            return (
-                              <div key={aIdx} className={`flex items-center gap-2 px-2 py-1 rounded text-xs ${
-                                isAthleteSelected ? 'bg-neon-cyan/20 border border-neon-cyan/50 text-neon-cyan' : 'bg-bg-darker/80 text-text-muted'
-                              }`}>
-                                {athlete.headshot && (
-                                  <img 
-                                    src={athlete.headshot} 
-                                    alt={athlete.shortName} 
-                                    className="w-5 h-5 rounded-full" 
-                                  />
-                                )}
-                                <span>{athlete.shortName}</span>
-                                <span className="opacity-60">{athlete.position}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
+                      </div>
+                          <p className="text-text-light text-sm leading-snug pl-0">
+                            {play.text}
+                          </p>
                     </div>
                   );
                 })}

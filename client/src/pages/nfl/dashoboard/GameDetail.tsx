@@ -7,13 +7,11 @@ import SummaryView from '../summary/Summary';
 import FootballField from '@/components/nfl/FootballField';
 import { useLoading } from '@/providers/LoadingContext';
 import { debugLog } from '@/utils/debugLog';
+import { fetchEspnPlays } from '@/utils/espnPlays';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
 import { Play } from '@/types/espn/playByplay';
-
-// Firebase Firestore endpoint (assuming you have a backend endpoint)
-const FIRESTORE_API = '/api/playbyplay';
 
 interface NFLGameProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
@@ -40,7 +38,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
   const [testGameId, setTestGameId] = useState<string>('401772949');
   const [selectedPlayIndex, setSelectedPlayIndex] = useState<number>(0);
 
-  // Load previous plays from Firebase on mount
+  // Load previous plays from ESPN plays endpoint on mount
   useEffect(() => {
     const loadPreviousPlays = async () => {
       if (!gameId || playsLoaded) return;
@@ -79,54 +77,22 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
         const actualGameId = gameId === 'test' ? testGameId : gameId;
         
         showLoading('Loading play history...');
-        debugLog(`Loading previous plays for game ${actualGameId} from backend API...`);
+        debugLog(`Loading previous plays for game ${actualGameId} from ESPN plays API...`);
+
+        const compId = event?.competitions?.[0]?.id || actualGameId;
+        const historicalPlays = await fetchEspnPlays(actualGameId, String(compId));
+
+        // Cache the data
+        localStorage.setItem(cacheKey, JSON.stringify({
+          plays: historicalPlays,
+          timestamp: Date.now()
+        }));
         
-        // Fetch from your backend API that connects to Firebase
-        const response = await axios.get(`${FIRESTORE_API}/${actualGameId}`);
-        
-        if (response.data && response.data.plays && Array.isArray(response.data.plays)) {
-          const historicalPlays = response.data.plays.map((play: any) => ({
-            text: play.text || '',
-            quarter: play.quarter || 0,
-            clock: play.clock || '0:00',
-            yardage: play.yardLine,
-            timestamp: play.timestamp ? new Date(play.timestamp) : new Date(),
-            possession: play.possession?.id || play.possession || play.team, // Extract ID if object, use string if available, fallback to team
-            athletesInvolved: play.athletesInvolved || [],
-            type: play.type || '',
-            scoreValue: play.scoreValue || 0
-          }));
-          
-          // Sort by timestamp descending (most recent first)
-          historicalPlays.sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime());
-          
-          // Check if all plays have the same timestamp (bad data from old bug)
-          if (historicalPlays.length > 10) {
-            const firstTimestamp = historicalPlays[0].timestamp.getTime();
-            const lastTimestamp = historicalPlays[historicalPlays.length - 1].timestamp.getTime();
-            const timeDiff = Math.abs(firstTimestamp - lastTimestamp);
-            
-            if (timeDiff < 60000) { // Less than 1 minute difference = bad data
-              console.warn('⚠️ Detected bad timestamp data (all plays have same time). This game needs to be re-saved with wallclock data.');
-              console.warn('   Please re-fetch the game data from ESPN and save it again to fix timestamps.');
-            }
-          }
-          
-          // Cache the data
-          localStorage.setItem(cacheKey, JSON.stringify({
-            plays: historicalPlays,
-            timestamp: Date.now()
-          }));
-          
-          setPlayLog(historicalPlays);
-          setPlaysLoaded(true);
-          debugLog(`✅ Loaded ${historicalPlays.length} historical plays from backend`);
-        } else {
-          debugLog('No plays found in backend for this game');
-          setPlaysLoaded(true);
-        }
+        setPlayLog(historicalPlays);
+        setPlaysLoaded(true);
+        debugLog(`✅ Loaded ${historicalPlays.length} historical plays from ESPN`);
       } catch (error: any) {
-        console.error('Error loading previous plays from backend:', error);
+        console.error('Error loading previous plays:', error);
         // Set playsLoaded to true even on error to prevent infinite retries
         setPlaysLoaded(true);
       } finally {

@@ -5,7 +5,7 @@ import telegramRoute from "./telegram/telegram.route";
 import linkRoute from "./link/link.route";
 import userRoute from "./user/user.route";
 import picksRoute from "./picks/picks.route";
-import playByPlayRoute from "./playbyplay/playbyplay.route";
+
 
 const router = express.Router();
 
@@ -31,10 +31,6 @@ const defaultRoutes: ReadonlyArray<RouteObj> = [
     path: "/link",
     route: linkRoute,
   },
-  {
-    path: "/playbyplay",
-    route: playByPlayRoute,
-  }
 ];
 
 defaultRoutes.forEach((route) => {

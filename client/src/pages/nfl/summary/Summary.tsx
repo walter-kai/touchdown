@@ -4,7 +4,6 @@ import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock, FaLock, F
 import PredictionChart from '@/components/nfl/PredictionChart';
 import PlayLog from '@/components/nfl/PlayLog';
 import PointsChart from '@/components/nfl/PointsChart';
-import axios from 'axios';
 import Info from '@/pages/nfl/scoreboard/Info';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
 import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
@@ -13,6 +12,7 @@ import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
 import { Play } from '@/types/espn/playByplay';
 import { getHeadshotUrl } from '@/utils/headshot';
+import { fetchEspnPlays } from '@/utils/espnPlays';
 
 interface SummaryViewProps {
   event: Event;
@@ -63,66 +63,15 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     return map;
   }, [summary?.boxscore?.players]);
   
-  // Fetch authoritative play-by-play from backend API and normalize
+  // Fetch authoritative play-by-play directly from ESPN API and normalize
   useEffect(() => {
     const fetchPlayByPlay = async () => {
       try {
-        const res = await axios.get(`/api/playbyplay/${event.id}`);
-        const data = res.data;
-        const normalized: Play[] = [];
-
-        if (data?.drives?.previous?.length) {
-          data.drives.previous.forEach((drive: any) => {
-            drive.plays?.forEach((p: any) => {
-              const possessionTeamId = p.start?.team?.id || drive.team?.id;
-              normalized.push({
-                text: p.text,
-                quarter: p.period?.number || 0,
-                clock: p.clock?.displayValue || '',
-                yardage: typeof p.statYardage === 'number' ? p.statYardage : undefined,
-                timestamp: new Date(p.wallclock || competition.date),
-                possession: possessionTeamId,
-                type: p.type?.text || 'Play',
-                athletesInvolved: (p.athletesInvolved || []).map((a: any) => ({
-                  id: a.athlete?.id || a.id,
-                  fullName: a.athlete?.displayName || a.fullName || a.displayName,
-                  displayName: a.athlete?.displayName || a.displayName,
-                  shortName: a.athlete?.shortName || a.shortName || a.displayName,
-                  headshot: getHeadshotUrl({ id: a.athlete?.id || a.id, headshot: a.athlete?.headshot || a.headshot }) || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : ''),
-                  jersey: a.athlete?.jersey || a.jersey || '',
-                  position: a.athlete?.position?.abbreviation || a.position || '',
-                  team: { id: a.athlete?.team?.id || (p.start?.team?.id) || possessionTeamId },
-                })),
-              });
-            });
-          });
-        } else if (Array.isArray(data?.plays)) {
-          data.plays.forEach((p: any) => {
-            normalized.push({
-              text: p.text,
-              quarter: p.period?.number || p.quarter || 0,
-              clock: p.clock?.displayValue || p.clock || '',
-              yardage: typeof p.statYardage === 'number' ? p.statYardage : p.yardage,
-              timestamp: new Date(p.wallclock || competition.date),
-              possession: p.start?.team?.id || p.possession,
-              type: p.type?.text || p.type || 'Play',
-              athletesInvolved: (p.athletesInvolved || []).map((a: any) => ({
-                id: a.athlete?.id || a.id,
-                fullName: a.athlete?.displayName || a.fullName || a.displayName,
-                displayName: a.athlete?.displayName || a.displayName,
-                shortName: a.athlete?.shortName || a.shortName || a.displayName,
-                headshot: getHeadshotUrl({ id: a.athlete?.id || a.id, headshot: a.athlete?.headshot || a.headshot }) || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : ''),
-                jersey: a.athlete?.jersey || a.jersey || '',
-                position: a.athlete?.position?.abbreviation || a.position || '',
-                team: { id: a.athlete?.team?.id || (p.start?.team?.id) || p.teamId || '' },
-              })),
-            });
-          });
-        }
-
-        setApiPlayLog(normalized);
+        const compId = competition.id || event.id;
+        const plays = await fetchEspnPlays(event.id, String(compId), headshotByAthleteId);
+        setApiPlayLog(plays);
       } catch (err) {
-        console.warn('Failed to fetch play-by-play from backend:', err);
+        console.warn('Failed to fetch play-by-play from ESPN:', err);
       }
     };
     fetchPlayByPlay();
