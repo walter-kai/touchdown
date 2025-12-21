@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus, FaCrosshairs, FaHandPointer, FaListUl } from 'react-icons/fa';
 import PlayLog from '@/components/nfl/PlayLog';
@@ -331,6 +331,17 @@ const YourPicks: React.FC<PlayerPickProps> = ({
   const [showGameLog, setShowGameLog] = useState(false);
   const [allPlayerScores, setAllPlayerScores] = useState<Record<string, number>>({});
   const rosterSelectorRef = React.useRef<HTMLDivElement>(null);
+
+  const playInvolvementCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    playLog.forEach(play => {
+      play.athletesInvolved?.forEach((athlete) => {
+        if (!athlete?.id) return;
+        counts[athlete.id] = (counts[athlete.id] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [playLog]);
   
   // Use picks context for scores
   const { fetchScores, getScores } = usePicks();
@@ -1099,8 +1110,8 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                     {currentRoster.filter(player => {
                       const pos = typeof player.position === 'string' ? player.position : player.position?.abbreviation;
                       return ['QB', 'RB', 'WR', 'TE', 'FB', 'OL', 'OT', 'OG', 'C'].includes(pos);
-                    }).sort((a, b) => (allPlayerScores[b.id] || 0) - (allPlayerScores[a.id] || 0)).map((player) => {
-                      const playerScore = allPlayerScores[player.id] || 0;
+                    }).sort((a, b) => (playInvolvementCounts[b.id] || 0) - (playInvolvementCounts[a.id] || 0)).map((player) => {
+                      const playerScore = playInvolvementCounts[player.id] || 0;
                       const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
                       const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
                       const isDuplicate = isInCurrent && !isInNew;
@@ -1142,12 +1153,10 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                               {typeof player.position === 'string' ? player.position : player.position?.abbreviation} {player.jersey && `• #${player.jersey}`}
                             </div>
                           </div>
-                          {playerScore > 0 && (
-                            <div className="text-right flex-shrink-0">
-                              <div className="text-neon-cyan font-bold text-sm">{playerScore}</div>
-                              <div className="text-text-muted text-[9px]">pts</div>
-                            </div>
-                          )}
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-neon-cyan font-bold text-sm">{playerScore}</div>
+                            <div className="text-text-muted text-[9px]">plays</div>
+                          </div>
                           {isInNew && <FaCheckCircle className="text-neon-cyan flex-shrink-0 text-xs ml-2" />}
                           {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs ml-2" />}
                         </button>
@@ -1163,8 +1172,8 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                     {currentRoster.filter(player => {
                       const pos = typeof player.position === 'string' ? player.position : player.position?.abbreviation;
                       return ['DE', 'DT', 'LB', 'CB', 'S', 'DB', 'DL', 'SAF', 'MLB', 'OLB'].includes(pos);
-                    }).sort((a, b) => (allPlayerScores[b.id] || 0) - (allPlayerScores[a.id] || 0)).map((player) => {
-                      const playerScore = allPlayerScores[player.id] || 0;
+                    }).sort((a, b) => (playInvolvementCounts[b.id] || 0) - (playInvolvementCounts[a.id] || 0)).map((player) => {
+                      const playerScore = playInvolvementCounts[player.id] || 0;
                       const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
                       const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
                       const isDuplicate = isInCurrent && !isInNew;
@@ -1206,12 +1215,10 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                               {typeof player.position === 'string' ? player.position : player.position?.abbreviation} {player.jersey && `• #${player.jersey}`}
                             </div>
                           </div>
-                          {playerScore > 0 && (
-                            <div className="text-right flex-shrink-0">
-                              <div className="text-neon-cyan font-bold text-sm">{playerScore}</div>
-                              <div className="text-text-muted text-[9px]">pts</div>
-                            </div>
-                          )}
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-neon-cyan font-bold text-sm">{playerScore}</div>
+                            <div className="text-text-muted text-[9px]">plays</div>
+                          </div>
                           {isInNew && <FaCheckCircle className="text-neon-cyan flex-shrink-0 text-xs ml-2" />}
                           {isDuplicate && <FaLock className="text-gray-500 flex-shrink-0 text-xs ml-2" />}
                         </button>
