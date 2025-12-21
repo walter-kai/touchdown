@@ -1301,7 +1301,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
           const rusherAthlete = lastPlay.athletesInvolved[0];
           // Offense identifiers: prefer athlete id from play, fall back to team possession
-          const offenseIdForSack = offenseAthleteId || offenseTeamId;
+          const offenseIdForSack = offenseAthleteId;
 
           // Parse QB name from text (e.g., "S.Darnold sacked") to improve matching to scoreboard shortName
           const qbNameRegex = /(\b[A-Z]\.[A-Za-z'\-]+)\s+sacked/i;

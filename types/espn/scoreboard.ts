@@ -125,7 +125,7 @@ export interface Competition {
   geoBroadcasts?: GeoBroadcast[];
   odds?: Odds[];
   situation?: Situation;
-  leaders?: Leader[];
+  leaders?: CompetitionLeader[];
   headlines?: Headline[];
   tickets?: Array<{
     summary: string;
@@ -157,7 +157,7 @@ export interface Competitor {
   linescores?: Linescore[];
   statistics?: any[];
   records?: Record[];
-  leaders?: Leader[];
+  leaders?: CompetitorLeader[];
 }
 
 export interface Team {
@@ -191,13 +191,19 @@ export interface Record {
   summary: string;
 }
 
-export interface Leader {
-  name: string;
-  displayName: string;
-  shortDisplayName: string;
-  abbreviation: string;
-  leaders: LeaderDetail[];
+export interface LeaderCategory {
+  name?: string;
+  displayName?: string;
+  shortDisplayName?: string;
+  abbreviation?: string;
+  leaders?: LeaderDetail[];
 }
+
+// Competition-level leaders (passingYards/rushingYards/receivingYards)
+export type CompetitionLeader = LeaderCategory;
+
+// Team-level leaders (passingLeader/rushingLeader/receivingLeader)
+export type CompetitorLeader = LeaderCategory;
 
 export interface LeaderDetail {
   displayValue: string;
