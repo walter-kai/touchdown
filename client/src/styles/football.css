@@ -394,25 +394,25 @@
     opacity: 1;
   }
   28% {
-    transform: translateX(var(--hit-x)) rotate(calc(var(--hit-rot-sign, 1) * -8deg)) scale(0.92);
+    transform: translateX(var(--hit-x)) rotate(calc(var(--hit-rot-sign, 1) * 8deg)) scale(0.92);
     opacity: 1;
   }
   46% {
-    transform: translateX(var(--hit-x)) rotate(calc(var(--hit-rot-sign, 1) * -12deg)) scale(0.88);
+    transform: translateX(var(--hit-x)) rotate(calc(var(--hit-rot-sign, 1) * 12deg)) scale(0.88);
     opacity: 0.92;
   }
   70% {
-    transform: translateX(var(--hit-x)) rotate(calc(var(--hit-rot-sign, 1) * -15deg)) scale(0.85);
+    transform: translateX(var(--hit-x)) rotate(calc(var(--hit-rot-sign, 1) * 15deg)) scale(0.85);
     opacity: 0.85;
   }
   100% {
-    transform: translateX(var(--hit-x)) rotate(calc(var(--hit-rot-sign, 1) * -20deg)) scale(0.82);
+    transform: translateX(var(--hit-x)) rotate(calc(var(--hit-rot-sign, 1) * 20deg)) scale(0.82);
     opacity: 0.75;
   }
 }
 
 .animate-qb-sacked {
-  animation: qb-sacked 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation: qb-sacked 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1 forwards;
 }
 
 /* Sack rusher hits immediately (no long lead-in) */
@@ -421,26 +421,18 @@
     transform: translateX(0);
     opacity: 1;
   }
-  12% {
+  40% {
     transform: translateX(var(--distance));
     opacity: 1;
-  }
-  45% {
-    transform: translateX(var(--distance));
-    opacity: 1;
-  }
-  65% {
-    transform: translateX(var(--distance));
-    opacity: 0.9;
   }
   100% {
-    transform: translateX(0);
-    opacity: 0.3;
+    transform: translateX(var(--distance));
+    opacity: 0.0;
   }
 }
 
 .animate-sack-rush {
-  animation: sack-rush-hit 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation: sack-rush-hit 2.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1 forwards;
 }
 
 /* Touchdown dance: hidden until late in the cycle, then pops in at end zone */

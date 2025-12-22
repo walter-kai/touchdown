@@ -329,13 +329,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
   
   // Single source of truth for all headshot vertical positions
   const HEADSHOT_VERTICAL_POSITION = '64%';
-  const ARROW_VERTICAL_POSITION = '36%';
   // Duration of the kickoff arc animation (matches animate-pass-arc duration)
   const KICK_ANIMATION_MS = 5000;
   // Duration of rush animation (matches rush-slide timing)
   const RUSH_ANIMATION_MS = 3000;
-  const PLAY_LOOP_MS = KICK_ANIMATION_MS + RUSH_ANIMATION_MS + 600; // small buffer
+  const PASS_PAUSE_MS = 2000;
+  const PLAY_END_DELAY_MS = 600;
   const clampYard = (yard: number) => Math.max(0, Math.min(100, yard));
+  const fieldWidthPx = fieldRef.current?.offsetWidth || 1000;
   
   if (!lastPlay) return null;
   // Determine initial orientation using the coin toss (receiver starts on the left driving left-to-right)
@@ -494,13 +495,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
   // Gate the return animation until the kick arc finishes
   const playKey = getPlayId(lastPlay) || lastPlay?.text || (lastPlay as any)?.type?.id || getPlayTypeText(lastPlay) || '';
-
-  // Single loop clock for all animations
-  React.useEffect(() => {
-    setLoopCycle(0);
-    const loopTimer = setInterval(() => setLoopCycle((c) => c + 1), PLAY_LOOP_MS);
-    return () => clearInterval(loopTimer);
-  }, [playKey]);
 
   React.useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -694,6 +688,45 @@ const FootballField: React.FC<FootballFieldProps> = ({
     }
   }
 
+  // Drive a per-play loop length so animations restart only after their real duration plus a short buffer
+  const playDurationMs = React.useMemo(() => {
+    const distancePercent = (playStartYard !== undefined && playEndYard !== undefined)
+      ? (playEndYard - playStartYard) * 0.8
+      : 0;
+    const signedDistancePx = (distancePercent / 100) * fieldWidthPx;
+    const distancePx = Math.abs(signedDistancePx);
+    const passDurationMs = Math.min(Math.max(distancePx * 5, 900), 4800);
+
+    if (playViz.animate === 'pass-complete' || playViz.animate === 'pass-incomplete') {
+      return passDurationMs + PASS_PAUSE_MS + PLAY_END_DELAY_MS;
+    }
+
+    if (isKickPlay) {
+      const hasReturnPhase = playViz.animate !== 'kickoff-fail' && hasPrimaryAthlete;
+      const returnDuration = hasReturnPhase ? RUSH_ANIMATION_MS : 0;
+      return KICK_ANIMATION_MS + returnDuration + PLAY_END_DELAY_MS;
+    }
+
+    if (playViz.animate === 'rush') return RUSH_ANIMATION_MS + PLAY_END_DELAY_MS;
+    if (playViz.animate === 'sack') return 1600 + PLAY_END_DELAY_MS;
+    if (playViz.animate === 'field-goal') return 5500 + PLAY_END_DELAY_MS;
+    if (playViz.animate === 'penalty') return 2400 + PLAY_END_DELAY_MS;
+    if (playViz.animate === 'timeout') return 3000 + PLAY_END_DELAY_MS;
+    if (playViz.animate === 'two-minute-warning') return 2000 + PLAY_END_DELAY_MS;
+    if (playViz.animate === 'end-regulation') return 3600 + PLAY_END_DELAY_MS;
+    if (playViz.animate === 'pulse') return 2400 + PLAY_END_DELAY_MS;
+    return 3200 + PLAY_END_DELAY_MS;
+  }, [fieldWidthPx, hasPrimaryAthlete, isKickPlay, playEndYard, playStartYard, playViz.animate, KICK_ANIMATION_MS, PASS_PAUSE_MS, PLAY_END_DELAY_MS, RUSH_ANIMATION_MS]);
+
+  React.useEffect(() => {
+    setLoopCycle(0);
+  }, [playKey]);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setLoopCycle((c) => c + 1), playDurationMs);
+    return () => clearTimeout(timer);
+  }, [playDurationMs, playKey, loopCycle]);
+
   return (
     <div className="space-y-6">
       {/* Current Drive Info - Only show if showGameInfo is true */}
@@ -826,14 +859,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
       {/* Arrow showing play direction - arrowhead only */}
       {playStartYard !== undefined && playEndYard !== undefined && playStartYard !== playEndYard && (
-        <>
+        <div className="top-12">
           {/* Arc path for punts/kickoffs */}
           {playViz.animate === 'arc' && (
             <svg
               className="absolute left-0 top-0 w-full h-full pointer-events-none"
             >
               <path
-                d={`M ${10 + (playStartYard * 0.8)}%,${ARROW_VERTICAL_POSITION} Q ${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%,13% ${10 + (playEndYard * 0.8)}%,${ARROW_VERTICAL_POSITION}`}
+                d={`M ${10 + (playStartYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION} Q ${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%,13% ${10 + (playEndYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION}`}
                 stroke={playViz.color}
                 strokeWidth={playViz.width}
                 fill="none"
@@ -878,7 +911,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               {playViz.icon}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {/* Timeout - spinning clock emoji (doesn't need play positions) */}
@@ -995,11 +1028,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
         const passStartX = 10 + (passStartYard * 0.8);
         const passEndX = 10 + (passEndYard * 0.8);
         const distance = passEndX - passStartX;
-        const fieldWidthPx = fieldRef.current?.offsetWidth || 1000;
         const signedDistancePx = distance / 100 * fieldWidthPx;
         const distancePx = Math.abs(signedDistancePx);
         const passDurationMs = Math.min(Math.max(distancePx * 5, 900), 4800); // clamp for fluid speed
-        const PASS_PAUSE_MS = 2000;
         
         // Rush animation - headshot slides from dot with football (supports losses/backwards motion)
         if (playViz.animate === 'rush') {
