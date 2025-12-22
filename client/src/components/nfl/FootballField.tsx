@@ -329,6 +329,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   
   // Single source of truth for all headshot vertical positions
   const HEADSHOT_VERTICAL_POSITION = '64%';
+  const ARROW_VERTICAL_POSITION = '36%';
   // Duration of the kickoff arc animation (matches animate-pass-arc duration)
   const KICK_ANIMATION_MS = 5000;
   // Duration of rush animation (matches rush-slide timing)
@@ -832,7 +833,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               className="absolute left-0 top-0 w-full h-full pointer-events-none"
             >
               <path
-                d={`M ${10 + (playStartYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION} Q ${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%,13% ${10 + (playEndYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION}`}
+                d={`M ${10 + (playStartYard * 0.8)}%,${ARROW_VERTICAL_POSITION} Q ${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%,13% ${10 + (playEndYard * 0.8)}%,${ARROW_VERTICAL_POSITION}`}
                 stroke={playViz.color}
                 strokeWidth={playViz.width}
                 fill="none"
@@ -842,13 +843,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
             </svg>
           )}
 
-          {/* Standalone arrowhead starting at the play dot */}
+          {/* Standalone arrowhead starting at the play dot (base sits on the dot) */}
           <div
             className="absolute"
             style={{
               left: `${10 + (playStartYard * 0.8)}%`,
               top: HEADSHOT_VERTICAL_POSITION,
-              transform: `translate(-50%, -50%) rotate(${playEndYard > playStartYard ? 0 : 180}deg)`
+              transform: `translateY(-50%) rotate(${playEndYard > playStartYard ? 0 : 180}deg)`,
+              transformOrigin: '0 50%'
             }}
           >
             <div
@@ -1094,7 +1096,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
         
         // Pass animations - football spins with headshot following
         if (playViz.animate === 'pass-complete' || playViz.animate === 'pass-incomplete') {
-          const headshotOffsetPx = 32; // nudge left so the football doesn't cover the face
+          const headshotOffsetPx = 20; // keep the receiver slightly offset so the ball lands beside the headshot
           const headshotOffsetPercent = (headshotOffsetPx / fieldWidthPx) * 100;
           const headshotStartX = passStartX + (Math.sign(distance) || 1) * -headshotOffsetPercent;
           return (
@@ -1187,7 +1189,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           // Use pass-arc for the kick, rush-slide for the return
           const kickStartX = kickStartYard !== null ? 10 + (kickStartYard * 0.8) : baseStartX;
           const kickLandX = kickEndYard !== null ? 10 + (kickEndYard * 0.8) : baseEndX;
-          const returnStartX = returnStartYard !== null ? 10 + (returnStartYard * 0.8) : kickLandX;
+                const returnStartX = returnStartYard !== null ? 10 + (returnStartYard * 0.8) : kickLandX;
           const returnEndX = returnEndYard !== null ? 10 + (returnEndYard * 0.8) : baseEndX;
           
           const kickDistance = kickLandX - kickStartX;
@@ -1200,9 +1202,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
           const effectiveReturnDistancePixels = needsReturnNudge
             ? fallbackReturnSign * 24 // minimal visible slide so "rush" is apparent
             : returnDistancePixels;
-          const headshotReturnOffsetPx = 14; // keep the football clear of the headshot
-          const headshotReturnOffsetPercent = (headshotReturnOffsetPx / fieldWidth) * 100;
-          const headshotReturnStartX = returnStartX + (Math.sign(returnDistance || fallbackReturnSign) || 1) * -headshotReturnOffsetPercent;
           
           console.log('🏈 KICKOFF/PUNT ANIMATION SETUP:', { 
             kickStartX,
@@ -1287,7 +1286,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     key={`kick-return-${playKey}-${loopCycle}`}
                     className="absolute z-10"
                     style={{ 
-                      left: `${headshotReturnStartX}%`,
+                      left: `calc(${returnStartX}% - 10px)`,
                       top: HEADSHOT_VERTICAL_POSITION,
                       transform: 'translate(-50%, -50%)'
                     }}
