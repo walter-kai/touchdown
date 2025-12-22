@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play } from '@/types/espn/playByplay';
+import { usePlays } from '@/providers/PlaysContext';
 
 interface PlayLogProps {
   playLog: Play[];
@@ -40,20 +41,22 @@ const PlayLog: React.FC<PlayLogProps> = ({
   maxHeight = 'none',
   countdown = 30
 }) => {
+  const { playLog: contextPlayLog = [] } = usePlays();
+  const resolvedPlayLog = playLog?.length ? playLog : contextPlayLog;
   const progress = (countdown / 30) * 100; // 30 seconds total
   const [newPlayIds, setNewPlayIds] = useState<Set<string>>(new Set());
-  const prevPlayCountRef = useRef(playLog.length);
+  const prevPlayCountRef = useRef(resolvedPlayLog.length);
 
   // Track new plays for animation
   useEffect(() => {
-    if (playLog.length > prevPlayCountRef.current) {
+    if (resolvedPlayLog.length > prevPlayCountRef.current) {
       // New plays were added
       const newIds = new Set<string>();
-      const numNewPlays = playLog.length - prevPlayCountRef.current;
+      const numNewPlays = resolvedPlayLog.length - prevPlayCountRef.current;
       
       // Mark the first N plays as new (they're added at the beginning)
       for (let i = 0; i < numNewPlays; i++) {
-        const play = playLog[i];
+        const play = resolvedPlayLog[i];
         const playId = `${play.text}-${play.quarter}-${play.clock}`;
         newIds.add(playId);
       }
@@ -66,10 +69,10 @@ const PlayLog: React.FC<PlayLogProps> = ({
       }, 1000);
     }
     
-    prevPlayCountRef.current = playLog.length;
-  }, [playLog]);
+    prevPlayCountRef.current = resolvedPlayLog.length;
+  }, [resolvedPlayLog]);
 
-  if (playLog.length === 0) {
+  if (resolvedPlayLog.length === 0) {
     return (
       <div className="text-text-muted text-center py-8">
         No plays recorded yet
@@ -81,10 +84,10 @@ const PlayLog: React.FC<PlayLogProps> = ({
   const groupedPlays: Array<{
     possession: string | undefined;
     team: any;
-    plays: typeof playLog;
+    plays: typeof resolvedPlayLog;
   }> = [];
   
-  playLog.forEach((play, idx) => {
+  resolvedPlayLog.forEach((play, idx) => {
     const team = play.possession === homeTeam?.id ? homeTeam : awayTeam;
     const lastGroup = groupedPlays[groupedPlays.length - 1];
     
@@ -120,8 +123,8 @@ const PlayLog: React.FC<PlayLogProps> = ({
             </div>
             
             <div className="text-right min-w-[120px] h-[60px] flex flex-col justify-center">
-              <div className="text-neon-cyan text-3xl font-bold leading-tight">{playLog.length}</div>
-              <div className="text-text-muted text-xs">{playLog.length === 1 ? 'play' : 'plays'}</div>
+              <div className="text-neon-cyan text-3xl font-bold leading-tight">{resolvedPlayLog.length}</div>
+              <div className="text-text-muted text-xs">{resolvedPlayLog.length === 1 ? 'play' : 'plays'}</div>
             </div>
           </div>
 

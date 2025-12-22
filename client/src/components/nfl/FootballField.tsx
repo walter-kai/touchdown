@@ -3,6 +3,7 @@ import { FaFootballBall } from 'react-icons/fa';
 import { Play, PlayType } from '@/types/espn/playByplay';
 import '@/styles/football.css';
 import { getHeadshotUrl } from '@/utils/headshot';
+import { usePlays } from '@/providers/PlaysContext';
 
 interface FootballFieldProps {
   homeTeam?: any;
@@ -279,7 +280,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
   const homeTeam = homeTeamProp;
   const awayTeam = awayTeamProp;
-  const playLog = playLogProp?.length ? playLogProp : [];
+  const { playLog: contextPlayLog = [] } = usePlays();
+  const playLog = playLogProp?.length ? playLogProp : (contextPlayLog || []);
   const lastPlay = (lastPlayProp ?? playLog[0]) as Partial<Play> | undefined;
   const fallbackPossession = getTeamId((lastPlay as any)?.team)
     || (lastPlay as any)?.possession
@@ -352,9 +354,39 @@ const FootballField: React.FC<FootballFieldProps> = ({
   // Get visualization config for this play type - handle both string and object
   const extractPlayType = (play?: any) => {
     if (!play) return '';
-    if (typeof play.type.id === 'string') return play.type;
-    if (play.type && typeof play.type === 'object') {
-      return play.type.text || play.type.displayName || play.type.abbreviation || '';
+    if (play.type) {
+      if (typeof play.type === 'string') return play.type;
+      if (typeof play.type === 'object') {
+        const fromFields = play.type.text || play.type.displayName || play.type.abbreviation;
+        if (fromFields) return fromFields;
+        const typeId = typeof play.type.id === 'string' ? play.type.id : undefined;
+        const typeIdMap: Record<string, string> = {
+          '2': 'Pass Reception',
+          '3': 'Pass Incompletion',
+          '4': 'Rush',
+          '5': 'Rushing Touchdown',
+          '6': 'Passing Touchdown',
+          '7': 'Field Goal Good',
+          '8': 'Field Goal Missed',
+          '9': 'Punt',
+          '10': 'Kickoff',
+          '11': 'Penalty',
+          '12': 'Sack',
+          '13': 'Pass Interception Return',
+          '14': 'Fumble Recovery (Own)',
+          '15': 'Fumble Recovery (Opponent)',
+          '17': 'Two-minute warning',
+          '18': 'End Period',
+          '19': 'End of Half',
+          '20': 'End of Game',
+          '24': 'Rush',
+          '25': 'Pass',
+          '26': 'Run',
+          '53': 'Kickoff'
+        };
+        if (typeId && typeIdMap[typeId]) return typeIdMap[typeId];
+        if (typeId) return typeId;
+      }
     }
     const text = play.text || '';
     const textLower = text.toLowerCase();
@@ -940,18 +972,18 @@ const FootballField: React.FC<FootballFieldProps> = ({
         const passDurationMs = Math.min(Math.max(distancePx * 5, 900), 4800); // clamp for fluid speed
         const PASS_PAUSE_MS = 2000;
         
-        // Rush animation - headshot slides from dot with football
+        // Rush animation - headshot slides from dot with football (supports losses/backwards motion)
         if (playViz.animate === 'rush') {
-          // Calculate distance as percentage of field width
+          // Calculate distance as percentage of field width (signed)
           const distancePercent = baseEndX - baseStartX;
           const fieldWidth = fieldRef.current?.offsetWidth || 1000;
-          // Add extra distance to account for football offset (headshot is 64px, football is 32px to the right)
-          // Add approximately 24px (half headshot radius + half football width) to reach the end position with the football
-          const distancePixels = (distancePercent / 100) * fieldWidth + 12;
-          // Check if there's actual yardage gain (not just pixel distance)
+          // Keep signed distance and add a small offset in the same direction so the ball clears the start dot
+          const distancePixels = (distancePercent / 100) * fieldWidth;
+          const distanceWithOffset = distancePixels + (Math.sign(distancePixels || 0) * 12);
+          const hasMovement = Math.abs(distanceWithOffset) > 1;
           const hasGain = (playEndYard ?? getEndYard(lastPlay) ?? 0) > (playStartYard ?? getStartYard(lastPlay) ?? 0);
           
-          console.log('Rush animation:', { startX: baseStartX, endX: baseEndX, distancePercent, fieldWidth, distancePixels, hasGain });
+          console.log('Rush animation:', { startX: baseStartX, endX: baseEndX, distancePercent, fieldWidth, distanceWithOffset, hasGain });
           
           return (
             <>
@@ -966,9 +998,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 }}
               >
                 <div
-                  className={hasGain ? "animate-rush-slide" : ""}
+                  className={hasMovement ? "animate-rush-slide" : ""}
                   style={{
-                    '--distance': `${distancePixels}px`
+                    '--distance': `${distanceWithOffset}px`
                   } as React.CSSProperties}
                 >
                   <div className="relative group">
@@ -1000,8 +1032,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
                         />
                       )}
                     </div>
-                    {/* Football being carried - only show if has gain */}
-                    {hasGain && (
+                    {/* Football being carried - show for any movement (gain or loss) */}
+                    {hasMovement && (
                       <div 
                         className="absolute -right-1 top-1/2 transform -translate-y-1/3 -rotate-45"
                         style={{
@@ -1015,8 +1047,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
                         />
                       </div>
                     )}
-                    {/* No gain emoji - animated overlay */}
-                    {!hasGain && (
+                    {/* No movement emoji - animated overlay */}
+                    {!hasMovement && (
                       <div 
                         className="absolute top-[30px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl animate-fadeInOut z-20"
                         style={{
@@ -1429,6 +1461,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           const distancePixels = (distancePercent / 100) * fieldWidth;
           const hitRollPx = Math.max(40, Math.min(Math.abs(distancePixels) * 0.35, 120));
           const hitRollSigned = (Math.sign(distancePercent) || 1) * hitRollPx;
+          const hitRotSign = Math.sign(hitRollSigned) || 1;
 
           const rusherAthlete = primaryAthlete;
           const qbAthlete = qbCandidate;
@@ -1486,7 +1519,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               >
                 <div
                   className="animate-qb-sacked"
-                  style={{ '--hit-x': `${hitRollSigned}px` } as React.CSSProperties}
+                  style={{ '--hit-x': `${hitRollSigned}px`, '--hit-rot-sign': hitRotSign } as React.CSSProperties}
                 >
                   <div className="relative group">
                     <div 

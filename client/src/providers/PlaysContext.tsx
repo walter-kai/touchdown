@@ -1,0 +1,38 @@
+import React from 'react';
+import { Play } from '@/types/espn/playByplay';
+
+interface PlaysContextValue {
+  playLog: Play[];
+  lastUpdated?: Date | null;
+  isRefreshing?: boolean;
+  countdown?: number;
+  refresh?: () => void | Promise<void>;
+}
+
+const PlaysContext = React.createContext<PlaysContextValue>({
+  playLog: []
+});
+
+export const usePlays = () => React.useContext(PlaysContext);
+
+interface PlaysProviderProps extends PlaysContextValue {
+  children: React.ReactNode;
+}
+
+export const PlaysProvider: React.FC<PlaysProviderProps> = ({
+  children,
+  playLog,
+  lastUpdated = null,
+  isRefreshing = false,
+  countdown = 0,
+  refresh
+}) => {
+  const value = React.useMemo(
+    () => ({ playLog, lastUpdated, isRefreshing, countdown, refresh }),
+    [playLog, lastUpdated, isRefreshing, countdown, refresh]
+  );
+
+  return <PlaysContext.Provider value={value}>{children}</PlaysContext.Provider>;
+};
+
+export default PlaysContext;

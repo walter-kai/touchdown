@@ -9,6 +9,13 @@ export const extractAthleteIdFromRef = (ref?: string): string => {
   return parts[parts.length - 1] || '';
 };
 
+const extractIdFromRef = (ref?: string): string => extractAthleteIdFromRef(ref);
+
+const resolveTeamId = (teamObj?: any, fallback?: string): string => {
+  if (!teamObj) return fallback || '';
+  return teamObj.id || extractIdFromRef(teamObj.$ref) || fallback || '';
+};
+
 const normalizeParticipants = (
   rawPlay: any,
   headshotLookup?: Map<string, string>
@@ -54,8 +61,9 @@ const normalizeParticipants = (
         team: {
           id:
             participant?.team?.id ||
-            rawPlay?.start?.team?.id ||
-            rawPlay?.team?.id ||
+            extractIdFromRef(participant?.team?.$ref) ||
+            resolveTeamId(rawPlay?.start?.team) ||
+            resolveTeamId(rawPlay?.team) ||
             rawPlay?.possession ||
             ''
         }
@@ -64,24 +72,62 @@ const normalizeParticipants = (
     .filter(Boolean) as PlayAthlete[];
 };
 
+const TYPE_ID_MAP: Record<string, string> = {
+  '2': 'Pass Reception',
+  '3': 'Pass Incompletion',
+  '4': 'Rush',
+  '5': 'Rushing Touchdown',
+  '6': 'Passing Touchdown',
+  '7': 'Field Goal Good',
+  '8': 'Field Goal Missed',
+  '9': 'Punt',
+  '10': 'Kickoff',
+  '11': 'Penalty',
+  '12': 'Sack',
+  '13': 'Pass Interception Return',
+  '14': 'Fumble Recovery (Own)',
+  '15': 'Fumble Recovery (Opponent)',
+  '16': 'Official Timeout',
+  '17': 'Two-minute warning',
+  '18': 'End Period',
+  '19': 'End of Half',
+  '20': 'End of Game',
+  '24': 'Rush',
+  '25': 'Pass',
+  '26': 'Run',
+  '53': 'Kickoff'
+};
+
 export const normalizePlayFromItem = (
   rawPlay: any,
   fallbackDate?: string | Date,
   headshotLookup?: Map<string, string>
 ): Play => {
+  const textBlob = rawPlay?.text || rawPlay?.shortText || rawPlay?.alternativeText || '';
+  const teamParticipants = rawPlay?.teamParticipants || rawPlay?.participants || [];
+  const offenseTeamId =
+    rawPlay?.team?.id ||
+    extractIdFromRef(rawPlay?.team?.$ref) ||
+    teamParticipants.find((p: any) => p?.type === 'offense')?.id ||
+    resolveTeamId(rawPlay?.start?.team) ||
+    resolveTeamId(rawPlay?.possession) ||
+    rawPlay?.possession?.id ||
+    rawPlay?.possession;
+
+  const startTeamId = resolveTeamId(rawPlay?.start?.team, offenseTeamId);
+  const endTeamId = resolveTeamId(rawPlay?.end?.team, offenseTeamId);
+
   const period = rawPlay?.period?.number ?? rawPlay?.period ?? 0;
   const clock = rawPlay?.clock?.displayValue ?? rawPlay?.clock ?? '';
-  const possession =
-    rawPlay?.start?.team?.id ||
-    rawPlay?.team?.id ||
-    rawPlay?.possession?.id ||
-    rawPlay?.possession ||
-    undefined;
+  const possession = offenseTeamId || undefined;
+  const typeId = rawPlay?.type?.id ? String(rawPlay.type.id) : undefined;
   const type =
     rawPlay?.type?.text ||
     rawPlay?.type?.displayName ||
-    rawPlay?.type?.id ||
-    rawPlay?.type ||
+    (typeId ? TYPE_ID_MAP[typeId] : undefined) ||
+    rawPlay?.type?.abbreviation ||
+    rawPlay?.type?.description ||
+    textBlob ||
     'Play';
   const timestamp = rawPlay?.wallclock || fallbackDate || new Date();
   const yardLine = rawPlay?.start?.yardLine ?? rawPlay?.end?.yardLine;
@@ -90,20 +136,34 @@ export const normalizePlayFromItem = (
       ? rawPlay.statYardage
       : rawPlay?.yardsGained ?? rawPlay?.yardage;
 
+  const normalizedStart = rawPlay?.start
+    ? {
+        ...rawPlay.start,
+        team: rawPlay.start?.team || startTeamId ? { id: startTeamId } : undefined
+      }
+    : undefined;
+
+  const normalizedEnd = rawPlay?.end
+    ? {
+        ...rawPlay.end,
+        team: rawPlay.end?.team || endTeamId ? { id: endTeamId || startTeamId } : undefined
+      }
+    : undefined;
+
   return {
     id: rawPlay?.id,
-    text: rawPlay?.text || rawPlay?.shortText || rawPlay?.description || '',
+    text: textBlob || rawPlay?.description || '',
     quarter: period,
     clock,
     timestamp: new Date(timestamp),
     possession,
-    team: rawPlay?.team?.id || rawPlay?.offensiveTeamId || possession,
+    team: resolveTeamId(rawPlay?.team, offenseTeamId) || rawPlay?.offensiveTeamId || possession,
     type,
     scoreValue: rawPlay?.scoreValue || rawPlay?.score || 0,
     yardLine,
     yardage,
-    start: rawPlay?.start,
-    end: rawPlay?.end,
+    start: normalizedStart,
+    end: normalizedEnd,
     athletesInvolved: normalizeParticipants(rawPlay, headshotLookup)
   };
 };

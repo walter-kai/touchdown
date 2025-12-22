@@ -8,6 +8,7 @@ import FootballField from '@/components/nfl/FootballField';
 import { useLoading } from '@/providers/LoadingContext';
 import { debugLog } from '@/utils/debugLog';
 import { fetchEspnPlays } from '@/utils/espnPlays';
+import { PlaysProvider } from '@/providers/PlaysContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
@@ -497,9 +498,17 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
   ) : null;
 
   // Render the appropriate view based on navPreset
+  const playContextValue = {
+    playLog: effectivePlayLog,
+    lastUpdated,
+    isRefreshing,
+    countdown,
+    refresh: handleManualRefresh
+  };
+
   if (navPreset === 'scoreboard') {
     return (
-      <>
+      <PlaysProvider {...playContextValue}>
         {testControls}
         {testFieldVisualization}
         <ScoreboardView
@@ -513,12 +522,12 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
           isRefreshing={isRefreshing}
           onManualRefresh={() => setCountdown(0)}
         />
-      </>
+      </PlaysProvider>
     );
   }
 
   return (
-    <>
+    <PlaysProvider {...playContextValue}>
       {testControls}
       {testFieldVisualization}
       <SummaryView
@@ -530,7 +539,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
         playLog={effectivePlayLog}
         gameId={gameId || ''}
       />
-    </>
+    </PlaysProvider>
   );
 };
 
