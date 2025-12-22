@@ -808,7 +808,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
           {/* Standalone arrowhead at end position */}
           <div
-            className="absolute z-20"
+            className="absolute"
             style={{
               left: `${10 + (playEndYard * 0.8)}%`,
               top: HEADSHOT_VERTICAL_POSITION,
@@ -1595,15 +1595,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
         );
       })()}
     </div>
-
-      {/* Play caption (last play text) */}
-      {lastPlay?.text && (
-        <div className="pt-3 text-center text-text-light text-xs sm:text-sm leading-snug">
-          <span className="font-semibold" style={{ color: playViz.color }}>
-            {lastPlay.text}
-          </span>
-        </div>
-      )}
 
       {/* Latest Play - Only show if showGameInfo is true */}
       {showGameInfo && lastPlay && (() => {
