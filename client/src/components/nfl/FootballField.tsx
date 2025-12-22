@@ -207,7 +207,7 @@ const getPlayVisualization = (playType?: PlayType | string | { text: string }) =
     return {
       color: '#FFD700',
       glowColor: 'rgba(255, 215, 0, 0.6)',
-      icon: '🕐',
+      icon: '',
       pattern: 'solid',
       width: 2,
       animate: 'timeout'
@@ -219,7 +219,7 @@ const getPlayVisualization = (playType?: PlayType | string | { text: string }) =
     return {
       color: '#FFD700',
       glowColor: 'rgba(255, 215, 0, 0.6)',
-      icon: '🕐',
+      icon: '',
       pattern: 'solid',
       width: 2,
       animate: 'timeout'

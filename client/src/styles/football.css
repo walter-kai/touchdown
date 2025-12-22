@@ -460,58 +460,50 @@
   animation: kickoff-fail 6.5s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
 }
 
-/* Timeout - Spinning clock - continuous smooth rotation */
-@keyframes timeout-spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+/* Timeout / Two Minute Warning - Clock emoji flipbook instead of rotation */
+@keyframes clock-emoji-cycle {
+  0% { content: "🕛"; }
+  8.332% { content: "🕐"; }
+  16.664% { content: "🕑"; }
+  25% { content: "🕒"; }
+  33.332% { content: "🕓"; }
+  41.664% { content: "🕔"; }
+  50% { content: "🕕"; }
+  58.332% { content: "🕖"; }
+  66.664% { content: "🕗"; }
+  75% { content: "🕘"; }
+  83.332% { content: "🕙"; }
+  91.664% { content: "🕚"; }
+  100% { content: "🕛"; }
 }
 
-.animate-timeout-spin {
-  animation: timeout-spin 3s linear infinite;
+/* Continuous rotation - 30 degrees per emoji cycle, never resets like a real clock */
+@keyframes clock-continuous-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* Two Minute Warning - Pulsing alarm */
-@keyframes two-minute-warning {
-  0% {
-    transform: translateX(0) translateY(0) rotate(0deg) scale(0.8);
-    opacity: 0.6;
-  }
-  15% {
-    transform: translateX(0) translateY(0) rotate(-10deg) scale(1.3);
-    opacity: 1;
-  }
-  30% {
-    transform: translateX(0) translateY(0) rotate(10deg) scale(0.9);
-    opacity: 0.7;
-  }
-  45% {
-    transform: translateX(0) translateY(0) rotate(-5deg) scale(1.2);
-    opacity: 1;
-  }
-  60% {
-    transform: translateX(0) translateY(0) rotate(5deg) scale(0.95);
-    opacity: 0.8;
-  }
-  75% {
-    transform: translateX(0) translateY(0) rotate(-3deg) scale(1.15);
-    opacity: 1;
-  }
-  90% {
-    transform: translateX(0) translateY(0) rotate(3deg) scale(1);
-    opacity: 0.85;
-  }
-  100% {
-    transform: translateX(0) translateY(0) rotate(0deg) scale(0.8);
-    opacity: 0.6;
-  }
-}
-
+.animate-timeout-spin,
 .animate-two-minute-warning {
-  animation: two-minute-warning 2s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+  position: relative;
+  color: inherit;
+}
+
+.animate-timeout-spin::after,
+.animate-two-minute-warning::after {
+  content: "🕛";
+  display: inline-block;
+  animation: 
+    clock-emoji-cycle 1.2s steps(1, end) infinite,
+    clock-continuous-rotate 14.4s linear infinite;
+  filter: drop-shadow(0 0 20px rgba(255,255,255,0.35));
+}
+
+/* Slightly slower for two-minute warning to feel more deliberate */
+.animate-two-minute-warning::after {
+  animation: 
+    clock-emoji-cycle 1.6s steps(1, end) infinite,
+    clock-continuous-rotate 19.2s linear infinite;
 }
 
 /* Sack - Crash with shake/vibrate effect */
