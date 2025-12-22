@@ -255,12 +255,12 @@ const PlayLog: React.FC<PlayLogProps> = ({
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="flex flex-col min-w-[110px]">
-                          <span className="text-sm text-neon-cyan font-bold">
+                        <div className="flex flex-col">
+                          <span className={`text-sm text-neon-cyan font-bold'}`}>
                             {typeText || 'Play'}
                           </span>
                           {participantCountLabel && (
-                            <span className="text-text-muted text-[11px] font-semibold">
+                            <span className="text-text-muted text-[11px] font-semibold pl-2">
                               {participantCountLabel}
                             </span>
                           )}
