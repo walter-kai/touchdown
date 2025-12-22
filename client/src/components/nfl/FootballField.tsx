@@ -787,53 +787,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
         </div>
       )}
 
-      {/* Arrow showing play direction - positioned at 50% (middle) */}
+      {/* Arrow showing play direction - arrowhead only */}
       {playStartYard !== undefined && playEndYard !== undefined && playStartYard !== playEndYard && (
         <>
-          <svg
-            className={`absolute left-0 top-0 w-full h-full pointer-events-none ${
-              playViz.animate === 'pulse' ? 'animate-pulse' : ''
-            }`}
-          >
-            <defs>
-              <marker
-                id={`arrowhead-${playViz.color.replace('#', '')}`}
-                markerWidth="10"
-                markerHeight="8"
-                refX="8"
-                refY="3"
-                orient="auto"
-              >
-                <polygon points="0 1, 8 3, 0 5" fill={playViz.color} />
-              </marker>
-              
-              {/* Glow filter for special plays */}
-              {(playViz.animate === 'pulse' || playViz.animate === 'flash') && (
-                <filter id={`glow-${playViz.color.replace('#', '')}`}>
-                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                  <feMerge>
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
-              )}
-            </defs>
-            
-            <line
-              x1={`${10 + (playStartYard * 0.8)}%`}
-              y1={HEADSHOT_VERTICAL_POSITION}
-              x2={`${10 + (playEndYard * 0.8)}%`}
-              y2={HEADSHOT_VERTICAL_POSITION}
-              stroke={playViz.color}
-              strokeWidth={playViz.width}
-              strokeDasharray={playViz.pattern === 'dashed' ? '8,4' : playViz.pattern === 'dotted' ? '2,4' : 'none'}
-              markerEnd={`url(#arrowhead-${playViz.color.replace('#', '')})`}
-              opacity="0.95"
-              filter={playViz.animate === 'pulse' || playViz.animate === 'flash' ? `url(#glow-${playViz.color.replace('#', '')})` : 'none'}
-            />
-            
-            {/* Arc path for punts/kickoffs */}
-            {playViz.animate === 'arc' && playStartYard !== undefined && playEndYard !== undefined && (
+          {/* Arc path for punts/kickoffs */}
+          {playViz.animate === 'arc' && (
+            <svg
+              className="absolute left-0 top-0 w-full h-full pointer-events-none"
+            >
               <path
                 d={`M ${10 + (playStartYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION} Q ${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%,13% ${10 + (playEndYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION}`}
                 stroke={playViz.color}
@@ -842,15 +803,36 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 opacity="0.5"
                 strokeDasharray="4,2"
               />
-            )}
-          </svg>
-          
+            </svg>
+          )}
+
+          {/* Standalone arrowhead at end position */}
+          <div
+            className="absolute z-20"
+            style={{
+              left: `${10 + (playEndYard * 0.8)}%`,
+              top: HEADSHOT_VERTICAL_POSITION,
+              transform: `translate(-50%, -50%) rotate(${playEndYard > playStartYard ? 0 : 180}deg)`
+            }}
+          >
+            <div
+              style={{
+                width: 0,
+                height: 0,
+                borderTop: '7px solid transparent',
+                borderBottom: '7px solid transparent',
+                borderLeft: `22px solid ${playViz.color}`,
+                filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
+              }}
+            />
+          </div>
+
           {/* Play type icon at midpoint - only show for fail cases */}
-            {playViz.icon === '🚫' && playStartYard !== undefined && playEndYard !== undefined && (
+          {playViz.icon === '🚫' && (
             <div
               className="absolute transform -translate-x-1/2 -translate-y-1/2 text-2xl z-20"
               style={{
-                  left: `${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%`,
+                left: `${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%`,
                 top: '50%',
                 filter: `drop-shadow(0 0 8px ${playViz.glowColor})`
               }}
