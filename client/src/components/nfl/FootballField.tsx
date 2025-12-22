@@ -330,8 +330,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
   // Single source of truth for all headshot vertical positions
   const HEADSHOT_VERTICAL_POSITION = '64%';
   const ARROW_VERTICAL_POSITION = '32%';
-  // Duration of the kickoff arc animation (matches animate-pass-arc duration)
-  const KICK_ANIMATION_MS = 5000;
   // Duration of rush animation (matches rush-slide timing)
   const RUSH_ANIMATION_MS = 3000;
   const PASS_PAUSE_MS = 2000;
@@ -494,35 +492,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
   
   if (debugLogs) console.log('🏈 Is kick play?', isKickPlay, 'playViz.animate:', playViz.animate);
 
-  // Gate the return animation until the kick arc finishes
-  const playKey = getPlayId(lastPlay) || lastPlay?.text || (lastPlay as any)?.type?.id || getPlayTypeText(lastPlay) || '';
-
-  React.useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    if (isKickPlay) {
-      setKickPhaseComplete(false);
-      setKickDone(false);
-      setReturnStarted(false);
-      setBallFade(false);
-      timer = setTimeout(() => {
-        setKickPhaseComplete(true);
-        setKickDone(true);
-        setReturnStarted(true);
-        setBallFade(true);
-      }, KICK_ANIMATION_MS);
-      if (debugLogs) console.log('⏱️ Kick phase reset; will complete after', KICK_ANIMATION_MS, 'ms');
-    } else {
-      setKickPhaseComplete(true);
-      setKickDone(false);
-      setReturnStarted(true);
-      setBallFade(true);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [playKey, isKickPlay, loopCycle]);
-
   if (isKickPlay && lastPlay?.text) {
+    // Extract punts (optionally include the from yard), plus returns
+    const puntMatch = lastPlay.text.match(/punts\s+(\d+)\s+yards(?:\s+from\s+(\w+)\s+(\d+))?\s+to\s+(\w+)\s+(\d+)/i);
+    const puntToEndZoneMatch = lastPlay.text.match(/punts\s+\d+\s+yards(?:\s+from\s+(\w+)\s+(\d+))?\s+to\s+(?:the\s+)?end zone/i);
     // Extract "kicks XX yards from TEAM YY to TEAM ZZ" for kick trajectory
     const kickMatch = lastPlay.text.match(/kicks\s+\d+\s+yards\s+from\s+(\w+)\s+(\d+)\s+to\s+(\w+)\s+(\d+)/i);
     const toEndZoneMatch = lastPlay.text.match(/kicks\s+\d+\s+yards\s+from\s+(\w+)\s+(\d+)\s+to\s+(?:the\s+)?end zone/i);
@@ -533,7 +506,43 @@ const FootballField: React.FC<FootballFieldProps> = ({
     // Extract "to TEAM YY for ZZ yards" for return
     const returnMatch = lastPlay.text.match(/to\s+(\w+)\s+(\d+)\s+for\s+\d+\s+yards/i);
     
-    if (kickMatch) {
+    if (puntMatch) {
+      const puntDistance = parseInt(puntMatch[1]);
+      const fromTeamAbbr = puntMatch[2]?.toUpperCase();
+      const fromYardLine = puntMatch[3] ? parseInt(puntMatch[3]) : undefined;
+      const landTeamAbbr = puntMatch[4].toUpperCase();
+      const landYardLine = parseInt(puntMatch[5]);
+
+      if (fromTeamAbbr && typeof fromYardLine === 'number' && !Number.isNaN(fromYardLine)) {
+        const isPuntTeamLeft = abbrMatches(fromTeamAbbr, leftAbbr);
+        kickStartYard = isPuntTeamLeft ? fromYardLine : (100 - fromYardLine);
+      } else {
+        const rawStart = getStartYard(lastPlay);
+        if (typeof rawStart === 'number') kickStartYard = rawStart;
+      }
+
+      const isLandTeamLeft = abbrMatches(landTeamAbbr, leftAbbr);
+      kickEndYard = isLandTeamLeft ? landYardLine : (100 - landYardLine);
+      returnStartYard = kickEndYard;
+
+      // If no explicit from yard, infer a reasonable snap spot using distance when possible
+      if (kickStartYard === null && !Number.isNaN(puntDistance) && puntDistance > 0 && kickEndYard !== null) {
+        const inferredStart = kickEndYard - puntDistance;
+        kickStartYard = inferredStart;
+      }
+    } else if (puntToEndZoneMatch) {
+      const fromTeamAbbr = puntToEndZoneMatch[1]?.toUpperCase();
+      const fromYardLine = puntToEndZoneMatch[2] ? parseInt(puntToEndZoneMatch[2]) : undefined;
+      if (fromTeamAbbr && typeof fromYardLine === 'number' && !Number.isNaN(fromYardLine)) {
+        const isPuntTeamLeft = abbrMatches(fromTeamAbbr, leftAbbr);
+        kickStartYard = isPuntTeamLeft ? fromYardLine : (100 - fromYardLine);
+      }
+      const isPuntTeamLeft = fromTeamAbbr ? abbrMatches(fromTeamAbbr, leftAbbr) : false;
+      // Punt touchbacks go to receiving team's 20
+      kickEndYard = isPuntTeamLeft ? 80 : 20;
+      returnStartYard = kickEndYard;
+      returnEndYard = kickEndYard;
+    } else if (kickMatch) {
       const kickTeamAbbr = kickMatch[1].toUpperCase();
       const kickYardLine = parseInt(kickMatch[2]);
       const landTeamAbbr = kickMatch[3].toUpperCase();
@@ -584,20 +593,59 @@ const FootballField: React.FC<FootballFieldProps> = ({
       returnEndYard = returnStartYard;
     }
     
-    if (debugLogs) {
-      console.log('🏈 KICK YARD LINE PARSING:', {
-        text: lastPlay.text,
-        kickStartYard,
-        kickEndYard,
-        returnStartYard,
-        returnEndYard,
-        awayTeam: awayTeam?.abbreviation,
-        homeTeam: homeTeam?.abbreviation,
-        hasAthletes: !!lastPlay.athletesInvolved,
-        athleteCount: lastPlay.athletesInvolved?.length || 0
-      });
-    }
   }
+
+  // Distance-aware timing helpers so kick/return animations scale with travel distance
+  const distancePxFromYards = (start: number | null | undefined, end: number | null | undefined, fallbackPx = 0) => {
+    if (start === null || end === null || start === undefined || end === undefined) return fallbackPx;
+    const distancePercent = (end - start) * 0.8; // yards to field percent (80% playable width)
+    const distancePx = (distancePercent / 100) * fieldWidthPx;
+    const absPx = Math.abs(distancePx);
+    return absPx > 0 ? absPx : fallbackPx;
+  };
+
+  const durationFromDistance = (distancePx: number, perPixelMs: number, minMs: number, maxMs: number, fallbackMs: number) => {
+    const raw = distancePx * perPixelMs;
+    if (!raw || Number.isNaN(raw)) return fallbackMs;
+    return Math.min(Math.max(raw, minMs), maxMs);
+  };
+
+  const kickArcDistancePx = distancePxFromYards(kickStartYard, kickEndYard, fieldWidthPx * 0.05); // 5% width fallback
+  const returnDistancePxForTiming = distancePxFromYards(returnStartYard, returnEndYard, 24); // tiny nudge fallback matches return slide
+
+  const kickArcDurationMs = isKickPlay
+    ? durationFromDistance(kickArcDistancePx, 5, 1400, 5200, 5000)
+    : 0;
+  const returnSlideDurationMs = isKickPlay
+    ? durationFromDistance(returnDistancePxForTiming, 4, 900, 3600, RUSH_ANIMATION_MS)
+    : 0;
+
+  // Gate the return animation until the kick arc finishes
+  const playKey = getPlayId(lastPlay) || lastPlay?.text || (lastPlay as any)?.type?.id || getPlayTypeText(lastPlay) || '';
+
+  React.useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (isKickPlay) {
+      setKickPhaseComplete(false);
+      setKickDone(false);
+      setReturnStarted(false);
+      setBallFade(false);
+      timer = setTimeout(() => {
+        setKickPhaseComplete(true);
+        setKickDone(true);
+        setReturnStarted(true);
+        setBallFade(true);
+      }, kickArcDurationMs || 5000);
+    } else {
+      setKickPhaseComplete(true);
+      setKickDone(false);
+      setReturnStarted(true);
+      setBallFade(true);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [kickArcDurationMs, playKey, isKickPlay, loopCycle]);
   
   // Possession-based normalization: orientation depends on which side home is on
   const possessionIsHome = situation?.possession === homeTeam?.id;
@@ -717,8 +765,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
     if (isKickPlay) {
       const hasReturnPhase = playViz.animate !== 'kickoff-fail' && hasPrimaryAthlete;
-      const returnDuration = hasReturnPhase ? RUSH_ANIMATION_MS : 0;
-      return KICK_ANIMATION_MS + returnDuration + PLAY_END_DELAY_MS;
+      const returnDuration = hasReturnPhase ? (returnSlideDurationMs || RUSH_ANIMATION_MS) : 0;
+      const arcDuration = kickArcDurationMs || 5000;
+      return arcDuration + returnDuration + PLAY_END_DELAY_MS;
     }
 
     if (playViz.animate === 'rush') return RUSH_ANIMATION_MS + PLAY_END_DELAY_MS;
@@ -730,7 +779,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
     if (playViz.animate === 'end-regulation') return 3600 + PLAY_END_DELAY_MS;
     if (playViz.animate === 'pulse') return 2400 + PLAY_END_DELAY_MS;
     return 3200 + PLAY_END_DELAY_MS;
-  }, [fieldWidthPx, hasPrimaryAthlete, isKickPlay, playEndYard, playStartYard, playViz.animate, KICK_ANIMATION_MS, PASS_PAUSE_MS, PLAY_END_DELAY_MS, RUSH_ANIMATION_MS]);
+  }, [fieldWidthPx, hasPrimaryAthlete, isKickPlay, playEndYard, playStartYard, playViz.animate, PASS_PAUSE_MS, PLAY_END_DELAY_MS, RUSH_ANIMATION_MS, kickArcDurationMs, returnSlideDurationMs]);
 
   React.useEffect(() => {
     setLoopCycle(0);
@@ -1248,25 +1297,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
             ? fallbackReturnSign * 24 // minimal visible slide so "rush" is apparent
             : returnDistancePixels;
           
-          console.log('🏈 KICKOFF/PUNT ANIMATION SETUP:', { 
-            kickStartX,
-            kickLandX,
-            returnStartX,
-            returnEndX,
-            kickDistance,
-            returnDistance,
-            returnDistancePixels,
-            needsReturnNudge,
-            effectiveReturnDistancePixels,
-            kickDone,
-            returnStarted,
-            playType: playViz.animate,
-            isKickoffFail: playViz.animate === 'kickoff-fail',
-            hasAthletes: !!lastPlay.athletesInvolved,
-            athleteCount: lastPlay.athletesInvolved?.length || 0,
-            returnDistanceAbs: Math.abs(returnDistance),
-            willShowRush: playViz.animate !== 'kickoff-fail' && hasPrimaryAthlete
-          });
           
           return (
             <>
@@ -1285,7 +1315,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     '--distance': kickDistance,
                     '--distance-px': `${kickDistancePx}px`,
                     '--arc-height': `${Math.abs(kickDistance) * 2.5}px`,
-                    animation: `${playViz.animate === 'kickoff-fail' ? 'pass-incomplete' : 'pass-arc'} ${KICK_ANIMATION_MS}ms linear 0s 1 forwards`,
+                    animation: `${playViz.animate === 'kickoff-fail' ? 'pass-incomplete' : 'pass-arc'} ${kickArcDurationMs || 5000}ms linear 0s 1 forwards`,
                     opacity: 1,
                     willChange: 'transform, opacity'
                   } as React.CSSProperties}
@@ -1313,19 +1343,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 const shouldShowReturn = playViz.animate !== 'kickoff-fail' && hasPrimaryAthlete;
                 const showReturnPhase = shouldShowReturn;
                 const canSlide = (Math.abs(returnDistance) > 1 || needsReturnNudge) && (kickDone || returnStarted);
-                console.log('🏈 RETURN ANIMATION CHECK:', {
-                  shouldShowReturn,
-                  showReturnPhase,
-                  kickDone,
-                  returnStarted,
-                  kickPhaseComplete,
-                  isNotKickoffFail: playViz.animate !== 'kickoff-fail',
-                  hasAthletes: !!lastPlay.athletesInvolved,
-                  hasFirstAthlete: hasPrimaryAthlete,
-                  returnDistance: Math.abs(returnDistance),
-                  willSlide: canSlide,
-                  needsReturnNudge
-                });
+
                 return showReturnPhase ? (
                   <div
                     key={`kick-return-${playKey}-${loopCycle}`}
@@ -1340,7 +1358,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                       <div
                         style={{
                           '--distance': `${effectiveReturnDistancePixels}px`,
-                          animation: `rush-slide ${RUSH_ANIMATION_MS}ms linear 0s 1 forwards`
+                          animation: `rush-slide ${returnSlideDurationMs || RUSH_ANIMATION_MS}ms linear 0s 1 forwards`
                         } as React.CSSProperties}
                       >
                         <div className="relative group">
