@@ -6,6 +6,8 @@ interface PlaysContextValue {
   lastUpdated?: Date | null;
   isRefreshing?: boolean;
   countdown?: number;
+  homeScore?: number;
+  awayScore?: number;
   refresh?: () => void | Promise<void>;
 }
 
@@ -25,11 +27,13 @@ export const PlaysProvider: React.FC<PlaysProviderProps> = ({
   lastUpdated = null,
   isRefreshing = false,
   countdown = 0,
+  homeScore,
+  awayScore,
   refresh
 }) => {
   const value = React.useMemo(
-    () => ({ playLog, lastUpdated, isRefreshing, countdown, refresh }),
-    [playLog, lastUpdated, isRefreshing, countdown, refresh]
+    () => ({ playLog, lastUpdated, isRefreshing, countdown, homeScore, awayScore, refresh }),
+    [playLog, lastUpdated, isRefreshing, countdown, homeScore, awayScore, refresh]
   );
 
   return <PlaysContext.Provider value={value}>{children}</PlaysContext.Provider>;

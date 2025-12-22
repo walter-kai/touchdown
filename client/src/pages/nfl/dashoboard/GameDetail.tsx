@@ -469,6 +469,10 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
 
   // Narrow situation shape for FootballField (it only needs possession + down/distance + timeouts)
   const competition = effectiveEvent?.competitions?.[0];
+  const homeCompetitor = competition?.competitors?.find((c: any) => c.homeAway === 'home');
+  const awayCompetitor = competition?.competitors?.find((c: any) => c.homeAway === 'away');
+  const homeScore = homeCompetitor?.score !== undefined ? Number(homeCompetitor.score) : undefined;
+  const awayScore = awayCompetitor?.score !== undefined ? Number(awayCompetitor.score) : undefined;
   const situationForField = competition?.situation
     ? {
         downDistanceText: competition.situation.downDistanceText,
@@ -503,6 +507,8 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     lastUpdated,
     isRefreshing,
     countdown,
+    homeScore,
+    awayScore,
     refresh: handleManualRefresh
   };
 

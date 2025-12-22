@@ -163,18 +163,9 @@ const PlayLog: React.FC<PlayLogProps> = ({
           {/* Loading Bar */}
           <div className="mx-2 mb-4">
             <div className="flex items-center gap-3">
-                            <button
-                type="button"
-                onClick={handleManualRefresh}
-                disabled={!refresh || isRefreshing || isLocked}
-                className={`px-3 py-1 min-w-[60px] text-[11px] font-semibold rounded-md border transition-all ${
-                  (!refresh || isRefreshing || isLocked)
-                    ? 'opacity-60 cursor-not-allowed border-white/20 text-white/50'
-                    : 'border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10'
-                }`}
-              >
-                {isRefreshing ? 'Refreshing…' : isLocked ? `${lockRemaining}s` : `Refresh (${remainingSeconds}s)`}
-              </button>
+              <div className="px-3 py-1 min-w-[60px] text-[11px] font-semibold text-text-muted">
+                {isRefreshing ? 'Refreshing…' : `Auto refresh (${remainingSeconds}s)`}
+              </div>
               <div className="flex-1">
                 <div className="h-1 bg-bg-darker rounded-full overflow-hidden">
                   <div 
@@ -274,7 +265,8 @@ const PlayLog: React.FC<PlayLogProps> = ({
                                 alt={athlete.shortName || athlete.displayName}
                                 className={`w-10 h-10 rounded-full border-2 object-cover ${
                                   selectedPlayers.some(p => p.id === athlete.id) ? 'border-neon-cyan' : 'border-white/30'
-                                } ${idx > 0 ? 'shadow-inner' : ''}`}
+                                }`}
+                                style={{ marginLeft: idx === 0 ? 0 : -8, zIndex: 20 - idx }}
                               />
                             ))}
                             <span className={`${textColor} text-xs font-bold pl-2`}>

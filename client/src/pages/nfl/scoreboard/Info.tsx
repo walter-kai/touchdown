@@ -7,6 +7,7 @@ import PlayLog from '@/components/nfl/PlayLog';
 import GameLeaders from '@/pages/nfl/summary/GameLeaders';
 import PredictionChart from '@/components/nfl/PredictionChart';
 import { CountUpScore } from '@/components/common/CountUpScore';
+import { usePlays } from '@/providers/PlaysContext';
 import type { Summary } from '@/types/espn/summary';
 
 interface InfoProps {
@@ -33,6 +34,9 @@ const Info: React.FC<InfoProps> = ({
   countdown = 30,
 }) => {
   const navigate = useNavigate();
+  const { homeScore: contextHomeScore, awayScore: contextAwayScore } = usePlays();
+  const currentHomeScore = contextHomeScore ?? (homeTeam?.score !== undefined ? Number(homeTeam.score) : 0);
+  const currentAwayScore = contextAwayScore ?? (awayTeam?.score !== undefined ? Number(awayTeam.score) : 0);
 
   const latestPlay: Play | undefined = playLog?.[0];
   const latestPlayType = typeof latestPlay?.type === 'string'
@@ -157,12 +161,12 @@ const Info: React.FC<InfoProps> = ({
           {/* Center Scores */}
           <div className="flex items-center gap-4 px-6">
             <CountUpScore 
-              value={awayTeam?.score || 0} 
+              value={currentAwayScore}
               className="text-neon-cyan text-4xl md:text-5xl font-bold"
             />
             <span className="text-text-muted text-2xl">-</span>
             <CountUpScore 
-              value={homeTeam?.score || 0} 
+              value={currentHomeScore}
               className="text-neon-cyan text-4xl md:text-5xl font-bold"
             />
           </div>
@@ -275,7 +279,7 @@ const Info: React.FC<InfoProps> = ({
                           </td>
                         ))}
                         <td className="text-center text-neon-cyan font-bold py-3">
-                          <CountUpScore value={awayTeam?.score || 0} />
+                          <CountUpScore value={currentAwayScore} />
                         </td>
                       </tr>
                       <tr>
@@ -291,7 +295,7 @@ const Info: React.FC<InfoProps> = ({
                           </td>
                         ))}
                         <td className="text-center text-neon-pink font-bold py-3">
-                          <CountUpScore value={homeTeam?.score || 0} />
+                          <CountUpScore value={currentHomeScore} />
                         </td>
                       </tr>
                     </tbody>

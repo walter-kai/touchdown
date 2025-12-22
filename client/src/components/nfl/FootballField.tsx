@@ -280,6 +280,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
   const homeTeam = homeTeamProp;
   const awayTeam = awayTeamProp;
+  const homeAbbrRaw = homeTeam?.team?.abbreviation?.toUpperCase() || homeTeam?.abbreviation?.toUpperCase() || homeTeam?.shortDisplayName?.toUpperCase();
+  const awayAbbrRaw = awayTeam?.team?.abbreviation?.toUpperCase() || awayTeam?.abbreviation?.toUpperCase() || awayTeam?.shortDisplayName?.toUpperCase();
   const { playLog: contextPlayLog = [] } = usePlays();
   const playLog = playLogProp?.length ? playLogProp : (contextPlayLog || []);
   const lastPlay = (lastPlayProp ?? playLog[0]) as Partial<Play> | undefined;
@@ -314,8 +316,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const debugLogs = false;
 
   // Normalize team abbreviations for yard conversions
-  const awayAbbr = awayTeam?.team?.abbreviation?.toUpperCase() || awayTeam?.abbreviation?.toUpperCase() || awayTeam?.shortDisplayName?.toUpperCase();
-  const homeAbbr = homeTeam?.team?.abbreviation?.toUpperCase() || homeTeam?.abbreviation?.toUpperCase() || homeTeam?.shortDisplayName?.toUpperCase();
   const abbrMatches = (abbr?: string, target?: string) => {
     if (!abbr || !target) return false;
     const a = abbr.toUpperCase();
@@ -325,15 +325,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
     if (a.length === 2 && b.startsWith(a)) return true;
     if (b.length === 2 && a.startsWith(b)) return true;
     return false;
-  };
-  const convertToFieldYard = (abbr?: string, yard?: number) => {
-    if (yard === undefined || yard < 0 || yard > 100) return undefined;
-    if (yard === 0 || yard === 100) return yard; // end zones stay at their absolute edges
-    if (!abbr) return yard; // unknown team, assume left-to-right as-is
-    if (abbrMatches(abbr, awayAbbr)) return yard; // left team keeps yard as-is
-    if (abbrMatches(abbr, homeAbbr)) return 100 - yard; // flip for right team
-    // Unrecognized team token: leave as-is to avoid stalling the animation
-    return yard;
   };
   
   // Single source of truth for all headshot vertical positions
@@ -346,10 +337,57 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const clampYard = (yard: number) => Math.max(0, Math.min(100, yard));
   
   if (!lastPlay) return null;
+  // Determine initial orientation using the coin toss (receiver starts on the left driving left-to-right)
+  const matchTeamFromText = (text?: string) => {
+    const upper = (text || '').toUpperCase();
+    if (homeTeam?.team?.displayName && upper.includes(homeTeam.team.displayName.toUpperCase())) return homeTeam;
+    if (awayTeam?.team?.displayName && upper.includes(awayTeam.team.displayName.toUpperCase())) return awayTeam;
+    if (homeAbbrRaw && upper.includes(homeAbbrRaw)) return homeTeam;
+    if (awayAbbrRaw && upper.includes(awayAbbrRaw)) return awayTeam;
+    if (homeTeam?.shortDisplayName && upper.includes(homeTeam.shortDisplayName.toUpperCase())) return homeTeam;
+    if (awayTeam?.shortDisplayName && upper.includes(awayTeam.shortDisplayName.toUpperCase())) return awayTeam;
+    return undefined;
+  };
 
-  // Match the box score layout: away team on left, home team on right
-  const leftTeam = awayTeam;
-  const rightTeam = homeTeam;
+  const coinTossPlay = React.useMemo(() => {
+    return (playLog || []).find((p: any) => {
+      const typeId = typeof p?.type?.id === 'string' ? p.type.id : String(p?.type?.id || '');
+      const typeText = (p?.type?.text || '').toLowerCase();
+      const fullText = (p?.text || '').toLowerCase();
+      return typeId === '70' || typeText.includes('coin toss') || fullText.includes('coin toss');
+    });
+  }, [playLog]);
+
+  const receiverTeam = React.useMemo(() => {
+    if (!coinTossPlay) return undefined;
+    const tossText = (coinTossPlay.text || '').toUpperCase();
+    const winner = matchTeamFromText(tossText);
+
+    if (tossText.includes('RECEIVE') || tossText.includes('RECIEVE')) {
+      return matchTeamFromText(tossText) || winner;
+    }
+
+    if (tossText.includes('DEFER')) {
+      if (winner) return winner.id === homeTeam?.id ? awayTeam : homeTeam;
+    }
+
+    return winner;
+  }, [coinTossPlay, homeTeam, awayTeam]);
+
+  const leftTeam = receiverTeam ?? awayTeam;
+  const rightTeam = leftTeam?.id === homeTeam?.id ? awayTeam : homeTeam;
+  const leftAbbr = leftTeam?.team?.abbreviation?.toUpperCase() || leftTeam?.abbreviation?.toUpperCase() || leftTeam?.shortDisplayName?.toUpperCase();
+  const rightAbbr = rightTeam?.team?.abbreviation?.toUpperCase() || rightTeam?.abbreviation?.toUpperCase() || rightTeam?.shortDisplayName?.toUpperCase();
+
+  const convertToFieldYard = (abbr?: string, yard?: number) => {
+    if (yard === undefined || yard < 0 || yard > 100) return undefined;
+    if (yard === 0 || yard === 100) return yard; // end zones stay at their absolute edges
+    if (!abbr) return yard; // unknown team, assume left-to-right as-is
+    if (abbrMatches(abbr, leftAbbr)) return yard; // left team keeps yard as-is
+    if (abbrMatches(abbr, rightAbbr)) return 100 - yard; // flip for right team
+    // Unrecognized team token: leave as-is to avoid stalling the animation
+    return yard;
+  };
   
   // Get visualization config for this play type - handle both string and object
   const extractPlayType = (play?: any) => {
@@ -456,6 +494,13 @@ const FootballField: React.FC<FootballFieldProps> = ({
   // Gate the return animation until the kick arc finishes
   const playKey = getPlayId(lastPlay) || lastPlay?.text || (lastPlay as any)?.type?.id || getPlayTypeText(lastPlay) || '';
 
+  // Single loop clock for all animations
+  React.useEffect(() => {
+    setLoopCycle(0);
+    const loopTimer = setInterval(() => setLoopCycle((c) => c + 1), PLAY_LOOP_MS);
+    return () => clearInterval(loopTimer);
+  }, [playKey]);
+
   React.useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     if (isKickPlay) {
@@ -481,13 +526,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
     };
   }, [playKey, isKickPlay, loopCycle]);
 
-  // Loop the full kick->rush sequence for kick plays
-  React.useEffect(() => {
-    if (!isKickPlay) return;
-    const loopTimer = setTimeout(() => setLoopCycle((c) => c + 1), PLAY_LOOP_MS);
-    return () => clearTimeout(loopTimer);
-  }, [isKickPlay, loopCycle, PLAY_LOOP_MS]);
-  
   if (isKickPlay && lastPlay?.text) {
     // Extract "kicks XX yards from TEAM YY to TEAM ZZ" for kick trajectory
     const kickMatch = lastPlay.text.match(/kicks\s+\d+\s+yards\s+from\s+(\w+)\s+(\d+)\s+to\s+(\w+)\s+(\d+)/i);
@@ -506,13 +544,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
       const landYardLine = parseInt(kickMatch[4]);
       
       // Convert kick start position
-      const isKickTeamLeft = kickTeamAbbr === awayTeam?.abbreviation?.toUpperCase() || 
-                             kickTeamAbbr === awayTeam?.shortDisplayName?.toUpperCase();
+      const isKickTeamLeft = abbrMatches(kickTeamAbbr, leftAbbr);
       kickStartYard = isKickTeamLeft ? kickYardLine : (100 - kickYardLine);
       
       // Convert landing position (where ball first lands)
-      const isLandTeamLeft = landTeamAbbr === awayTeam?.abbreviation?.toUpperCase() || 
-                            landTeamAbbr === awayTeam?.shortDisplayName?.toUpperCase();
+      const isLandTeamLeft = abbrMatches(landTeamAbbr, leftAbbr);
       kickEndYard = isLandTeamLeft ? landYardLine : (100 - landYardLine);
       
       // Default return start is where ball lands
@@ -522,8 +558,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       const kickTeamAbbr = toEndZoneMatch[1].toUpperCase();
       const kickYardLine = parseInt(toEndZoneMatch[2]);
       
-      const isKickTeamLeft = kickTeamAbbr === awayTeam?.abbreviation?.toUpperCase() || 
-                             kickTeamAbbr === awayTeam?.shortDisplayName?.toUpperCase();
+      const isKickTeamLeft = abbrMatches(kickTeamAbbr, leftAbbr);
       kickStartYard = isKickTeamLeft ? kickYardLine : (100 - kickYardLine);
       
       // Touchback goes to receiving team's 25
@@ -537,8 +572,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       const recoveryTeamAbbr = recoveryMatch[1].toUpperCase();
       const recoveryYardLine = parseInt(recoveryMatch[2]);
       
-      const isRecoveryTeamLeft = recoveryTeamAbbr === awayTeam?.abbreviation?.toUpperCase() || 
-                                 recoveryTeamAbbr === awayTeam?.shortDisplayName?.toUpperCase();
+      const isRecoveryTeamLeft = abbrMatches(recoveryTeamAbbr, leftAbbr);
       returnStartYard = isRecoveryTeamLeft ? recoveryYardLine : (100 - recoveryYardLine);
     }
     
@@ -547,8 +581,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       const returnTeamAbbr = returnMatch[1].toUpperCase();
       const returnYardLine = parseInt(returnMatch[2]);
       
-      const isReturnTeamLeft = returnTeamAbbr === awayTeam?.abbreviation?.toUpperCase() || 
-                              returnTeamAbbr === awayTeam?.shortDisplayName?.toUpperCase();
+      const isReturnTeamLeft = abbrMatches(returnTeamAbbr, leftAbbr);
       returnEndYard = isReturnTeamLeft ? returnYardLine : (100 - returnYardLine);
     } else {
       // No return, final position is where ball was caught/recovered
@@ -570,10 +603,13 @@ const FootballField: React.FC<FootballFieldProps> = ({
     }
   }
   
-  // Possession-based normalization: away (left) drives left->right, home (right) drives right->left
+  // Possession-based normalization: orientation depends on which side home is on
   const possessionIsHome = situation?.possession === homeTeam?.id;
-  const possessionAbbr = possessionIsHome ? homeAbbr : awayAbbr;
-  const possessionDirection = possessionIsHome ? -1 : 1; // home drives right-to-left on this field layout
+  const homeOnLeft = leftTeam?.id === homeTeam?.id;
+  const possessionAbbr = possessionIsHome ? homeAbbrRaw : awayAbbrRaw;
+  const possessionDirection = possessionIsHome
+    ? (homeOnLeft ? 1 : -1)
+    : (homeOnLeft ? -1 : 1);
   const fallbackYard = situation?.yardLine;
   const normalizedStartYard = isKickPlay
     ? undefined
@@ -806,11 +842,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
             </svg>
           )}
 
-          {/* Standalone arrowhead at end position */}
+          {/* Standalone arrowhead starting at the play dot */}
           <div
             className="absolute"
             style={{
-              left: `${10 + (playEndYard * 0.8)}%`,
+              left: `${10 + (playStartYard * 0.8)}%`,
               top: HEADSHOT_VERTICAL_POSITION,
               transform: `translate(-50%, -50%) rotate(${playEndYard > playStartYard ? 0 : 180}deg)`
             }}
@@ -980,7 +1016,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             <>
               {/* Headshot with football starts at dot */}
               <div
-                key={`rush-${getStartYard(lastPlay)}-${getEndYard(lastPlay)}`}
+                key={`rush-${getStartYard(lastPlay)}-${getEndYard(lastPlay)}-${isTouchdownPlay ? 'static' : loopCycle}`}
                 className="absolute z-10"
                 style={{ 
                   left: `${baseStartX}%`,
@@ -1058,11 +1094,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
         
         // Pass animations - football spins with headshot following
         if (playViz.animate === 'pass-complete' || playViz.animate === 'pass-incomplete') {
-          const headshotOffsetPx = 20; // keep the receiver slightly offset so the ball lands beside the headshot
+          const headshotOffsetPx = 32; // nudge left so the football doesn't cover the face
           const headshotOffsetPercent = (headshotOffsetPx / fieldWidthPx) * 100;
           const headshotStartX = passStartX + (Math.sign(distance) || 1) * -headshotOffsetPercent;
           return (
-            <React.Fragment key={`pass-${playKey}`}>
+            <React.Fragment key={`pass-${playKey}-${isTouchdownPlay ? 'static' : loopCycle}`}>
               {/* Football animation */}
               <div
                 className="absolute z-20"
@@ -1164,6 +1200,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
           const effectiveReturnDistancePixels = needsReturnNudge
             ? fallbackReturnSign * 24 // minimal visible slide so "rush" is apparent
             : returnDistancePixels;
+          const headshotReturnOffsetPx = 14; // keep the football clear of the headshot
+          const headshotReturnOffsetPercent = (headshotReturnOffsetPx / fieldWidth) * 100;
+          const headshotReturnStartX = returnStartX + (Math.sign(returnDistance || fallbackReturnSign) || 1) * -headshotReturnOffsetPercent;
           
           console.log('🏈 KICKOFF/PUNT ANIMATION SETUP:', { 
             kickStartX,
@@ -1248,7 +1287,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     key={`kick-return-${playKey}-${loopCycle}`}
                     className="absolute z-10"
                     style={{ 
-                      left: `${returnStartX}%`,
+                      left: `${headshotReturnStartX}%`,
                       top: HEADSHOT_VERTICAL_POSITION,
                       transform: 'translate(-50%, -50%)'
                     }}
@@ -1330,6 +1369,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             <>
               {/* Football arc */}
               <div
+                key={`fg-arc-${playKey}-${loopCycle}`}
                 className="absolute z-20"
                 style={{ 
                   left: `${baseStartX}%`,
@@ -1356,6 +1396,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               
               {/* Headshot at end position */}
               <div
+                key={`fg-head-${playKey}-${loopCycle}`}
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
                   left: `${baseEndX}%`,
@@ -1466,6 +1507,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             <>
               {/* Rusher sliding in */}
               <div
+                key={`sack-rusher-${playKey}-${loopCycle}`}
                 className="absolute z-20"
                 style={{ 
                   left: `${baseStartX}%`,
@@ -1505,6 +1547,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
               {/* QB waiting and getting bumped */}
               <div
+                key={`sack-qb-${playKey}-${loopCycle}`}
                 className="absolute z-10"
                 style={{ 
                   left: `${baseEndX}%`,
