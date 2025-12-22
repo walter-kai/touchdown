@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaFootballBall } from "react-icons/fa";
 import axios from "axios";
-import type { Leader } from "@/types/espn/scoreboard";
+import type { LeaderCategory } from "@/types/espn/scoreboard";
+import { getHeadshotUrl } from "@/utils/headshot";
 
 interface HeadToHeadProps {
   homeTeamId: string;
@@ -19,8 +20,8 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
 }) => {
   const navigate = useNavigate();
   const fetchedKeyRef = useRef<string | null>(null);
-  const [homeTeamLeaders, setHomeTeamLeaders] = useState<Leader[]>([]);
-  const [awayTeamLeaders, setAwayTeamLeaders] = useState<Leader[]>([]);
+  const [homeTeamLeaders, setHomeTeamLeaders] = useState<LeaderCategory[]>([]);
+  const [awayTeamLeaders, setAwayTeamLeaders] = useState<LeaderCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,12 +100,12 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
       <h3 className="text-neon-cyan font-bold text-lg mb-4">Head-to-Head Leaders</h3>
       
       <div className="space-y-3">
-        {homeTeamLeaders.map((homeLeader: Leader, idx: number) => {
+        {homeTeamLeaders.map((homeLeader: LeaderCategory, idx: number) => {
           const homeTopLeader = homeLeader.leaders?.[0];
           if (!homeTopLeader) return null;
           
           // Find matching category in away team leaders
-          const awayLeader = awayTeamLeaders.find((l: Leader) => l.name === homeLeader.name);
+          const awayLeader = awayTeamLeaders.find((l: LeaderCategory) => l.name === homeLeader.name);
           const awayTopLeader = awayLeader?.leaders?.[0];
           
           return (
@@ -124,9 +125,11 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                 <div className="flex items-center gap-2 justify-start">
                   {awayTopLeader ? (
                     <>
-                      {awayTopLeader.athlete.headshot?.href ? (
-                        <img 
-                          src={awayTopLeader.athlete.headshot.href}
+                      {(() => {
+                        const headshotUrl = getHeadshotUrl({ id: awayTopLeader.athlete.id, headshot: awayTopLeader.athlete.headshot });
+                        return headshotUrl ? (
+                          <img 
+                          src={headshotUrl}
                           alt={awayTopLeader.athlete.displayName}
                           className="w-10 h-10 rounded-full object-cover border-2 border-neon-pink/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
                           onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
@@ -136,10 +139,11 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                             if (fallback) fallback.style.display = 'flex';
                           }}
                         />
-                      ) : null}
+                        ) : null;
+                      })()}
                       <div 
                         className="w-10 h-10 rounded-full bg-bg-darker border-2 border-neon-pink/50 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
-                        style={{ display: awayTopLeader.athlete.headshot?.href ? 'none' : 'flex' }}
+                        style={{ display: getHeadshotUrl({ id: awayTopLeader.athlete.id, headshot: awayTopLeader.athlete.headshot }) ? 'none' : 'flex' }}
                         onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
                       >
                         <FaFootballBall className="text-neon-pink text-xs" />
@@ -185,22 +189,25 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                       {homeTopLeader.displayValue}
                     </div>
                   </div>
-                  {homeTopLeader.athlete.headshot?.href ? (
-                    <img 
-                      src={homeTopLeader.athlete.headshot.href}
-                      alt={homeTopLeader.athlete.displayName}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-neon-cyan/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
-                      onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                        const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
-                        if (fallback) fallback.style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
+                  {(() => {
+                    const headshotUrl = getHeadshotUrl({ id: homeTopLeader.athlete.id, headshot: homeTopLeader.athlete.headshot });
+                    return headshotUrl ? (
+                      <img 
+                        src={headshotUrl}
+                        alt={homeTopLeader.athlete.displayName}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-neon-cyan/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
+                        onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                    ) : null;
+                  })()}
                   <div 
                     className="w-10 h-10 rounded-full bg-bg-darker border-2 border-neon-cyan/50 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
-                    style={{ display: homeTopLeader.athlete.headshot?.href ? 'none' : 'flex' }}
+                    style={{ display: getHeadshotUrl({ id: homeTopLeader.athlete.id, headshot: homeTopLeader.athlete.headshot }) ? 'none' : 'flex' }}
                     onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
                   >
                     <FaFootballBall className="text-neon-cyan text-xs" />

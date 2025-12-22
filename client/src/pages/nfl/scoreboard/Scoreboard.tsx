@@ -6,15 +6,14 @@ import HeadToHead from '@/components/nfl/HeadToHead';
 import ProbChart from '@/components/nfl/ProbabilityChart';
 import PointsChart from '@/components/nfl/PointsChart';
 import PlayerPick from '@/pages/nfl/scoreboard/PlayerPick';
-import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
 import Info from '@/pages/nfl/scoreboard/Info';
 import type { Event } from '@/types/espn/scoreboard';
 import { Play } from '@/types/espn/playByplay';
 
 interface ScoreboardViewProps {
   event: Event;
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'top' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games') => void;
   getTeamLogo: (team: any) => string;
   playLog: Play[];
   lastUpdated: Date | null;
@@ -44,8 +43,9 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   const competition = event.competitions[0];
   const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
   const awayTeam = competition.competitors.find(c => c.homeAway === 'away');
-  const isGameInSession = competition.status.type.state === 'in';
-  const isGameUpcoming = competition.status.type.state === 'pre';
+  const statusState = competition.status.type.state ?? '';
+  const isGameInSession = statusState === 'in';
+  const isGameUpcoming = statusState === 'pre';
 
   // Extract scoring plays from play log
   const scoringPlays = React.useMemo(() => {
@@ -105,9 +105,12 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   }, [playLog, homeTeam?.id]);
 
   // Get tab index for carousel position
+  const scoreboardTabs = ['info', 'pick', 'odds', 'headtohead'] as const;
+  const totalSlides = scoreboardTabs.length;
+  const slideWidth = `${100 / totalSlides}%`;
+
   const getTabIndex = (tab: string) => {
-    const scoreboardTabs = ['info', 'pick', 'top', 'odds', 'headtohead'];
-    return scoreboardTabs.indexOf(tab);
+    return scoreboardTabs.indexOf(tab as (typeof scoreboardTabs)[number]);
   };
 
   // Update carousel position when tab changes
@@ -115,7 +118,6 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
     if (carouselRef.current) {
       const index = getTabIndex(activeTab);
       if (index !== -1) {
-        const totalSlides = 5;
         const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -139,7 +141,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
   // Update game countdown timer for pre-game state
   useEffect(() => {
-    if (competition.status.type.state === 'pre') {
+    if (statusState === 'pre') {
       const updateCountdown = () => {
         const now = new Date();
         const gameTime = new Date(competition.date);
@@ -151,7 +153,30 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
       const timer = setInterval(updateCountdown, 1000);
       return () => clearInterval(timer);
     }
-  }, [competition.date, competition.status.type.state]);
+  }, [competition.date, statusState]);
+
+  const safeSituation = competition.situation
+    ? {
+        ...competition.situation,
+        lastPlay: competition.situation.lastPlay
+          ? {
+              start:
+                competition.situation.lastPlay.start?.yardLine !== undefined
+                  ? { yardLine: competition.situation.lastPlay.start.yardLine }
+                  : undefined,
+              end:
+                competition.situation.lastPlay.end?.yardLine !== undefined
+                  ? { yardLine: competition.situation.lastPlay.end.yardLine }
+                  : undefined,
+              athletesInvolved: competition.situation.lastPlay.athletesInvolved?.map((a) => ({
+                displayName: a.displayName || a.fullName || '',
+                headshot: a.headshot || '',
+                position: a.position || '',
+              })),
+            }
+          : undefined,
+      }
+    : undefined;
 
   return (
     <div className="">
@@ -161,10 +186,10 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
           <div
             ref={carouselRef}
             className="flex transition-transform duration-500 ease-in-out"
-            style={{ width: '500%' }}
+            style={{ width: `${totalSlides * 100}%` }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: slideWidth }}>
               <Info
                 homeTeam={homeTeam}
                 awayTeam={awayTeam}
@@ -193,7 +218,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                         color: awayTeam?.team.color || 'faafe8'
                       }}
                       scoringPlays={scoringPlays}
-                      gameStatus={competition.status.type.state}
+                      gameStatus={statusState || 'pre'}
                     />
                   </div>
                 </div>
@@ -201,7 +226,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Pick Section - Your Picks */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: slideWidth }}>
               {homeTeam?.id && awayTeam?.id && (
                 <PlayerPick
                   gameId={event.id}
@@ -220,32 +245,16 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                   isExpanded={isPickExpanded}
                   onToggle={() => setIsPickExpanded(!isPickExpanded)}
                   playLog={playLog}
-                  situation={competition.situation}
+                  situation={safeSituation}
                   homeTeam={homeTeam}
                   awayTeam={awayTeam}
                   getTeamLogo={getTeamLogo}
-                />
-              )}
-            </div>
-
-            {/* Top Section - Top Picks */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '20%' }}>
-              {homeTeam?.id && awayTeam?.id && (
-                <TopPicks
-                  gameId={event.id}
-                  homeTeamId={homeTeam.id}
-                  awayTeamId={awayTeam.id}
-                  playLog={playLog}
-                  getTeamLogo={getTeamLogo}
-                  homeTeam={homeTeam}
-                  awayTeam={awayTeam}
-                  isGameInSession={isGameInSession}
                 />
               )}
             </div>
 
             {/* Odds Section */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: slideWidth }}>
               {/* Divider */}
               <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
               <div className="mx-2">
@@ -258,7 +267,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                   <ProbChart
                   gameId={event.id}
                   competitionId={competition.id}
-                  gameStatus={competition.status.type.state}
+                  gameStatus={statusState || 'pre'}
                   homeTeamInfo={{
                     name: homeTeam.team.displayName,
                     logo: getTeamLogo(homeTeam),
@@ -275,7 +284,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: '20%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: slideWidth }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}

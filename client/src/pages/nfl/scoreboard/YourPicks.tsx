@@ -51,8 +51,8 @@ interface PlayerPickProps {
   playLog: Play[];
   situation?: {
     lastPlay?: {
-      start?: { yardLine: number };
-      end?: { yardLine: number };
+      start?: { yardLine?: number };
+      end?: { yardLine?: number };
       athletesInvolved?: Array<{
         displayName: string;
         headshot: string;

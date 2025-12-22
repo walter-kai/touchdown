@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { FaFootballBall, FaArrowLeft, FaHome, FaRoad, FaTrophy, FaUsers, FaChartLine, FaCalendar, FaMapMarkerAlt, FaStar, FaCrosshairs, FaListOl, FaClipboardList, FaNewspaper } from "react-icons/fa";
 import axios from "axios";
-import type { TeamApiResponse, TeamRecord, NextEvent, Competitor, Leader } from "@/types/espn/team";
+import type { TeamApiResponse, TeamRecord, NextEvent, Competitor } from "@/types/espn/team";
+import type { LeaderCategory } from "@/types/espn/scoreboard";
 import type { NewsResponse, NewsArticle } from '@/types/espn/news';
 import { debugLog } from '@/utils/debugLog';
 import NewsTicker from '@/components/nfl/NewsTicker';
@@ -108,7 +109,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
   const isProgrammaticScrollRef = useRef(false);
 
   // Get leaders from navigation state
-  const passedLeaders = (location.state as any)?.leaders as Leader[] | undefined;
+  const passedLeaders = (location.state as any)?.leaders as LeaderCategory[] | undefined;
 
   useEffect(() => {
     const fetchTeamData = async () => {
@@ -700,7 +701,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
               Season Leaders
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {teamLeaders.map((leader: Leader, idx: number) => {
+              {teamLeaders.map((leader: LeaderCategory, idx: number) => {
                 const topLeader = leader.leaders?.[0];
                 if (!topLeader) return null;
                 

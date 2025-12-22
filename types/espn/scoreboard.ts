@@ -214,8 +214,8 @@ export interface LeaderDetail {
   };
 }
 
-// Legacy alias used by team.ts
-export type Leader = LeaderDetail;
+// Legacy alias used by team.ts and head-to-head views (leader category with leaders array)
+export type Leader = LeaderCategory;
 
 export interface Status {
   clock?: number;
