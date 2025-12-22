@@ -239,7 +239,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
         <div className="overflow-hidden relative">
           <div
             ref={carouselRef}
-            className="flex transition-transform duration-500 ease-in-out"
+            className="flex transition-transform duration-500 ease-in-out pb-16"
             style={{ width: isPreGame ? '200%' : '400%' }}
           >
             {/* Info Section */}
@@ -254,21 +254,6 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 summary={summary}
                 gameId={gameId}
               />
-
-              {isPreGame && (
-                <div className="mx-2 mt-2 bg-bg-dark/60 border border-neon-cyan/30 rounded-xl p-4 shadow-[0_0_20px_rgba(0,255,231,0.15)]">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-text-muted text-xs mb-1">Countdown to Kickoff</p>
-                      <p className="text-neon-cyan font-bold text-xl leading-tight">{timeUntilGame || 'Starting soon'}</p>
-                    </div>
-                    <div className="text-right text-text-muted text-xs">
-                      <div className="font-semibold text-text-light">{new Date(competition.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                      <div>{new Date(competition.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
               
               {/* Points Chart - Show for all games with scoring data */}
               {scoringPlays.length > 0 && (
