@@ -296,8 +296,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             </div>
 
             {/* Pick Section - Your Picks (moved to 2nd position) */}
-            {!isPreGame && (
-            <div className="w-full flex-shrink-0  overflow-hidden" style={{ width: '25%' }}>
+            <div className="w-full flex-shrink-0 overflow-hidden" style={{ width: isPreGame ? '50%' : '25%' }}>
               {!isAuthenticated ? (
                 // Login Prompt - Advertisement Style
                 <div className="h-[calc(100%-64px)] flex items-center justify-center px-6">
@@ -437,7 +436,6 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 )
               )}
             </div>
-            )}
 
             {/* Player Statistics Section */}
             {!isPreGame && (
