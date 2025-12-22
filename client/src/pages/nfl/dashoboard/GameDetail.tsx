@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
 import axios from 'axios';
@@ -37,6 +37,29 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
   // Test mode controls
   const [testGameId, setTestGameId] = useState<string>('401772949');
   const [selectedPlayIndex, setSelectedPlayIndex] = useState<number>(0);
+
+  const refreshPlaysFromApi = useCallback(async () => {
+    if (!gameId) return;
+
+    const cacheKey = `playlog_${gameId}`;
+    const actualGameId = gameId === 'test' ? testGameId : gameId;
+    const compId = event?.competitions?.[0]?.id || actualGameId;
+
+    try {
+      setIsRefreshing(true);
+      const latestPlays = await fetchEspnPlays(actualGameId, String(compId));
+
+      // cache latest pulls for quick resume
+      localStorage.setItem(cacheKey, JSON.stringify({ plays: latestPlays, timestamp: Date.now() }));
+      setPlayLog(latestPlays);
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error('Error refreshing plays from ESPN:', err);
+    } finally {
+      setIsRefreshing(false);
+      setCountdown(30);
+    }
+  }, [event, gameId, testGameId]);
 
   // Load previous plays from ESPN plays endpoint on mount
   useEffect(() => {
@@ -256,69 +279,25 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
 
   // Countdown timer effect for auto-refresh (only for live games)
   useEffect(() => {
-    if (!event) return; // Don't start countdown until initial load
-    
-    // Don't auto-refresh in test mode
-    if (gameId === 'test') return;
-    
-    // Only auto-refresh if using scoreboard API (live games)
-    if (navPreset === 'summary') return; // Don't refresh final games
-    
-    // Handle countdown reaching 0
-    if (countdown === 0) {
-      debugLog('⏰ Countdown reached 0, triggering auto-refresh...');
-      
-      const fetchGameData = async () => {
-        if (!gameId) return;
+    if (!gameId) return;
 
-        try {
-          setIsRefreshing(true);
-          setError(null);
-
-          debugLog('🔄 Fetching fresh game data from API...');
-          const { game, usedSummaryApi } = await getGameData(gameId);
-          
-          if (game) {
-            debugLog('✅ Game data refreshed, updating state...');
-            debugLog('📊 Latest play:', game.competitions[0]?.situation?.lastPlay?.text);
-            mergeLatestPlay(game, event);
-            
-            const preset = usedSummaryApi ? 'summary' : 'scoreboard';
-            setNavPreset(preset);
-            onPresetChange(preset);
-            setEvent(game);
-            setLastUpdated(new Date());
-          }
-          
-          debugLog('✅ Refresh complete, countdown will reset to 30s');
-        } catch (err) {
-          console.error('❌ Error refreshing game data:', err);
-        } finally {
-          setIsRefreshing(false);
-          // Reset countdown after fetch completes - this will trigger the effect again
-          setCountdown(30);
-        }
-      };
-
-      fetchGameData();
-      return; // Don't set up interval when countdown is 0
-    }
-
-    // Normal countdown tick - only run when countdown > 0
     const timer = setInterval(() => {
       setCountdown((prev) => {
-        const next = prev - 1;
-        debugLog(`⏱️ Countdown: ${next}s`);
-        return next;
+        if (prev <= 1) {
+          debugLog('⏰ Countdown reached 0, refreshing plays from ESPN API...');
+          refreshPlaysFromApi();
+          return 30;
+        }
+        return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countdown, gameId, navPreset]); // Removed event and playLog from dependencies
+  }, [gameId, refreshPlaysFromApi]);
 
   const handleManualRefresh = () => {
-    setCountdown(0); // Trigger immediate refresh
+    refreshPlaysFromApi();
+    setCountdown(30);
   };
 
   if (error) {
