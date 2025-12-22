@@ -277,9 +277,17 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId, testGameId]); // Re-run when gameId or testGameId changes (for test mode)
 
-  // Countdown timer effect for auto-refresh (only for live games)
+  // Derive competition + latest play for live/final handling
+  const competitionLive = event?.competitions?.[0];
+  const latestPlay = playLog?.[0];
+  const latestPlayTypeText = typeof latestPlay?.type === 'string'
+    ? latestPlay.type
+    : (latestPlay?.type as any)?.text || (latestPlay?.type as any)?.displayName || '';
+  const isGameFinal = (competitionLive?.status?.type?.state === 'post') || /end of.*game|final/i.test(latestPlayTypeText || latestPlay?.text || '');
+
+  // Countdown timer effect for auto-refresh (only while game is live)
   useEffect(() => {
-    if (!gameId) return;
+    if (!gameId || isGameFinal) return;
 
     const timer = setInterval(() => {
       setCountdown((prev) => {
@@ -293,9 +301,20 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [gameId, refreshPlaysFromApi]);
+  }, [gameId, refreshPlaysFromApi, isGameFinal]);
+
+  // When game ends, stop refreshing and switch to summary preset
+  useEffect(() => {
+    if (isGameFinal) {
+      setCountdown(0);
+      setIsRefreshing(false);
+      setNavPreset('summary');
+      onPresetChange('summary');
+    }
+  }, [isGameFinal, onPresetChange]);
 
   const handleManualRefresh = () => {
+    if (isGameFinal) return;
     refreshPlaysFromApi();
     setCountdown(30);
   };

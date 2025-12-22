@@ -2,12 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
 import FootballField from '@/components/nfl/FootballField';
+import type { Play } from '@/types/espn/playByplay';
 import PlayLog from '@/components/nfl/PlayLog';
 import GameLeaders from '@/pages/nfl/summary/GameLeaders';
 import PredictionChart from '@/components/nfl/PredictionChart';
 import { CountUpScore } from '@/components/common/CountUpScore';
 import type { Summary } from '@/types/espn/summary';
-import { Play } from '@/types/espn/playByplay';
 
 interface InfoProps {
   homeTeam: any;
@@ -34,6 +34,18 @@ const Info: React.FC<InfoProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  const latestPlay: Play | undefined = playLog?.[0];
+  const latestPlayType = typeof latestPlay?.type === 'string'
+    ? latestPlay.type
+    : (latestPlay?.type as any)?.text || (latestPlay?.type as any)?.displayName || '';
+  const compState = competition.status?.type?.state ?? '';
+  const livePeriod = latestPlay?.quarter ?? competition.status.period;
+  const liveClock = latestPlay?.clock ?? competition.status.displayClock;
+  const endOfGameByText = /end of.*game|final/i.test(latestPlayType || latestPlay?.text || '');
+  const isFinal = compState === 'post' || endOfGameByText;
+  const liveState = isFinal ? 'post' : (compState === 'pre' ? 'pre' : compState);
+  const livePossession = latestPlay?.possession || competition.situation?.possession;
+
   return (
     <>
       <div className='mx-2'>
@@ -59,14 +71,14 @@ const Info: React.FC<InfoProps> = ({
 
           {/* Game Status */}
           <div className="bg-bg-dark/50 rounded-lg p-4 border border-neon-cyan/20">
-            <p className="text-text-muted text-xs mb-1">{competition.status.type.state === 'pre' ? 'Starts In' : 'Status'}</p>
-          {competition.status.type.state === 'in' ? (
+            <p className="text-text-muted text-xs mb-1">{liveState === 'pre' ? 'Starts In' : 'Status'}</p>
+          {liveState === 'in' ? (
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
               <span className="text-red-500 font-bold text-lg">LIVE</span>
-              <span className="text-text-light font-bold">Q{competition.status.period} - {competition.status.displayClock}</span>
+              <span className="text-text-light font-bold">Q{livePeriod} - {liveClock}</span>
             </div>
-          ) : competition.status.type.state === 'post' ? (
+          ) : liveState === 'post' ? (
             <span className="text-text-muted font-bold text-lg">FINAL</span>
           ) : (
             <div>
@@ -88,7 +100,7 @@ const Info: React.FC<InfoProps> = ({
         </div>
 
         {/* Down & Distance - Only show for live games */}
-        {competition.status.type.state === 'in' && (
+        {liveState === 'in' && (
           <div className="bg-bg-dark/50 rounded-lg p-4 border border-neon-pink/20">
             <p className="text-text-muted text-xs mb-1">Down & Distance</p>
             {competition.situation?.downDistanceText ? (
@@ -100,18 +112,20 @@ const Info: React.FC<InfoProps> = ({
         )}
 
         {/* Possession - Only show for live games */}
-        {competition.status.type.state === 'in' && (
+        {liveState === 'in' && (
           <div className="bg-bg-dark/50 rounded-lg p-4 border border-neon-cyan/20">
             <p className="text-text-muted text-xs mb-1">Possession</p>
-            {competition.situation?.possession ? (
+            {livePossession ? (
               <div className="flex items-center gap-2">
-                <img
-                  src={competition.situation.possession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
-                  alt="Possession"
-                  className="w-8 h-8"
-                />
+                {homeTeam?.id && awayTeam?.id && (
+                  <img
+                    src={livePossession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
+                    alt="Possession"
+                    className="w-8 h-8"
+                  />
+                )}
                 <p className="text-neon-cyan font-bold text-lg">
-                  {competition.situation.possession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
+                  {livePossession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
                 </p>
               </div>
             ) : (
@@ -174,38 +188,56 @@ const Info: React.FC<InfoProps> = ({
       </div>
       
       {/* Live Game Situation */}
-      {competition.situation && competition.status.type.state === 'in' && (
+      {(competition.status.type.state === 'in') && (
         <div className="space-y-4">
-          {/* Football Field Visualization */}
-          {competition.situation.lastPlay && (
-            <div className="">
-              {/* Field Visualization */}
-              <div className="pt-2 ">
-                <div className='mx-2'>
-                  <FootballField
-                    homeTeam={homeTeam}
-                    awayTeam={awayTeam}
-                    lastPlay={competition.situation.lastPlay}
-                    situation={competition.situation}
-                    getTeamLogo={getTeamLogo}
-                  />
+          {(() => {
+            const situation = latestPlay
+              ? {
+                  lastPlay: latestPlay,
+                  possession: latestPlay.possession,
+                  downDistanceText: competition.situation?.downDistanceText,
+                  awayTimeouts: competition.situation?.awayTimeouts,
+                  homeTimeouts: competition.situation?.homeTimeouts,
+                }
+              : competition.situation
+                ? {
+                    ...competition.situation,
+                    possession: competition.situation.possession,
+                  }
+                : undefined;
 
-                  {/* Play Log */}
-                  <div className="mt-4">
-                    <PlayLog
-                      playLog={playLog}
+            if (!situation || !situation.lastPlay) return null;
+
+            return (
+              <div className="">
+                <div className="pt-2 ">
+                  <div className='mx-2'>
+                    <FootballField
                       homeTeam={homeTeam}
                       awayTeam={awayTeam}
+                      lastPlay={situation.lastPlay}
+                      situation={situation}
+                      playLog={playLog}
                       getTeamLogo={getTeamLogo}
-                      title="Play Log"
-                      showTitle={true}
-                      countdown={countdown}
                     />
+
+                    {/* Play Log */}
+                    <div className="mt-4">
+                      <PlayLog
+                        playLog={playLog}
+                        homeTeam={homeTeam}
+                        awayTeam={awayTeam}
+                        getTeamLogo={getTeamLogo}
+                        title="Play Log"
+                        showTitle={true}
+                        countdown={countdown}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
 

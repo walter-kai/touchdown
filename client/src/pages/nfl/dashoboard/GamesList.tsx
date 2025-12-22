@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaFootballBall, FaPlay, FaCalendar, FaChevronLeft, FaChevronRight, FaMapMarkerAlt } from "react-icons/fa";
 import LoadingFootball from '../../../components/common/LoadingFootball';
@@ -19,9 +19,15 @@ const NFLScoreboard: React.FC = () => {
     selectedWeek,
     initialLoading,
     error,
+    fetchScoreboardData,
     handlePreviousWeek,
     handleNextWeek,
   } = useScoreboard();
+
+  // Refresh scoreboard whenever this view is (re)loaded
+  useEffect(() => {
+    fetchScoreboardData(selectedWeek || undefined);
+  }, [fetchScoreboardData, selectedWeek]);
 
   // Helper function to group games by date with time information preserved
   const groupGamesByDate = (gamesList: Event[]) => {

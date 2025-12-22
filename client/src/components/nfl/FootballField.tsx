@@ -34,6 +34,7 @@ interface FootballFieldProps {
     possession?: string;
     awayTimeouts?: number;
     homeTimeouts?: number;
+    yardLine?: number;
     lastPlay?: {
       possession?: string;
     };
@@ -213,15 +214,15 @@ const getPlayVisualization = (playType?: PlayType | string | { text: string }) =
     };
   }
   
-  // Two Minute Warning - Pulsing alarm
+  // Two Minute Warning - reuse timeout animation for consistency
   if (type.includes('two-minute warning') || type.includes('two minute warning')) {
     return {
-      color: '#FF4500',
-      glowColor: 'rgba(255, 69, 0, 0.8)',
-      icon: '⚠️',
+      color: '#FFD700',
+      glowColor: 'rgba(255, 215, 0, 0.6)',
+      icon: '🕐',
       pattern: 'solid',
       width: 2,
-      animate: 'two-minute-warning'
+      animate: 'timeout'
     };
   }
   
@@ -343,7 +344,34 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const rightTeam = homeTeam;
   
   // Get visualization config for this play type - handle both string and object
-  const playViz = getPlayVisualization(lastPlay.type?.text ?? '');
+  const extractPlayType = (play?: any) => {
+    if (!play) return '';
+    if (typeof play.type.id === 'string') return play.type;
+    if (play.type && typeof play.type === 'object') {
+      return play.type.text || play.type.displayName || play.type.abbreviation || '';
+    }
+    const text = play.text || '';
+    const textLower = text.toLowerCase();
+
+    // Fallback: infer from text when ESPN play type is missing (e.g., penalties flagged as "No Play")
+    if (textLower.includes('penalty')) return 'Penalty';
+    if (textLower.includes('pass')) return 'Pass';
+    if (textLower.includes('rush') || textLower.includes('run')) return 'Rush';
+    if (textLower.includes('field goal')) return 'Field Goal';
+    if (textLower.includes('kickoff')) return 'Kickoff';
+    if (textLower.includes('punt')) return 'Punt';
+    if (textLower.includes('two-minute warning') || textLower.includes('two minute warning')) return 'Two Minute Warning';
+    if (textLower.includes('timeout')) return 'Timeout';
+    return text;
+  };
+
+  // Prefer explicit type text from the latest play log when situation.lastPlay is sparse
+  const resolvedPlayType = extractPlayType(lastPlay) || extractPlayType(playLog?.[0]) || lastPlay.text || playLog?.[0]?.text || '';
+
+  const playViz = getPlayVisualization(resolvedPlayType);
+
+  // If we still cannot derive a meaningful play type, skip rendering to avoid empty field
+  if (!playViz) return null;
 
   const normalizeName = (v?: string) => v?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
 
@@ -366,6 +394,17 @@ const FootballField: React.FC<FootballFieldProps> = ({
   }, [lastPlay.athletesInvolved, lastPlay.text]);
 
   const qbHeadshot = getHeadshotUrl({ id: qbCandidate?.id, headshot: qbCandidate?.headshot });
+
+  // Prefer athletes from lastPlay, but fall back to latest playLog entry when situation.lastPlay lacks participants
+  const resolvedAthletes = React.useMemo(() => {
+    if (lastPlay?.athletesInvolved?.length) return lastPlay.athletesInvolved;
+    if (playLog?.[0]?.athletesInvolved?.length) return playLog[0].athletesInvolved;
+    return [] as any[];
+  }, [lastPlay?.athletesInvolved, playLog]);
+
+  const primaryAthlete = resolvedAthletes[0] || qbCandidate;
+  const primaryHeadshot = getHeadshotUrl({ id: primaryAthlete?.id, headshot: primaryAthlete?.headshot });
+  const hasPrimaryAthlete = Boolean(primaryAthlete);
 
   // For kickoffs/punts, extract accurate yard lines from text since start/end data is unreliable
   let kickStartYard: number | null = null;
@@ -497,16 +536,21 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const possessionIsHome = situation?.possession === homeTeam?.id;
   const possessionAbbr = possessionIsHome ? homeAbbr : awayAbbr;
   const possessionDirection = possessionIsHome ? -1 : 1; // home drives right-to-left on this field layout
-  const normalizedStartYard = isKickPlay ? undefined : convertToFieldYard(possessionAbbr, lastPlay.start?.yardLine);
-  const normalizedEndYard = isKickPlay ? undefined : convertToFieldYard(possessionAbbr, lastPlay.end?.yardLine);
+  const fallbackYard = situation?.yardLine;
+  const normalizedStartYard = isKickPlay
+    ? undefined
+    : convertToFieldYard(possessionAbbr, lastPlay.start?.yardLine ?? fallbackYard);
+  const normalizedEndYard = isKickPlay
+    ? undefined
+    : convertToFieldYard(possessionAbbr, lastPlay.end?.yardLine ?? fallbackYard);
 
   // Use kick yards if available, otherwise use normalized-by-possession yard data
   let playStartYard = isKickPlay && kickStartYard !== null
     ? kickStartYard
-    : (normalizedStartYard ?? lastPlay.start?.yardLine);
+    : (normalizedStartYard ?? lastPlay.start?.yardLine ?? fallbackYard);
   let playEndYard = isKickPlay && returnEndYard !== null
     ? returnEndYard
-    : (normalizedEndYard ?? lastPlay.end?.yardLine);
+    : (normalizedEndYard ?? lastPlay.end?.yardLine ?? fallbackYard);
 
   // Force scoring plays to end at the correct goal line so touchdowns reach the end zone, and backfill a reasonable start if distance is known
   const isTouchdownPlay = ((lastPlay.type?.text || '').toLowerCase().includes('touchdown')) || ((lastPlay.text || '').toLowerCase().includes('touchdown'));
@@ -902,12 +946,17 @@ const FootballField: React.FC<FootballFieldProps> = ({
                         boxShadow: `0 0 20px ${playViz.glowColor}`
                       }}
                     >
-                      <img
-                        src={getHeadshotUrl({ id: lastPlay.athletesInvolved[0].id, headshot: lastPlay.athletesInvolved[0].headshot })}
-                        alt={lastPlay.athletesInvolved[0].displayName}
-                        className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                        style={{ borderColor: playViz.color }}
-                      />
+                      {hasPrimaryAthlete && (
+                        <img
+                          src={primaryHeadshot || '/assets/football.png'}
+                          alt={primaryAthlete?.displayName || 'Player'}
+                          className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                          style={{ borderColor: playViz.color }}
+                        />
+                      )}
+                      {!hasPrimaryAthlete && (
+                        <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
+                      )}
                       {isTouchdownPlay && (
                         <img
                           src="/assets/football_dance.gif"
@@ -1008,12 +1057,17 @@ const FootballField: React.FC<FootballFieldProps> = ({
                         boxShadow: `0 0 20px ${playViz.glowColor}`
                       }}
                     >
-                      <img
-                        src={lastPlay.athletesInvolved[0].headshot}
-                        alt={lastPlay.athletesInvolved[0].displayName}
-                        className="w-12 h-12 rounded-full object-cover z-10 border-2"
-                        style={{ borderColor: playViz.color }}
-                      />
+                        {hasPrimaryAthlete && (
+                          <img
+                            src={primaryHeadshot || '/assets/football.png'}
+                            alt={primaryAthlete?.displayName || 'Player'}
+                            className="w-12 h-12 rounded-full object-cover z-10 border-2"
+                            style={{ borderColor: playViz.color }}
+                          />
+                        )}
+                        {!hasPrimaryAthlete && (
+                          <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
+                        )}
                       {isTouchdownPlay && (
                         <img
                           src="/assets/football_dance.gif"
@@ -1068,7 +1122,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             hasAthletes: !!lastPlay.athletesInvolved,
             athleteCount: lastPlay.athletesInvolved?.length || 0,
             returnDistanceAbs: Math.abs(returnDistance),
-            willShowRush: playViz.animate !== 'kickoff-fail' && lastPlay.athletesInvolved && lastPlay.athletesInvolved[0]
+            willShowRush: playViz.animate !== 'kickoff-fail' && hasPrimaryAthlete
           });
           
           return (
@@ -1113,7 +1167,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
               {/* Receiver headshot always present at landing spot; animates only after kick completes */}
               {(() => {
-                const shouldShowReturn = playViz.animate !== 'kickoff-fail' && lastPlay.athletesInvolved && lastPlay.athletesInvolved[0];
+                const shouldShowReturn = playViz.animate !== 'kickoff-fail' && hasPrimaryAthlete;
                 const showReturnPhase = shouldShowReturn;
                 const canSlide = (Math.abs(returnDistance) > 1 || needsReturnNudge) && (kickDone || returnStarted);
                 console.log('🏈 RETURN ANIMATION CHECK:', {
@@ -1124,7 +1178,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   kickPhaseComplete,
                   isNotKickoffFail: playViz.animate !== 'kickoff-fail',
                   hasAthletes: !!lastPlay.athletesInvolved,
-                  hasFirstAthlete: !!(lastPlay.athletesInvolved && lastPlay.athletesInvolved[0]),
+                  hasFirstAthlete: hasPrimaryAthlete,
                   returnDistance: Math.abs(returnDistance),
                   willSlide: canSlide,
                   needsReturnNudge
@@ -1153,12 +1207,17 @@ const FootballField: React.FC<FootballFieldProps> = ({
                               boxShadow: `0 0 20px ${playViz.glowColor}`
                             }}
                           >
-                            <img
-                              src={lastPlay.athletesInvolved[0].headshot}
-                              alt={lastPlay.athletesInvolved[0].displayName}
-                              className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                              style={{ borderColor: playViz.color }}
-                            />
+                            {hasPrimaryAthlete && (
+                              <img
+                                src={primaryHeadshot || '/assets/football.png'}
+                                alt={primaryAthlete?.displayName || 'Player'}
+                                className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                                style={{ borderColor: playViz.color }}
+                              />
+                            )}
+                            {!hasPrimaryAthlete && (
+                              <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
+                            )}
                           </div>
                           <div 
                             className="absolute -right-1 top-1/2 transform -translate-y-1/3 -rotate-45"
@@ -1183,12 +1242,17 @@ const FootballField: React.FC<FootballFieldProps> = ({
                             boxShadow: `0 0 20px ${playViz.glowColor}`
                           }}
                         >
-                          <img
-                            src={lastPlay.athletesInvolved[0].headshot}
-                            alt={lastPlay.athletesInvolved[0].displayName}
-                            className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                            style={{ borderColor: playViz.color }}
-                          />
+                          {hasPrimaryAthlete && (
+                            <img
+                              src={primaryHeadshot || '/assets/football.png'}
+                              alt={primaryAthlete?.displayName || 'Player'}
+                              className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                              style={{ borderColor: playViz.color }}
+                            />
+                          )}
+                          {!hasPrimaryAthlete && (
+                            <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
+                          )}
                         </div>
                       </div>
                     )}
@@ -1245,12 +1309,17 @@ const FootballField: React.FC<FootballFieldProps> = ({
                       boxShadow: `0 0 20px ${playViz.glowColor}`
                     }}
                   >
-                    <img
-                      src={lastPlay.athletesInvolved[0].headshot}
-                      alt={lastPlay.athletesInvolved[0].displayName}
-                      className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                      style={{ borderColor: playViz.color }}
-                    />
+                    {hasPrimaryAthlete && (
+                      <img
+                        src={primaryHeadshot || '/assets/football.png'}
+                        alt={primaryAthlete?.displayName || 'Player'}
+                        className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                        style={{ borderColor: playViz.color }}
+                      />
+                    )}
+                    {!hasPrimaryAthlete && (
+                      <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
+                    )}
                   </div>
                 </div>
               </div>
@@ -1277,15 +1346,20 @@ const FootballField: React.FC<FootballFieldProps> = ({
                       boxShadow: `0 0 20px ${playViz.glowColor}`
                     }}
                   >
-                    <img
-                      src={lastPlay.athletesInvolved[0].headshot}
-                      alt={lastPlay.athletesInvolved[0].displayName}
-                      className="w-14 h-14 rounded-full object-cover z-1 border-2"
-                      style={{ 
-                        borderColor: playViz.color,
-                        filter: 'grayscale(100%)'
-                      }}
-                    />
+                    {hasPrimaryAthlete && (
+                      <img
+                        src={primaryHeadshot || '/assets/football.png'}
+                        alt={primaryAthlete?.displayName || 'Player'}
+                        className="w-14 h-14 rounded-full object-cover z-1 border-2"
+                        style={{ 
+                          borderColor: playViz.color,
+                          filter: 'grayscale(100%)'
+                        }}
+                      />
+                    )}
+                    {!hasPrimaryAthlete && (
+                      <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
+                    )}
                   </div>
                 </div>
               </div>
@@ -1322,7 +1396,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           const hitRollPx = Math.max(40, Math.min(Math.abs(distancePixels) * 0.35, 120));
           const hitRollSigned = (Math.sign(distancePercent) || 1) * hitRollPx;
 
-          const rusherAthlete = lastPlay.athletesInvolved[0];
+          const rusherAthlete = primaryAthlete;
           const qbAthlete = qbCandidate;
           const qbHeadshotUrl = qbHeadshot;
 
@@ -1351,12 +1425,17 @@ const FootballField: React.FC<FootballFieldProps> = ({
                         boxShadow: `0 0 20px ${playViz.glowColor}`
                       }}
                     >
-                      <img
-                        src={lastPlay.athletesInvolved[0].headshot}
-                        alt={lastPlay.athletesInvolved[0].displayName}
-                        className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                        style={{ borderColor: playViz.color }}
-                      />
+                      {hasPrimaryAthlete && (
+                        <img
+                          src={primaryHeadshot || '/assets/football.png'}
+                          alt={primaryAthlete?.displayName || 'Player'}
+                          className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                          style={{ borderColor: playViz.color }}
+                        />
+                      )}
+                      {!hasPrimaryAthlete && (
+                        <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1420,29 +1499,34 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   boxShadow: `0 0 20px ${playViz.glowColor}`
                 }}
               >
-                <img
-                  src={getHeadshotUrl({ id: lastPlay.athletesInvolved[0].id, headshot: lastPlay.athletesInvolved[0].headshot })}
-                  alt={lastPlay.athletesInvolved[0].displayName}
-                  className="w-14 h-14 rounded-full object-cover z-1 border-2"
-                  style={{ borderColor: playViz.color }}
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const parent = e.currentTarget.parentElement;
-                    if (parent) {
-                      const fallback = document.createElement('div');
-                      fallback.className = 'flex items-center justify-center text-2xl';
-                      fallback.innerHTML = playViz.icon;
-                      parent.appendChild(fallback);
-                    }
-                  }}
-                />
+                {hasPrimaryAthlete && (
+                  <img
+                    src={primaryHeadshot || '/assets/football.png'}
+                    alt={primaryAthlete?.displayName || 'Player'}
+                    className="w-14 h-14 rounded-full object-cover z-1 border-2"
+                    style={{ borderColor: playViz.color }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const parent = e.currentTarget.parentElement;
+                      if (parent) {
+                        const fallback = document.createElement('div');
+                        fallback.className = 'flex items-center justify-center text-2xl';
+                        fallback.innerHTML = playViz.icon;
+                        parent.appendChild(fallback);
+                      }
+                    }}
+                  />
+                )}
+                {!hasPrimaryAthlete && (
+                  <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
+                )}
               </div>
               {/* Player name tooltip */}
               <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-bg-darker border rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-[9999]"
                 style={{ borderColor: `${playViz.color}80` }}
               >
-                <p className="text-xs font-bold" style={{ color: playViz.color }}>{lastPlay.athletesInvolved[0].displayName}</p>
-                <p className="text-text-muted text-xs">{lastPlay.athletesInvolved[0].position}</p>
+                <p className="text-xs font-bold" style={{ color: playViz.color }}>{primaryAthlete?.displayName || 'Player'}</p>
+                <p className="text-text-muted text-xs">{primaryAthlete?.position || ''}</p>
               </div>
             </div>
           </div>
