@@ -17,7 +17,7 @@ const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
 						<img
 							src="/logos/Drive-logo.png"
 							alt="Drive"
-							className="h-8 w-8 rounded-sm shadow-[0_0_12px_rgba(0,255,231,0.25)]"
+							className="h-8 w-8 rounded-sm"
 						/>
 						<div className="flex  leading-tight">
 							<span className="text-text-light font-semibold tracking-wide">NFL Drive</span>

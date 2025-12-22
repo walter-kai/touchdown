@@ -651,6 +651,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const possessionIsHome = situation?.possession === homeTeam?.id;
   const homeOnLeft = leftTeam?.id === homeTeam?.id;
   const possessionAbbr = possessionIsHome ? homeAbbrRaw : awayAbbrRaw;
+  const teamColor = possessionIsHome ? '#FAAFE8' : '#00FFE7'; // pink for home, cyan for away
   const possessionDirection = possessionIsHome
     ? (homeOnLeft ? 1 : -1)
     : (homeOnLeft ? -1 : 1);
@@ -1140,7 +1141,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                           src={primaryHeadshot || '/assets/football.png'}
                           alt={primaryAthlete?.displayName || 'Player'}
                           className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                          style={{ borderColor: playViz.color }}
+                          style={{ borderColor: teamColor }}
                         />
                       )}
                       {!hasPrimaryAthlete && (
@@ -1254,7 +1255,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                             src={primaryHeadshot || '/assets/football.png'}
                             alt={primaryAthlete?.displayName || 'Player'}
                             className="w-12 h-12 rounded-full object-cover z-10 border-2"
-                            style={{ borderColor: playViz.color }}
+                            style={{ borderColor: teamColor }}
                           />
                         )}
                         {!hasPrimaryAthlete && (
@@ -1374,7 +1375,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                                 src={primaryHeadshot || '/assets/football.png'}
                                 alt={primaryAthlete?.displayName || 'Player'}
                                 className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                                style={{ borderColor: playViz.color }}
+                                style={{ borderColor: teamColor }}
                               />
                             )}
                             {!hasPrimaryAthlete && (
@@ -1409,7 +1410,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                               src={primaryHeadshot || '/assets/football.png'}
                               alt={primaryAthlete?.displayName || 'Player'}
                               className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                              style={{ borderColor: playViz.color }}
+                              style={{ borderColor: teamColor }}
                             />
                           )}
                           {!hasPrimaryAthlete && (
@@ -1478,7 +1479,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                         src={primaryHeadshot || '/assets/football.png'}
                         alt={primaryAthlete?.displayName || 'Player'}
                         className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                        style={{ borderColor: playViz.color }}
+                        style={{ borderColor: teamColor }}
                       />
                     )}
                     {!hasPrimaryAthlete && (
@@ -1516,7 +1517,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                         alt={primaryAthlete?.displayName || 'Player'}
                         className="w-14 h-14 rounded-full object-cover z-1 border-2"
                         style={{ 
-                          borderColor: playViz.color,
+                          borderColor: teamColor,
                           filter: 'grayscale(100%)'
                         }}
                       />
@@ -1596,7 +1597,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                           src={primaryHeadshot || '/assets/football.png'}
                           alt={primaryAthlete?.displayName || 'Player'}
                           className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                          style={{ borderColor: playViz.color }}
+                          style={{ borderColor: teamColor }}
                         />
                       )}
                       {!hasPrimaryAthlete && (
@@ -1634,7 +1635,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                           src={qbHeadshotUrl}
                           alt={qbAthlete?.displayName || 'QB'}
                           className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                          style={{ borderColor: playViz.color }}
+                          style={{ borderColor: teamColor }}
                         />
                       ) : (
                         <div className="text-2xl" style={{ color: playViz.color }}>
@@ -1671,7 +1672,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     src={primaryHeadshot || '/assets/football.png'}
                     alt={primaryAthlete?.displayName || 'Player'}
                     className="w-14 h-14 rounded-full object-cover z-1 border-2"
-                    style={{ borderColor: playViz.color }}
+                    style={{ borderColor: teamColor }}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                       const parent = e.currentTarget.parentElement;
