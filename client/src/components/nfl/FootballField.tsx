@@ -329,6 +329,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   
   // Single source of truth for all headshot vertical positions
   const HEADSHOT_VERTICAL_POSITION = '64%';
+  const ARROW_VERTICAL_POSITION = '32%';
   // Duration of the kickoff arc animation (matches animate-pass-arc duration)
   const KICK_ANIMATION_MS = 5000;
   // Duration of rush animation (matches rush-slide timing)
@@ -622,10 +623,23 @@ const FootballField: React.FC<FootballFieldProps> = ({
     : (normalizedEndYard ?? getEndYard(lastPlay) ?? fallbackYard);
 
 
-  // Force scoring plays to end at the correct goal line so touchdowns reach the end zone, and backfill a reasonable start if distance is known
+  // Force scoring plays to end at the correct goal line so touchdowns/FGs reach the posts, and backfill a reasonable start if distance is known
   const isTouchdownPlay = ((getPlayTypeText(lastPlay) || '').toLowerCase().includes('touchdown')) || ((lastPlay?.text || '').toLowerCase().includes('touchdown'));
   const distanceMatch = lastPlay.text?.match(/for\s+(\d+)\s+yards/i);
   const distanceYards = distanceMatch ? parseInt(distanceMatch[1], 10) : undefined;
+  const statYardage = typeof (lastPlay as any)?.statYardage === 'number' ? (lastPlay as any).statYardage : undefined;
+
+  // Field goal attempts should always target the opponent posts; use statYardage to infer snap spot when available
+  if (playViz.animate === 'field-goal') {
+    const goalCenter = possessionIsHome ? -5 : 105; // inside the opponent end zone
+    playEndYard = goalCenter;
+
+    const fgDistance = statYardage ?? distanceYards;
+    if (fgDistance && !Number.isNaN(fgDistance)) {
+      const inferredStart = clampYard(goalCenter - possessionDirection * fgDistance);
+      playStartYard = inferredStart;
+    }
+  }
 
   // If end yard is missing but we have start+gain or we can parse a target yard from text, infer it for animation
   let inferredEndYard: number | undefined;
@@ -844,7 +858,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           className="absolute transform -translate-x-1/2 -translate-y-1/2"
           style={{ 
             left: `${10 + (playStartYard * 0.8)}%`,
-            top: HEADSHOT_VERTICAL_POSITION
+            top: ARROW_VERTICAL_POSITION
           }}
         >
           <div 
@@ -859,14 +873,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
       {/* Arrow showing play direction - arrowhead only */}
       {playStartYard !== undefined && playEndYard !== undefined && playStartYard !== playEndYard && (
-        <div className="top-12">
+        <div className="absolute left-0 top-0 w-full h-full pointer-events-none">
           {/* Arc path for punts/kickoffs */}
           {playViz.animate === 'arc' && (
             <svg
-              className="absolute left-0 top-0 w-full h-full pointer-events-none"
+              className="absolute left-0 top-0 w-full h-full"
             >
               <path
-                d={`M ${10 + (playStartYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION} Q ${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%,13% ${10 + (playEndYard * 0.8)}%,${HEADSHOT_VERTICAL_POSITION}`}
+                d={`M ${10 + (playStartYard * 0.8)}%,${ARROW_VERTICAL_POSITION} Q ${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%,13% ${10 + (playEndYard * 0.8)}%,${ARROW_VERTICAL_POSITION}`}
                 stroke={playViz.color}
                 strokeWidth={playViz.width}
                 fill="none"
@@ -881,7 +895,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             className="absolute"
             style={{
               left: `${10 + (playStartYard * 0.8)}%`,
-              top: HEADSHOT_VERTICAL_POSITION,
+              top: ARROW_VERTICAL_POSITION,
               transform: `translateY(-50%) rotate(${playEndYard > playStartYard ? 0 : 180}deg)`,
               transformOrigin: '0 50%'
             }}

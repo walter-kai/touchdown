@@ -423,6 +423,8 @@
   }
   40% {
     transform: translateX(var(--distance));
+  }
+  60% {
     opacity: 1;
   }
   100% {
