@@ -930,23 +930,32 @@ const FootballField: React.FC<FootballFieldProps> = ({
         </div>
       )}
 
-      {/* End of regulation - scale pulse animation */}
+      {/* End of quarter/half/regulation - show ad-style banner at center */}
       {playViz.animate === 'end-regulation' && (
         <div
-          className="absolute z-20"
-          style={{ 
+          className="absolute z-20 w-3/4 max-w-xl"
+          style={{
             left: '50%',
             top: '50%',
             transform: 'translate(-50%, -50%)'
           }}
         >
-          <div 
-            className="text-5xl animate-scale-pulse"
+          <div
+            className="relative overflow-hidden rounded-xl shadow-2xl border-2"
             style={{
-              filter: `drop-shadow(0 0 30px ${playViz.glowColor})`
+              background: 'linear-gradient(135deg, rgba(0,255,231,0.15), rgba(250,175,232,0.15))',
+              borderColor: `${playViz.color}70`,
+              boxShadow: `0 0 30px ${playViz.glowColor}`
             }}
           >
-            {playViz.icon}
+            <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.08)_8px,transparent_8px,transparent_16px)]" />
+            <div className="px-6 py-4 flex items-center justify-between gap-4">
+              <span className="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">Presented by</span>
+              <span className="text-2xl font-extrabold" style={{ color: playViz.color }}>
+                {lastPlay?.text || 'End of quarter'}
+              </span>
+              <span className="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">Touchdown Live</span>
+            </div>
           </div>
         </div>
       )}
@@ -1067,8 +1076,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
         
         // Pass animations - football spins with headshot following
         if (playViz.animate === 'pass-complete' || playViz.animate === 'pass-incomplete') {
+          const headshotOffsetPx = 20; // keep the receiver slightly offset so the ball lands beside the headshot
+          const headshotOffsetPercent = (headshotOffsetPx / fieldWidthPx) * 100;
+          const headshotStartX = passStartX + (Math.sign(distance) || 1) * -headshotOffsetPercent;
           return (
-            <>
+            <React.Fragment key={`pass-${playKey}`}>
               {/* Football animation */}
               <div
                 className="absolute z-20"
@@ -1083,7 +1095,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     '--distance': distance,
                     '--distance-px': `${signedDistancePx}px`,
                     '--arc-height': `${Math.abs(distance) * 2.5}px`,
-                    animation: `${playViz.animate === 'pass-complete' ? 'pass-arc' : 'pass-incomplete'} ${passDurationMs + PASS_PAUSE_MS}ms linear 0s infinite`,
+                    animation: `${playViz.animate === 'pass-complete' ? 'pass-arc' : 'pass-incomplete'} ${passDurationMs + PASS_PAUSE_MS}ms cubic-bezier(0.4, 0.0, 0.2, 1) 0s 1 forwards`,
                     willChange: 'transform, opacity'
                   } as React.CSSProperties}
                 >
@@ -1102,7 +1114,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               <div
                 className="absolute z-10"
                 style={{ 
-                  left: `${passStartX}%`,
+                  left: `${headshotStartX}%`,
                   top: HEADSHOT_VERTICAL_POSITION,
                   transform: 'translate(-50%, -50%)'
                 }}
@@ -1111,7 +1123,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   style={{
                     '--distance': distance,
                     '--distance-px': `${signedDistancePx}px`,
-                    animation: `headshot-follow ${passDurationMs + PASS_PAUSE_MS}ms linear 0s infinite`,
+                    animation: `headshot-follow ${passDurationMs + PASS_PAUSE_MS}ms cubic-bezier(0.4, 0.0, 0.2, 1) 0s 1 forwards`,
                     willChange: 'transform, opacity'
                   } as React.CSSProperties}
                 >
@@ -1148,7 +1160,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   </div>
                 </div>
               </div>
-            </>
+            </React.Fragment>
           );
         }
         
@@ -1251,6 +1263,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 });
                 return showReturnPhase ? (
                   <div
+                    key={`kick-return-${playKey}-${loopCycle}`}
                     className="absolute z-10"
                     style={{ 
                       left: `${returnStartX}%`,

@@ -29,7 +29,7 @@ const GameLeaders: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamI
       {/* Divider */}
       <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
       <div className="mx-2">
-        <div className="flex items-center mb-6 pb-3 border-b border-neon-cyan/10">
+        <div className="flex items-center pb-3">
           <h1>Game Leaders</h1>
         </div>
       </div>

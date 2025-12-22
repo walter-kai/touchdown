@@ -41,11 +41,29 @@ const PlayLog: React.FC<PlayLogProps> = ({
   maxHeight = 'none',
   countdown = 30
 }) => {
-  const { playLog: contextPlayLog = [] } = usePlays();
+  const { playLog: contextPlayLog = [], countdown: contextCountdown, isRefreshing, refresh } = usePlays();
   const resolvedPlayLog = playLog?.length ? playLog : contextPlayLog;
-  const progress = (countdown / 30) * 100; // 30 seconds total
+  const REFRESH_TOTAL_SECONDS = 30;
+  const effectiveCountdown = contextCountdown ?? countdown;
+  const remainingSeconds = Math.max(0, Math.ceil(effectiveCountdown ?? REFRESH_TOTAL_SECONDS));
+  const progress = Math.max(0, Math.min(100, ((effectiveCountdown ?? REFRESH_TOTAL_SECONDS) / REFRESH_TOTAL_SECONDS) * 100));
   const [newPlayIds, setNewPlayIds] = useState<Set<string>>(new Set());
   const prevPlayCountRef = useRef(resolvedPlayLog.length);
+  const [lockUntil, setLockUntil] = useState<number | null>(null);
+  const [now, setNow] = useState<number>(() => Date.now());
+
+  // Track lock countdown ticks
+  useEffect(() => {
+    if (!lockUntil) return;
+    const tick = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(tick);
+  }, [lockUntil]);
+
+  useEffect(() => {
+    if (lockUntil && now >= lockUntil) {
+      setLockUntil(null);
+    }
+  }, [lockUntil, now]);
 
   // Track new plays for animation
   useEffect(() => {
@@ -71,6 +89,20 @@ const PlayLog: React.FC<PlayLogProps> = ({
     
     prevPlayCountRef.current = resolvedPlayLog.length;
   }, [resolvedPlayLog]);
+
+  const lockRemaining = lockUntil ? Math.max(0, Math.ceil((lockUntil - now) / 1000)) : 0;
+  const isLocked = lockRemaining > 0;
+
+  const handleManualRefresh = async () => {
+    if (!refresh || isLocked || isRefreshing) return;
+    setLockUntil(Date.now() + 30000);
+    try {
+      await refresh();
+    } catch (err) {
+      // Swallow to avoid UI interruption; the next auto refresh will recover
+      console.error('Manual refresh failed', err);
+    }
+  };
 
   if (resolvedPlayLog.length === 0) {
     return (
@@ -115,7 +147,7 @@ const PlayLog: React.FC<PlayLogProps> = ({
           {/* Divider */}
           <div className="border-t-2 border-neon-cyan/20"></div>
           
-          <div className="flex items-center justify-between py-2 pr-2 border-b border-neon-cyan/10 mx-2 min-h-[76px]">
+          <div className="flex items-center justify-between py-2 pr-2 mx-2 min-h-[76px]">
             <div>
               <h1>
                 {title}
@@ -130,15 +162,28 @@ const PlayLog: React.FC<PlayLogProps> = ({
 
           {/* Loading Bar */}
           <div className="mx-2 mb-4">
-            <div className="h-1 bg-bg-darker rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-neon-cyan to-neon-pink transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(0,255,231,0.5)]"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <div className="flex items-center justify-between mt-1 px-1">
-              <span className="text-text-muted text-[10px]">Next refresh</span>
-              <span className="text-neon-cyan text-[10px] font-bold">{countdown}s</span>
+            <div className="flex items-center gap-3">
+                            <button
+                type="button"
+                onClick={handleManualRefresh}
+                disabled={!refresh || isRefreshing || isLocked}
+                className={`px-3 py-1 min-w-[60px] text-[11px] font-semibold rounded-md border transition-all ${
+                  (!refresh || isRefreshing || isLocked)
+                    ? 'opacity-60 cursor-not-allowed border-white/20 text-white/50'
+                    : 'border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10'
+                }`}
+              >
+                {isRefreshing ? 'Refreshing…' : isLocked ? `${lockRemaining}s` : `Refresh (${remainingSeconds}s)`}
+              </button>
+              <div className="flex-1">
+                <div className="h-1 bg-bg-darker rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-neon-cyan to-neon-pink transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(0,255,231,0.5)]"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+
             </div>
           </div>
         </>
@@ -210,18 +255,16 @@ const PlayLog: React.FC<PlayLogProps> = ({
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        {headshots.length > 0 && (
-                          <div className="flex flex-col -space-x-2">
-                            <span className={`text-sm text-neon-cyan font-bold'}`}>
-                              {typeText || 'Play'}
-                            </span>
-                                                      {participantCountLabel && (
-                            <span className="text-text-muted text-[11px] font-semibold pl-2">
+                        <div className="flex flex-col min-w-[110px]">
+                          <span className="text-sm text-neon-cyan font-bold">
+                            {typeText || 'Play'}
+                          </span>
+                          {participantCountLabel && (
+                            <span className="text-text-muted text-[11px] font-semibold">
                               {participantCountLabel}
                             </span>
                           )}
-                          </div>
-                        )}
+                        </div>
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center justify-end">
                             {headshots.map((athlete, idx) => (

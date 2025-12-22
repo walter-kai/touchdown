@@ -809,7 +809,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
             {/* Divider */}
             <div className="border-t-2 border-neon-cyan/20"></div>
             
-            <div className="flex items-center justify-between py-2 pr-2 border-b border-neon-cyan/10 mx-2 min-h-[76px]">
+            <div className="flex items-center justify-between py-2 pr-2 mx-2 min-h-[76px]">
               <div>
                   <h1>
                     {isLocked ? 'Selected Picks' : 'Your Picks'}
