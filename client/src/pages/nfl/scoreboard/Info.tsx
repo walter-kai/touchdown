@@ -173,53 +173,6 @@ const Info: React.FC<InfoProps> = ({
         </div>
       </div>
       
-      {/* Leaders Section - Compact */}
-      {competition.leaders && competition.leaders.length > 0 && (
-        <div className="mt-4">
-          {/* Divider */}
-          <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
-          <div className="mx-2">
-            <div className="flex items-center mb-6 pb-3 border-b border-neon-cyan/10">
-              <h1>Leaders</h1>
-            </div>
-          </div>
-          <div className="mx-2">
-            <div className="grid grid-cols-3 gap-3">
-              {competition.leaders.slice(0, 3).map((category: any, categoryIdx: number) => {
-                const leader = category.leaders?.[0];
-                if (!leader) return null;
-                const headshot = leader.athlete.headshot;
-                const headshotUrl = typeof headshot === 'string' ? headshot : headshot?.href;
-                return (
-                  <button
-                    key={`${category.name}-${categoryIdx}`}
-                    onClick={() => navigate(`/nfl/player/${leader.athlete.id}`)}
-                    className="flex flex-col items-center text-center hover:bg-neon-cyan/5 rounded-lg p-2 transition-all group cursor-pointer bg-bg-darker/50 border border-neon-cyan/10"
-                  >
-                    {headshotUrl ? (
-                      <img
-                        src={headshotUrl}
-                        alt={leader.athlete.displayName}
-                        className="w-16 h-16 rounded-full group-hover:scale-110 transition-transform object-cover mb-2"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-bg-darker flex items-center justify-center group-hover:scale-110 transition-transform border-2 border-neon-cyan/30 mb-2">
-                        <FaFootballBall className="text-neon-cyan" />
-                      </div>
-                    )}
-                    <p className="text-text-light font-bold text-sm group-hover:text-neon-cyan transition-colors truncate w-full">
-                      {leader.athlete.shortName || leader.athlete.displayName}
-                    </p>
-                    <p className="text-text-muted text-xs mb-1">{category.shortDisplayName || category.displayName}</p>
-                    <p className="text-neon-cyan font-bold text-lg">{leader.displayValue}</p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-     
       {/* Live Game Situation */}
       {competition.situation && competition.status.type.state === 'in' && (
         <div className="space-y-4">

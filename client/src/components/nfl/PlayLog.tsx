@@ -208,7 +208,19 @@ const PlayLog: React.FC<PlayLogProps> = ({
                     >
                       <div className="flex items-center gap-3">
                         {headshots.length > 0 && (
-                          <div className="flex -space-x-2">
+                          <div className="flex flex-col -space-x-2">
+                            <span className={`text-sm text-neon-cyan font-bold'}`}>
+                              {typeText || 'Play'}
+                            </span>
+                                                      {participantCountLabel && (
+                            <span className="text-text-muted text-[11px] font-semibold pl-2">
+                              {participantCountLabel}
+                            </span>
+                          )}
+                          </div>
+                        )}
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center justify-end">
                             {headshots.map((athlete, idx) => (
                               <img
                                 key={athlete.id || idx}
@@ -219,22 +231,11 @@ const PlayLog: React.FC<PlayLogProps> = ({
                                 } ${idx > 0 ? 'shadow-inner' : ''}`}
                               />
                             ))}
-                          </div>
-                        )}
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className={`text-sm text-neon-cyan font-bold'}`}>
-                              {typeText || 'Play'}
-                            </span>
-                            <span className={`${textColor} text-xs font-bold`}>
+                            <span className={`${textColor} text-xs font-bold pl-2`}>
                               Q{play.quarter} - {play.clock}
                             </span>
                           </div>
-                          {participantCountLabel && (
-                            <span className="text-text-muted text-[11px] font-semibold">
-                              {participantCountLabel}
-                            </span>
-                          )}
+
                         </div>
                       </div>
                           <p className="text-text-light text-sm leading-snug pl-0">

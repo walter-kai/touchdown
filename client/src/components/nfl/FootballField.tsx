@@ -579,7 +579,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
             {/* Timeouts - Only show if showGameInfo is true */}
       {/* {showGameInfo && situation && ( */}
-        <div className="flex justify-between items-center pt-4">
+        <div className="flex justify-between items-center">
           <div className="text-center">
             <p className="text-text-muted text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
             <div className="flex gap-1 justify-center">
