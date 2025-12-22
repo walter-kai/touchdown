@@ -91,6 +91,7 @@ export const normalizePlayFromItem = (
       : rawPlay?.yardsGained ?? rawPlay?.yardage;
 
   return {
+    id: rawPlay?.id,
     text: rawPlay?.text || rawPlay?.shortText || rawPlay?.description || '',
     quarter: period,
     clock,
@@ -101,6 +102,8 @@ export const normalizePlayFromItem = (
     scoreValue: rawPlay?.scoreValue || rawPlay?.score || 0,
     yardLine,
     yardage,
+    start: rawPlay?.start,
+    end: rawPlay?.end,
     athletesInvolved: normalizeParticipants(rawPlay, headshotLookup)
   };
 };

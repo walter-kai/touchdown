@@ -48,6 +48,8 @@ export interface PlayAthlete {
  * Individual play in a game
  */
 export interface Play {
+  /** Unique play identifier when available */
+  id?: string;
   /** Play description text */
   text: string;
   
@@ -74,6 +76,18 @@ export interface Play {
   
   /** Yard line position */
   yardLine?: number;
+
+  /** Raw start spot (from ESPN) */
+  start?: {
+    yardLine?: number;
+    team?: { id?: string };
+  };
+
+  /** Raw end spot (from ESPN) */
+  end?: {
+    yardLine?: number;
+    team?: { id?: string };
+  };
   
   /** Yards gained/lost on the play */
   yardage?: number;

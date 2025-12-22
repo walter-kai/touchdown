@@ -2,7 +2,6 @@ import React from 'react';
 import { FaFootballBall } from 'react-icons/fa';
 import { Play, PlayType } from '@/types/espn/playByplay';
 import '@/styles/football.css';
-import { useScoreboard } from '@/providers/ScoreboardContext';
 import { getHeadshotUrl } from '@/utils/headshot';
 
 interface FootballFieldProps {
@@ -258,33 +257,40 @@ const FootballField: React.FC<FootballFieldProps> = ({
   getTeamLogo,
   showGameInfo = false,
 }) => {
-  const scoreboard = useScoreboard?.();
-  const games = scoreboard?.games || [];
+  const getTeamId = (team: any) => {
+    if (!team) return undefined;
+    if (typeof team === 'string') return team;
+    return team.id ?? team.team?.id;
+  };
+  const getStartYard = (play: any) => {
+    const yard = play?.start?.yardLine ?? play?.yardLine;
+    return typeof yard === 'number' ? yard : undefined;
+  };
+  const getEndYard = (play: any) => {
+    const yard = play?.end?.yardLine;
+    return typeof yard === 'number' ? yard : undefined;
+  };
+  const getPlayId = (play: any) => (typeof play?.id === 'string' ? play.id : play?.id) as string | undefined;
+  const getPlayTypeText = (play: any) => {
+    if (!play?.type) return '';
+    if (typeof play.type === 'string') return play.type;
+    return play.type.text || play.type.displayName || play.type.abbreviation || '';
+  };
 
-  // Try to match the game from context when explicit props are missing
-  const getTeamId = (team: any) => team?.team?.id ?? team?.id;
-  const homeId = getTeamId(homeTeamProp);
-  const awayId = getTeamId(awayTeamProp);
-
-  const matchedGame = games.find((g: any) => {
-    const competitors = g?.competitions?.[0]?.competitors || [];
-    const ids = competitors.map((c: any) => String(getTeamId(c)));
-    if (homeId && awayId) return ids.includes(String(homeId)) && ids.includes(String(awayId));
-    if (homeId) return ids.includes(String(homeId));
-    if (awayId) return ids.includes(String(awayId));
-    return false;
-  }) || games.find((g: any) => g?.competitions?.[0]?.situation?.lastPlay);
-
-  const competition = matchedGame?.competitions?.[0];
-  const homeTeam = homeTeamProp ?? competition?.competitors?.find((c: any) => c.homeAway === 'home');
-  const awayTeam = awayTeamProp ?? competition?.competitors?.find((c: any) => c.homeAway === 'away');
-  const situation = situationProp ?? competition?.situation;
-  const lastPlay = lastPlayProp ?? competition?.situation?.lastPlay;
-  const playLog = playLogProp?.length
-    ? playLogProp
-    : competition?.situation?.lastPlay
-      ? [competition.situation.lastPlay as any]
-      : [];
+  const homeTeam = homeTeamProp;
+  const awayTeam = awayTeamProp;
+  const playLog = playLogProp?.length ? playLogProp : [];
+  const lastPlay = (lastPlayProp ?? playLog[0]) as Partial<Play> | undefined;
+  const fallbackPossession = getTeamId((lastPlay as any)?.team)
+    || (lastPlay as any)?.possession
+    || (lastPlay as any)?.athletesInvolved?.[0]?.team?.id;
+  const situation = (situationProp as any) ?? (lastPlay
+    ? {
+        possession: fallbackPossession,
+        lastPlay: { possession: fallbackPossession },
+        yardLine: getStartYard(lastPlay) ?? getEndYard(lastPlay),
+      }
+    : undefined);
 
 
 
@@ -293,13 +299,13 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const fieldRef = React.useRef<HTMLDivElement>(null);
   const [kickPhaseComplete, setKickPhaseComplete] = React.useState(false);
   const [kickDone, setKickDone] = React.useState(false);
-  const offenseAthleteId = lastPlay?.athletesInvolved?.[0]?.id;
+  const offenseAthleteId = (lastPlay as any)?.athletesInvolved?.[0]?.id;
   const offenseTeamId = situation?.possession
     || (situation?.lastPlay as any)?.possession
-    || lastPlay?.team?.id
+    || getTeamId((lastPlay as any)?.team)
     || (lastPlay as any)?.possession
     || (playLog[0] as any)?.possession
-    || lastPlay?.athletesInvolved?.[0]?.team?.id;
+    || (lastPlay as any)?.athletesInvolved?.[0]?.team?.id;
   const [returnStarted, setReturnStarted] = React.useState(false);
   const [ballFade, setBallFade] = React.useState(false);
   const [loopCycle, setLoopCycle] = React.useState(0);
@@ -416,7 +422,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   if (debugLogs) console.log('🏈 Is kick play?', isKickPlay, 'playViz.animate:', playViz.animate);
 
   // Gate the return animation until the kick arc finishes
-  const playKey = lastPlay?.id ?? lastPlay?.text ?? lastPlay?.type?.id ?? lastPlay?.type?.text ?? '';
+  const playKey = getPlayId(lastPlay) || lastPlay?.text || (lastPlay as any)?.type?.id || getPlayTypeText(lastPlay) || '';
 
   React.useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -450,7 +456,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
     return () => clearTimeout(loopTimer);
   }, [isKickPlay, loopCycle, PLAY_LOOP_MS]);
   
-  if (isKickPlay && lastPlay.text) {
+  if (isKickPlay && lastPlay?.text) {
     // Extract "kicks XX yards from TEAM YY to TEAM ZZ" for kick trajectory
     const kickMatch = lastPlay.text.match(/kicks\s+\d+\s+yards\s+from\s+(\w+)\s+(\d+)\s+to\s+(\w+)\s+(\d+)/i);
     const toEndZoneMatch = lastPlay.text.match(/kicks\s+\d+\s+yards\s+from\s+(\w+)\s+(\d+)\s+to\s+(?:the\s+)?end zone/i);
@@ -539,23 +545,51 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const fallbackYard = situation?.yardLine;
   const normalizedStartYard = isKickPlay
     ? undefined
-    : convertToFieldYard(possessionAbbr, lastPlay.start?.yardLine ?? fallbackYard);
+    : convertToFieldYard(possessionAbbr, getStartYard(lastPlay) ?? fallbackYard);
   const normalizedEndYard = isKickPlay
     ? undefined
-    : convertToFieldYard(possessionAbbr, lastPlay.end?.yardLine ?? fallbackYard);
+    : convertToFieldYard(possessionAbbr, getEndYard(lastPlay) ?? fallbackYard);
 
   // Use kick yards if available, otherwise use normalized-by-possession yard data
   let playStartYard = isKickPlay && kickStartYard !== null
     ? kickStartYard
-    : (normalizedStartYard ?? lastPlay.start?.yardLine ?? fallbackYard);
+    : (normalizedStartYard ?? getStartYard(lastPlay) ?? fallbackYard);
   let playEndYard = isKickPlay && returnEndYard !== null
     ? returnEndYard
-    : (normalizedEndYard ?? lastPlay.end?.yardLine ?? fallbackYard);
+    : (normalizedEndYard ?? getEndYard(lastPlay) ?? fallbackYard);
+
 
   // Force scoring plays to end at the correct goal line so touchdowns reach the end zone, and backfill a reasonable start if distance is known
-  const isTouchdownPlay = ((lastPlay.type?.text || '').toLowerCase().includes('touchdown')) || ((lastPlay.text || '').toLowerCase().includes('touchdown'));
+  const isTouchdownPlay = ((getPlayTypeText(lastPlay) || '').toLowerCase().includes('touchdown')) || ((lastPlay?.text || '').toLowerCase().includes('touchdown'));
   const distanceMatch = lastPlay.text?.match(/for\s+(\d+)\s+yards/i);
   const distanceYards = distanceMatch ? parseInt(distanceMatch[1], 10) : undefined;
+
+  // If end yard is missing but we have start+gain or we can parse a target yard from text, infer it for animation
+  let inferredEndYard: number | undefined;
+  if (!isKickPlay && playStartYard !== undefined && (playEndYard === undefined || playEndYard === playStartYard)) {
+    // Try to parse explicit yard from play text (e.g., "to BLT 15")
+    if (lastPlay?.text) {
+      const yardTextMatch = lastPlay.text.match(/\b(?:to|at)\s+([A-Z]{2,3})\s+(\d{1,2})\b/i);
+      if (yardTextMatch) {
+        const abbr = yardTextMatch[1].toUpperCase();
+        const yardNum = parseInt(yardTextMatch[2], 10);
+        const parsedYard = convertToFieldYard(abbr, yardNum);
+        if (typeof parsedYard === 'number') {
+          inferredEndYard = parsedYard;
+        }
+      }
+    }
+
+    // If still missing, use yardage gain/loss when available
+    const distanceFromGain = distanceYards ?? (typeof lastPlay?.yardage === 'number' ? lastPlay.yardage : undefined);
+    if (inferredEndYard === undefined && distanceFromGain !== undefined && !Number.isNaN(distanceFromGain)) {
+      inferredEndYard = clampYard(playStartYard + possessionDirection * distanceFromGain);
+    }
+
+    if (inferredEndYard !== undefined) {
+      playEndYard = inferredEndYard;
+    }
+  }
   if (!isKickPlay && isTouchdownPlay) {
     const goalCenter = possessionIsHome ? -5 : 105; // middle of end zone (inside)
     playEndYard = goalCenter;
@@ -594,13 +628,13 @@ const FootballField: React.FC<FootballFieldProps> = ({
   return (
     <div className="space-y-6">
       {/* Current Drive Info - Only show if showGameInfo is true */}
-      {showGameInfo && situation && (
+      {showGameInfo && situation && ('downDistanceText' in situation) && (
         <div className="flex items-center justify-between gap-4 mb-4">
           {/* Down & Distance */}
-          {situation.downDistanceText && (
+          {(situation as any).downDistanceText && (
             <div className="flex-1 text-center">
               <p className="text-text-muted text-xs mb-2">Down & Distance</p>
-              <p className="text-neon-pink font-bold text-xl">{situation.downDistanceText}</p>
+              <p className="text-neon-pink font-bold text-xl">{(situation as any).downDistanceText}</p>
             </div>
           )}
           
@@ -631,7 +665,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 <div 
                   key={i} 
                   className={`w-3 h-3 rounded-full ${
-                    i < (situation?.awayTimeouts ?? 3) 
+                    i < ((situation as any)?.awayTimeouts ?? 3) 
                       ? 'bg-neon-cyan' 
                       : 'bg-gray-600'
                   }`}
@@ -641,11 +675,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
           </div>
           
           {/* Play Type Display */}
-          {lastPlay?.type?.text && (
+          {getPlayTypeText(lastPlay) && (
             <div className="flex-1 text-center">
               <p className="text-text-muted text-xs mb-1">Play Type</p>
               <p className="font-bold text-sm" style={{ color: playViz.color }}>
-                {lastPlay.type.text}
+                {getPlayTypeText(lastPlay)}
               </p>
             </div>
           )}
@@ -657,7 +691,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 <div 
                   key={i} 
                   className={`w-3 h-3 rounded-full ${
-                    i < (situation?.homeTimeouts ?? 3) 
+                    i < ((situation as any)?.homeTimeouts ?? 3) 
                       ? 'bg-neon-pink' 
                       : 'bg-gray-600'
                   }`}
@@ -886,10 +920,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
       )}
 
       {/* Animated play elements */}
-      {lastPlay.start && lastPlay.end && lastPlay.athletesInvolved && lastPlay.athletesInvolved.length > 0 && (() => {
+      {(getStartYard(lastPlay) !== undefined) && (getEndYard(lastPlay) !== undefined) && (lastPlay as any)?.athletesInvolved && (lastPlay as any)?.athletesInvolved.length > 0 && (() => {
         if (debugLogs) console.log('Play data:', lastPlay);
-        const resolvedStartYard = normalizedPassStart ?? playStartYard ?? lastPlay.start?.yardLine;
-        const resolvedEndYard = normalizedPassEnd ?? playEndYard ?? lastPlay.end?.yardLine;
+        const resolvedStartYard = normalizedPassStart ?? playStartYard ?? getStartYard(lastPlay);
+        const resolvedEndYard = normalizedPassEnd ?? playEndYard ?? getEndYard(lastPlay);
         if (resolvedStartYard === undefined || resolvedEndYard === undefined) return null;
 
         const passStartYard = resolvedStartYard;
@@ -915,7 +949,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           // Add approximately 24px (half headshot radius + half football width) to reach the end position with the football
           const distancePixels = (distancePercent / 100) * fieldWidth + 12;
           // Check if there's actual yardage gain (not just pixel distance)
-          const hasGain = (playEndYard ?? lastPlay.end?.yardLine ?? 0) > (playStartYard ?? lastPlay.start?.yardLine ?? 0);
+          const hasGain = (playEndYard ?? getEndYard(lastPlay) ?? 0) > (playStartYard ?? getStartYard(lastPlay) ?? 0);
           
           console.log('Rush animation:', { startX: baseStartX, endX: baseEndX, distancePercent, fieldWidth, distancePixels, hasGain });
           
@@ -923,7 +957,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             <>
               {/* Headshot with football starts at dot */}
               <div
-                key={`rush-${lastPlay.start?.yardLine}-${lastPlay.end?.yardLine}`}
+                key={`rush-${getStartYard(lastPlay)}-${getEndYard(lastPlay)}`}
                 className="absolute z-10"
                 style={{ 
                   left: `${baseStartX}%`,

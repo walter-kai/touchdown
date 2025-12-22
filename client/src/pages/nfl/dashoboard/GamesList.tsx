@@ -1,28 +1,111 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { FaFootballBall, FaPlay, FaCalendar, FaChevronLeft, FaChevronRight, FaMapMarkerAlt } from "react-icons/fa";
+import { FaFootballBall, FaPlay, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import LoadingFootball from '../../../components/common/LoadingFootball';
 import NewsTicker from '../../../components/nfl/NewsTicker';
-import { useScoreboard } from '../../../providers/ScoreboardContext';
 import type {
   Event,
-  Competitor
+  Competitor,
+  TeamOnBye
 } from '@/types/espn/scoreboard';
+import type { NewsArticle } from '@/types/espn/news';
+
+interface ESPNData {
+  events?: Event[];
+  week?: {
+    number?: number;
+    teamsOnBye?: TeamOnBye[];
+  };
+  news?: {
+    articles?: NewsArticle[];
+  };
+}
 
 const NFLScoreboard: React.FC = () => {
   const navigate = useNavigate();
-  const {
-    games,
-    news,
-    byeTeams,
-    weekNumber,
-    selectedWeek,
-    initialLoading,
-    error,
-    fetchScoreboardData,
-    handlePreviousWeek,
-    handleNextWeek,
-  } = useScoreboard();
+  const [games, setGames] = useState<Event[]>([]);
+  const [news, setNews] = useState<NewsArticle[]>([]);
+  const [byeTeams, setByeTeams] = useState<TeamOnBye[]>([]);
+  const [weekNumber, setWeekNumber] = useState<number | null>(null);
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Helper function to get date range for a specific NFL week
+  const getWeekDateRange = (week: number): string => {
+    // 2025 NFL Season: Week 1 started on Thursday, Sept 4, 2025
+    const season2025Week1Start = new Date('2025-09-04');
+    const daysOffset = (week - 1) * 7;
+    const weekStart = new Date(season2025Week1Start);
+    weekStart.setDate(weekStart.getDate() + daysOffset);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const formatDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}${month}${day}`;
+    };
+    return `${formatDate(weekStart)}-${formatDate(weekEnd)}`;
+  };
+
+  const fetchScoreboardData = useCallback(async (week?: number) => {
+    try {
+      setError(null);
+
+      let url = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?limit=50';
+      if (week) {
+        const dateRange = getWeekDateRange(week);
+        url += `&dates=${dateRange}`;
+      }
+
+      const [scoreboardResponse, newsResponse] = await Promise.all([
+        axios.get(url),
+        axios.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit=6')
+      ]);
+
+      const data: ESPNData = scoreboardResponse.data;
+      const events = data.events || [];
+      setGames(events);
+
+      if (newsResponse.data?.articles) {
+        setNews(newsResponse.data.articles);
+      }
+
+      const weekData = data.week;
+      if (weekData) {
+        setByeTeams(weekData.teamsOnBye || []);
+        const currentWeek = weekData.number || null;
+        setWeekNumber(currentWeek);
+        if (!selectedWeek && currentWeek && !week) {
+          setSelectedWeek(currentWeek);
+        }
+      }
+
+      setInitialLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      setInitialLoading(false);
+    }
+  }, [selectedWeek]);
+
+  const handlePreviousWeek = useCallback(() => {
+    if (selectedWeek && selectedWeek > 1) {
+      setSelectedWeek(selectedWeek - 1);
+    }
+  }, [selectedWeek]);
+
+  const handleNextWeek = useCallback(() => {
+    if (selectedWeek && selectedWeek < 18) {
+      setSelectedWeek(selectedWeek + 1);
+    }
+  }, [selectedWeek]);
+
+  // Refresh scoreboard whenever this view is (re)loaded
+  useEffect(() => {
+    fetchScoreboardData(selectedWeek || undefined);
+  }, [fetchScoreboardData, selectedWeek]);
 
   // Refresh scoreboard whenever this view is (re)loaded
   useEffect(() => {

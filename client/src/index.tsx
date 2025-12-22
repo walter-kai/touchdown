@@ -6,7 +6,6 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './providers/AuthContext';
 import { LoadingProvider } from './providers/LoadingContext';
-import { ScoreboardProvider } from './providers/ScoreboardContext';
 
 
 const root = ReactDOM.createRoot(
@@ -17,9 +16,7 @@ root.render(
   <Router>
       <AuthProvider>
         <LoadingProvider>
-          <ScoreboardProvider>
             <App />
-          </ScoreboardProvider>
         </LoadingProvider>
       </AuthProvider>
   </Router>

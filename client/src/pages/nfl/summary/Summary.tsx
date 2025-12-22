@@ -89,6 +89,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
         drive.plays.forEach((p: any) => {
           const possessionTeamId = p.start?.team?.id || drive.team?.id;
           plays.push({
+            id: p.id,
             text: p.text,
             quarter: p.period?.number || 0,
             clock: p.clock?.displayValue || '',
@@ -96,6 +97,9 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             timestamp: new Date(p.wallclock || competition.date),
             possession: possessionTeamId,
             type: p.type?.text || 'Play',
+            yardLine: p.start?.yardLine ?? p.end?.yardLine,
+            start: p.start,
+            end: p.end,
             athletesInvolved: (p.athletesInvolved || [])
               .map((a: any) => ({
                 id: a.athlete?.id || a.id,
