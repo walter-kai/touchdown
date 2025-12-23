@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus, FaCrosshairs, FaHandPointer, FaListUl } from 'react-icons/fa';
-import PlayLog from '@/components/nfl/PlayLog';
+import PlayLog from '@/components/espn/PlayLog';
 import LoadingFootball from '../../../components/common/LoadingFootball';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend, getEmptyImage } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
-import FootballField from '@/components/nfl/FootballField';
+import FootballField from '@/components/espn/FootballField';
 import type { Athlete } from '@/types/espn/athlete';
 import { usePicks } from '../../../providers/PicksContext';
 import { useLeague } from '../../../providers/LeagueContext';

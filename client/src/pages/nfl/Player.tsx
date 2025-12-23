@@ -16,18 +16,30 @@ interface NFLPlayerProps {
 const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, onRegisterTabClick }) => {
   const { playerId } = useParams<{ playerId: string }>();
   const navigate = useNavigate();
-  const { league } = useLeague();
+  const { league, getHeadshotFromIdOrUrl } = useLeague();
   
   const [overview, setOverview] = useState<AthleteOverview | null>(null);
   const [bio, setBio] = useState<AthleteBio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentLeague, setCurrentLeague] = useState<string>(league);
   
   // Flag to prevent observer from triggering during programmatic scroll
   const isScrollingProgrammatically = useRef(false);
   
   // Refs for each section
   const infoRef = useRef<HTMLDivElement>(null);
+
+  // Reset state when league changes to prevent using old player IDs with new league
+  useEffect(() => {
+    if (currentLeague !== league) {
+      console.log(`League changed from ${currentLeague} to ${league}, clearing player state`);
+      setOverview(null);
+      setBio(null);
+      setError(null);
+      setCurrentLeague(league);
+    }
+  }, [league, currentLeague]);
   const scheduleRef = useRef<HTMLDivElement>(null);
   const newsRef = useRef<HTMLDivElement>(null);
   
@@ -184,7 +196,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
             <div className="relative">
               <div className="w-48 h-48 rounded-full bg-bg-darker border-4 border-neon-cyan/50 flex items-center justify-center overflow-hidden">
                 <img 
-                  src={`https://a.espncdn.com/i/headshots/nfl/players/full/${playerId}.png`}
+                  src={getHeadshotFromIdOrUrl(playerId)}
                   alt="Player"
                   className="w-full h-full object-cover"
                   onError={(e) => {

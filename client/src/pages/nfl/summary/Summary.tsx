@@ -1,18 +1,17 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock, FaLock, FaCheckCircle, FaBolt, FaChartLine, FaUsers } from 'react-icons/fa';
-import PredictionChart from '@/components/nfl/PredictionChart';
-import PlayLog from '@/components/nfl/PlayLog';
-import PointsChart from '@/components/nfl/PointsChart';
+import PredictionChart from '@/components/espn/PredictionChart';
+import PlayLog from '@/components/espn/PlayLog';
+import PointsChart from '@/components/espn/PointsChart';
 import Info from '@/pages/nfl/scoreboard/Info';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
 import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
 import { useAuth } from '@/providers/AuthContext';
-import { useLeague } from '@/providers/LeagueContext';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
 import { Play } from '@/types/espn/playByplay';
-import { getHeadshotUrl } from '@/utils/headshot';
+import { useLeague } from '@/providers/LeagueContext';
 import { fetchEspnPlays } from '@/utils/espnPlays';
 
 interface SummaryViewProps {
@@ -36,7 +35,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { isAuthenticated, triggerLoginModal } = useAuth();
-  const { league } = useLeague();
+  const { league, getHeadshotUrl } = useLeague();
   const carouselRef = useRef<HTMLDivElement>(null);
   const [timeUntilGame, setTimeUntilGame] = useState<string>('');
   const [gameCountdown, setGameCountdown] = useState<number>(0);
@@ -70,7 +69,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     const fetchPlayByPlay = async () => {
       try {
         const compId = competition.id || event.id;
-        const plays = await fetchEspnPlays(event.id, String(compId), headshotByAthleteId, league);
+        const plays = await fetchEspnPlays(event.id, String(compId), headshotByAthleteId, league, getHeadshotUrl);
         setApiPlayLog(plays);
       } catch (err) {
         console.warn('Failed to fetch play-by-play from ESPN:', err);

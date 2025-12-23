@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { Play, PlayAthlete } from '@/types/espn/playByplay';
-import { getHeadshotUrl } from '@/utils/headshot';
 import { getPlaysUrl } from './leagueApi';
 
 export const extractAthleteIdFromRef = (ref?: string): string => {
@@ -19,7 +18,8 @@ const resolveTeamId = (teamObj?: any, fallback?: string): string => {
 
 const normalizeParticipants = (
   rawPlay: any,
-  headshotLookup?: Map<string, string>
+  headshotLookup?: Map<string, string>,
+  getHeadshotUrl?: (opts: { id?: string | number; headshot?: string | { href?: string } | null } | null | undefined) => string
 ): PlayAthlete[] => {
   const participants = rawPlay?.participants || rawPlay?.athletesInvolved || [];
   const seen = new Set<string>();
@@ -42,7 +42,7 @@ const normalizeParticipants = (
         athlete?.headshot ||
         participant?.headshot?.href ||
         participant?.headshot;
-      const resolvedHeadshot = getHeadshotUrl({ id, headshot: headshotHref }) || headshotLookup?.get(id) || '';
+      const resolvedHeadshot = getHeadshotUrl ? getHeadshotUrl({ id, headshot: headshotHref }) : headshotLookup?.get(id) || '';
 
       const pos =
         athlete?.position?.abbreviation ||
@@ -102,7 +102,8 @@ const TYPE_ID_MAP: Record<string, string> = {
 export const normalizePlayFromItem = (
   rawPlay: any,
   fallbackDate?: string | Date,
-  headshotLookup?: Map<string, string>
+  headshotLookup?: Map<string, string>,
+  getHeadshotUrl?: (opts: { id?: string | number; headshot?: string | { href?: string } | null } | null | undefined) => string
 ): Play => {
   const textBlob = rawPlay?.text || rawPlay?.shortText || rawPlay?.alternativeText || '';
   const teamParticipants = rawPlay?.teamParticipants || rawPlay?.participants || [];
@@ -165,7 +166,7 @@ export const normalizePlayFromItem = (
     yardage,
     start: normalizedStart,
     end: normalizedEnd,
-    athletesInvolved: normalizeParticipants(rawPlay, headshotLookup)
+    athletesInvolved: normalizeParticipants(rawPlay, headshotLookup, getHeadshotUrl)
   };
 };
 
@@ -173,7 +174,8 @@ export const fetchEspnPlays = async (
   gameId: string,
   competitionId?: string,
   headshotLookup?: Map<string, string>,
-  league: 'nfl' | 'nba' = 'nfl'
+  league: 'nfl' | 'nba' = 'nfl',
+  getHeadshotUrl?: (opts: { id?: string | number; headshot?: string | { href?: string } | null } | null | undefined) => string
 ): Promise<Play[]> => {
   const compId = competitionId || gameId;
 
@@ -202,7 +204,7 @@ export const fetchEspnPlays = async (
 
   const normalized = plays
     .filter((p): p is any => Boolean(p))
-    .map((p: any) => normalizePlayFromItem(p, data?.gameDate, headshotLookup))
+    .map((p: any) => normalizePlayFromItem(p, data?.gameDate, headshotLookup, getHeadshotUrl))
     .filter((p: Play) => Boolean(p.text));
 
   // Sort by true game order (latest first): period, clock, fallback to timestamp

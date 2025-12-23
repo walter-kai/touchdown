@@ -5,7 +5,7 @@ import { jwtStorage } from '../../../utils/jwtStorage';
 import { usePicks } from '../../../providers/PicksContext';
 import { debugLog } from '@/utils/debugLog';
 import { Play } from '@/types/espn/playByplay';
-import { getHeadshotUrl } from '@/utils/headshot';
+import { useLeague } from '@/providers/LeagueContext';
 
 interface TopPicksProps {
   gameId: string;
@@ -43,6 +43,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
   awayTeam,
   isGameInSession,
 }) => {
+  const { getHeadshotUrl } = useLeague();
   const [isExpanded, setIsExpanded] = useState(false);
   const [userPickIds, setUserPickIds] = useState<Set<string>>(new Set());
   const [currentPickIds, setCurrentPickIds] = useState<Set<string>>(new Set()); // Currently active picks only

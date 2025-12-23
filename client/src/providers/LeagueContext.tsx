@@ -35,6 +35,11 @@ interface LeagueContextType {
   leagueConfig: LeagueConfig;
   setLeague: (league: LeagueType) => void;
   getApiPath: (endpoint: string) => string;
+  getHeadshotUrl: (opts: {
+    id?: string | number;
+    headshot?: string | { href?: string } | null;
+  } | null | undefined) => string;
+  getHeadshotFromIdOrUrl: (id?: string | number, raw?: string) => string;
 }
 
 const LeagueContext = createContext<LeagueContextType | undefined>(undefined);
@@ -64,8 +69,30 @@ export const LeagueProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return endpoint;
   };
 
+  // Headshot URL utilities that automatically use current league
+  const getHeadshotUrl = (opts: {
+    id?: string | number;
+    headshot?: string | { href?: string } | null;
+  } | null | undefined): string => {
+    if (!opts) return '';
+    const raw = (opts as any).headshot;
+    const href = typeof raw === 'string' ? raw : raw?.href;
+    if (href) return href;
+    const id = (opts as any).id;
+    if (!id) return '';
+    const sport = leagueConfig.sport === 'basketball' ? 'nba' : 'nfl';
+    return `https://a.espncdn.com/i/headshots/${sport}/players/full/${id}.png`;
+  };
+
+  const getHeadshotFromIdOrUrl = (id?: string | number, raw?: string): string => {
+    if (raw) return raw;
+    if (!id) return '';
+    const sport = leagueConfig.sport === 'basketball' ? 'nba' : 'nfl';
+    return `https://a.espncdn.com/i/headshots/${sport}/players/full/${id}.png`;
+  };
+
   return (
-    <LeagueContext.Provider value={{ league, leagueConfig, setLeague, getApiPath }}>
+    <LeagueContext.Provider value={{ league, leagueConfig, setLeague, getApiPath, getHeadshotUrl, getHeadshotFromIdOrUrl }}>
       {children}
     </LeagueContext.Provider>
   );

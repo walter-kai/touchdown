@@ -5,10 +5,10 @@ import GameNavBar from './components/common/navs/NavBar';
 import LoginNav from './components/common/navs/LoginNav';
 
 import DashboardCarousel from './pages/nfl/dashoboard/DashboardCarousel';
-import NFL from './pages/nfl/dashoboard/GamesList';
+import GameGrid from './pages/nfl/dashoboard/GameGrid';
 import NFLTeamPage from './pages/nfl/Team';
 import NFLPlayerPage from './pages/nfl/Player';
-import GameDetail from './pages/nfl/dashoboard/GameDetail';
+import GameContainer from './pages/nfl/dashoboard/GameContainer';
 
 
 
@@ -170,12 +170,13 @@ const App: React.FC = () => {
               */}
               <div ref={nodeRef} >
                 <Routes location={location}>
-                  <Route path="/" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/')} /> : <NFL />} />
-                  <Route path="/nfl" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/nfl')} /> : <NFL />} />
+                  <Route path="/" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/')} /> : <GameGrid />} />
+                  <Route path="/nfl" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/nfl')} /> : <GameGrid />} />
+                  <Route path="/nba" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nba/games' : '/nba')} /> : <GameGrid />} />
                   <Route path="/nfl/dashboard" element={<DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/nfl/dashboard')} />} />
                   <Route path="/nfl/games" element={<DashboardCarousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/nfl/dashboard')} />} />
                   <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
-                  <Route path="/nfl/game/:gameId" element={<GameDetail activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
+                  <Route path="/nfl/game/:gameId" element={<GameContainer activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays'} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/player/:playerId" element={<NFLPlayerPage activeTab={gameTab as 'info' | 'schedule' | 'news'} onTabChange={(tab) => setGameTab(tab as any)} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   

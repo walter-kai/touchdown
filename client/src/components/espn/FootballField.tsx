@@ -2,7 +2,7 @@ import React from 'react';
 import { FaFootballBall } from 'react-icons/fa';
 import { Play, PlayType } from '@/types/espn/playByplay';
 import '@/styles/football.css';
-import { getHeadshotUrl } from '@/utils/headshot';
+import { useLeague } from '@/providers/LeagueContext';
 import { usePlays } from '@/providers/PlaysContext';
 
 interface FootballFieldProps {
@@ -258,6 +258,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   getTeamLogo,
   showGameInfo = false,
 }) => {
+  const { getHeadshotUrl } = useLeague();
   const getTeamId = (team: any) => {
     if (!team) return undefined;
     if (typeof team === 'string') return team;

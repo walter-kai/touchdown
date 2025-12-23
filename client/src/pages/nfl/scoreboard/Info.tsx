@@ -1,11 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
-import FootballField from '@/components/nfl/FootballField';
+import FootballField from '@/components/espn/FootballField';
 import type { Play } from '@/types/espn/playByplay';
-import PlayLog from '@/components/nfl/PlayLog';
+import PlayLog from '@/components/espn/PlayLog';
 import GameLeaders from '@/pages/nfl/summary/GameLeaders';
-import PredictionChart from '@/components/nfl/PredictionChart';
+import PredictionChart from '@/components/espn/PredictionChart';
 import { CountUpScore } from '@/components/common/CountUpScore';
 import { usePlays } from '@/providers/PlaysContext';
 import type { Summary } from '@/types/espn/summary';

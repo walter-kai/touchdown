@@ -6,7 +6,7 @@ import type { TeamApiResponse, TeamRecord, NextEvent, Competitor } from "@/types
 import type { LeaderCategory } from "@/types/espn/scoreboard";
 import type { NewsResponse, NewsArticle } from '@/types/espn/news';
 import { debugLog } from '@/utils/debugLog';
-import NewsTicker from '@/components/nfl/NewsTicker';
+import NewsTicker from '@/components/espn/NewsTicker';
 import { useLeague } from '@/providers/LeagueContext';
 import { getTeamApiUrl, getTeamScheduleUrl, getNewsUrl } from '@/utils/leagueApi';
 
@@ -73,6 +73,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
   const [loadingNews, setLoadingNews] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentLeague, setCurrentLeague] = useState<string>(league);
 
   // Refs for scroll sections
   const infoRef = useRef<HTMLDivElement>(null);
@@ -82,6 +83,18 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
 
   // Get leaders from navigation state
   const passedLeaders = (location.state as any)?.leaders as LeaderCategory[] | undefined;
+
+  // Reset state when league changes to prevent using old team IDs with new league
+  useEffect(() => {
+    if (currentLeague !== league) {
+      debugLog(`League changed from ${currentLeague} to ${league}, clearing team state`);
+      setTeamData(null);
+      setScheduleData(null);
+      setNews([]);
+      setError(null);
+      setCurrentLeague(league);
+    }
+  }, [league, currentLeague]);
 
   useEffect(() => {
     const fetchTeamData = async () => {

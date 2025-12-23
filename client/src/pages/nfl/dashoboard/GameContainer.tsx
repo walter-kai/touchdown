@@ -4,18 +4,19 @@ import { FaFootballBall } from 'react-icons/fa';
 import axios from 'axios';
 import ScoreboardView from '../scoreboard/Scoreboard';
 import SummaryView from '../summary/Summary';
-import FootballField from '@/components/nfl/FootballField';
+import FootballField from '@/components/espn/FootballField';
 import { useLoading } from '@/providers/LoadingContext';
 import { useLeague } from '@/providers/LeagueContext';
 import { debugLog } from '@/utils/debugLog';
 import { fetchEspnPlays } from '@/utils/espnPlays';
+import { getScoreboardUrl, getSummaryUrl } from '@/utils/leagueApi';
 import { PlaysProvider } from '@/providers/PlaysContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
 import { Play } from '@/types/espn/playByplay';
 
-interface NFLGameProps {
+interface GameContainerProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
   onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games') => void;
   onPresetChange: (preset: 'scoreboard' | 'summary') => void;
@@ -23,10 +24,10 @@ interface NFLGameProps {
   onRegisterTabClick?: (callback: (tab: string) => void) => void;
 }
 
-const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
+const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
   const { gameId } = useParams<{ gameId: string }>();
   const { showLoading, hideLoading } = useLoading();
-  const { league } = useLeague();
+  const { league, getHeadshotUrl } = useLeague();
   const [event, setEvent] = useState<Event | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,10 +37,28 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [playLog, setPlayLog] = useState<Play[]>([]);
   const [playsLoaded, setPlaysLoaded] = useState(false);
+  const [currentLeague, setCurrentLeague] = useState<string>(league);
   
   // Test mode controls
   const [testGameId, setTestGameId] = useState<string>('401772949');
   const [selectedPlayIndex, setSelectedPlayIndex] = useState<number>(0);
+
+  // Reset state when league changes to prevent using old game IDs with new league
+  useEffect(() => {
+    if (currentLeague !== league) {
+      debugLog(`League changed from ${currentLeague} to ${league}, clearing game state`);
+      setEvent(null);
+      setSummary(null);
+      setPlayLog([]);
+      setPlaysLoaded(false);
+      setError(null);
+      setCurrentLeague(league);
+      // Clear any cached data for the old game
+      if (gameId) {
+        localStorage.removeItem(`playlog_${gameId}`);
+      }
+    }
+  }, [league, currentLeague, gameId]);
 
   const refreshPlaysFromApi = useCallback(async () => {
     if (!gameId) return;
@@ -50,7 +69,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
 
     try {
       setIsRefreshing(true);
-      const latestPlays = await fetchEspnPlays(actualGameId, String(compId), undefined, league);
+      const latestPlays = await fetchEspnPlays(actualGameId, String(compId), undefined, league, getHeadshotUrl);
 
       // cache latest pulls for quick resume
       localStorage.setItem(cacheKey, JSON.stringify({ plays: latestPlays, timestamp: Date.now() }));
@@ -106,7 +125,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
         debugLog(`Loading previous plays for game ${actualGameId} from ESPN plays API...`);
 
         const compId = event?.competitions?.[0]?.id || actualGameId;
-        const historicalPlays = await fetchEspnPlays(actualGameId, String(compId), undefined, league);
+        const historicalPlays = await fetchEspnPlays(actualGameId, String(compId), undefined, league, getHeadshotUrl);
 
         // Cache the data
         localStorage.setItem(cacheKey, JSON.stringify({
@@ -194,14 +213,14 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
     if (gid === 'test') {
       // In test mode, fetch real game data using testGameId
       const scoreboardResponse = await axios.get<ScoreboardResponse>(
-        'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
+        getScoreboardUrl(league)
       );
       game = scoreboardResponse.data.events?.find(e => e.id === testGameId);
       if (!game) {
         // If not in scoreboard, try summary
         try {
           const summaryResponse = await axios.get<Summary>(
-            `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${testGameId}`
+            getSummaryUrl(league, testGameId)
           );
           setSummary(summaryResponse.data);
           usedSummaryApi = true;
@@ -214,14 +233,14 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
       }
     } else {
       const scoreboardResponse = await axios.get<ScoreboardResponse>(
-        'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
+        getScoreboardUrl(league)
       );
       game = scoreboardResponse.data.events?.find(e => e.id === gid);
       const gameStatus = game?.competitions[0].status.type.state;
       if (!game || gameStatus !== 'in') {
         try {
           const summaryResponse = await axios.get<Summary>(
-            `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gid}`
+            getSummaryUrl(league, gid)
           );
           setSummary(summaryResponse.data);
           usedSummaryApi = true;
@@ -551,4 +570,4 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
   );
 };
 
-export default GameDetail;
+export default GameContainer;

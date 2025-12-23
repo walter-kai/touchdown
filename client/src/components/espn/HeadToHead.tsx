@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { FaFootballBall } from "react-icons/fa";
 import axios from "axios";
 import type { LeaderCategory } from "@/types/espn/scoreboard";
-import { getHeadshotUrl } from "@/utils/headshot";
 import { useLeague } from "@/providers/LeagueContext";
 import { getTeamApiUrl } from "@/utils/leagueApi";
 
@@ -21,7 +20,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
   awayTeamName,
 }) => {
   const navigate = useNavigate();
-  const { league } = useLeague();
+  const { league, getHeadshotUrl } = useLeague();
   const fetchedKeyRef = useRef<string | null>(null);
   const [homeTeamLeaders, setHomeTeamLeaders] = useState<LeaderCategory[]>([]);
   const [awayTeamLeaders, setAwayTeamLeaders] = useState<LeaderCategory[]>([]);
