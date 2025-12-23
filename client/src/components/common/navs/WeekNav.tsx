@@ -77,23 +77,14 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
 
   // Generate 7 consecutive days starting from Thursday (NFL week: Thu-Wed)
   const generateWeekDays = (startDate: Date): Date[] => {
-    // Get Thursday of the current week
+    // Get Thursday of the current week (the most recent Thursday before or on startDate)
     const thursday = new Date(startDate);
     const dayOfWeek = thursday.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
     
-    // Calculate offset to get to Thursday
-    let offset;
-    if (dayOfWeek === 0) { // Sunday
-      offset = 4; // Go to next Thursday
-    } else if (dayOfWeek === 1) { // Monday - part of previous week (goes with Thu-Sun)
-      offset = 3; // Go to next Thursday
-    } else if (dayOfWeek === 2) { // Tuesday
-      offset = 2; // Go to next Thursday  
-    } else if (dayOfWeek === 3) { // Wednesday
-      offset = 1; // Go to next Thursday
-    } else { // Thursday (4), Friday (5), Saturday (6)
-      offset = -(dayOfWeek - 4); // Go back to Thursday of this week
-    }
+    // Calculate offset to get back to the most recent Thursday
+    // Thu-Wed week: if today is Tue Dec 23, go back to Thu Dec 18
+    let offset = (4 - dayOfWeek) % 7;
+    if (offset > 0) offset -= 7; // Ensure we always go back, never forward
     
     thursday.setDate(thursday.getDate() + offset);
     
