@@ -6,6 +6,7 @@ import ScoreboardView from '../scoreboard/Scoreboard';
 import SummaryView from '../summary/Summary';
 import FootballField from '@/components/nfl/FootballField';
 import { useLoading } from '@/providers/LoadingContext';
+import { useLeague } from '@/providers/LeagueContext';
 import { debugLog } from '@/utils/debugLog';
 import { fetchEspnPlays } from '@/utils/espnPlays';
 import { PlaysProvider } from '@/providers/PlaysContext';
@@ -25,6 +26,7 @@ interface NFLGameProps {
 const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
   const { gameId } = useParams<{ gameId: string }>();
   const { showLoading, hideLoading } = useLoading();
+  const { league } = useLeague();
   const [event, setEvent] = useState<Event | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +50,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
 
     try {
       setIsRefreshing(true);
-      const latestPlays = await fetchEspnPlays(actualGameId, String(compId));
+      const latestPlays = await fetchEspnPlays(actualGameId, String(compId), undefined, league);
 
       // cache latest pulls for quick resume
       localStorage.setItem(cacheKey, JSON.stringify({ plays: latestPlays, timestamp: Date.now() }));
@@ -104,7 +106,7 @@ const GameDetail: React.FC<NFLGameProps> = ({ activeTab, onTabChange, onPresetCh
         debugLog(`Loading previous plays for game ${actualGameId} from ESPN plays API...`);
 
         const compId = event?.competitions?.[0]?.id || actualGameId;
-        const historicalPlays = await fetchEspnPlays(actualGameId, String(compId));
+        const historicalPlays = await fetchEspnPlays(actualGameId, String(compId), undefined, league);
 
         // Cache the data
         localStorage.setItem(cacheKey, JSON.stringify({

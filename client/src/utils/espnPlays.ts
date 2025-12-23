@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Play, PlayAthlete } from '@/types/espn/playByplay';
 import { getHeadshotUrl } from '@/utils/headshot';
+import { getPlaysUrl } from './leagueApi';
 
 export const extractAthleteIdFromRef = (ref?: string): string => {
   if (!ref || typeof ref !== 'string') return '';
@@ -171,32 +172,15 @@ export const normalizePlayFromItem = (
 export const fetchEspnPlays = async (
   gameId: string,
   competitionId?: string,
-  headshotLookup?: Map<string, string>
+  headshotLookup?: Map<string, string>,
+  league: 'nfl' | 'nba' = 'nfl'
 ): Promise<Play[]> => {
   const compId = competitionId || gameId;
 
-  // ESPN sometimes requires the league path; try multiple URLs to avoid 404s
-  const candidateUrls = [
-    `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${gameId}/competitions/${compId}/plays?limit=300&lang=en&region=us`,
-    `https://sports.core.api.espn.com/v2/sports/football/nfl/events/${gameId}/competitions/${compId}/plays?limit=300&lang=en&region=us`
-  ];
-
-  let data: any | undefined;
-  let lastError: unknown;
-
-  for (const url of candidateUrls) {
-    try {
-      const res = await axios.get(url);
-      data = res.data;
-      break;
-    } catch (err) {
-      lastError = err;
-    }
-  }
-
-  if (!data) {
-    throw lastError ?? new Error('Unable to fetch plays from ESPN');
-  }
+  // Fetch plays from ESPN API
+  const url = getPlaysUrl(league, gameId, compId);
+  const res = await axios.get(url);
+  const data = res.data;
 
   const items = data?.items || [];
 

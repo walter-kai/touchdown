@@ -8,6 +8,7 @@ import Info from '@/pages/nfl/scoreboard/Info';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
 import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
 import { useAuth } from '@/providers/AuthContext';
+import { useLeague } from '@/providers/LeagueContext';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
 import { Play } from '@/types/espn/playByplay';
@@ -35,6 +36,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { isAuthenticated, triggerLoginModal } = useAuth();
+  const { league } = useLeague();
   const carouselRef = useRef<HTMLDivElement>(null);
   const [timeUntilGame, setTimeUntilGame] = useState<string>('');
   const [gameCountdown, setGameCountdown] = useState<number>(0);
@@ -68,14 +70,14 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     const fetchPlayByPlay = async () => {
       try {
         const compId = competition.id || event.id;
-        const plays = await fetchEspnPlays(event.id, String(compId), headshotByAthleteId);
+        const plays = await fetchEspnPlays(event.id, String(compId), headshotByAthleteId, league);
         setApiPlayLog(plays);
       } catch (err) {
         console.warn('Failed to fetch play-by-play from ESPN:', err);
       }
     };
     fetchPlayByPlay();
-  }, [event.id, competition.date, headshotByAthleteId]);
+  }, [event.id, competition.date, headshotByAthleteId, league]);
   // Build a unified play log: use drives for completed games, else use provided playLog
   const effectivePlayLog = React.useMemo(() => {
     const state = competition.status.type.state;

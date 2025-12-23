@@ -10,7 +10,9 @@ import { usePreview } from 'react-dnd-preview';
 import FootballField from '@/components/nfl/FootballField';
 import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
 import { useAuth } from '@/providers/AuthContext';
+import { useLeague } from '@/providers/LeagueContext';
 import { debugLog } from '@/utils/debugLog';
+import { getTeamApiUrl } from '@/utils/leagueApi';
 import type { Athlete } from '@/types/espn/athlete';
 import { Play } from '@/types/espn/playByplay';
 
@@ -304,6 +306,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   awayTeam,
   getTeamLogo
 }) => {
+  const { league } = useLeague();
   const [homeRoster, setHomeRoster] = useState<Athlete[]>([]);
   const [awayRoster, setAwayRoster] = useState<Athlete[]>([]);
   const [homeTeamLogo, setHomeTeamLogo] = useState<string>('');
@@ -519,7 +522,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     ) => {
       try {
         const response = await axios.get(
-          `https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamId}?enable=roster`
+          `${getTeamApiUrl(league, teamId)}?enable=roster`
         );
         const athletes = response.data.team.athletes || [];
         rosterSetter(athletes);

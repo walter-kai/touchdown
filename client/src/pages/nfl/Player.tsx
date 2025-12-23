@@ -4,6 +4,8 @@ import { FaFootballBall, FaArrowLeft, FaCalendar, FaChartLine, FaTrophy, FaNewsp
 import axios from 'axios';
 import type { AthleteOverview, AthleteBio } from '@/types/espn/athlete';
 import LoadingFootball from '../../components/common/LoadingFootball';
+import { useLeague } from '@/providers/LeagueContext';
+import { getPlayerOverviewUrl, getPlayerBioUrl } from '@/utils/leagueApi';
 
 interface NFLPlayerProps {
   activeTab?: 'info' | 'schedule' | 'news' | 'dashboard' | 'games';
@@ -14,6 +16,7 @@ interface NFLPlayerProps {
 const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, onRegisterTabClick }) => {
   const { playerId } = useParams<{ playerId: string }>();
   const navigate = useNavigate();
+  const { league } = useLeague();
   
   const [overview, setOverview] = useState<AthleteOverview | null>(null);
   const [bio, setBio] = useState<AthleteBio | null>(null);
@@ -125,8 +128,8 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
 
         // Fetch overview and bio APIs in parallel
         const [overviewRes, bioRes] = await Promise.all([
-          axios.get(`https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/${playerId}/overview`),
-          axios.get(`https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/${playerId}`)
+          axios.get(getPlayerOverviewUrl(league, playerId)),
+          axios.get(getPlayerBioUrl(league, playerId))
         ]);
 
         setOverview(overviewRes.data);
@@ -145,7 +148,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
     };
 
     fetchPlayerData();
-  }, [playerId]);
+  }, [playerId, league]);
 
   if (loading) {
     return <LoadingFootball message="Loading player data..." />;

@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { FaFootballBall, FaPlay, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import LoadingFootball from '../../../components/common/LoadingFootball';
 import NewsTicker from '../../../components/nfl/NewsTicker';
+import { useLeague } from '../../../providers/LeagueContext';
+import { getScoreboardUrl, getNewsUrl } from '@/utils/leagueApi';
 import type {
   Event,
   Competitor,
@@ -24,6 +26,7 @@ interface ESPNData {
 
 const NFLScoreboard: React.FC = () => {
   const navigate = useNavigate();
+  const { league } = useLeague();
   const [games, setGames] = useState<Event[]>([]);
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [byeTeams, setByeTeams] = useState<TeamOnBye[]>([]);
@@ -54,24 +57,46 @@ const NFLScoreboard: React.FC = () => {
     try {
       setError(null);
 
-      let url = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?limit=50';
+      let url = getScoreboardUrl(league);
       if (week) {
         const dateRange = getWeekDateRange(week);
-        url += `&dates=${dateRange}`;
+        url += `${url.includes('?') ? '&' : '?'}dates=${dateRange}`;
+      } else {
+        url += `${url.includes('?') ? '&' : '?'}limit=50`;
       }
 
-      const [scoreboardResponse, newsResponse] = await Promise.all([
+      // Fetch news for both NFL and NBA
+      const requests = [
         axios.get(url),
-        axios.get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit=6')
-      ]);
+        axios.get(getNewsUrl(league))
+      ];
+      const responses = await Promise.all(requests);
+      const scoreboardResponse = responses[0];
+      const newsResponse = responses[1];
 
-      const data: ESPNData = scoreboardResponse.data;
+      // NBA and NFL have different response structures
+      let data: ESPNData;
+      if (league === 'nba') {
+        // NBA response has data nested in content.sbData
+        const nbaData = scoreboardResponse.data;
+        data = {
+          events: nbaData.content?.sbData?.events || [],
+          week: nbaData.content?.sbData?.week,
+        };
+      } else {
+        // NFL response has data at root level
+        data = scoreboardResponse.data;
+      }
+
+      // Set news for both leagues (API structure is the same)
+      if (newsResponse?.data?.articles) {
+        setNews(newsResponse.data.articles);
+      } else {
+        setNews([]);
+      }
+
       const events = data.events || [];
       setGames(events);
-
-      if (newsResponse.data?.articles) {
-        setNews(newsResponse.data.articles);
-      }
 
       const weekData = data.week;
       if (weekData) {

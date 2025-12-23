@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { FaChartLine, FaTimes } from "react-icons/fa";
 import axios from "axios";
+import { useLeague } from "@/providers/LeagueContext";
+import { getProbabilitiesUrl } from "@/utils/leagueApi";
 
 interface ProbabilityItem {
   tiePercentage: number;
@@ -29,6 +31,7 @@ interface ProbabilityProps {
 }
 
 const ProbabilityChart: React.FC<ProbabilityProps> = ({ gameId, competitionId, gameStatus, homeTeamInfo, awayTeamInfo }) => {
+  const { league } = useLeague();
   const [data, setData] = useState<ProbabilityData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

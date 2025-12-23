@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaPercent, FaTimes } from "react-icons/fa";
 import axios from "axios";
+import { useLeague } from "@/providers/LeagueContext";
+import { getPredictorUrl } from "@/utils/leagueApi";
 
 interface Statistic {
   name: string;
@@ -37,6 +39,7 @@ interface PredictionProps {
 }
 
 const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, homeTeamInfo, awayTeamInfo, getTeamLogo, homeTeam, awayTeam }) => {
+  const { league } = useLeague();
   const [data, setData] = useState<PredictionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +51,7 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
         setError(null);
 
         const response = await axios.get(
-          `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${gameId}/competitions/${competitionId}/predictor`
+          getPredictorUrl(league, gameId, competitionId)
         );
 
         setData(response.data);
@@ -61,7 +64,7 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
     };
 
     fetchPrediction();
-  }, [gameId, competitionId]);
+  }, [gameId, competitionId, league]);
 
   if (loading) {
     return (

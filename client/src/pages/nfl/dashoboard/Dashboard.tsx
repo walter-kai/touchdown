@@ -6,8 +6,10 @@ import { jwtStorage } from '../../../utils/jwtStorage';
 import LoadingFootball from '../../../components/common/LoadingFootball';
 import { CountUpScore } from '../../../components/common/CountUpScore';
 import { useAuth } from '../../../providers/AuthContext';
+import { useLeague } from '../../../providers/LeagueContext';
 import TelegramCard from './TelegramCard';
 import { debugLog } from '@/utils/debugLog';
+import { getSummaryUrl } from '@/utils/leagueApi';
 
 interface Player {
   id: string;
@@ -55,6 +57,7 @@ interface GameData {
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { league } = useLeague();
   const [loading, setLoading] = useState(true);
   const [gamesWithPicks, setGamesWithPicks] = useState<GameData[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -145,7 +148,7 @@ const Dashboard: React.FC = () => {
 
             try {
               // Try to fetch from ESPN API or cache for additional info
-              const gameInfoResponse = await axios.get(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gamePick.gameId}`);
+              const gameInfoResponse = await axios.get(getSummaryUrl(league, gamePick.gameId));
               const gameInfo = gameInfoResponse.data;
               
               if (gameInfo.header) {

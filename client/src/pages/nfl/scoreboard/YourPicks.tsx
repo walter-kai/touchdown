@@ -11,8 +11,10 @@ import { usePreview } from 'react-dnd-preview';
 import FootballField from '@/components/nfl/FootballField';
 import type { Athlete } from '@/types/espn/athlete';
 import { usePicks } from '../../../providers/PicksContext';
+import { useLeague } from '../../../providers/LeagueContext';
 import { Play } from '@/types/espn/playByplay';
 import { debugLog } from '@/utils/debugLog';
+import { getTeamApiUrl } from '@/utils/leagueApi';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {
@@ -309,6 +311,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
   awayTeam,
   getTeamLogo
 }) => {
+  const { league } = useLeague();
   const [homeRoster, setHomeRoster] = useState<Athlete[]>([]);
   const [awayRoster, setAwayRoster] = useState<Athlete[]>([]);
   const [homeTeamLogo, setHomeTeamLogo] = useState<string>('');
@@ -525,7 +528,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
     ) => {
       try {
         const response = await axios.get(
-          `https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamId}?enable=roster`
+          `${getTeamApiUrl(league, teamId)}?enable=roster`
         );
         const athletes = response.data.team.athletes || [];
         rosterSetter(athletes);

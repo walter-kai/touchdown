@@ -1,41 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { FaFootballBall, FaArrowLeft, FaHome, FaRoad, FaTrophy, FaUsers, FaChartLine, FaCalendar, FaMapMarkerAlt, FaStar, FaCrosshairs, FaListOl, FaClipboardList, FaNewspaper } from "react-icons/fa";
+import { FaFootballBall, FaHome, FaRoad, FaTrophy, FaUsers, FaChartLine, FaCalendar, FaMapMarkerAlt, FaStar, FaClipboardList, FaNewspaper } from "react-icons/fa";
 import axios from "axios";
 import type { TeamApiResponse, TeamRecord, NextEvent, Competitor } from "@/types/espn/team";
 import type { LeaderCategory } from "@/types/espn/scoreboard";
 import type { NewsResponse, NewsArticle } from '@/types/espn/news';
 import { debugLog } from '@/utils/debugLog';
 import NewsTicker from '@/components/nfl/NewsTicker';
-
-interface ProjectionData {
-  chanceToWinThisWeek: number;
-  chanceToWinDivision: number;
-  projectedWins: number;
-  projectedLosses: number;
-}
-
-interface RecordStat {
-  name: string;
-  displayName: string;
-  value: number;
-  displayValue: string;
-}
-
-interface RecordItem {
-  id: string;
-  name: string;
-  displayName?: string;
-  type: string;
-  summary: string;
-  displayValue: string;
-  value: number;
-  stats: RecordStat[];
-}
-
-interface DetailedRecordData {
-  items: RecordItem[];
-}
+import { useLeague } from '@/providers/LeagueContext';
+import { getTeamApiUrl, getTeamScheduleUrl, getNewsUrl } from '@/utils/leagueApi';
 
 interface ScheduleEvent {
   id: string;
@@ -93,9 +66,8 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { league } = useLeague();
   const [teamData, setTeamData] = useState<TeamApiResponse | null>(null);
-  const [projectionData, setProjectionData] = useState<ProjectionData | null>(null);
-  const [detailedRecords, setDetailedRecords] = useState<DetailedRecordData | null>(null);
   const [scheduleData, setScheduleData] = useState<ScheduleData | null>(null);
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [loadingNews, setLoadingNews] = useState(false);
@@ -120,28 +92,12 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
         setError(null);
         
         // Fetch team data
-        const teamResponse = await axios.get(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamId}`);
+        const teamResponse = await axios.get(getTeamApiUrl(league, teamId));
         setTeamData(teamResponse.data);
-
-        // Fetch projection data
-        try {
-          const projectionResponse = await axios.get(`https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2025/teams/${teamId}/projection`);
-          setProjectionData(projectionResponse.data);
-        } catch (projErr) {
-          debugLog('Projection data not available:', projErr);
-        }
-
-        // Fetch detailed records
-        try {
-          const recordsResponse = await axios.get(`https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2025/types/2/teams/${teamId}/record`);
-          setDetailedRecords(recordsResponse.data);
-        } catch (recErr) {
-          debugLog('Detailed records not available:', recErr);
-        }
 
         // Fetch schedule
         try {
-          const scheduleResponse = await axios.get(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/${teamId}/schedule`);
+          const scheduleResponse = await axios.get(getTeamScheduleUrl(league, teamId));
           setScheduleData(scheduleResponse.data);
         } catch (schedErr) {
           debugLog('Schedule not available:', schedErr);
@@ -155,7 +111,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
     };
 
     fetchTeamData();
-  }, [teamId]);
+  }, [teamId, league]);
 
   // Fetch news on component mount
   useEffect(() => {
@@ -164,7 +120,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
         try {
           setLoadingNews(true);
           const response = await axios.get<NewsResponse>(
-            `https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?team=${teamId}`
+            getNewsUrl(league, { team: teamId })
           );
           setNews(response.data.articles || []);
         } catch (err) {
@@ -176,7 +132,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
     };
 
     fetchNews();
-  }, [teamId]);
+  }, [teamId, league]);
 
   // Register tab click callback
   useEffect(() => {
@@ -492,98 +448,6 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                 </div>
               </div>
             </div>
-
-            {/* Season Projections - Compact Grid */}
-            {projectionData && (
-              <div className="bg-gradient-to-br from-bg-dark/90 to-bg-darker/90 rounded-xl border border-neon-pink/30 shadow-[0_0_20px_rgba(250,175,232,0.1)] p-6 mb-6">
-                <h2 className="text-xl font-bold text-neon-pink mb-4 flex items-center gap-2">
-                  <FaCrosshairs />
-                  2025 Projections
-                </h2>
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Projected Record */}
-                  <div className="bg-bg-darker/50 rounded-lg p-4 border border-neon-cyan/30">
-                    <div className="text-xs text-gray-400 mb-2">Projected Record</div>
-                    <div className="text-3xl font-bold text-neon-cyan mb-1">
-                      {projectionData.projectedWins.toFixed(1)}-{projectionData.projectedLosses.toFixed(1)}
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      {((projectionData.projectedWins / (projectionData.projectedWins + projectionData.projectedLosses)) * 100).toFixed(0)}% Win Rate
-                    </div>
-                  </div>
-
-                  {/* Division Odds */}
-                  <div className="bg-bg-darker/50 rounded-lg p-4 border border-neon-pink/30">
-                    <div className="text-xs text-gray-400 mb-2">Division Odds</div>
-                    <div className="text-3xl font-bold text-neon-pink mb-1">
-                      {(projectionData.chanceToWinDivision * 100).toFixed(1)}%
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      {projectionData.chanceToWinDivision >= 0.5 ? 'Favorite' : projectionData.chanceToWinDivision >= 0.25 ? 'Contender' : 'Underdog'}
-                    </div>
-                  </div>
-
-                  {/* This Week */}
-                  <div className="bg-bg-darker/50 rounded-lg p-4 border border-neon-cyan/30">
-                    <div className="text-xs text-gray-400 mb-2">This Week</div>
-                    <div className="text-3xl font-bold text-neon-cyan mb-1">
-                      {(projectionData.chanceToWinThisWeek * 100).toFixed(1)}%
-                    </div>
-                    <div className="text-xs text-gray-400">Win Probability</div>
-                  </div>
-
-                  {/* Playoff Outlook */}
-                  <div className={`rounded-lg p-4 border-2 ${
-                    projectionData.projectedWins >= 10 
-                      ? 'bg-neon-cyan/10 border-neon-cyan/50' 
-                      : projectionData.projectedWins >= 9 
-                      ? 'bg-yellow-500/10 border-yellow-500/50'
-                      : 'bg-red-500/10 border-red-500/50'
-                  }`}>
-                    <div className="text-xs text-gray-400 mb-2">Playoff Outlook</div>
-                    <div className={`text-3xl font-bold mb-1 ${
-                      projectionData.projectedWins >= 10 ? 'text-neon-cyan' : 
-                      projectionData.projectedWins >= 9 ? 'text-yellow-400' : 
-                      'text-red-400'
-                    }`}>
-                      {projectionData.projectedWins >= 10 ? 'STRONG' : projectionData.projectedWins >= 9 ? 'LIKELY' : 'BUBBLE'}
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      Based on {projectionData.projectedWins.toFixed(1)} wins
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-        {/* Detailed Records Breakdown */}
-        {detailedRecords && (
-          <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
-            <h2 className="text-xl font-bold text-neon-cyan mb-4 flex items-center gap-2">
-              <FaListOl />
-              Detailed Records
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {detailedRecords.items.map((record, idx) => {
-                const getRecordStat = (statName: string) => {
-                  const stat = record.stats.find(s => s.name === statName);
-                  return stat?.displayValue || stat?.value?.toString() || 'N/A';
-                };
-
-                return (
-                  <div 
-                    key={idx}
-                    className="bg-bg-darker/50 rounded-lg border border-neon-cyan/20 p-3 hover:border-neon-cyan/40 transition-all"
-                  >
-                    <div className="text-xs text-gray-400 mb-1 uppercase">{record.displayName || record.name}</div>
-                    <div className="text-2xl font-bold text-white mb-1">{record.summary}</div>
-                    <div className="text-xs text-gray-400">{(record.value * 100).toFixed(0)}% Win Rate</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         {/* Division Stats */}
         <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 shadow-[0_0_20px_rgba(0,255,231,0.1)] p-6 mb-6">
