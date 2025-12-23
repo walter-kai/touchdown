@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Play, PlayAthlete } from '@/types/espn/playByplay';
-import { getPlaysUrl } from './leagueApi';
+import { getPlaysUrl } from './espnApi';
 
 export const extractAthleteIdFromRef = (ref?: string): string => {
   if (!ref || typeof ref !== 'string') return '';

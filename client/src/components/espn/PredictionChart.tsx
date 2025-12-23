@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaPercent, FaTimes } from "react-icons/fa";
 import axios from "axios";
 import { useLeague } from "@/providers/LeagueContext";
-import { getPredictorUrl } from "@/utils/leagueApi";
+import { getPredictorUrl } from "@/utils/espnApi";
 
 interface Statistic {
   name: string;

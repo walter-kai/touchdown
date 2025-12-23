@@ -9,7 +9,7 @@ import { useLoading } from '@/providers/LoadingContext';
 import { useLeague } from '@/providers/LeagueContext';
 import { debugLog } from '@/utils/debugLog';
 import { fetchEspnPlays } from '@/utils/espnPlays';
-import { getScoreboardUrl, getSummaryUrl } from '@/utils/leagueApi';
+import { getScoreboardUrl, getSummaryUrl } from '@/utils/espnApi';
 import { PlaysProvider } from '@/providers/PlaysContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';

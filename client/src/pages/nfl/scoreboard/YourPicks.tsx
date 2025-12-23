@@ -14,7 +14,7 @@ import { usePicks } from '../../../providers/PicksContext';
 import { useLeague } from '../../../providers/LeagueContext';
 import { Play } from '@/types/espn/playByplay';
 import { debugLog } from '@/utils/debugLog';
-import { getTeamApiUrl } from '@/utils/leagueApi';
+import { getTeamApiUrl } from '@/utils/espnApi';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {

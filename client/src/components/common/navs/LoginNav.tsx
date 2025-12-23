@@ -18,7 +18,8 @@ const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
 	const handleLeagueChange = (newLeague: LeagueType) => {
 		setLeague(newLeague);
 		setDropdownOpen(false);
-		navigate('/'); // Navigate to home when switching leagues
+		// Force a full page reload to ensure all components reinitialize with new league
+		window.location.href = '/';
 	};
 
 	// Close dropdown when clicking outside

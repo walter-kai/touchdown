@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { FaChartLine, FaTimes } from "react-icons/fa";
 import axios from "axios";
 import { useLeague } from "@/providers/LeagueContext";
-import { getProbabilitiesUrl } from "@/utils/leagueApi";
+import { getProbabilitiesUrl } from "@/utils/espnApi";
 
 interface ProbabilityItem {
   tiePercentage: number;

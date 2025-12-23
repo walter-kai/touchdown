@@ -12,7 +12,7 @@ import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
 import { useAuth } from '@/providers/AuthContext';
 import { useLeague } from '@/providers/LeagueContext';
 import { debugLog } from '@/utils/debugLog';
-import { getTeamApiUrl } from '@/utils/leagueApi';
+import { getTeamApiUrl } from '@/utils/espnApi';
 import type { Athlete } from '@/types/espn/athlete';
 import { Play } from '@/types/espn/playByplay';
 

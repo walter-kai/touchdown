@@ -8,7 +8,7 @@ import type { NewsResponse, NewsArticle } from '@/types/espn/news';
 import { debugLog } from '@/utils/debugLog';
 import NewsTicker from '@/components/espn/NewsTicker';
 import { useLeague } from '@/providers/LeagueContext';
-import { getTeamApiUrl, getTeamScheduleUrl, getNewsUrl } from '@/utils/leagueApi';
+import { getTeamApiUrl, getTeamScheduleUrl, getNewsUrl } from '@/utils/espnApi';
 
 interface ScheduleEvent {
   id: string;

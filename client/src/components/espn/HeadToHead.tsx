@@ -4,7 +4,7 @@ import { FaFootballBall } from "react-icons/fa";
 import axios from "axios";
 import type { LeaderCategory } from "@/types/espn/scoreboard";
 import { useLeague } from "@/providers/LeagueContext";
-import { getTeamApiUrl } from "@/utils/leagueApi";
+import { getTeamApiUrl } from "@/utils/espnApi";
 
 interface HeadToHeadProps {
   homeTeamId: string;

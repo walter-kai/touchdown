@@ -5,7 +5,7 @@ import axios from 'axios';
 import type { AthleteOverview, AthleteBio } from '@/types/espn/athlete';
 import LoadingFootball from '../../components/common/LoadingFootball';
 import { useLeague } from '@/providers/LeagueContext';
-import { getPlayerOverviewUrl, getPlayerBioUrl } from '@/utils/leagueApi';
+import { getPlayerOverviewUrl, getPlayerBioUrl } from '@/utils/espnApi';
 
 interface NFLPlayerProps {
   activeTab?: 'info' | 'schedule' | 'news' | 'dashboard' | 'games';

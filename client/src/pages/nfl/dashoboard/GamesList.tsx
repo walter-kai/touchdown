@@ -5,7 +5,7 @@ import { FaFootballBall, FaPlay, FaChevronLeft, FaChevronRight } from "react-ico
 import LoadingFootball from '../../../components/common/LoadingFootball';
 import NewsTicker from '../../../components/espn/NewsTicker';
 import { useLeague } from '../../../providers/LeagueContext';
-import { getScoreboardUrl, getNewsUrl } from '@/utils/leagueApi';
+import { getScoreboardUrl, getNewsUrl } from '@/utils/espnApi';
 import type {
   Event,
   Competitor,

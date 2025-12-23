@@ -9,7 +9,7 @@ import { useAuth } from '../../../providers/AuthContext';
 import { useLeague } from '../../../providers/LeagueContext';
 import TelegramCard from './TelegramCard';
 import { debugLog } from '@/utils/debugLog';
-import { getSummaryUrl } from '@/utils/leagueApi';
+import { getSummaryUrl } from '@/utils/espnApi';
 
 interface Player {
   id: string;

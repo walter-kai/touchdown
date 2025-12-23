@@ -7,13 +7,10 @@ import type {
   Season, 
   Week, 
   League,
-  NewsArticle as ScoreboardNewsArticle,
   Link,
-  Image
 } from './scoreboard';
 
 export interface NBAScoreboardResponse {
-  news: NewsSection;
   pinnedCount: number;
   nowFeedMD5Hash: string;
   type: string;
@@ -28,11 +25,7 @@ export interface NBAScoreboardResponse {
   tier2Nav: any; // Complex navigation object
 }
 
-export interface NewsSection {
-  link: Link;
-  header: string;
-  articles: ScoreboardNewsArticle[];
-}
+
 
 export interface ContentSection {
   league: string;
@@ -79,7 +72,6 @@ export interface NowFeedItem {
       href: string;
     };
   };
-  images?: Image[];
   categories?: any[];
 }
 
