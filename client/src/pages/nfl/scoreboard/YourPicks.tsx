@@ -1104,15 +1104,20 @@ const YourPicks: React.FC<PlayerPickProps> = ({
             <div className="bg-bg-dark/90 rounded-b-lg py-4 mx-2">
 
               
-              {/* Split into Offense and Defense columns */}
+              {/* Split into Offense/Guards and Defense/Forwards columns */}
               <div className="grid grid-cols-2 gap-2">
-                {/* Offense Column */}
+                {/* Offense/Guards Column */}
                 <div>
-                  <h5 className="text-neon-pink font-bold text-sm mb-2">OFFENSE</h5>
+                  <h5 className="text-neon-pink font-bold text-sm mb-2">{league === 'nfl' ? 'OFFENSE' : 'GUARDS'}</h5>
                   <div className="space-y-2">
                     {currentRoster.filter(player => {
                       const pos = typeof player.position === 'string' ? player.position : player.position?.abbreviation;
-                      return ['QB', 'RB', 'WR', 'TE', 'FB', 'OL', 'OT', 'OG', 'C'].includes(pos);
+                      if (league === 'nfl') {
+                        return ['QB', 'RB', 'WR', 'TE', 'FB', 'OL', 'OT', 'OG', 'C'].includes(pos);
+                      } else {
+                        // NBA: Guards and Guard-Forwards
+                        return ['PG', 'SG', 'G', 'G-F'].includes(pos);
+                      }
                     }).sort((a, b) => (playInvolvementCounts[b.id] || 0) - (playInvolvementCounts[a.id] || 0)).map((player) => {
                       const playerScore = playInvolvementCounts[player.id] || 0;
                       const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
@@ -1168,13 +1173,18 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                   </div>
                 </div>
 
-                {/* Defense Column */}
+                {/* Defense/Forwards Column */}
                 <div>
-                  <h5 className="text-neon-pink font-bold text-sm mb-2">DEFENSE</h5>
+                  <h5 className="text-neon-pink font-bold text-sm mb-2">{league === 'nfl' ? 'DEFENSE' : 'FORWARDS/CENTERS'}</h5>
                   <div className="space-y-2">
                     {currentRoster.filter(player => {
                       const pos = typeof player.position === 'string' ? player.position : player.position?.abbreviation;
-                      return ['DE', 'DT', 'LB', 'CB', 'S', 'DB', 'DL', 'SAF', 'MLB', 'OLB'].includes(pos);
+                      if (league === 'nfl') {
+                        return ['DE', 'DT', 'LB', 'CB', 'S', 'DB', 'DL', 'SAF', 'MLB', 'OLB'].includes(pos);
+                      } else {
+                        // NBA: Forwards, Centers, and Forward-Centers
+                        return ['SF', 'PF', 'C', 'F', 'F-C'].includes(pos);
+                      }
                     }).sort((a, b) => (playInvolvementCounts[b.id] || 0) - (playInvolvementCounts[a.id] || 0)).map((player) => {
                       const playerScore = playInvolvementCounts[player.id] || 0;
                       const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
