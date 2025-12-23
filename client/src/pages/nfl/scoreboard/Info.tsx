@@ -351,6 +351,39 @@ const Info: React.FC<InfoProps> = ({
         </div>
       )}
 
+
+            {/* Predictions */}
+      <div className=" ">
+        {/* Divider */}
+        <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
+        <div className="mx-2">
+          <div className="flex items-center pb-3">
+            <h1>Game Prediction</h1>
+          </div>
+        </div>
+        <div className="mx-2">
+          {homeTeam && awayTeam && gameId && (
+            <PredictionChart
+              gameId={gameId}
+              competitionId={competition.id}
+              homeTeamInfo={{
+                name: homeTeam.team.displayName,
+                logo: getTeamLogo(homeTeam),
+                color: homeTeam.team.color || '00ffe7'
+              }}
+              awayTeamInfo={{
+                name: awayTeam.team.displayName,
+                logo: getTeamLogo(awayTeam),
+                color: awayTeam.team.color || 'faafe8'
+              }}
+              getTeamLogo={getTeamLogo}
+              homeTeam={homeTeam.team}
+              awayTeam={awayTeam.team}
+            />
+          )}
+        </div>
+      </div>
+
       {/* Head-to-Head Leaders - Condensed */}
       <GameLeaders 
         summary={summary}
@@ -426,37 +459,6 @@ const Info: React.FC<InfoProps> = ({
         </div>
       </div>
 
-      {/* Predictions */}
-      <div className=" ">
-        {/* Divider */}
-        <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
-        <div className="mx-2">
-          <div className="flex items-center pb-3">
-            <h1>Game Prediction</h1>
-          </div>
-        </div>
-        <div className="mx-2">
-          {homeTeam && awayTeam && gameId && (
-            <PredictionChart
-              gameId={gameId}
-              competitionId={competition.id}
-              homeTeamInfo={{
-                name: homeTeam.team.displayName,
-                logo: getTeamLogo(homeTeam),
-                color: homeTeam.team.color || '00ffe7'
-              }}
-              awayTeamInfo={{
-                name: awayTeam.team.displayName,
-                logo: getTeamLogo(awayTeam),
-                color: awayTeam.team.color || 'faafe8'
-              }}
-              getTeamLogo={getTeamLogo}
-              homeTeam={homeTeam.team}
-              awayTeam={awayTeam.team}
-            />
-          )}
-        </div>
-      </div>
     </>
   );
 };

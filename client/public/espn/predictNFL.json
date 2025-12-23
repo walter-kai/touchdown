@@ -1,0 +1,236 @@
+{
+  "$ref": "http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/401437932/competitions/401437932/predictor?lang=en&region=us",
+  "name": "Dallas Cowboys at Tennessee Titans",
+  "shortName": "DAL @ TEN",
+  "lastModified": "2022-12-22T18:42Z",
+  "homeTeam": {
+    "team": {
+      "$ref": "http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2022/teams/10?lang=en&region=us"
+    },
+    "statistics": [
+      {
+        "name": "gameProjection",
+        "displayName": "WIN PROB",
+        "shortDisplayName": "GP",
+        "description": "Team's predicted win percentage in this game at time of given BPI run",
+        "abbreviation": "GP",
+        "value": 6.999,
+        "displayValue": "7.0"
+      },
+      {
+        "name": "matchupQuality",
+        "displayName": "Matchup Quality",
+        "shortDisplayName": "MQ",
+        "description": "A measure of projected competitiveness and excitement in the game, using a 0 to 100 scale, with 100 as the most exciting",
+        "abbreviation": "MQ",
+        "value": 8.902,
+        "displayValue": "8.9"
+      },
+      {
+        "name": "oppSeasonStrengthFbsRank",
+        "displayName": "Opponent Seasson Strength FBS Rank",
+        "shortDisplayName": "OSS FBS RK",
+        "description": "",
+        "abbreviation": "OSS FBS RK",
+        "value": 0,
+        "displayValue": "0"
+      },
+      {
+        "name": "oppSeasonStrengthRating",
+        "displayName": "Opponent Seasson Strength Rating",
+        "shortDisplayName": "OSS RT",
+        "description": "",
+        "abbreviation": "OSS RT",
+        "value": 9.756,
+        "displayValue": "9.8"
+      },
+      {
+        "name": "teamAvgWp",
+        "displayName": "Team Average Win Percentage",
+        "shortDisplayName": "TAW%",
+        "description": "",
+        "abbreviation": "TAW%",
+        "value": 24.6,
+        "displayValue": "24.6"
+      },
+      {
+        "name": "teamChanceLoss",
+        "displayName": "Team Chance Loss",
+        "shortDisplayName": "TCL",
+        "description": "",
+        "abbreviation": "TCL",
+        "value": 92.942,
+        "displayValue": "92.9"
+      },
+      {
+        "name": "teamChanceTie",
+        "displayName": "Team Chance Tie",
+        "shortDisplayName": "TCT",
+        "description": "",
+        "abbreviation": "TCT",
+        "value": 0.059,
+        "displayValue": ".1"
+      },
+      {
+        "name": "teamDefEff",
+        "displayName": "Team Defensive Efficiency",
+        "shortDisplayName": "TDE",
+        "description": "",
+        "abbreviation": "TDE",
+        "value": 29.346,
+        "displayValue": "29.3"
+      },
+      {
+        "name": "teamOffEff",
+        "displayName": "Team Offensive Efficiency",
+        "shortDisplayName": "TOE",
+        "description": "",
+        "abbreviation": "TOE",
+        "value": 24.798,
+        "displayValue": "24.8"
+      },
+      {
+        "name": "teamPredPtDiff",
+        "displayName": "Team Pred. Point Difference",
+        "shortDisplayName": "TPPD",
+        "description": "",
+        "abbreviation": "TPPD",
+        "value": -18.344,
+        "displayValue": "-18.3"
+      },
+      {
+        "name": "teamSTEff",
+        "displayName": "Team ST Efficiency",
+        "shortDisplayName": "TSTE",
+        "description": "",
+        "abbreviation": "TSTE",
+        "value": 49.113,
+        "displayValue": "49.1"
+      },
+      {
+        "name": "teamTotEff",
+        "displayName": "Team Total Efficiency",
+        "shortDisplayName": "TTE",
+        "description": "",
+        "abbreviation": "TTE",
+        "value": 19.968,
+        "displayValue": "20"
+      }
+    ]
+  },
+  "awayTeam": {
+    "team": {
+      "$ref": "http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2022/teams/6?lang=en&region=us"
+    },
+    "statistics": [
+      {
+        "name": "gameProjection",
+        "displayName": "WIN PROB",
+        "shortDisplayName": "GP",
+        "description": "Team's predicted win percentage in this game at time of given BPI run",
+        "abbreviation": "GP",
+        "value": 92.942,
+        "displayValue": "92.9"
+      },
+      {
+        "name": "matchupQuality",
+        "displayName": "Matchup Quality",
+        "shortDisplayName": "MQ",
+        "description": "A measure of projected competitiveness and excitement in the game, using a 0 to 100 scale, with 100 as the most exciting",
+        "abbreviation": "MQ",
+        "value": 8.902,
+        "displayValue": "8.9"
+      },
+      {
+        "name": "oppSeasonStrengthFbsRank",
+        "displayName": "Opponent Seasson Strength FBS Rank",
+        "shortDisplayName": "OSS FBS RK",
+        "description": "",
+        "abbreviation": "OSS FBS RK",
+        "value": 0,
+        "displayValue": "0"
+      },
+      {
+        "name": "oppSeasonStrengthRating",
+        "displayName": "Opponent Seasson Strength Rating",
+        "shortDisplayName": "OSS RT",
+        "description": "",
+        "abbreviation": "OSS RT",
+        "value": -11.124,
+        "displayValue": "-11.1"
+      },
+      {
+        "name": "teamAvgWp",
+        "displayName": "Team Average Win Percentage",
+        "shortDisplayName": "TAW%",
+        "description": "",
+        "abbreviation": "TAW%",
+        "value": 75.4,
+        "displayValue": "75.4"
+      },
+      {
+        "name": "teamChanceLoss",
+        "displayName": "Team Chance Loss",
+        "shortDisplayName": "TCL",
+        "description": "",
+        "abbreviation": "TCL",
+        "value": 6.999,
+        "displayValue": "7.0"
+      },
+      {
+        "name": "teamChanceTie",
+        "displayName": "Team Chance Tie",
+        "shortDisplayName": "TCT",
+        "description": "",
+        "abbreviation": "TCT",
+        "value": 0.059,
+        "displayValue": ".1"
+      },
+      {
+        "name": "teamDefEff",
+        "displayName": "Team Defensive Efficiency",
+        "shortDisplayName": "TDE",
+        "description": "",
+        "abbreviation": "TDE",
+        "value": 75.202,
+        "displayValue": "75.2"
+      },
+      {
+        "name": "teamOffEff",
+        "displayName": "Team Offensive Efficiency",
+        "shortDisplayName": "TOE",
+        "description": "",
+        "abbreviation": "TOE",
+        "value": 70.654,
+        "displayValue": "70.7"
+      },
+      {
+        "name": "teamPredPtDiff",
+        "displayName": "Team Pred. Point Difference",
+        "shortDisplayName": "TPPD",
+        "description": "",
+        "abbreviation": "TPPD",
+        "value": 18.344,
+        "displayValue": "18.3"
+      },
+      {
+        "name": "teamSTEff",
+        "displayName": "Team ST Efficiency",
+        "shortDisplayName": "TSTE",
+        "description": "",
+        "abbreviation": "TSTE",
+        "value": 50.887,
+        "displayValue": "50.9"
+      },
+      {
+        "name": "teamTotEff",
+        "displayName": "Team Total Efficiency",
+        "shortDisplayName": "TTE",
+        "description": "",
+        "abbreviation": "TTE",
+        "value": 80.032,
+        "displayValue": "80"
+      }
+    ]
+  }
+}

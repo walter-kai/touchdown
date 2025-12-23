@@ -54,6 +54,21 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
           getPredictorUrl(league, gameId, competitionId)
         );
 
+        console.log('Predictor API response:', response.data);
+        
+        // Validate that we have the expected structure
+        if (!response.data || !response.data.homeTeam || !response.data.awayTeam) {
+          throw new Error('Invalid predictor data structure');
+        }
+        
+        // Ensure at least one team has statistics (NBA sometimes only has awayTeam stats)
+        const hasHomeStats = response.data.homeTeam.statistics && Array.isArray(response.data.homeTeam.statistics);
+        const hasAwayStats = response.data.awayTeam.statistics && Array.isArray(response.data.awayTeam.statistics);
+        
+        if (!hasHomeStats && !hasAwayStats) {
+          throw new Error('Statistics data not available');
+        }
+
         setData(response.data);
       } catch (err) {
         console.error('Failed to fetch prediction:', err);
@@ -82,24 +97,69 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
     );
   }
 
-  // Extract key statistics
-  const getStatValue = (stats: Statistic[], statName: string): string => {
+  // Extract key statistics - silently returns N/A if stat doesn't exist
+  const getStatValue = (stats: Statistic[] | undefined, statName: string): string => {
+    if (!stats || !Array.isArray(stats)) {
+      return "N/A";
+    }
     const stat = stats.find(s => s.name === statName);
     return stat?.displayValue || "N/A";
   };
 
-  const homeWinProb = getStatValue(data.homeTeam.statistics, "gameProjection");
-  const awayWinProb = getStatValue(data.awayTeam.statistics, "gameProjection");
-  const matchupQuality = getStatValue(data.homeTeam.statistics, "matchupQuality");
+  const getNumericStatValue = (stats: Statistic[] | undefined, statName: string): number | null => {
+    if (!stats || !Array.isArray(stats)) {
+      return null;
+    }
+    const stat = stats.find(s => s.name === statName);
+    return stat ? parseFloat(stat.value.toString()) : null;
+  };
+
+  // NBA only provides awayTeam statistics - calculate home team as complement
+  const hasHomeStats = data.homeTeam?.statistics && Array.isArray(data.homeTeam.statistics);
+  const hasAwayStats = data.awayTeam?.statistics && Array.isArray(data.awayTeam.statistics);
+
+  // Win probabilities
+  const awayWinProbValue = getNumericStatValue(data.awayTeam?.statistics, "gameProjection");
+  const homeWinProbValue = hasHomeStats 
+    ? getNumericStatValue(data.homeTeam?.statistics, "gameProjection")
+    : (awayWinProbValue !== null ? 100 - awayWinProbValue : null);
   
-  const homeOffEff = getStatValue(data.homeTeam.statistics, "teamOffEff");
-  const awayOffEff = getStatValue(data.awayTeam.statistics, "teamOffEff");
-  const homeDefEff = getStatValue(data.homeTeam.statistics, "teamDefEff");
-  const awayDefEff = getStatValue(data.awayTeam.statistics, "teamDefEff");
-  const homeTotalEff = getStatValue(data.homeTeam.statistics, "teamTotEff");
-  const awayTotalEff = getStatValue(data.awayTeam.statistics, "teamTotEff");
-  const homePredPtDiff = getStatValue(data.homeTeam.statistics, "teamPredPtDiff");
-  const awayPredPtDiff = getStatValue(data.awayTeam.statistics, "teamPredPtDiff");
+  const homeWinProb = homeWinProbValue !== null ? homeWinProbValue.toFixed(1) : "N/A";
+  const awayWinProb = awayWinProbValue !== null ? awayWinProbValue.toFixed(1) : "N/A";
+
+  // Matchup quality (same for both teams)
+  const matchupQuality = getStatValue(data.awayTeam?.statistics || data.homeTeam?.statistics, "matchupQuality");
+
+  // Point differentials
+  const awayPredPtDiffValue = getNumericStatValue(data.awayTeam?.statistics, "teamPredPtDiff");
+  const homePredPtDiffValue = hasHomeStats
+    ? getNumericStatValue(data.homeTeam?.statistics, "teamPredPtDiff")
+    : (awayPredPtDiffValue !== null ? -awayPredPtDiffValue : null);
+  
+  const homePredPtDiff = homePredPtDiffValue !== null ? homePredPtDiffValue.toFixed(3) : "N/A";
+  const awayPredPtDiff = awayPredPtDiffValue !== null ? awayPredPtDiffValue.toFixed(3) : "N/A";
+  
+  // NFL-specific stats (only available when both teams have stats)
+  const homeOffEff = getStatValue(data.homeTeam?.statistics, "teamOffEff");
+  const awayOffEff = getStatValue(data.awayTeam?.statistics, "teamOffEff");
+  const homeDefEff = getStatValue(data.homeTeam?.statistics, "teamDefEff");
+  const awayDefEff = getStatValue(data.awayTeam?.statistics, "teamDefEff");
+  const homeTotalEff = getStatValue(data.homeTeam?.statistics, "teamTotEff");
+  const awayTotalEff = getStatValue(data.awayTeam?.statistics, "teamTotEff");
+  
+  // NBA-specific stats - home team values are inverse of away team
+  const awayExpectedPtsValue = getNumericStatValue(data.awayTeam?.statistics, "teamExpectedPts");
+  const awayOppExpectedPtsValue = getNumericStatValue(data.awayTeam?.statistics, "oppExpectedPts");
+  
+  const homeExpectedPts = hasHomeStats
+    ? getStatValue(data.homeTeam?.statistics, "teamExpectedPts")
+    : (awayOppExpectedPtsValue !== null ? awayOppExpectedPtsValue.toFixed(3) : "N/A");
+  const awayExpectedPts = awayExpectedPtsValue !== null ? awayExpectedPtsValue.toFixed(3) : "N/A";
+  
+  const homeOppExpectedPts = hasHomeStats
+    ? getStatValue(data.homeTeam?.statistics, "oppExpectedPts")
+    : (awayExpectedPtsValue !== null ? awayExpectedPtsValue.toFixed(3) : "N/A");
+  const awayOppExpectedPts = awayOppExpectedPtsValue !== null ? awayOppExpectedPtsValue.toFixed(3) : "N/A";
 
   return (
     <div className="bg-bg-dark/95 rounded-xl py-4 sm:p-6">
@@ -163,55 +223,97 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
         </div>
       </div>
 
-      {/* Team Efficiency Stats */}
-      <div className="space-y-3">
-        <div className="text-xs text-gray-400 font-bold uppercase text-center mb-3">Team Efficiency Ratings</div>
-        
-        {/* Total Efficiency */}
-        <div className="p-3 bg-bg-darker/50 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-400">Total Efficiency</span>
-          </div>
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <div className="text-xl font-bold text-neon-pink">{awayTotalEff}</div>
+      {/* Team Stats - Different for NBA vs NFL */}
+      {league === 'nfl' ? (
+        // NFL: Show Efficiency Ratings
+        <div className="space-y-3">
+          <div className="text-xs text-gray-400 font-bold uppercase text-center mb-3">Team Efficiency Ratings</div>
+          
+          {/* Total Efficiency */}
+          <div className="p-3 bg-bg-darker/50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-gray-400">Total Efficiency</span>
             </div>
-            <div>
-              <div className="text-xl font-bold text-neon-cyan">{homeTotalEff}</div>
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-xl font-bold text-neon-pink">{awayTotalEff}</div>
+              </div>
+              <div>
+                <div className="text-xl font-bold text-neon-cyan">{homeTotalEff}</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Offensive Efficiency */}
-        <div className="p-3 bg-bg-darker/50 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-400">Offensive Efficiency</span>
-          </div>
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <div className="text-lg font-bold text-neon-pink">{awayOffEff}</div>
+          {/* Offensive Efficiency */}
+          <div className="p-3 bg-bg-darker/50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-gray-400">Offensive Efficiency</span>
             </div>
-            <div>
-              <div className="text-lg font-bold text-neon-cyan">{homeOffEff}</div>
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-lg font-bold text-neon-pink">{awayOffEff}</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-neon-cyan">{homeOffEff}</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Defensive Efficiency */}
-        <div className="p-3 bg-bg-darker/50 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-400">Defensive Efficiency</span>
-          </div>
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <div className="text-lg font-bold text-neon-pink">{awayDefEff}</div>
+          {/* Defensive Efficiency */}
+          <div className="p-3 bg-bg-darker/50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-gray-400">Defensive Efficiency</span>
             </div>
-            <div>
-              <div className="text-lg font-bold text-neon-cyan">{homeDefEff}</div>
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-lg font-bold text-neon-pink">{awayDefEff}</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-neon-cyan">{homeDefEff}</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        // NBA: Show Expected Points
+        <div className="space-y-3">
+          <div className="text-xs text-gray-400 font-bold uppercase text-center mb-3">Expected Points</div>
+          
+          {/* Team Expected Points */}
+          <div className="p-3 bg-bg-darker/50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-gray-400">Team Expected Points</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-xl font-bold text-neon-pink">{awayExpectedPts}</div>
+                <div className="text-xs text-gray-500 mt-1">{awayTeamInfo.name}</div>
+              </div>
+              <div>
+                <div className="text-xl font-bold text-neon-cyan">{homeExpectedPts}</div>
+                <div className="text-xs text-gray-500 mt-1">{homeTeamInfo.name}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Opponent Expected Points (Defense) */}
+          <div className="p-3 bg-bg-darker/50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-gray-400">Opponent Expected Points</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-lg font-bold text-neon-pink">{awayOppExpectedPts}</div>
+                <div className="text-xs text-gray-500 mt-1">vs {homeTeamInfo.name}</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-neon-cyan">{homeOppExpectedPts}</div>
+                <div className="text-xs text-gray-500 mt-1">vs {awayTeamInfo.name}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer Note */}
       <div className="mt-4 pt-4 border-t border-neon-pink/20">
