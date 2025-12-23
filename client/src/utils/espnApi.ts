@@ -15,11 +15,35 @@
  * Use extractNBAScoreboardData() helper to normalize the response.
  */
 
-export const getScoreboardUrl = (league: 'nfl' | 'nba'): string => {
-  if (league === 'nba') {
-    return 'https://cdn.espn.com/core/nba/scoreboard?xhr=1&limit=50';
+/**
+ * Get scoreboard URL for league with optional date filtering
+ * 
+ * Both NFL and NBA support date ranges when using site.api.espn.com:
+ * - NFL: site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard
+ * - NBA: site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard
+ * 
+ * Both support dates=YYYYMMDD for single date or dates=YYYYMMDD-YYYYMMDD for ranges
+ */
+export const getScoreboardUrl = (
+  league: 'nfl' | 'nba',
+  options?: {
+    dates?: string; // Single date (YYYYMMDD) or range (YYYYMMDD-YYYYMMDD)
+    limit?: number;
   }
-  return 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
+): string => {
+  const params = new URLSearchParams();
+  params.append('limit', String(options?.limit || 100));
+  
+  if (options?.dates) {
+    params.append('dates', options.dates);
+  }
+  
+  if (league === 'nba') {
+    return `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?${params.toString()}`;
+  }
+  
+  // NFL
+  return `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?${params.toString()}`;
 };
 
 export const getLeagueApiPath = (league: 'nfl' | 'nba'): string => {

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { FaFootballBall, FaPlay, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import LoadingFootball from '../../../components/common/LoadingFootball';
 import NewsTicker from '../../../components/espn/NewsTicker';
+import WeekNav from '../../../components/common/navs/WeekNav';
 import { useLeague } from '../../../providers/LeagueContext';
 import { getScoreboardUrl, getNewsUrl } from '@/utils/espnApi';
 import type {
@@ -32,6 +33,7 @@ const GameGrid: React.FC = () => {
   const [byeTeams, setByeTeams] = useState<TeamOnBye[]>([]);
   const [weekNumber, setWeekNumber] = useState<number | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,19 +55,30 @@ const GameGrid: React.FC = () => {
     return `${formatDate(weekStart)}-${formatDate(weekEnd)}`;
   };
 
-  const fetchScoreboardData = useCallback(async (week?: number) => {
+  const fetchScoreboardData = useCallback(async (week?: number, date?: string) => {
     try {
       setError(null);
+      setInitialLoading(true);
 
-      let url = getScoreboardUrl(league);
-      if (week) {
-        const dateRange = getWeekDateRange(week);
-        url += `${url.includes('?') ? '&' : '?'}dates=${dateRange}`;
-      } else {
-        url += `${url.includes('?') ? '&' : '?'}limit=50`;
+      console.log('Fetching games for:', { league, week, date });
+      
+      // Determine dates parameter
+      let datesParam: string | undefined;
+      if (date) {
+        datesParam = date; // Can be single date or range
+      } else if (week) {
+        datesParam = getWeekDateRange(week);
       }
+      
+      // Use centralized API utility - both NFL and NBA support date ranges
+      const url = getScoreboardUrl(league, {
+        dates: datesParam,
+        limit: datesParam ? 100 : 50
+      });
 
-      // Fetch news for both NFL and NBA
+      console.log('Fetching URL:', url);
+
+      // Fetch scoreboard and news
       const requests = [
         axios.get(url),
         axios.get(getNewsUrl(league))
@@ -75,20 +88,11 @@ const GameGrid: React.FC = () => {
       const newsResponse = responses[1];
 
       // NBA and NFL have different response structures
-      let data: ESPNData;
-      if (league === 'nba') {
-        // NBA response has data nested in content.sbData
-        const nbaData = scoreboardResponse.data;
-        data = {
-          events: nbaData.content?.sbData?.events || [],
-          week: nbaData.content?.sbData?.week,
-        };
-      } else {
-        // NFL response has data at root level
-        data = scoreboardResponse.data;
-      }
+      // Note: site.api.espn.com/nba has events at root level (like NFL)
+      // This is different from cdn.espn.com/nba which nests in content.sbData
+      const data: ESPNData = scoreboardResponse.data;
 
-      // Set news for both leagues (API structure is the same)
+      // Set news
       if (newsResponse?.data?.articles) {
         setNews(newsResponse.data.articles);
       } else {
@@ -96,6 +100,7 @@ const GameGrid: React.FC = () => {
       }
 
       const events = data.events || [];
+      console.log('Games fetched:', events.length);
       setGames(events);
 
       const weekData = data.week;
@@ -103,39 +108,44 @@ const GameGrid: React.FC = () => {
         setByeTeams(weekData.teamsOnBye || []);
         const currentWeek = weekData.number || null;
         setWeekNumber(currentWeek);
-        if (!selectedWeek && currentWeek && !week) {
+        if (!week && !date) {
           setSelectedWeek(currentWeek);
         }
       }
 
       setInitialLoading(false);
     } catch (err) {
+      console.error('Error fetching games:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
       setInitialLoading(false);
     }
-  }, [selectedWeek]);
+  }, [league]);
 
   const handlePreviousWeek = useCallback(() => {
     if (selectedWeek && selectedWeek > 1) {
       setSelectedWeek(selectedWeek - 1);
+      setSelectedDate(null);
     }
   }, [selectedWeek]);
 
   const handleNextWeek = useCallback(() => {
     if (selectedWeek && selectedWeek < 18) {
       setSelectedWeek(selectedWeek + 1);
+      setSelectedDate(null);
     }
   }, [selectedWeek]);
 
-  // Refresh scoreboard whenever this view is (re)loaded
-  useEffect(() => {
-    fetchScoreboardData(selectedWeek || undefined);
-  }, [fetchScoreboardData, selectedWeek]);
+  const handleDateSelect = useCallback((dateOrRange: string) => {
+    console.log('Date selected:', dateOrRange);
+    setSelectedDate(dateOrRange);
+    setSelectedWeek(null); // Clear week selection when date is selected
+  }, []);
 
   // Refresh scoreboard whenever this view is (re)loaded
   useEffect(() => {
-    fetchScoreboardData(selectedWeek || undefined);
-  }, [fetchScoreboardData, selectedWeek]);
+    console.log('Effect triggered - fetching with:', { selectedWeek, selectedDate });
+    fetchScoreboardData(selectedWeek || undefined, selectedDate || undefined);
+  }, [fetchScoreboardData, selectedWeek, selectedDate]);
 
   // Helper function to group games by date with time information preserved
   const groupGamesByDate = (gamesList: Event[]) => {
@@ -175,33 +185,11 @@ const GameGrid: React.FC = () => {
   <>
   <div className="max-w-7xl mx-auto py-2">
 	
-  {/* Week Navigation */}
-		<div className="bg-bg-dark/50 rounded-lg p-2 mb-6 mx-2">
-			<div className="flex items-center justify-between gap-2">
-				<button
-					onClick={handlePreviousWeek}
-					disabled={!selectedWeek || selectedWeek <= 1}
-					className="btn-purple flex items-center gap-2 h-12 w-48"
-				>
-					<FaChevronLeft />
-					Last
-				</button>
-				
-				<h1 className="w-full text-center pt-2 mx-2">
-					Week {selectedWeek || weekNumber || '...'}
-				</h1>
-				
-				<button
-					onClick={handleNextWeek}
-					disabled={!selectedWeek || selectedWeek >= 18}
-					className="btn-purple flex items-center gap-2 h-12 w-48"
-				>
-					Next
-					<FaChevronRight />
-				</button>
-			</div>
-
-		</div>
+  {/* Week Navigation - New Calendar Style */}
+  <WeekNav 
+    onDateSelect={handleDateSelect}
+    selectedDate={selectedDate || undefined}
+  />
 
 
   {/* Teams on Bye - Ticker Banner */}
