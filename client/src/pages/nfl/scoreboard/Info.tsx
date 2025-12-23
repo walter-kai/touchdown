@@ -55,7 +55,7 @@ const Info: React.FC<InfoProps> = ({
       <div className='mx-2'>
         {/* Box Score */}
         <div>
-          {/* 2x2 Grid for Game Info */}
+          {/* Grid for Game Info */}
           <div className="grid grid-cols-2 gap-2 mb-2">
         {/* Date & Time */}
         <div className="bg-bg-dark/50 rounded-lg p-4 border border-neon-cyan/20">
@@ -102,41 +102,6 @@ const Info: React.FC<InfoProps> = ({
             </div>
           )}
         </div>
-
-        {/* Down & Distance - Only show for live games */}
-        {liveState === 'in' && (
-          <div className="bg-bg-dark/50 rounded-lg p-4 border border-neon-pink/20">
-            <p className="text-text-muted text-xs mb-1">Down & Distance</p>
-            {competition.situation?.downDistanceText ? (
-              <p className="text-neon-pink font-bold text-lg">{competition.situation.downDistanceText}</p>
-            ) : (
-              <p className="text-text-light text-sm">-</p>
-            )}
-          </div>
-        )}
-
-        {/* Possession - Only show for live games */}
-        {liveState === 'in' && (
-          <div className="bg-bg-dark/50 rounded-lg p-4 border border-neon-cyan/20">
-            <p className="text-text-muted text-xs mb-1">Possession</p>
-            {livePossession ? (
-              <div className="flex items-center gap-2">
-                {homeTeam?.id && awayTeam?.id && (
-                  <img
-                    src={livePossession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
-                    alt="Possession"
-                    className="w-8 h-8"
-                  />
-                )}
-                <p className="text-neon-cyan font-bold text-lg">
-                  {livePossession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
-                </p>
-              </div>
-            ) : (
-              <p className="text-text-light text-sm">-</p>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Team Scores */}
@@ -193,7 +158,7 @@ const Info: React.FC<InfoProps> = ({
       
       {/* Live Game Situation */}
       {(competition.status.type.state === 'in') && (
-        <div className="space-y-4">
+        <div className="">
           {(() => {
             const situation = latestPlay
               ? {
@@ -216,6 +181,86 @@ const Info: React.FC<InfoProps> = ({
               <div className="">
                 <div className="pt-2 ">
                   <div className='mx-2'>
+                    {/* Down & Distance and Possession - Above Field */}
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      {/* Down & Distance */}
+                      <div className="bg-bg-dark/50 rounded-lg p-3 border border-neon-pink/20">
+                        <p className="text-text-muted text-xs mb-1">Down & Distance</p>
+                        {competition.situation?.downDistanceText ? (
+                          <p className="text-neon-pink font-bold text-base">{competition.situation.downDistanceText}</p>
+                        ) : (
+                          <p className="text-text-light text-sm">-</p>
+                        )}
+                      </div>
+
+                      {/* Possession */}
+                      <div className="bg-bg-dark/50 rounded-lg p-3 border border-neon-cyan/20">
+                        <p className="text-text-muted text-xs mb-1">Possession</p>
+                        {livePossession ? (
+                          <div className="flex items-center gap-2">
+                            {homeTeam?.id && awayTeam?.id && (
+                              <img
+                                src={livePossession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
+                                alt="Possession"
+                                className="w-6 h-6"
+                              />
+                            )}
+                            <p className="text-neon-cyan font-bold text-base">
+                              {livePossession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-text-light text-sm">-</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Timeouts and Play Type - Combined Row */}
+                    <div className="flex items-center justify-between gap-3 mb-3 bg-bg-dark/30 rounded-xl p-3 border border-neon-cyan/20">
+                      {/* Away Team Timeouts */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-text-muted text-xs font-semibold">{awayTeam?.team.abbreviation}</span>
+                        <div className="flex gap-1">
+                          {[1, 2, 3].map((_, idx) => (
+                            <div
+                              key={idx}
+                              className={`w-2 h-2 rounded-full ${
+                                idx < (situation.awayTimeouts ?? 3)
+                                  ? 'bg-neon-cyan shadow-[0_0_8px_rgba(0,255,231,0.6)]'
+                                  : 'bg-gray-600'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Play Type - Center */}
+                      <div className="flex-1 flex justify-center">
+                        <div className="px-4 py-1.5 bg-yellow-500/20 border border-yellow-500/50 rounded-full">
+                          <span className="text-yellow-400 font-bold text-sm">
+                            {latestPlayType || 'Play'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Home Team Timeouts */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          {[1, 2, 3].map((_, idx) => (
+                            <div
+                              key={idx}
+                              className={`w-2 h-2 rounded-full ${
+                                idx < (situation.homeTimeouts ?? 3)
+                                  ? 'bg-neon-pink shadow-[0_0_8px_rgba(250,175,232,0.6)]'
+                                  : 'bg-gray-600'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-text-muted text-xs font-semibold">{homeTeam?.team.abbreviation}</span>
+                      </div>
+                    </div>
+
                     <FootballField
                       homeTeam={homeTeam}
                       awayTeam={awayTeam}

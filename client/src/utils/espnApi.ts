@@ -36,7 +36,6 @@ export const getEventApiUrl = (league: 'nfl' | 'nba', eventId: string): string =
 
 export const getTeamApiUrl = (league: 'nfl' | 'nba', teamId: string): string => {
   const basePath = getLeagueApiPath(league);
-//   return `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/teams/${teamId}`
   return `https://site.api.espn.com/apis/site/${basePath}/teams/${teamId}`;
 };
 

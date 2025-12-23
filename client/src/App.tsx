@@ -107,15 +107,18 @@ const App: React.FC = () => {
   };
   
   // Check if we're on a game page or team page or player page
-  const isGamePage = location.pathname.startsWith('/nfl/game/');
-  const isTeamPage = location.pathname.startsWith('/nfl/team/');
-  const isPlayerPage = location.pathname.startsWith('/nfl/player/');
+  const isGamePage = location.pathname.startsWith('/nfl/game/') || location.pathname.startsWith('/nba/game/');
+  const isTeamPage = location.pathname.startsWith('/nfl/team/') || location.pathname.startsWith('/nba/team/');
+  const isPlayerPage = location.pathname.startsWith('/nfl/player/') || location.pathname.startsWith('/nba/player/');
   
   // Check if we're on Dashboard or GamesList pages
   const isDashboardOrGames = location.pathname === '/' || 
                              location.pathname === '/nfl' || 
                              location.pathname === '/nfl/dashboard' || 
-                             location.pathname === '/nfl/games';
+                             location.pathname === '/nfl/games' ||
+                             location.pathname === '/nba' || 
+                             location.pathname === '/nba/dashboard' || 
+                             location.pathname === '/nba/games';
 
   // Reset scroll position on route change (except for hash navigation)
   useEffect(() => {
@@ -138,7 +141,10 @@ const App: React.FC = () => {
     if (location.pathname === '/' || 
         location.pathname === '/nfl' || 
         location.pathname === '/nfl/dashboard' || 
-        location.pathname === '/nfl/games') {
+        location.pathname === '/nfl/games' ||
+        location.pathname === '/nba' || 
+        location.pathname === '/nba/dashboard' || 
+        location.pathname === '/nba/games') {
       return 'dashboard-carousel';
     }
     return location.pathname;
@@ -175,10 +181,15 @@ const App: React.FC = () => {
                   <Route path="/nba" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nba/games' : '/nba')} /> : <GameGrid />} />
                   <Route path="/nfl/dashboard" element={<DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/nfl/dashboard')} />} />
                   <Route path="/nfl/games" element={<DashboardCarousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/nfl/dashboard')} />} />
+                  <Route path="/nba/dashboard" element={<DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nba/games' : '/nba/dashboard')} />} />
+                  <Route path="/nba/games" element={<DashboardCarousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/nba/games' : '/nba/dashboard')} />} />
                   <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
                   <Route path="/nfl/game/:gameId" element={<GameContainer activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays'} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/player/:playerId" element={<NFLPlayerPage activeTab={gameTab as 'info' | 'schedule' | 'news'} onTabChange={(tab) => setGameTab(tab as any)} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
+                  <Route path="/nba/game/:gameId" element={<GameContainer activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
+                  <Route path="/nba/team/:teamId" element={<NFLTeamPage activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays'} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
+                  <Route path="/nba/player/:playerId" element={<NFLPlayerPage activeTab={gameTab as 'info' | 'schedule' | 'news'} onTabChange={(tab) => setGameTab(tab as any)} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   
                   
                   <Route path="*" element={<NotFound />} />
@@ -192,12 +203,13 @@ const App: React.FC = () => {
         {/* Game Navigation Bar - Show on game pages, team pages, player pages, and dashboard/games when logged in */}
         {(isGamePage || isTeamPage || isPlayerPage || (isDashboardOrGames && user)) && (
           <GameNavBar 
-            activeTab={isDashboardOrGames ? (location.pathname === '/nfl/games' ? 'games' : 'dashboard') : gameTab} 
+            activeTab={isDashboardOrGames ? (location.pathname.endsWith('/games') ? 'games' : 'dashboard') : gameTab} 
             onTabChange={(tab) => {
               if (tab === 'dashboard' || tab === 'games') {
-                // For dashboard/games tabs, call the callback that will update carousel state
-                // We still need to handle this through navigation for now
-                navigate(tab === 'games' ? '/nfl/games' : '/nfl/dashboard');
+                // For dashboard/games tabs, determine if we're in NBA or NFL context
+                const isNBA = location.pathname.startsWith('/nba');
+                const league = isNBA ? 'nba' : 'nfl';
+                navigate(tab === 'games' ? `/${league}/games` : `/${league}/dashboard`);
               } else {
                 setGameTab(tab);
               }

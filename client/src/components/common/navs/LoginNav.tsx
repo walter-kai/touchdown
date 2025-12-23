@@ -19,7 +19,8 @@ const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
 		setLeague(newLeague);
 		setDropdownOpen(false);
 		// Force a full page reload to ensure all components reinitialize with new league
-		window.location.href = '/';
+		// Navigate to the games grid for the selected league
+		window.location.href = `/${newLeague}/games`;
 	};
 
 	// Close dropdown when clicking outside

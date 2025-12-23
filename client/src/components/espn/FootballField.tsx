@@ -793,7 +793,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   }, [playDurationMs, playKey, loopCycle]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       {/* Current Drive Info - Only show if showGameInfo is true */}
       {showGameInfo && situation && ('downDistanceText' in situation) && (
         <div className="flex items-center justify-between gap-4 mb-4">
@@ -821,53 +821,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
           </div>
         </div>
       )}
-
-            {/* Timeouts - Only show if showGameInfo is true */}
-      {/* {showGameInfo && situation && ( */}
-        <div className="flex justify-between items-center">
-          <div className="text-center">
-            <p className="text-text-muted text-xs mb-1">{awayTeam?.team.abbreviation} Timeouts</p>
-            <div className="flex gap-1 justify-center">
-              {[...Array(3)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`w-3 h-3 rounded-full ${
-                    i < ((situation as any)?.awayTimeouts ?? 3) 
-                      ? 'bg-neon-cyan' 
-                      : 'bg-gray-600'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-          
-          {/* Play Type Display */}
-          {getPlayTypeText(lastPlay) && (
-            <div className="flex-1 text-center">
-              <p className="text-text-muted text-xs mb-1">Play Type</p>
-              <p className="font-bold text-sm" style={{ color: playViz.color }}>
-                {getPlayTypeText(lastPlay)}
-              </p>
-            </div>
-          )}
-          
-          <div className="text-center">
-            <p className="text-text-muted text-xs mb-1">{homeTeam?.team.abbreviation} Timeouts</p>
-            <div className="flex gap-1 justify-center">
-              {[...Array(3)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`w-3 h-3 rounded-full ${
-                    i < ((situation as any)?.homeTimeouts ?? 3) 
-                      ? 'bg-neon-pink' 
-                      : 'bg-gray-600'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      {/* )} */}
 
       {/* Football Field */}
       <div className={showGameInfo ? "border-t border-neon-cyan/10 pt-6" : ""}>

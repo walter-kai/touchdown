@@ -334,7 +334,14 @@ const Dashboard: React.FC = () => {
                     </>
                   )}
                   <div>
-                    <h3 className="text-xl font-bold">{game.gameName}</h3>
+                    <h3 className="text-xl font-bold">
+                      {game.gameName?.includes('@') 
+                        ? game.gameName 
+                        : game.awayTeam?.team?.abbreviation && game.homeTeam?.team?.abbreviation
+                        ? `${game.awayTeam.team.abbreviation} @ ${game.homeTeam.team.abbreviation}`
+                        : `Game ${game.gameId}`
+                      }
+                    </h3>
                     <p className="text-sm text-gray-400">
                       {game.picks.length} pick{game.picks.length !== 1 ? 's' : ''} made
                     </p>

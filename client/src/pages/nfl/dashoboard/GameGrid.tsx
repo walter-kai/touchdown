@@ -215,7 +215,7 @@ const GameGrid: React.FC = () => {
           {byeTeams.map((team) => (
             <button
               key={team.id}
-              onClick={() => navigate(`/nfl/team/${team.id}`)}
+              onClick={() => navigate(`/${league}/team/${team.id}`)}
               className="flex items-center gap-2 bg-bg-darker/50 hover:bg-bg-darker border border-neon-pink/20 hover:border-neon-pink/50 rounded px-3 py-1 transition-all flex-shrink-0"
             >
               {team.logo && <img src={team.logo} alt={team.displayName} className="w-5 h-5" />}
@@ -255,7 +255,7 @@ const GameGrid: React.FC = () => {
 						<h2 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{date}</h2>
 						<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
 							{gamesWithTime.map((game) => (
-								<GameGridCard key={game.id} game={game} navigate={navigate} />
+								<GameGridCard key={game.id} game={game} navigate={navigate} league={league} />
 							))}
 						</div>
 					</div>
@@ -274,7 +274,7 @@ const GameGrid: React.FC = () => {
 						<h2 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{date}</h2>
 						<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
 							{gamesWithTime.map((game) => (
-								<GameGridCard key={game.id} game={game} navigate={navigate} />
+								<GameGridCard key={game.id} game={game} navigate={navigate} league={league} />
 							))}
 						</div>
 					</div>
@@ -293,7 +293,7 @@ const GameGrid: React.FC = () => {
 						<h2 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{date}</h2>
 						<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
 							{gamesWithTime.map((game) => (
-								<GameGridCard key={game.id} game={game} navigate={navigate} />
+								<GameGridCard key={game.id} game={game} navigate={navigate} league={league} />
 							))}
 						</div>
 					</div>
@@ -321,9 +321,10 @@ const GameGrid: React.FC = () => {
 interface GameGridCardProps {
   game: Event & { timeKey?: string };
   navigate: (path: string) => void;
+  league: string;
 }
 
-const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
+const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate, league }) => {
   const competition = game.competitions[0];
   const awayTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'away');
   const homeTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'home');
@@ -336,7 +337,7 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
 
   return (
     <button
-      onClick={() => navigate(`/nfl/game/${game.id}`)}
+      onClick={() => navigate(`/${league}/game/${game.id}`)}
       className="relative rounded-md border border-neon-pink/20  bg-bg-dark/50 hover:bg-bg-dark/70 p-3 px-4 transition-all duration-200 text-left w-full"
     >
       {/* Time Header */}

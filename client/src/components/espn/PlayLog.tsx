@@ -163,18 +163,15 @@ const PlayLog: React.FC<PlayLogProps> = ({
           {/* Loading Bar */}
           <div className="mx-2 mb-4">
             <div className="flex items-center gap-3">
-                            <button
-                type="button"
-                onClick={handleManualRefresh}
-                disabled={!refresh || isRefreshing || isLocked}
-                className={`px-3 py-1 min-w-[60px] text-[11px] font-semibold rounded-md border transition-all ${
-                  (!refresh || isRefreshing || isLocked)
-                    ? 'opacity-60 cursor-not-allowed border-white/20 text-white/50'
-                    : 'border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10'
-                }`}
-              >
-                {isRefreshing ? 'Refreshing…' : isLocked ? `${lockRemaining}s` : `Refresh (${remainingSeconds}s)`}
-              </button>
+                              <div
+                              className={`px-3 py-1 min-w-[60px] text-[11px] font-semibold rounded-md border transition-all ${
+                                (!refresh || isRefreshing || isLocked)
+                                ? 'opacity-60 border-white/20 text-white/50'
+                                : 'border-neon-cyan text-neon-cyan'
+                              }`}
+                              >
+                              {isRefreshing ? 'Refreshing…' : isLocked ? `${lockRemaining}s` : `Refresh (${remainingSeconds}s)`}
+                              </div>
               <div className="flex-1">
                 <div className="h-1 bg-bg-darker rounded-full overflow-hidden">
                   <div 
