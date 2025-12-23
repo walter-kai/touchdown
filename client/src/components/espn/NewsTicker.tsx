@@ -28,13 +28,8 @@ const NewsTicker: React.FC<NewsTickerProps> = ({ news }) => {
   if (news.length === 0) return null;
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center gap-2 mx-2">
-        <h1>Latest News</h1>
-        <span className="text-gray-400 text-sm ml-auto">
-          {currentNewsIndex + 1} / {Math.min(news.length, 6)}
-        </span>
-      </div>
+    <div className="">
+
       
       <div className="mx-2 bg-bg-dark rounded-xl border border-neon-pink/30 shadow-[0_0_20px_rgba(250,175,232,0.15)] overflow-hidden h-[100px]">
         <div className="flex items-stretch h-full">

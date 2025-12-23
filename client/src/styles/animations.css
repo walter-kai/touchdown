@@ -118,6 +118,17 @@
   }
 }
 
+@keyframes slide-up-from-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes scale-pulse {
   0%, 100% {
     transform: scale(1);
@@ -158,6 +169,10 @@
 
 .animate-fade-in {
   animation: fade-in 0.4s ease-out;
+}
+
+.animate-slide-up-from-bottom {
+  animation: slide-up-from-bottom 0.4s ease-out;
 }
 
 .animate-fade-in-delayed {

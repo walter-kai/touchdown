@@ -16,7 +16,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
 
   // All available navigation items
   const allNavItems = [
-    // { id: 'back', label: 'Scoreboard', icon: <FaArrowLeft />, action: () => navigate('/nfl') },
+    { id: 'back', label: 'Back to Games', icon: <FaArrowLeft />, action: () => navigate('/nfl') },
     { id: 'info', label: 'Info', icon: <FaInfoCircle /> },
     { id: 'player', label: 'Players', icon: <FaTrophy /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
@@ -33,11 +33,11 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
 
   // Preset configurations
   const presetConfig = {
-    scoreboard: ['info', 'pick', 'odds', 'headtohead'],
-    summary: ['info', 'pick', 'player', 'plays'],
-    team: ['info', 'schedule', 'news'], // Team page shows back, info, schedule, news
-    player: ['info', 'schedule', 'news'], // Player page shows back, overview, game log, news
-    dashboard: ['dashboard', 'games'], // Dashboard/Games navigation
+    scoreboard: ['back', 'info', 'pick', 'odds', 'headtohead'],
+    summary: ['back', 'info', 'pick', 'player', 'plays'],
+    team: ['back', 'info', 'schedule', 'news'],
+    player: ['back', 'info', 'schedule', 'news'],
+    dashboard: ['dashboard', 'games'],
   };
 
   // For upcoming games, hide 'player' and 'plays' tabs but keep 'pick' visible
@@ -53,7 +53,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
     .filter((item): item is NonNullable<typeof item> => item !== undefined);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-bg-dark border-t border-neon-cyan/30 shadow-[0_-2px_24px_0_#00ffe7/20] backdrop-blur-md">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-bg-dark/60 border-t border-neon-cyan/30 shadow-[0_-2px_24px_0_#00ffe7/20] backdrop-blur-md animate-slide-up-from-bottom">
       <div className="max-w-7xl mx-auto px-2 sm:px-4">
         <div className="flex items-center justify-around py-2 sm:py-3 gap-1 sm:gap-2">
           {navItems.map((item) => {
@@ -63,6 +63,12 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
               <button
                 key={item.id}
                 onClick={() => {
+                  // Handle back button with custom action
+                  if (item.id === 'back' && item.action) {
+                    item.action();
+                    return;
+                  }
+                  
                   // Call onTabClick first (to set programmatic scroll flag), then onTabChange
                   if (onTabClick) {
                     onTabClick(item.id as any);

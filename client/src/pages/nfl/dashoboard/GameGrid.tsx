@@ -143,6 +143,13 @@ const GameGrid: React.FC = () => {
 
   // Refresh scoreboard whenever this view is (re)loaded
   useEffect(() => {
+    // Don't fetch on initial mount - wait for WeekNav to set the date/week
+    // This prevents showing previous games before switching to upcoming games
+    if (selectedWeek === null && selectedDate === null && initialLoading) {
+      console.log('Waiting for WeekNav to set date/week...');
+      return;
+    }
+    
     console.log('Effect triggered - fetching with:', { selectedWeek, selectedDate });
     fetchScoreboardData(selectedWeek || undefined, selectedDate || undefined);
   }, [fetchScoreboardData, selectedWeek, selectedDate]);
@@ -185,6 +192,8 @@ const GameGrid: React.FC = () => {
   <>
   <div className="max-w-7xl mx-auto py-2">
 	
+    {/* News Ticker - Moved to Top */}
+  <NewsTicker news={news} />
   {/* Week Navigation - New Calendar Style */}
   <WeekNav 
     onDateSelect={handleDateSelect}
@@ -193,7 +202,7 @@ const GameGrid: React.FC = () => {
 
 
   {/* Teams on Bye - Ticker Banner */}
-  {byeTeams.length > 0 && (
+  {/* {byeTeams.length > 0 && (
     <div className="mb-6 bg-bg-dark/90 rounded-lg border border-neon-pink/30 overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-2">
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -213,10 +222,7 @@ const GameGrid: React.FC = () => {
         </div>
       </div>
     </div>
-  )}
-
-  {/* News Ticker - Moved to Top */}
-  <NewsTicker news={news} />
+  )} */}
 
   {/* Loading State */}
 	{initialLoading && games.length === 0 && <LoadingFootball message="Loading NFL scores..." />}
@@ -254,12 +260,12 @@ const GameGrid: React.FC = () => {
       {/* Upcoming Games */}
 			{upcomingGames.length > 0 && (
 			<div>
-				<h1 className="flex items-center gap-2 mx-2 mb-4">
+				<h2 className="flex items-center gap-2 mx-2 mb-4">
 				Upcoming ({upcomingGames.length})
-				</h1>
+				</h2>
 				{Object.entries(groupGamesByDate(upcomingGames)).map(([date, gamesWithTime]) => (
 					<div key={date} className="mb-6">
-						<h2 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{date}</h2>
+						<h3 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{date}</h3>
 						<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
 							{gamesWithTime.map((game) => (
 								<GameGridCard key={game.id} game={game} navigate={navigate} league={league} />
