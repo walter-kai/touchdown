@@ -4,7 +4,7 @@ import { FaFootballBall } from 'react-icons/fa';
 import axios from 'axios';
 import ScoreboardView from '../../scoreboard/Carousel';
 import SummaryView from '../../summary/Summary';
-import FootballField from '@/components/espn/FootballField';
+import FootballField from '@/pages/espn/gamesThisWeek/FootballField';
 import { useLoading } from '@/providers/LoadingContext';
 import { useLeague } from '@/providers/LeagueContext';
 import { debugLog } from '@/utils/debugLog';
@@ -137,8 +137,14 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
         setPlaysLoaded(true);
         debugLog(`✅ Loaded ${historicalPlays.length} historical plays from ESPN`);
       } catch (error: any) {
-        console.error('Error loading previous plays:', error);
-        // Set playsLoaded to true even on error to prevent infinite retries
+        // Silently handle 404 errors for old games no longer in ESPN API
+        if (error?.response?.status === 404) {
+          debugLog(`⚠️ Game ${gameId} not found in ESPN API (likely an old game) - continuing without plays`);
+        } else {
+          console.error('Error loading previous plays:', error);
+        }
+        // Set empty play log and mark as loaded to prevent infinite retries
+        setPlayLog([]);
         setPlaysLoaded(true);
       } finally {
         hideLoading();
@@ -227,8 +233,12 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
           if (summaryResponse.data.header) {
             game = summaryResponse.data.header as unknown as Event;
           }
-        } catch (summaryErr) {
-          console.error('Error fetching summary data:', summaryErr);
+        } catch (summaryErr: any) {
+          if (summaryErr?.response?.status === 404) {
+            debugLog(`⚠️ Summary not found for game ${gid} (404) - likely an old game`);
+          } else {
+            console.error('Error fetching summary data:', summaryErr);
+          }
         }
       }
     } else {
@@ -247,8 +257,12 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
           if (!game && summaryResponse.data.header) {
             game = summaryResponse.data.header as unknown as Event;
           }
-        } catch (summaryErr) {
-          console.error('Error fetching summary data:', summaryErr);
+        } catch (summaryErr: any) {
+          if (summaryErr?.response?.status === 404) {
+            debugLog(`⚠️ Summary not found for game ${gid} (404) - likely an old game`);
+          } else {
+            console.error('Error fetching summary data:', summaryErr);
+          }
         }
       }
     }
@@ -270,9 +284,12 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
         const { game, usedSummaryApi } = await getGameData(gameId);
         
         if (!game) {
-          setError('Game data not available');
+          // For old games, show a message but don't block the UI
+          debugLog(`⚠️ Game ${gameId} not available from ESPN API - may be an old game`);
+          setError('This game is no longer available in ESPN API. Showing cached data only.');
           hideLoading();
           setIsRefreshing(false);
+          // Don't return - let the component render with whatever data we have
           return;
         }
         

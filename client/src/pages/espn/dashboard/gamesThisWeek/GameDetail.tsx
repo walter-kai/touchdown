@@ -4,7 +4,7 @@ import { FaFootballBall } from 'react-icons/fa';
 import axios from 'axios';
 import ScoreboardView from '../../scoreboard/Carousel';
 import SummaryView from '../../summary/Summary';
-import FootballField from '@/components/nfl/FootballField';
+import FootballField from '@/pages/espn/gamesThisWeek/FootballField';
 import { useLoading } from '@/providers/LoadingContext';
 import { useLeague } from '@/providers/LeagueContext';
 import { debugLog } from '@/utils/debugLog';

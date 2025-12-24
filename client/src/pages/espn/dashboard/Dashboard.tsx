@@ -158,7 +158,7 @@ const Dashboard: React.FC = () => {
 
             // First priority: Check if teamData is stored (includes names & abbreviations)
             if (gamePick.teamData) {
-              // Use stored team data
+              // Use stored team data - no need to fetch from ESPN API
               homeTeam = { 
                 team: { 
                   displayName: gamePick.teamData.homeTeam.name,
@@ -180,23 +180,21 @@ const Dashboard: React.FC = () => {
                 away: gamePick.teamData.awayTeam.abbreviation,
                 home: gamePick.teamData.homeTeam.abbreviation
               });
-            }
-
-            try {
-              // Always fetch from ESPN API to get team names/abbreviations and game status
-              const gameInfoResponse = await axios.get(getSummaryUrl(league, gamePick.gameId));
-              const gameInfo = gameInfoResponse.data;
-              
-              if (gameInfo.header) {
-                const competition = gameInfo.header.competitions?.[0];
-                if (competition) {
-                  const competitors = competition.competitors || [];
-                  const apiHomeTeam = competitors.find((c: any) => c.homeAway === 'home');
-                  const apiAwayTeam = competitors.find((c: any) => c.homeAway === 'away');
-                  
-                  // Use API data for team names/abbreviations
-                  // If we don't have teamData, use API as source of truth
-                  if (!gamePick.teamData) {
+            } else {
+              // Only fetch from ESPN API if we don't have stored teamData
+              // This avoids 404 errors for old games no longer available in ESPN API
+              try {
+                debugLog(`📡 Fetching game info from ESPN API for ${gamePick.gameId}...`);
+                const gameInfoResponse = await axios.get(getSummaryUrl(league, gamePick.gameId));
+                const gameInfo = gameInfoResponse.data;
+                
+                if (gameInfo.header) {
+                  const competition = gameInfo.header.competitions?.[0];
+                  if (competition) {
+                    const competitors = competition.competitors || [];
+                    const apiHomeTeam = competitors.find((c: any) => c.homeAway === 'home');
+                    const apiAwayTeam = competitors.find((c: any) => c.homeAway === 'away');
+                    
                     if (apiHomeTeam) {
                       homeTeam = {
                         ...apiHomeTeam,
@@ -222,18 +220,19 @@ const Dashboard: React.FC = () => {
                     if (apiHomeTeam && apiAwayTeam) {
                       gameName = `${apiAwayTeam.team.abbreviation} @ ${apiHomeTeam.team.abbreviation}`;
                     }
-                  }
-                  
-                  // Determine game status from API
-                  if (competition.status?.type?.state === 'in') {
-                    gameStatus = 'in';
-                  } else if (competition.status?.type?.state === 'pre') {
-                    gameStatus = 'pre';
+                    
+                    // Determine game status from API
+                    if (competition.status?.type?.state === 'in') {
+                      gameStatus = 'in';
+                    } else if (competition.status?.type?.state === 'pre') {
+                      gameStatus = 'pre';
+                    }
                   }
                 }
+              } catch (err) {
+                console.warn(`Could not fetch game info for ${gamePick.gameId} - using fallback`, err);
+                // Fall through to fallback logic below
               }
-            } catch (err) {
-              console.warn(`Could not fetch game info for ${gamePick.gameId}`, err);
             }
             
             // Final fallback - construct from team info if available
@@ -338,11 +337,33 @@ const Dashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto mt-2 px-2">
       {/* Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">
-          Welcome back{user?.displayName ? `, ${user.displayName}` : ''}! 🏈
-        </h1>
-        <p className="text-gray-400">Here's your fantasy picks overview</p>
+      <div className="mb-8 flex items-center gap-6">
+        {/* Dancing gif with profile picture as head */}
+        <div className="relative flex-shrink-0">
+          <img
+            src="/assets/football_dance.gif"
+            alt="Dancing"
+            className="w-24 h-24 object-contain"
+          />
+          {user?.photoUrl && (
+            <img
+              src={user.photoUrl}
+              alt={user.displayName}
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full border-2 border-neon-cyan shadow-lg object-cover"
+            />
+          )}
+        </div>
+        
+        {/* Welcome text */}
+        <div className="flex-1">
+          <h2 className="text-xl sm:text-2xl text-gray-400 font-normal mb-1">
+            Welcome back
+          </h2>
+          <h1 className="text-3xl sm:text-5xl font-bold text-neon-cyan">
+            {user?.displayName || 'Player'}!
+          </h1>
+          <p className="text-gray-400 text-sm sm:text-base mt-2">Here's your fantasy picks overview</p>
+        </div>
       </div>
 
       {/* Stats Overview */}
@@ -401,69 +422,76 @@ const Dashboard: React.FC = () => {
             key={game.gameId}
             className="bg-bg-dark/50 border border-neon-cyan/20 rounded-lg overflow-hidden hover:border-neon-cyan/50 transition-all"
           >
-            {/* Game Header - Split into clickable areas */}
-            <div className="flex items-stretch">
-              {/* Left: Game Info - Clickable to navigate to game */}
-              <button
-                onClick={() => navigate(`/${game.league || 'nfl'}/game/${game.gameId}`)}
-                className="flex items-center gap-4 flex-1 p-4 hover:bg-neon-cyan/5 transition-all text-left"
-              >
-                {/* Team Logos */}
+            {/* Game Header - Mobile Optimized */}
+            <button
+              onClick={() => navigate(`/${game.league || 'nfl'}/game/${game.gameId}`)}
+              className="w-full p-4 hover:bg-neon-cyan/5 transition-all text-left"
+            >
+              <div className="flex items-center gap-3">
+                {/* Team Logos with abbreviations below */}
                 {game.awayTeam && game.homeTeam && (
-                  <div className="flex items-center gap-2">
-                    <img 
-                      src={game.awayTeam.team.logo} 
-                      alt={game.awayTeam.team.abbreviation}
-                      className="w-10 h-10"
-                    />
-                    <span className="text-lg font-bold text-gray-400">@</span>
-                    <img 
-                      src={game.homeTeam.team.logo} 
-                      alt={game.homeTeam.team.abbreviation}
-                      className="w-10 h-10"
-                    />
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex flex-col items-center gap-1">
+                      <img 
+                        src={game.awayTeam.team.logo} 
+                        alt={game.awayTeam.team.abbreviation}
+                        className="w-12 h-12"
+                      />
+                      <span className="text-[10px] font-semibold text-gray-400">
+                        {game.awayTeam.team.abbreviation}
+                      </span>
+                    </div>
+                    <span className="text-base font-bold text-gray-400">@</span>
+                    <div className="flex flex-col items-center gap-1">
+                      <img 
+                        src={game.homeTeam.team.logo} 
+                        alt={game.homeTeam.team.abbreviation}
+                        className="w-12 h-12"
+                      />
+                      <span className="text-[10px] font-semibold text-gray-400">
+                        {game.homeTeam.team.abbreviation}
+                      </span>
+                    </div>
                   </div>
                 )}
                 
-                {/* Game Details */}
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-white">
-                    {game.gameName}
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    {game.picks.length} pick{game.picks.length !== 1 ? 's' : ''} • {' '}
-                    {Array.from(new Set(game.picks.flatMap(pick => pick.players.map(p => p.id)))).length} players
-                  </p>
+                {/* Picks and Players info */}
+                <div className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                  <div>{game.picks.length} pick{game.picks.length !== 1 ? 's' : ''}</div>
+                  <div>{Array.from(new Set(game.picks.flatMap(pick => pick.players.map(p => p.id)))).length} players</div>
                 </div>
-
+                
+                {/* Spacer */}
+                <div className="flex-1"></div>
+                
                 {/* Score Display */}
-                <div className="text-center px-6">
-                  <div className="flex items-center gap-2">
-                    <FaTrophy className="text-neon-pink text-xl" />
-                    <CountUpScore 
-                      value={game.totalUserScore} 
-                      className="text-3xl font-bold text-neon-pink"
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">Total Score</p>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <FaTrophy className="text-neon-pink text-lg" />
+                  <CountUpScore 
+                    value={game.totalUserScore} 
+                    className="text-2xl font-bold text-neon-pink"
+                  />
+                  <p className="text-[10px] text-gray-400">pts</p>
                 </div>
-              </button>
-
-              {/* Right: Expand/Collapse Button - Full height */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleGameExpansion(game.gameId, e);
-                }}
-                className="flex items-center justify-center px-6 hover:bg-neon-cyan/10 transition-all border-l border-neon-cyan/20"
-              >
-                {isExpanded ? (
-                  <FaChevronUp className="text-neon-cyan text-xl" />
-                ) : (
-                  <FaChevronDown className="text-neon-cyan text-xl" />
-                )}
-              </button>
-            </div>
+                
+                {/* Expand/Collapse Button */}
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleGameExpansion(game.gameId, e);
+                  }}
+                  className="p-2 hover:bg-neon-cyan/10 rounded transition-all flex-shrink-0 cursor-pointer"
+                  role="button"
+                  aria-label="Toggle game details"
+                >
+                  {isExpanded ? (
+                    <FaChevronUp className="text-neon-cyan text-lg" />
+                  ) : (
+                    <FaChevronDown className="text-neon-cyan text-lg" />
+                  )}
+                </div>
+              </div>
+            </button>
 
             {/* Expanded Players Section */}
             {isExpanded && (

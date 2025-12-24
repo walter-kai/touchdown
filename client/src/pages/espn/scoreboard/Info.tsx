@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
-import FootballField from '@/components/espn/FootballField';
+import FootballField from '@/pages/espn/gamesThisWeek/FootballField';
 import type { Play } from '@/types/espn/playByplay';
 import PlayLog from '@/components/espn/PlayLog';
 import GameLeaders from '@/pages/espn/summary/GameLeaders';

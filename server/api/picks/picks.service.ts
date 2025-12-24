@@ -251,65 +251,80 @@ export async function getUserPickHistory(userId: string, gameId: string) {
  * 3. userScore - total accumulated score that the athlete generated for the user (all sessions)
  */
 export async function calculateAthleteScores(userId: string, gameId: string, playLog: any[]) {
-  const result = await getUserPicksForGame(userId, gameId);
+  try {
+    const result = await getUserPicksForGame(userId, gameId);
 
-  if (!result || !result.picks || result.picks.length === 0) {
-    logger.info(`No picks found for user ${userId} in game ${gameId}`);
-    return { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 };
-  }
-
-  const picks = result.picks;
-
-  // Get the latest pick (current session)
-  const latestPick = picks[picks.length - 1];
-  const currentPlayers = new Set<string>(latestPick.players.map((p: any) => p.id as string));
-  
-  // Calculate game scores (all plays for each athlete)
-  const gameScores: Record<string, number> = {};
-  const athletePlayCounts: Record<string, number> = {};
-  
-  playLog.forEach(play => {
-    if (play.athletesInvolved && play.athletesInvolved.length > 0) {
-      play.athletesInvolved.forEach((athlete: any) => {
-        if (!athletePlayCounts[athlete.id]) athletePlayCounts[athlete.id] = 0;
-        athletePlayCounts[athlete.id]++;
-      });
+    if (!result || !result.picks || result.picks.length === 0) {
+      logger.info(`No picks found for user ${userId} in game ${gameId}`);
+      return { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 };
     }
-  });
-  
-  Object.keys(athletePlayCounts).forEach(athleteId => {
-    gameScores[athleteId] = athletePlayCounts[athleteId];
-  });
 
-  // Calculate session scores (time-filtered for current pick)
-  const sessionScores: Record<string, number> = {};
-  
-  Array.from(currentPlayers).forEach((playerId: string) => {
-    sessionScores[playerId] = 0;
+    const picks = result.picks;
+
+    // Get the latest pick (current session)
+    const latestPick = picks[picks.length - 1];
+    const currentPlayers = new Set<string>(latestPick.players.map((p: any) => p.id as string));
     
-    // All players in a pick submission share the same timestamp (when pick was locked)
-    if (!latestPick.timestamp) {
-      logger.warn(`No timestamp found for latest pick in session score calculation`);
-      return;
-    }
+    // Calculate game scores (all plays for each athlete)
+    const gameScores: Record<string, number> = {};
+    const athletePlayCounts: Record<string, number> = {};
     
-    const lockTimeMs = new Date(latestPick.timestamp).getTime();
-    
-    // Count plays that happened AFTER the pick was locked
     playLog.forEach(play => {
-      if (!play.athletesInvolved) return;
-      
-      const hasPlayer = play.athletesInvolved.some((a: any) => a.id === playerId);
-      if (!hasPlayer) return;
-      
-      const playTime = new Date(play.timestamp).getTime();
-      
-      // Check if play happened after lock time
-      if (playTime >= lockTimeMs) {
-        sessionScores[playerId]++;
+      try {
+        if (play.athletesInvolved && play.athletesInvolved.length > 0) {
+          play.athletesInvolved.forEach((athlete: any) => {
+            if (athlete?.id) {
+              if (!athletePlayCounts[athlete.id]) athletePlayCounts[athlete.id] = 0;
+              athletePlayCounts[athlete.id]++;
+            }
+          });
+        }
+      } catch (err) {
+        logger.warn(`Error processing play for scoring: ${err}`);
       }
     });
-  });
+    
+    Object.keys(athletePlayCounts).forEach(athleteId => {
+      gameScores[athleteId] = athletePlayCounts[athleteId];
+    });
+
+    // Calculate session scores (time-filtered for current pick)
+    const sessionScores: Record<string, number> = {};
+    
+    Array.from(currentPlayers).forEach((playerId: string) => {
+      sessionScores[playerId] = 0;
+      
+      // All players in a pick submission share the same timestamp (when pick was locked)
+      if (!latestPick.timestamp) {
+        logger.warn(`No timestamp found for latest pick in session score calculation`);
+        return;
+      }
+      
+      try {
+        const lockTimeMs = new Date(latestPick.timestamp).getTime();
+        
+        // Count plays that happened AFTER the pick was locked
+        playLog.forEach(play => {
+          try {
+            if (!play.athletesInvolved) return;
+            
+            const hasPlayer = play.athletesInvolved.some((a: any) => a?.id === playerId);
+            if (!hasPlayer) return;
+            
+            const playTime = new Date(play.timestamp).getTime();
+            
+            // Check if play happened after lock time
+            if (playTime >= lockTimeMs) {
+              sessionScores[playerId]++;
+            }
+          } catch (err) {
+            // Skip plays with invalid timestamps
+          }
+        });
+      } catch (err) {
+        logger.warn(`Error calculating session score for player ${playerId}: ${err}`);
+      }
+    });
 
   // Calculate user scores (accumulated across all sessions)
   const userScores: Record<string, number> = {};
@@ -399,6 +414,11 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
     userScores,
     totalScore
   };
+  } catch (error) {
+    logger.error(`Error calculating athlete scores for user ${userId} in game ${gameId}: ${error}`);
+    // Return empty scores on error rather than throwing
+    return { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 };
+  }
 }
 
 /**
