@@ -215,10 +215,19 @@ export const getAllUserPicksWithScoresController = catchAsync(async (req: Reques
     throw new ApiError(400, 'Missing user email from token');
   }
 
+  // Helper to normalize athlete id from ESPN $ref or direct id
+  const extractAthleteIdFromRef = (ref?: string): string => {
+    if (!ref || typeof ref !== 'string') return '';
+    const sanitized = ref.split('?')[0];
+    const parts = sanitized.split('/').filter(Boolean);
+    return parts[parts.length - 1] || '';
+  };
+
   // Create a function that fetches play-by-play from ESPN Summary API
-  const getPlayByPlayFromESPN = async (gameId: string) => {
-    const sport = league === 'nba' ? 'basketball' : 'football';
-    const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/summary?event=${gameId}`;
+  const getPlayByPlayFromESPN = async (gameId: string, meta?: any) => {
+    const gameLeague = meta?.teamData?.league || league;
+    const sport = gameLeague === 'nba' ? 'basketball' : 'football';
+    const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${gameLeague}/summary?event=${gameId}`;
     
     try {
       const response = await axios.get(summaryUrl);
@@ -229,16 +238,23 @@ export const getAllUserPicksWithScoresController = catchAsync(async (req: Reques
       }
 
       // Transform plays to expected format with athletesInvolved
-      const plays = summaryData.plays.map((play: any) => ({
-        ...play,
-        athletesInvolved: play.participants?.map((p: any) => ({
-          id: p.athlete?.id,
-          displayName: play.text
-        })) || [],
-        timestamp: play.wallclock || new Date().toISOString(),
-        quarter: play.period?.number || 0,
-        clock: play.clock?.displayValue || '0:00'
-      }));
+      const plays = summaryData.plays.map((play: any) => {
+        const athletesInvolved = (play.participants || [])
+          .map((p: any) => {
+            const athleteId = p.athlete?.id || extractAthleteIdFromRef(p.athlete?.$ref);
+            if (!athleteId) return null;
+            return { id: athleteId, displayName: play.text };
+          })
+          .filter(Boolean);
+
+        return {
+          ...play,
+          athletesInvolved,
+          timestamp: play.wallclock || new Date().toISOString(),
+          quarter: play.period?.number || 0,
+          clock: play.clock?.displayValue || '0:00'
+        };
+      });
 
       return { plays };
     } catch (error) {

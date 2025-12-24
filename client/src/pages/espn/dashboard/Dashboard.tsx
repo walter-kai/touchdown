@@ -345,7 +345,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto mt-2 px-2">
       {/* Welcome Section */}
-      <div className="mb-4 flex items-center gap-6">
+      <div className="flex items-center gap-6">
         {/* Dancing gif with profile picture as head */}
         <div className="relative flex-shrink-0">
           <img

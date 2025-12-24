@@ -480,7 +480,10 @@ export async function getAllUserPicksAcrossGames(userId: string) {
  * Get all user picks with scores calculated for each game
  * OPTIMIZED: Single query for all picks, then calculates scores in memory
  */
-export async function getAllUserPicksWithScores(userId: string, getPlayByPlayFn: (gameId: string) => Promise<any>) {
+export async function getAllUserPicksWithScores(
+  userId: string,
+  getPlayByPlayFn: (gameId: string, meta?: any) => Promise<any>
+) {
   const db = admin.firestore();
   
   try {
@@ -517,7 +520,7 @@ export async function getAllUserPicksWithScores(userId: string, getPlayByPlayFn:
 
         try {
           // Fetch play-by-play data for score calculation
-          const playByPlayData = await getPlayByPlayFn(gameId);
+          const playByPlayData = await getPlayByPlayFn(gameId, data);
           
           if (!playByPlayData || !playByPlayData.plays) {
             logger.warn(`No play-by-play data for game ${gameId}`);
@@ -580,6 +583,25 @@ export async function getAllUserPicksWithScores(userId: string, getPlayByPlayFn:
 async function calculateAthleteScoresFromPicks(picks: any[], playLog: any[], userId: string, gameId: string) {
   if (picks.length === 0) {
     return { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 };
+  }
+
+  // If no play-by-play is available (old games / ESPN 404), fall back to stored pick total
+  if (!playLog || playLog.length === 0) {
+    const latestPick = picks[picks.length - 1];
+    const storedTotal = Number(latestPick?.totalScore || 0);
+    const userScores: Record<string, number> = {};
+    // We cannot allocate per-athlete without plays; keep per-athlete zero but surface total for dashboard
+    latestPick?.players?.forEach((p: any) => {
+      if (p?.id) userScores[p.id] = 0;
+    });
+
+    logger.info(`No play log for game ${gameId}, using stored totalScore=${storedTotal} for user ${userId}`);
+    return {
+      gameScores: {},
+      sessionScores: {},
+      userScores,
+      totalScore: storedTotal,
+    };
   }
 
   // Get the latest pick (current session)
