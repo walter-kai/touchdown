@@ -49,6 +49,8 @@ interface PlayerPickProps {
     logo: string;
     color: string;
   };
+  gameStatus: string;
+  gameStartDate: string;
   isExpanded: boolean;
   onToggle: () => void;
   playLog: Play[];
@@ -308,6 +310,8 @@ const YourPicks = forwardRef<{ openRoster: () => void }, PlayerPickProps>((
   awayTeamId,
   homeTeamInfo,
   awayTeamInfo,
+  gameStatus,
+  gameStartDate,
   isExpanded,
   onToggle,
   playLog,
@@ -339,6 +343,53 @@ ref
   const [showGameLog, setShowGameLog] = useState(false);
   const [allPlayerScores, setAllPlayerScores] = useState<Record<string, number>>({});
   const rosterSelectorRef = React.useRef<HTMLDivElement>(null);
+
+  // Pre-game lock logic
+  const normalizedGameStatus = (gameStatus || '').toLowerCase();
+  const isGameLiveOrDone = ['in', 'post', 'final', 'completed', 'end'].includes(normalizedGameStatus);
+  const isPreGame = !isGameLiveOrDone;
+  const preGameUnlockTimestamp = React.useMemo(() => {
+    if (!gameStartDate) return null;
+    const timestamp = new Date(gameStartDate).getTime() - 2 * 60 * 1000;
+    console.log('YourPicks - Game start:', gameStartDate, 'Unlock timestamp:', new Date(timestamp).toISOString(), 'Diff from now:', timestamp - Date.now());
+    return timestamp;
+  }, [gameStartDate]);
+  const [preGameCountdownMs, setPreGameCountdownMs] = React.useState<number | null>(null);
+
+  // Update countdown
+  React.useEffect(() => {
+    if (!isPreGame || !preGameUnlockTimestamp) {
+      setPreGameCountdownMs(null);
+      return;
+    }
+    
+    const updateCountdown = () => {
+      const diff = preGameUnlockTimestamp - Date.now();
+      setPreGameCountdownMs(diff > 0 ? diff : 0);
+    };
+    
+    updateCountdown();
+    const timerId = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timerId);
+  }, [isPreGame, preGameUnlockTimestamp]);
+
+  const isPreGameLocked = isPreGame && (
+    !preGameUnlockTimestamp || Date.now() < preGameUnlockTimestamp
+  );
+
+  const formatPreGameCountdown = (ms: number) => {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const hours = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    if (hours > 0) {
+      return `${hours}h ${mins}m ${secs}s`;
+    } else if (mins > 0) {
+      return `${mins}m ${secs}s`;
+    } else {
+      return `${secs}s`;
+    }
+  };
 
   // Expose method to open roster via ref
   useImperativeHandle(ref, () => ({
@@ -913,6 +964,42 @@ ref
 
   if (loading) {
     return <LoadingFootball message="Loading players..." />;
+  }
+
+  // Show countdown panel when game hasn't started
+  if (isPreGameLocked) {
+    const preGameUnlockDate = preGameUnlockTimestamp ? new Date(preGameUnlockTimestamp) : null;
+    return (
+      <div className="px-4 pt-12">
+        <div className="bg-gradient-to-r from-neon-cyan/10 via-bg-darkest to-neon-pink/10 border border-neon-cyan/30 rounded-2xl shadow-[0_0_24px_rgba(0,255,231,0.25)] p-6">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-neon-cyan/20 border-2 border-neon-cyan flex items-center justify-center">
+                <FaClock className="text-neon-cyan text-xl" />
+              </div>
+              <div>
+                <div className="text-white font-bold text-lg leading-tight">Kickoff Countdown</div>
+                <div className="text-text-muted text-sm">
+                  Picks unlock 2 minutes before kickoff
+                  {preGameUnlockDate ? ` (${preGameUnlockDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })})` : ''}
+                </div>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-neon-cyan text-4xl font-mono leading-none">
+                {preGameCountdownMs !== null && preGameCountdownMs > 0 ? formatPreGameCountdown(preGameCountdownMs) : '0s'}
+              </div>
+              <div className="text-text-muted text-xs mt-1">Until picks open</div>
+            </div>
+          </div>
+          {gameStartDate && (
+            <div className="mt-4 text-text-muted text-xs">
+              Game starts at {new Date(gameStartDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} • Your picks will be available right after this timer hits 00:00.
+            </div>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (

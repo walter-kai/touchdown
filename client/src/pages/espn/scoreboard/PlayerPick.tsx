@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import axios from 'axios';
 import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus, FaCrosshairs, FaHandPointer, FaBolt, FaChartLine } from 'react-icons/fa';
 import LoadingFootball from '../../../components/common/LoadingFootball';
@@ -37,10 +37,20 @@ const HTML5toTouch = {
 
 interface PlayerPickProps {
   gameId: string;
-  teams: {
-    home: any;
-    away: any;
+  homeTeamId: string;
+  awayTeamId: string;
+  homeTeamInfo: {
+    name: string;
+    logo: string;
+    color: string;
   };
+  awayTeamInfo: {
+    name: string;
+    logo: string;
+    color: string;
+  };
+  gameStatus: string;
+  gameStartDate: string;
   isExpanded: boolean;
   onToggle: () => void;
   playLog: Play[];
@@ -59,9 +69,25 @@ interface PlayerPickProps {
     awayTimeouts?: number;
     homeTimeouts?: number;
   };
+  homeTeam?: {
+    id: string;
+    team: {
+      displayName: string;
+      abbreviation: string;
+      logo?: string;
+      logos?: Array<{ href: string }>;
+    };
+  };
+  awayTeam?: {
+    id: string;
+    team: {
+      displayName: string;
+      abbreviation: string;
+      logo?: string;
+      logos?: Array<{ href: string }>;
+    };
+  };
   getTeamLogo?: (team: any) => string;
-  gameStatus?: string;
-  gameStartTime?: string;
 }
 
 const ItemTypes = {
@@ -272,29 +298,20 @@ const MyPreview = () => {
 const PlayerPick = forwardRef<{ openRoster: () => void }, PlayerPickProps>(
   ({
   gameId,
-  teams,
+  homeTeamId,
+  awayTeamId,
+  homeTeamInfo,
+  awayTeamInfo,
+  gameStatus,
+  gameStartDate,
   isExpanded,
   onToggle,
   playLog,
   situation,
+  homeTeam,
+  awayTeam,
   getTeamLogo,
-  gameStatus,
-  gameStartTime,
 }, ref) => {
-  const homeTeam = teams?.home;
-  const awayTeam = teams?.away;
-  const homeTeamId = homeTeam?.id || '';
-  const awayTeamId = awayTeam?.id || '';
-  const homeTeamInfo = {
-    name: homeTeam?.team?.displayName || '',
-    logo: homeTeam ? (getTeamLogo ? getTeamLogo(homeTeam) : homeTeam?.team?.logo || '') : '',
-    color: homeTeam?.team?.color || '00ffe7'
-  };
-  const awayTeamInfo = {
-    name: awayTeam?.team?.displayName || '',
-    logo: awayTeam ? (getTeamLogo ? getTeamLogo(awayTeam) : awayTeam?.team?.logo || '') : '',
-    color: awayTeam?.team?.color || 'faafe8'
-  };
   const { league } = useLeague();
   const [homeRoster, setHomeRoster] = useState<Athlete[]>([]);
   const [awayRoster, setAwayRoster] = useState<Athlete[]>([]);
@@ -313,8 +330,6 @@ const PlayerPick = forwardRef<{ openRoster: () => void }, PlayerPickProps>(
   const [isViewTransitioning, setIsViewTransitioning] = useState(false);
   const [isLockingIn, setIsLockingIn] = useState(false);
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
-  const [pregameCountdown, setPregameCountdown] = useState(0);
-  const [isPregameLocked, setIsPregameLocked] = useState(false);
 
   // MUST call useAuth at the top before any conditional returns (Rules of Hooks)
   const { isAuthenticated, triggerLoginModal } = useAuth();
@@ -532,41 +547,6 @@ const PlayerPick = forwardRef<{ openRoster: () => void }, PlayerPickProps>(
       fetchRoster(awayTeamId, setAwayRoster)
     ]).finally(() => setLoading(false));
   }, [homeTeamId, awayTeamId]);
-
-  useEffect(() => {
-    const normalizedState = gameStatus?.toLowerCase() || '';
-    if (normalizedState !== 'pre' || !gameStartTime) {
-      setIsPregameLocked(false);
-      setPregameCountdown(0);
-      return;
-    }
-
-    const startMs = new Date(gameStartTime).getTime();
-    if (!Number.isFinite(startMs)) {
-      setIsPregameLocked(false);
-      setPregameCountdown(0);
-      return;
-    }
-
-    const unlockMs = startMs - 2 * 60 * 1000;
-    let intervalId: number | undefined;
-
-    const tick = () => {
-      const remainingSeconds = Math.max(0, Math.ceil((unlockMs - Date.now()) / 1000));
-      setPregameCountdown(remainingSeconds);
-      setIsPregameLocked(remainingSeconds > 0);
-      if (remainingSeconds <= 0 && intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-
-    tick();
-    intervalId = window.setInterval(tick, 1000);
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [gameStatus, gameStartTime]);
 
   const handlePlayerSelect = (player: Athlete) => {
     if (isLocked) return;
@@ -913,68 +893,6 @@ const PlayerPick = forwardRef<{ openRoster: () => void }, PlayerPickProps>(
     );
   }
 
-  // Show countdown gate before picks open
-  const formatPregameTime = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  if (isPregameLocked) {
-    const startLabel = gameStartTime
-      ? new Date(gameStartTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })
-      : '';
-
-    return (
-      <div className="flex items-center justify-center px-6">
-        <div className="max-w-md w-full">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neon-cyan/20 via-bg-darkest to-neon-pink/20 border-2 border-neon-cyan/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-6 sm:p-8">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-neon-cyan/10 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-neon-pink/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-
-            <div className="relative z-10 space-y-4">
-              <div className="flex justify-center">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-neon-cyan blur-xl opacity-50 animate-pulse"></div>
-                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-neon-cyan to-neon-pink flex items-center justify-center shadow-lg">
-                    <FaClock className="text-bg-darkest text-2xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-center space-y-2">
-                <h1>Picks open soon</h1>
-                <p className="text-text-muted text-base">
-                  Picks unlock 2 minutes before kickoff. You can start selecting once the timer hits zero.
-                </p>
-                {startLabel && (
-                  <p className="text-text-light text-sm">Scheduled start: {startLabel}</p>
-                )}
-              </div>
-
-              <div className="bg-bg-dark/70 rounded-xl border border-neon-cyan/30 p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-neon-cyan/20 border-2 border-neon-cyan flex items-center justify-center">
-                    <FaUnlock className="text-neon-cyan text-sm" />
-                  </div>
-                  <div>
-                    <div className="text-white font-bold text-sm">Picks unlock in</div>
-                    <div className="text-text-muted text-xs">We'll automatically switch to the player picker.</div>
-                  </div>
-                </div>
-                <div className="text-neon-cyan text-3xl font-bold font-mono">
-                  {formatPregameTime(pregameCountdown)}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       {/* Your Picks Section */}
@@ -985,6 +903,8 @@ const PlayerPick = forwardRef<{ openRoster: () => void }, PlayerPickProps>(
         awayTeamId={awayTeamId}
         homeTeamInfo={homeTeamInfo}
         awayTeamInfo={awayTeamInfo}
+        gameStatus={gameStatus}
+        gameStartDate={gameStartDate}
         isExpanded={isExpanded}
         onToggle={onToggle}
         playLog={playLog}

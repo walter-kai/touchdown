@@ -241,13 +241,26 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                 <PlayerPick
                   ref={playerPickRef}
                   gameId={event.id}
-                  teams={{ home: homeTeam, away: awayTeam }}
-                  gameStatus={statusState}
-                  gameStartTime={competition.date}
+                  homeTeamId={homeTeam.id}
+                  awayTeamId={awayTeam.id}
+                  homeTeamInfo={{
+                    name: homeTeam.team.displayName,
+                    logo: getTeamLogo(homeTeam),
+                    color: homeTeam.team.color || '00ffe7'
+                  }}
+                  awayTeamInfo={{
+                    name: awayTeam.team.displayName,
+                    logo: getTeamLogo(awayTeam),
+                    color: awayTeam.team.color || 'faafe8'
+                  }}
+                  gameStatus={statusState || 'pre'}
+                  gameStartDate={competition.date}
                   isExpanded={isPickExpanded}
                   onToggle={() => setIsPickExpanded(!isPickExpanded)}
                   playLog={playLog}
                   situation={safeSituation}
+                  homeTeam={homeTeam}
+                  awayTeam={awayTeam}
                   getTeamLogo={getTeamLogo}
                 />
               )}

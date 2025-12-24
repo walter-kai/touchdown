@@ -416,6 +416,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                         logo: getTeamLogo(awayTeam),
                         color: awayTeam.team.color || 'faafe8'
                       }}
+                      gameStatus={gameStatus || 'pre'}
+                      gameStartDate={competition.date}
                       isExpanded={isPickExpanded}
                       onToggle={() => setIsPickExpanded(!isPickExpanded)}
                       playLog={playLog}
