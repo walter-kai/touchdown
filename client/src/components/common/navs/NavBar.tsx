@@ -58,6 +58,7 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
         <div className="flex items-center justify-around py-2 sm:py-3 gap-1 sm:gap-2">
           {navItems.map((item) => {
             const isActive = item.id === activeTab;
+            const isBackButton = item.id === 'back';
             
             return (
               <button
@@ -79,16 +80,18 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
                   flex flex-col items-center justify-center gap-1 sm:gap-1.5 
                   px-2 sm:px-4 py-2 sm:py-2.5 rounded-lg 
                   transition-all duration-200 min-w-0 flex-1
-                  ${isActive 
+                  ${isBackButton
+                    ? 'btn-purple'
+                    : isActive 
                     ? 'bg-neon-cyan text-bg-darkest shadow-[0_0_12px_#00ffe7]' 
                     : 'text-neon-cyan hover:bg-neon-cyan/10'
                   }
                 `}
               >
-                <span className={`text-base sm:text-xl ${isActive ? 'text-bg-darkest' : ''}`}>
+                <span className={`text-base sm:text-xl ${isActive && !isBackButton ? 'text-bg-darkest' : ''}`}>
                   {item.icon}
                 </span>
-                <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight truncate max-w-full ${isActive ? 'text-bg-darkest' : ''}`}>
+                <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight truncate max-w-full ${isActive && !isBackButton ? 'text-bg-darkest' : ''}`}>
                   {item.label}
                 </span>
               </button>

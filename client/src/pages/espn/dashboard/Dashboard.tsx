@@ -447,6 +447,13 @@ const Dashboard: React.FC = () => {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <div className="flex flex-col items-center gap-1">
                       <img 
+                        src={game.league === 'nfl' ? '/logos/logo-nfl.svg' : '/logos/logo-nba.svg'} 
+                        alt={game.league?.toUpperCase()}
+                        className="w-12 h-6 absolute -translate-y-[50px] translate-x-2 px-3 py-0 bg-bg-dark/50 rounded-md border border-neon-cyan/30"
+                      />
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <img 
                         src={game.awayTeam.team.logo} 
                         alt={game.awayTeam.team.abbreviation}
                         className="w-12 h-12"
