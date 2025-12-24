@@ -173,6 +173,15 @@ export const getScores = catchAsync(async (req: Request, res: Response) => {
   // This allows us to return the user's picks and accumulated scores
   try {
     const scores = await calculateAthleteScores(user.email, gameId, plays);
+    
+    console.log(`[Scoring] Returning scores for game ${gameId}:`, {
+      gameScoresCount: Object.keys(scores.gameScores).length,
+      sessionScoresCount: Object.keys(scores.sessionScores).length,
+      userScoresCount: Object.keys(scores.userScores).length,
+      totalScore: scores.totalScore,
+      sampleGameScores: Object.entries(scores.gameScores).slice(0, 3)
+    });
+    
     return res.status(200).json({ 
       ok: true, 
       ...scores,

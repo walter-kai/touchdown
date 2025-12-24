@@ -47,6 +47,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [userPickIds, setUserPickIds] = useState<Set<string>>(new Set());
   const [currentPickIds, setCurrentPickIds] = useState<Set<string>>(new Set()); // Currently active picks only
+  const [playerDetailsMap, setPlayerDetailsMap] = useState<Map<string, any>>(new Map()); // Store full player details
   const [isLoading, setIsLoading] = useState(true);
   
   // Use picks context for scores
@@ -80,6 +81,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
         
         // Extract players from the most recent pick submission
         let athleteIds: string[] = [];
+        const playerDetails = new Map<string, any>();
         
         if (picksResponse.data?.picks?.picks && picksResponse.data.picks.picks.length > 0) {
           // Get the most recent pick (last in array)
@@ -89,20 +91,30 @@ const TopPicks: React.FC<TopPicksProps> = ({
           // Extract CURRENT pick IDs from latest submission
           const currentIds = new Set<string>(players.map((p: any) => p.id).filter(Boolean));
           
-          // Collect ALL unique player IDs across ALL pick submissions
+          // Collect ALL unique player IDs across ALL pick submissions AND their details
           const allPickSubmissions = picksResponse.data.picks.picks;
           const allPlayerIds = new Set<string>();
           
           allPickSubmissions.forEach((pick: any) => {
             const pickPlayers = pick.players || [];
             pickPlayers.forEach((p: any) => {
-              if (p.id) allPlayerIds.add(p.id);
+              if (p.id) {
+                allPlayerIds.add(p.id);
+                // Store full player details
+                if (!playerDetails.has(p.id)) {
+                  playerDetails.set(p.id, p);
+                }
+              }
             });
             
             // Also include players from playerHistory in each pick submission
             const pickHistory = pick.playerHistory || {};
             Object.keys(pickHistory).forEach(playerId => {
               allPlayerIds.add(playerId);
+              // Store player details from history
+              if (pickHistory[playerId] && !playerDetails.has(playerId)) {
+                playerDetails.set(playerId, pickHistory[playerId]);
+              }
             });
           });
           
@@ -111,6 +123,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
           debugLog(`✅ Found ${allPlayerIds.size} total unique players across ${allPickSubmissions.length} pick submissions`);
           debugLog('📚 All player IDs ever picked:', athleteIds);
           debugLog('🎯 Current active picks:', Array.from(currentIds));
+          debugLog('👥 Player details collected:', playerDetails.size);
           
           setCurrentPickIds(currentIds);
         } else {
@@ -119,6 +132,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
         
         debugLog('🎯 Athlete IDs from picks:', athleteIds);
         setUserPickIds(new Set(athleteIds));
+        setPlayerDetailsMap(playerDetails);
         
         // Fetch scores from API
         await fetchScores(gameId);
@@ -135,6 +149,11 @@ const TopPicks: React.FC<TopPicksProps> = ({
 
   // Calculate top picks from play log using context scores
   const topPicks = useMemo(() => {
+    // Don't calculate if still loading
+    if (isLoading) {
+      return [];
+    }
+
     debugLog('🔄 Recalculating top picks using context scores...');
     debugLog('📊 User pick IDs:', Array.from(userPickIds));
     debugLog('📝 Total plays in log:', playLog.length);
@@ -143,7 +162,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
     const scores = getScores(gameId);
     
     if (!scores) {
-      console.warn('⚠️ No scores available from context yet');
+      debugLog('⚠️ No scores available from context yet');
       return [];
     }
 
@@ -152,6 +171,28 @@ const TopPicks: React.FC<TopPicksProps> = ({
     // Build a map of all athletes with scores
     const athleteScores = new Map<string, PlayerScore>();
 
+    // First, add all user picks with their stored details
+    playerDetailsMap.forEach((playerDetail, playerId) => {
+      const hasScore = userPickIds.has(playerId);
+      const isCurrentPick = currentPickIds.has(playerId);
+      
+      athleteScores.set(playerId, {
+        id: playerId,
+        fullName: playerDetail.fullName || playerDetail.displayName || 'Unknown',
+        displayName: playerDetail.displayName || playerDetail.shortName || 'Unknown',
+        shortName: playerDetail.shortName || playerDetail.displayName || 'Unknown',
+        headshot: getHeadshotUrl({ id: playerId, headshot: playerDetail.headshot }),
+        jersey: playerDetail.jersey || '',
+        position: playerDetail.position?.abbreviation || playerDetail.position || '',
+        teamId: playerDetail.team?.id || '',
+        gameScore: scores.gameScores[playerId] || 0,
+        userScore: scores.userScores[playerId] || 0,
+        isUserPick: hasScore,
+        isCurrentPick: isCurrentPick,
+      });
+    });
+
+    // Then add any other players from playLog who scored but aren't in user picks
     playLog.forEach((play) => {
       if (play.athletesInvolved && play.athletesInvolved.length > 0) {
         play.athletesInvolved.forEach((athlete) => {
@@ -159,15 +200,19 @@ const TopPicks: React.FC<TopPicksProps> = ({
             const hasScore = userPickIds.has(athlete.id);
             const isCurrentPick = currentPickIds.has(athlete.id);
             
+            // Check if we have stored details for this player
+            const storedDetails = playerDetailsMap.get(athlete.id);
+            const playerInfo = storedDetails || athlete;
+            
             athleteScores.set(athlete.id, {
               id: athlete.id,
-              fullName: athlete.fullName || athlete.displayName,
-              displayName: athlete.displayName,
-              shortName: athlete.shortName || athlete.displayName,
-              headshot: getHeadshotUrl({ id: athlete.id, headshot: athlete.headshot }),
-              jersey: athlete.jersey || '',
-              position: athlete.position || '',
-              teamId: athlete.team?.id || '',
+              fullName: playerInfo.fullName || playerInfo.displayName || 'Unknown',
+              displayName: playerInfo.displayName || playerInfo.shortName || 'Unknown',
+              shortName: playerInfo.shortName || playerInfo.displayName || 'Unknown',
+              headshot: getHeadshotUrl({ id: athlete.id, headshot: playerInfo.headshot }),
+              jersey: playerInfo.jersey || '',
+              position: playerInfo.position?.abbreviation || playerInfo.position || '',
+              teamId: playerInfo.team?.id || athlete.team?.id || '',
               gameScore: scores.gameScores[athlete.id] || 0,
               userScore: scores.userScores[athlete.id] || 0,
               isUserPick: hasScore,
@@ -186,7 +231,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
     debugLog(`✅ Total players with scores: ${sorted.length}, User picks: ${userPicks.length}`);
     
     return sorted;
-  }, [playLog, userPickIds, currentPickIds, gameId, getScores]);
+  }, [playLog, userPickIds, currentPickIds, gameId, getScores, isLoading, playerDetailsMap]);
 
   // Calculate total user score from the topPicks data
   const userTotalScore = topPicks
@@ -216,8 +261,24 @@ const TopPicks: React.FC<TopPicksProps> = ({
           )}
         </div>
         <div className="border border-neon-cyan/20 bg-bg-dark/50">
-          {/* Header Row - Show when user has any picks */}
-          {userPickIds.size > 0 && (
+          {/* Loading State */}
+          {isLoading && (
+            <div className="py-8 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan"></div>
+              <p className="mt-2 text-text-muted text-sm">Loading scores...</p>
+            </div>
+          )}
+          
+          {/* Empty State - no scores yet */}
+          {!isLoading && topPicks.length === 0 && (
+            <div className="py-8 text-center text-text-muted">
+              <p>No scoring data available yet</p>
+              <p className="text-xs mt-1">Scores will appear once the game starts</p>
+            </div>
+          )}
+          
+          {/* Header Row - Show when user has any picks and not loading */}
+          {!isLoading && userPickIds.size > 0 && topPicks.length > 0 && (
             <div className="bg-neon-cyan/10 border-b-2 border-neon-cyan/30 py-2 flex items-center justify-end sticky top-0 z-10 pr-3">
               <div className="flex items-center" style={{ gap: '12px' }}>
                 <div className="text-[10px] text-neon-cyan font-bold text-center" style={{ width: '80px' }}>
@@ -229,7 +290,9 @@ const TopPicks: React.FC<TopPicksProps> = ({
               </div>
             </div>
           )}
-          {displayedPicks.map((player, index) => {
+          
+          {/* Player List - Only show when not loading */}
+          {!isLoading && displayedPicks.map((player, index) => {
               const team = player.teamId === homeTeam?.id ? homeTeam : awayTeam;
               const teamColor = team?.team?.color || '00ffe7';
               const isHome = player.teamId === homeTeam?.id;
@@ -342,8 +405,8 @@ const TopPicks: React.FC<TopPicksProps> = ({
               );
             })}
 
-          {/* Expand Button */}
-          {hasMore && (
+          {/* Expand Button - Only show when not loading */}
+          {!isLoading && hasMore && (
             <div className="border-t border-neon-cyan/20 p-2">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}

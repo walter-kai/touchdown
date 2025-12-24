@@ -453,6 +453,93 @@ const YourPicks: React.FC<PlayerPickProps> = ({
   // Get scores from context for display
   useEffect(() => {
     const scores = getScores(gameId);
+    
+    // If backend scores not available but we have playLog, calculate locally
+    if ((!scores || Object.keys(scores.gameScores).length === 0) && playLog.length > 0 && selectedPlayers.length > 0) {
+      debugLog('📊 YourPicks: Backend scores not available, calculating from playLog locally');
+      
+      // Calculate game scores from playLog
+      const localGameScores: Record<string, number> = {};
+      playLog.forEach(play => {
+        play.athletesInvolved?.forEach((athlete) => {
+          if (!athlete?.id) return;
+          localGameScores[athlete.id] = (localGameScores[athlete.id] || 0) + 1;
+        });
+      });
+      
+      setAllPlayerScores(localGameScores);
+      
+      // Calculate session scores based on pick timestamp
+      const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          const playerLockTimes = parsed.playerLockTimes || {};
+          
+          debugLog('🔍 Lock times from state:', playerLockTimes);
+          debugLog('🔍 First 3 plays:', playLog.slice(0, 3).map(p => ({
+            text: p.text,
+            quarter: p.quarter,
+            clock: p.clock,
+            timestamp: p.timestamp,
+            timestampMs: p.timestamp instanceof Date ? p.timestamp.getTime() : new Date(p.timestamp).getTime()
+          })));
+          
+          const sessionScores: Record<string, number> = {};
+          let calculatedTotalScore = 0;
+          
+          selectedPlayers.forEach(player => {
+            const lockTime = playerLockTimes[player.id];
+            
+            if (lockTime) {
+              // Convert lock time to milliseconds
+              const lockTimeMs = typeof lockTime === 'number' ? lockTime : new Date(lockTime).getTime();
+              let playerScore = 0;
+              
+              debugLog(`🔍 Checking ${player.shortName} locked at ${new Date(lockTimeMs).toISOString()}`);
+              
+              // Count plays that occurred after the pick was made
+              playLog.forEach((play, idx) => {
+                if (!play.athletesInvolved) return;
+                
+                // Get play timestamp in milliseconds
+                const playTimeMs = play.timestamp instanceof Date 
+                  ? play.timestamp.getTime() 
+                  : new Date(play.timestamp).getTime();
+                
+                // Only count if play happened after lock time
+                if (playTimeMs > lockTimeMs) {
+                  const hasPlayer = play.athletesInvolved.some((a: any) => a?.id === player.id);
+                  if (hasPlayer) {
+                    playerScore++;
+                    if (playerScore <= 2) { // Log first 2 scoring plays
+                      debugLog(`  ✓ Play #${idx}: ${play.text.substring(0, 50)} (${new Date(playTimeMs).toISOString()})`);
+                    }
+                  }
+                }
+              });
+              
+              sessionScores[player.id] = playerScore;
+              debugLog(`📊 ${player.shortName}: ${playerScore} plays after ${new Date(lockTimeMs).toLocaleTimeString()}`);
+            } else {
+              // No lock time - count all plays
+              sessionScores[player.id] = localGameScores[player.id] || 0;
+              debugLog(`⚠️ No lock time for ${player.shortName}, using full game score`);
+            }
+            
+            calculatedTotalScore += sessionScores[player.id];
+          });
+          
+          setCurrentSetScores(sessionScores);
+          setTotalScore(calculatedTotalScore);
+          debugLog('✅ Session scores calculated:', { sessionScores, calculatedTotalScore });
+        } catch (e) {
+          console.error('Error calculating session scores:', e);
+        }
+      }
+      return;
+    }
+    
     if (!scores) {
       console.warn('⚠️ YourPicks: No scores available from context yet');
       return;
@@ -475,7 +562,7 @@ const YourPicks: React.FC<PlayerPickProps> = ({
       setCurrentSetScores({});
       setTotalScore(0);
     }
-  }, [selectedPlayers, gameId, getScores]);
+  }, [selectedPlayers, gameId, getScores, playLog, homeTeamId, awayTeamId]);
 
   // Roster player scores are now provided by context (allPlayerScores is set above)
 
@@ -689,17 +776,23 @@ const YourPicks: React.FC<PlayerPickProps> = ({
         }
       });
       
-      // Build player lock times - preserve existing times for kept players, add new time for new players
+      // Build player lock times - preserve existing for kept players, add new for new players
       const playerLockTimes: Record<string, number> = {};
+      
       swappedPicks.forEach((player, idx) => {
         // If this player was already in selectedPlayers, keep their original lock time
         if (selectedPlayers.some(p => p.id === player.id) && existingPlayerLockTimes[player.id]) {
           playerLockTimes[player.id] = existingPlayerLockTimes[player.id];
         } else {
-          // New player - set lock time to now
+          // New player - set lock time to now (milliseconds)
           playerLockTimes[player.id] = currentTime;
         }
       });
+      
+      debugLog('🔒 Player lock times:', Object.entries(playerLockTimes).map(([id, time]) => ({
+        id,
+        time: new Date(time).toISOString()
+      })));
       
       // Save to localStorage and backend
       const state = {
@@ -877,12 +970,21 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                   {/* Show column headers when roster is closed */}
                   {!isRosterOpen && showStats && (
                     <div className="flex items-center gap-3 pr-3">
-                      <div className="text-[10px] text-neon-pink font-bold text-center" style={{ width: '50px' }}>
-                        GAME
-                      </div>
-                      <div className="text-[10px] text-neon-cyan font-bold text-center" style={{ width: '50px' }}>
-                        SESSION
-                      </div>
+                      {/* Check if we have any scores (if all are 0, ESPN data not available) */}
+                      {Object.values(allPlayerScores).some(score => score > 0) || totalScore > 0 ? (
+                        <>
+                          <div className="text-[10px] text-neon-pink font-bold text-center" style={{ width: '50px' }}>
+                            TOTAL
+                          </div>
+                          <div className="text-[10px] text-neon-cyan font-bold text-center" style={{ width: '50px' }}>
+                            MY SCORE
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-[9px] text-yellow-400 font-semibold text-right">
+                          Scores unavailable
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

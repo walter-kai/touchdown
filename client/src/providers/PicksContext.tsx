@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import axios from 'axios';
 import { jwtStorage } from '../utils/jwtStorage';
 import { debugLog } from '@/utils/debugLog';
+import { useLeague } from './LeagueContext';
 
 interface Player {
   id: string;
@@ -52,6 +53,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [picksCache, setPicksCache] = useState<Record<string, PicksState>>({});
   const [scoresCache, setScoresCache] = useState<Record<string, AthleteScores>>({});
   const fetchingRef = React.useRef<Set<string>>(new Set());
+  const { league } = useLeague();
 
   const getKey = (homeTeamId: string, awayTeamId: string) => `playerPick_${homeTeamId}_${awayTeamId}`;
 
@@ -196,8 +198,13 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const response = await axios.get(`/api/picks/game/${gameId}/user/scores`, {
         headers: {
           'Authorization': `Bearer ${token}`
+        },
+        params: {
+          league // Pass league parameter
         }
       });
+
+      debugLog(`📊 Response from scores API:`, response.data);
 
       if (response.data.ok) {
         const scores: AthleteScores = {
