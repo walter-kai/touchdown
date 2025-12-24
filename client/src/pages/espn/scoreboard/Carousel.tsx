@@ -36,6 +36,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   const navigate = useNavigate();
   const { isAuthenticated, triggerLoginModal } = useAuth();
   const carouselRef = useRef<HTMLDivElement>(null);
+  const playerPickRef = useRef<{ openRoster: () => void }>(null);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [isPickExpanded, setIsPickExpanded] = useState(true); // Default to true so picker is visible
   const [gameCountdown, setGameCountdown] = useState<number>(0);
@@ -198,6 +199,15 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                 gameCountdown={gameCountdown}
                 playLog={playLog}
                 countdown={countdown}
+                homeTeamId={homeTeam?.id}
+                awayTeamId={awayTeam?.id}
+                onOpenPicks={() => {
+                  onTabChange('yourpicks');
+                  // Wait for tab change animation, then open roster
+                  setTimeout(() => {
+                    playerPickRef.current?.openRoster();
+                  }, 300);
+                }}
               />
               
               {/* Points Chart - Show for all games with scoring data */}
@@ -229,6 +239,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: slideWidth }}>
               {homeTeam?.id && awayTeam?.id && (
                 <PlayerPick
+                  ref={playerPickRef}
                   gameId={event.id}
                   homeTeamId={homeTeam.id}
                   awayTeamId={awayTeam.id}

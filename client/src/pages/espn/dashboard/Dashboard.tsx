@@ -10,7 +10,7 @@ import { useLeague } from '../../../providers/LeagueContext';
 import TelegramCard from './TelegramCard';
 import { debugLog } from '@/utils/debugLog';
 import { getSummaryUrl } from '@/utils/espnApi';
-import { getTeamLogoUrl } from '@/utils/espnImages';
+import { getTeamLogoUrl, getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
 
 interface Player {
   id: string;
@@ -527,16 +527,20 @@ const Dashboard: React.FC = () => {
                             className="flex items-center justify-between p-3 bg-bg-dark/50 rounded-lg border border-neon-cyan/10 hover:border-neon-cyan/30 transition-all"
                           >
                             <div className="flex items-center gap-3">
-                              {player.headshot && (
-                                <img
-                                  src={player.headshot}
+                              {(() => {
+                                const league = (game as any).league || (game as any).teamData?.league || 'nfl';
+                                const headshotUrl = getHeadshotUrlUtil({ id: player.id, headshot: player.headshot }, league as 'nfl' | 'nba');
+                                return headshotUrl ? (
+                                  <img
+                                  src={headshotUrl}
                                   alt={player.displayName}
                                   className="w-12 h-12 rounded-full bg-neon-cyan/10 object-cover"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
                                   }}
-                                />
-                              )}
+                                  />
+                                ) : null;
+                              })()}
                               <div>
                                 <p className="font-semibold text-white">{player.displayName}</p>
                                 <p className="text-sm text-gray-400">{player.position}</p>

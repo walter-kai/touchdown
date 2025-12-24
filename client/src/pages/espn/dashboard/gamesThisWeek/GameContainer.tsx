@@ -10,6 +10,7 @@ import { useLeague } from '@/providers/LeagueContext';
 import { debugLog } from '@/utils/debugLog';
 import { fetchEspnPlays } from '@/utils/espnPlays';
 import { getScoreboardUrl, getSummaryUrl } from '@/utils/espnApi';
+import { getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
 import { PlaysProvider } from '@/providers/PlaysContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
@@ -27,7 +28,12 @@ interface GameContainerProps {
 const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
   const { gameId } = useParams<{ gameId: string }>();
   const { showLoading, hideLoading } = useLoading();
-  const { league, getHeadshotUrl } = useLeague();
+  useLeague();
+  
+  // Derive league from URL path as primary source to avoid race conditions
+  const urlLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
+  const league = urlLeague; // Use URL-derived league to ensure accuracy
+  
   const [event, setEvent] = useState<Event | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +75,13 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
 
     try {
       setIsRefreshing(true);
-      const latestPlays = await fetchEspnPlays(actualGameId, String(compId), undefined, league, getHeadshotUrl);
+      const latestPlays = await fetchEspnPlays(
+        actualGameId,
+        String(compId),
+        undefined,
+        league,
+        (opts) => getHeadshotUrlUtil(opts, league as 'nfl' | 'nba')
+      );
 
       // cache latest pulls for quick resume
       localStorage.setItem(cacheKey, JSON.stringify({ plays: latestPlays, timestamp: Date.now() }));
@@ -81,7 +93,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
       setIsRefreshing(false);
       setCountdown(30);
     }
-  }, [event, gameId, testGameId]);
+  }, [event, gameId, testGameId, league]);
 
   // Load previous plays from ESPN plays endpoint on mount
   useEffect(() => {
@@ -125,7 +137,13 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
         debugLog(`Loading previous plays for game ${actualGameId} from ESPN plays API...`);
 
         const compId = event?.competitions?.[0]?.id || actualGameId;
-        const historicalPlays = await fetchEspnPlays(actualGameId, String(compId), undefined, league, getHeadshotUrl);
+        const historicalPlays = await fetchEspnPlays(
+          actualGameId,
+          String(compId),
+          undefined,
+          league,
+          (opts) => getHeadshotUrlUtil(opts, league as 'nfl' | 'nba')
+        );
 
         // Cache the data
         localStorage.setItem(cacheKey, JSON.stringify({
@@ -153,7 +171,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
 
     loadPreviousPlays();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId, testGameId, playsLoaded]); // Re-run when gameId or testGameId changes
+  }, [gameId, testGameId, playsLoaded, league]); // Re-run when gameId or testGameId changes
 
   // Notify parent of game status changes
   useEffect(() => {
@@ -247,7 +265,9 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
       );
       game = scoreboardResponse.data.events?.find(e => e.id === gid);
       const gameStatus = game?.competitions[0].status.type.state;
-      if (!game || gameStatus !== 'in') {
+      
+      // Only fetch summary if game is NOT in session (pre or post game)
+      if (!game || (gameStatus !== 'in' && gameStatus !== 'post')) {
         try {
           const summaryResponse = await axios.get<Summary>(
             getSummaryUrl(league, gid)
@@ -264,6 +284,8 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
             console.error('Error fetching summary data:', summaryErr);
           }
         }
+      } else {
+        debugLog(`Skipping summary API for live game ${gid} (status: ${gameStatus})`);
       }
     }
     return { game, usedSummaryApi };

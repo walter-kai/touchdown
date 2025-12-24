@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import axios from 'axios';
 import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus, FaCrosshairs, FaHandPointer, FaBolt, FaChartLine } from 'react-icons/fa';
 import LoadingFootball from '../../../components/common/LoadingFootball';
@@ -293,7 +293,8 @@ const MyPreview = () => {
   );
 };
 
-const PlayerPick: React.FC<PlayerPickProps> = ({
+const PlayerPick = forwardRef<{ openRoster: () => void }, PlayerPickProps>(
+  ({
   gameId,
   homeTeamId,
   awayTeamId,
@@ -305,8 +306,8 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   situation,
   homeTeam,
   awayTeam,
-  getTeamLogo
-}) => {
+  getTeamLogo,
+}, ref) => {
   const { league } = useLeague();
   const [homeRoster, setHomeRoster] = useState<Athlete[]>([]);
   const [awayRoster, setAwayRoster] = useState<Athlete[]>([]);
@@ -328,6 +329,14 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
   // MUST call useAuth at the top before any conditional returns (Rules of Hooks)
   const { isAuthenticated, triggerLoginModal } = useAuth();
+  const yourPicksRef = useRef<{ openRoster: () => void }>(null);
+
+  // Forward ref to YourPicks
+  useImperativeHandle(ref, () => ({
+    openRoster: () => {
+      yourPicksRef.current?.openRoster();
+    }
+  }));
 
   // Load saved state from localStorage and backend
   useEffect(() => {
@@ -884,6 +893,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     <>
       {/* Your Picks Section */}
       <YourPicks
+        ref={yourPicksRef}
         gameId={gameId}
         homeTeamId={homeTeamId}
         awayTeamId={awayTeamId}
@@ -899,7 +909,8 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       />
     </>
   );
-};
+});
 
+PlayerPick.displayName = 'PlayerPick';
 
 export default PlayerPick;

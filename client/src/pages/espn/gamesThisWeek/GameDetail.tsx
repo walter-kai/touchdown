@@ -9,6 +9,7 @@ import { useLoading } from '@/providers/LoadingContext';
 import { useLeague } from '@/providers/LeagueContext';
 import { debugLog } from '@/utils/debugLog';
 import { fetchEspnPlays } from '@/utils/espnPlays';
+import { getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
 import { PlaysProvider } from '@/providers/PlaysContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
@@ -26,7 +27,13 @@ interface GameContainerProps {
 const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
   const { gameId } = useParams<{ gameId: string }>();
   const { showLoading, hideLoading } = useLoading();
-  const { league } = useLeague();
+  // Derive league from URL to avoid context lag (prevents nfl headshots on NBA)
+  const { league: contextLeague } = useLeague();
+  const pathLeague = React.useMemo<'nfl' | 'nba'>(() => {
+    if (window.location.pathname.startsWith('/nba')) return 'nba';
+    if (window.location.pathname.startsWith('/nfl')) return 'nfl';
+    return contextLeague;
+  }, [contextLeague]);
   const [event, setEvent] = useState<Event | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +57,13 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
 
     try {
       setIsRefreshing(true);
-      const latestPlays = await fetchEspnPlays(actualGameId, String(compId), undefined, league);
+      const latestPlays = await fetchEspnPlays(
+        actualGameId,
+        String(compId),
+        undefined,
+        pathLeague,
+        (opts) => getHeadshotUrlUtil(opts, pathLeague)
+      );
 
       // cache latest pulls for quick resume
       localStorage.setItem(cacheKey, JSON.stringify({ plays: latestPlays, timestamp: Date.now() }));
@@ -62,7 +75,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
       setIsRefreshing(false);
       setCountdown(30);
     }
-  }, [event, gameId, testGameId]);
+  }, [event, gameId, testGameId, pathLeague]);
 
   // Load previous plays from ESPN plays endpoint on mount
   useEffect(() => {
@@ -106,7 +119,13 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
         debugLog(`Loading previous plays for game ${actualGameId} from ESPN plays API...`);
 
         const compId = event?.competitions?.[0]?.id || actualGameId;
-        const historicalPlays = await fetchEspnPlays(actualGameId, String(compId), undefined, league);
+         const historicalPlays = await fetchEspnPlays(
+           actualGameId,
+           String(compId),
+           undefined,
+           pathLeague,
+           (opts) => getHeadshotUrlUtil(opts, pathLeague)
+         );
 
         // Cache the data
         localStorage.setItem(cacheKey, JSON.stringify({
@@ -128,7 +147,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
 
     loadPreviousPlays();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId, testGameId, playsLoaded]); // Re-run when gameId or testGameId changes
+  }, [gameId, testGameId, playsLoaded, pathLeague]); // Re-run when gameId or testGameId changes
 
   // Notify parent of game status changes
   useEffect(() => {

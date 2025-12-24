@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
 import FootballField from '@/pages/espn/gamesThisWeek/FootballField';
@@ -8,6 +8,8 @@ import GameLeaders from '@/pages/espn/summary/GameLeaders';
 import PredictionChart from '@/pages/espn/gameView/info/PredictionChart';
 import { CountUpScore } from '@/components/common/CountUpScore';
 import { usePlays } from '@/providers/PlaysContext';
+import { useLeague } from '@/providers/LeagueContext';
+import { getHeadshotUrl } from '@/utils/espnImages';
 import type { Summary } from '@/types/espn/summary';
 
 interface InfoProps {
@@ -20,6 +22,9 @@ interface InfoProps {
   gameId?: string;
   countdown?: number;
   playLog: Play[];
+  homeTeamId?: string;
+  awayTeamId?: string;
+  onOpenPicks?: () => void;
 }
 
 const Info: React.FC<InfoProps> = ({
@@ -32,11 +37,49 @@ const Info: React.FC<InfoProps> = ({
   gameId,
   playLog,
   countdown = 30,
+  homeTeamId,
+  awayTeamId,
+  onOpenPicks,
 }) => {
   const navigate = useNavigate();
   const { homeScore: contextHomeScore, awayScore: contextAwayScore } = usePlays();
   const currentHomeScore = contextHomeScore ?? (homeTeam?.score !== undefined ? Number(homeTeam.score) : 0);
   const currentAwayScore = contextAwayScore ?? (awayTeam?.score !== undefined ? Number(awayTeam.score) : 0);
+
+  // Derive league from URL to avoid race condition with LeagueContext
+  const urlLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
+
+  const [currentPicks, setCurrentPicks] = useState<any[]>([]);
+  const [picksScores, setPicksScores] = useState<Record<string, number>>({});
+
+  // Load picks from localStorage
+  useEffect(() => {
+    if (!homeTeamId || !awayTeamId) return;
+    
+    const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.players && parsed.players.length > 0) {
+          setCurrentPicks(parsed.players);
+          
+          // Calculate scores from playLog
+          const scores: Record<string, number> = {};
+          parsed.players.forEach((player: any) => {
+            scores[player.id] = 0;
+            playLog.forEach(play => {
+              if (play.athletesInvolved?.some((a: any) => a?.id === player.id)) {
+                scores[player.id]++;
+              }
+            });
+          });
+          setPicksScores(scores);
+        }
+      } catch (e) {
+        console.error('Error loading picks:', e);
+      }
+    }
+  }, [homeTeamId, awayTeamId, playLog]);
 
   const latestPlay: Play | undefined = playLog?.[0];
   const latestPlayType = typeof latestPlay?.type === 'string'
@@ -155,6 +198,8 @@ const Info: React.FC<InfoProps> = ({
       </div>
         </div>
       </div>
+
+
       
       {/* Live Game Situation */}
       {(competition.status.type.state === 'in') && (
@@ -270,8 +315,60 @@ const Info: React.FC<InfoProps> = ({
                       getTeamLogo={getTeamLogo}
                     />
 
+          {/* Current Picks Display */}
+          {currentPicks.length > 0 && (
+            <div className="bg-bg-dark/50 rounded-lg p-3 border border-neon-pink/20 my-2">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-neon-pink text-xs font-bold">YOUR PICKS</span>
+                <span className="text-text-muted text-[10px]">
+                  Total: {Object.values(picksScores).reduce((sum, score) => sum + score, 0)} pts
+                </span>
+              </div>
+              <div className="flex gap-2 mb-3 overflow-x-auto">
+                {currentPicks.map((player, idx) => {
+                  // Use utility with URL-derived league to avoid context race condition
+                  const headshotUrl = getHeadshotUrl({ id: player.id, headshot: player.headshot }, urlLeague);
+                  return (
+                    <div key={player.id} className="flex flex-col items-center min-w-[60px]">
+                      {headshotUrl ? (
+                        <img
+                          src={headshotUrl}
+                          alt={player.displayName}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-neon-pink/50"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                            const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className="w-12 h-12 rounded-full bg-bg-darker border-2 border-neon-pink/50 flex items-center justify-center"
+                        style={{ display: headshotUrl ? 'none' : 'flex' }}
+                      >
+                        <span className="text-neon-pink text-xs font-bold">
+                          {player.shortName?.substring(0, 2).toUpperCase()}
+                        </span>
+                      </div>
+                      <span className="text-white text-[10px] font-bold mt-1 text-center truncate w-full">
+                        {player.shortName}
+                      </span>
+                      <span className="text-neon-pink text-lg font-bold">{picksScores[player.id] || 0}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <button
+                onClick={onOpenPicks}
+                className="w-full bg-neon-pink/20 hover:bg-neon-pink/30 border border-neon-pink/50 rounded-lg py-2 text-neon-pink font-bold text-sm transition-all"
+              >
+                Manage Picks
+              </button>
+            </div>
+          )}
+
                     {/* Play Log */}
-                    <div className="mt-4">
+                    <div className="mt-2">
                       <PlayLog
                         playLog={playLog}
                         homeTeam={homeTeam}

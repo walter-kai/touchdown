@@ -13,6 +13,7 @@ import type { Event } from '@/types/espn/scoreboard';
 import { Play } from '@/types/espn/playByplay';
 import { useLeague } from '@/providers/LeagueContext';
 import { fetchEspnPlays } from '@/utils/espnPlays';
+import { getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
 
 interface SummaryViewProps {
   event: Event;
@@ -35,7 +36,13 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { isAuthenticated, triggerLoginModal } = useAuth();
-  const { league, getHeadshotUrl } = useLeague();
+  // Derive league from URL to avoid context lag (prevents nfl headshots on NBA)
+  const { league: contextLeague } = useLeague();
+  const urlLeague = React.useMemo<'nfl' | 'nba'>(() => {
+    if (window.location.pathname.startsWith('/nba')) return 'nba';
+    if (window.location.pathname.startsWith('/nfl')) return 'nfl';
+    return contextLeague;
+  }, [contextLeague]);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [timeUntilGame, setTimeUntilGame] = useState<string>('');
   const [gameCountdown, setGameCountdown] = useState<number>(0);
@@ -54,7 +61,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     players.forEach(teamData => {
       teamData.statistics.forEach(cat => {
         cat.athletes.forEach(a => {
-          const url = getHeadshotUrl({ id: a.athlete?.id, headshot: (a.athlete as any)?.headshot });
+          const url = getHeadshotUrlUtil({ id: a.athlete?.id, headshot: (a.athlete as any)?.headshot }, urlLeague);
           if (a.athlete?.id && url) {
             map.set(a.athlete.id, url);
           }
@@ -62,21 +69,27 @@ const SummaryView: React.FC<SummaryViewProps> = ({
       });
     });
     return map;
-  }, [summary?.boxscore?.players]);
+  }, [summary?.boxscore?.players, urlLeague]);
   
   // Fetch authoritative play-by-play directly from ESPN API and normalize
   useEffect(() => {
     const fetchPlayByPlay = async () => {
       try {
         const compId = competition.id || event.id;
-        const plays = await fetchEspnPlays(event.id, String(compId), headshotByAthleteId, league, getHeadshotUrl);
+        const plays = await fetchEspnPlays(
+          event.id,
+          String(compId),
+          headshotByAthleteId,
+          urlLeague,
+          (opts) => getHeadshotUrlUtil(opts, urlLeague)
+        );
         setApiPlayLog(plays);
       } catch (err) {
         console.warn('Failed to fetch play-by-play from ESPN:', err);
       }
     };
     fetchPlayByPlay();
-  }, [event.id, competition.date, headshotByAthleteId, league]);
+  }, [event.id, competition.date, headshotByAthleteId, urlLeague]);
   // Build a unified play log: use drives for completed games, else use provided playLog
   const effectivePlayLog = React.useMemo(() => {
     const state = competition.status.type.state;
@@ -107,7 +120,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 fullName: a.athlete?.displayName || a.fullName || a.displayName,
                 displayName: a.athlete?.displayName || a.displayName,
                 shortName: a.athlete?.shortName || a.shortName || a.displayName,
-                headshot: getHeadshotUrl({ id: a.athlete?.id || a.id, headshot: a.athlete?.headshot || a.headshot }) || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : ''),
+                headshot: getHeadshotUrlUtil({ id: a.athlete?.id || a.id, headshot: a.athlete?.headshot || a.headshot }, urlLeague) || (a.athlete?.id ? headshotByAthleteId.get(a.athlete.id) : ''),
                 jersey: a.athlete?.jersey || a.jersey || '',
                 position: a.athlete?.position?.abbreviation || a.position || '',
                 team: { id: a.athlete?.team?.id || (p.start?.team?.id) || possessionTeamId },
@@ -119,7 +132,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
       return plays;
     }
     return playLog;
-  }, [competition.status.type.state, summary?.drives, playLog, competition.date, apiPlayLog]);
+  }, [competition.status.type.state, summary?.drives, playLog, competition.date, apiPlayLog, urlLeague]);
 
   // Extract scoring plays from play log
   const scoringPlays = React.useMemo(() => {
@@ -413,7 +426,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                           end: competition.situation.lastPlay.end?.yardLine !== undefined ? { yardLine: competition.situation.lastPlay.end.yardLine } : undefined,
                           athletesInvolved: competition.situation.lastPlay.athletesInvolved?.map((a: any) => ({
                             displayName: a.displayName || a.fullName || '',
-                            headshot: getHeadshotUrl({ id: a.id, headshot: a.headshot }),
+                            headshot: getHeadshotUrlUtil({ id: a.id, headshot: a.headshot }, urlLeague),
                             position: typeof a.position === 'string' ? a.position : a.position?.abbreviation || '',
                           })),
                         } : undefined,

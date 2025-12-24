@@ -147,7 +147,7 @@ const PlayLog: React.FC<PlayLogProps> = ({
           {/* Divider */}
           <div className="border-t-2 border-neon-cyan/20"></div>
           
-          <div className="flex items-center justify-between py-2 pr-2 mx-2 min-h-[76px]">
+          <div className="flex items-center justify-between pt-2 pr-2 ">
             <div>
               <h1>
                 {title}
@@ -164,7 +164,7 @@ const PlayLog: React.FC<PlayLogProps> = ({
           <div className="mx-2 mb-4">
             <div className="flex items-center gap-3">
                               <div
-                              className={`px-3 py-1 min-w-[60px] text-[11px] font-semibold rounded-md border transition-all ${
+                              className={`py-1 text-[11px] font-semibold transition-all ${
                                 (!refresh || isRefreshing || isLocked)
                                 ? 'opacity-60 border-white/20 text-white/50'
                                 : 'border-neon-cyan text-neon-cyan'
@@ -229,7 +229,8 @@ const PlayLog: React.FC<PlayLogProps> = ({
               {/* Plays in this possession */}
               <div className="space-y-3">
                 {group.plays.map((play, playIdx) => {
-                  const participants = play.athletesInvolved || [];
+                  // Normalize participant list to avoid null/undefined entries from API
+                  const participants = (play.athletesInvolved || []).filter(Boolean);
                   const primaryAthlete = participants.length > 0 ? participants[0] : null;
                   const headshots = participants.filter(a => a.headshot).slice(0, 4);
                   const isSelected = selectedPlayers.some(p => p.id === primaryAthlete?.id);

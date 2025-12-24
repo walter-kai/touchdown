@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react';
 import axios from 'axios';
 import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus, FaCrosshairs, FaHandPointer, FaListUl } from 'react-icons/fa';
 import PlayLog from '@/components/espn/PlayLog';
@@ -15,7 +15,7 @@ import { useLeague } from '../../../providers/LeagueContext';
 import { Play } from '@/types/espn/playByplay';
 import { debugLog } from '@/utils/debugLog';
 import { getTeamApiUrl } from '@/utils/espnApi';
-import { getTeamLogoUrl } from '@/utils/espnImages';
+import { getTeamLogoUrl, getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {
@@ -120,7 +120,9 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
     },
   });
 
-  const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+  // Derive league from URL to avoid race condition
+  const urlLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
+  const headshotUrl = getHeadshotUrlUtil({ id: player.id, headshot: player.headshot }, urlLeague);
   const teamLogo = player.team?.logo || (player.team?.logos && player.team.logos.length > 0 ? player.team.logos[0].href : null);
 
   return (
@@ -249,7 +251,8 @@ const MyPreview = () => {
   }
   
   const { item, style } = preview;
-  const headshotUrl = typeof item.player.headshot === 'string' ? item.player.headshot : item.player.headshot?.href;
+  const urlLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
+  const headshotUrl = getHeadshotUrlUtil({ id: item.player.id, headshot: item.player.headshot }, urlLeague);
   const teamLogo = item.player.team?.logo || (item.player.team?.logos && item.player.team.logos.length > 0 ? item.player.team.logos[0].href : null);
   
   return (
@@ -298,7 +301,8 @@ const MyPreview = () => {
   );
 };
 
-const YourPicks: React.FC<PlayerPickProps> = ({
+const YourPicks = forwardRef<{ openRoster: () => void }, PlayerPickProps>((
+  {
   gameId,
   homeTeamId,
   awayTeamId,
@@ -311,7 +315,9 @@ const YourPicks: React.FC<PlayerPickProps> = ({
   homeTeam,
   awayTeam,
   getTeamLogo
-}) => {
+},
+ref
+) => {
   const { league } = useLeague();
   const [homeRoster, setHomeRoster] = useState<Athlete[]>([]);
   const [awayRoster, setAwayRoster] = useState<Athlete[]>([]);
@@ -333,6 +339,26 @@ const YourPicks: React.FC<PlayerPickProps> = ({
   const [showGameLog, setShowGameLog] = useState(false);
   const [allPlayerScores, setAllPlayerScores] = useState<Record<string, number>>({});
   const rosterSelectorRef = React.useRef<HTMLDivElement>(null);
+
+  // Expose method to open roster via ref
+  useImperativeHandle(ref, () => ({
+    openRoster: () => {
+      if (!isLocked) {
+        setIsRosterOpen(true);
+        // Expand the picks section if it's not already expanded
+        if (!isExpanded && onToggle) {
+          onToggle();
+        }
+        // Scroll to roster after animation
+        setTimeout(() => {
+          rosterSelectorRef.current?.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }, 150);
+      }
+    }
+  }));
 
   const playInvolvementCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -1005,7 +1031,8 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                       );
                     }
 
-                    const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+                    const urlLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
+                    const headshotUrl = getHeadshotUrlUtil({ id: player.id, headshot: player.headshot }, urlLeague);
                     const playerScore = currentSetScores[player.id] || 0;
                     const teamLogo = player.team?.logo || (player.team?.logos && player.team.logos.length > 0 ? player.team.logos[0].href : null);
                     // Check if THIS specific pick is being replaced by checking if there's a new pick at this index
@@ -1231,7 +1258,8 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                       const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
                       const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
                       const isDuplicate = isInCurrent && !isInNew;
-                      const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+                      const urlLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
+                      const headshotUrl = getHeadshotUrlUtil({ id: player.id, headshot: player.headshot }, urlLeague);
                       return (
                         <button
                           key={player.id}
@@ -1298,7 +1326,8 @@ const YourPicks: React.FC<PlayerPickProps> = ({
                       const isInNew = newPicks.filter(p => p).some((p) => p.id === player.id);
                       const isInCurrent = selectedPlayers.some((p) => p.id === player.id);
                       const isDuplicate = isInCurrent && !isInNew;
-                      const headshotUrl = typeof player.headshot === 'string' ? player.headshot : player.headshot?.href;
+                      const urlLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
+                      const headshotUrl = getHeadshotUrlUtil({ id: player.id, headshot: player.headshot }, urlLeague);
                       return (
                         <button
                           key={player.id}
@@ -1356,6 +1385,8 @@ const YourPicks: React.FC<PlayerPickProps> = ({
       </div>
     </DndProvider>
   );
-};
+});
+
+YourPicks.displayName = 'YourPicks';
 
 export default YourPicks;

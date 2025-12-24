@@ -27,7 +27,12 @@ interface GameContainerProps {
 const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
   const { gameId } = useParams<{ gameId: string }>();
   const { showLoading, hideLoading } = useLoading();
-  const { league, getHeadshotUrl } = useLeague();
+  const { league: contextLeague, getHeadshotUrl } = useLeague();
+  
+  // Derive league from URL path as primary source to avoid race conditions
+  const urlLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
+  const league = urlLeague; // Use URL-derived league to ensure accuracy
+  
   const [event, setEvent] = useState<Event | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
