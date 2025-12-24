@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
 import FootballField from '@/pages/espn/gamesThisWeek/FootballField';
@@ -8,9 +8,39 @@ import GameLeaders from '@/pages/espn/summary/GameLeaders';
 import PredictionChart from '@/pages/espn/gameView/info/PredictionChart';
 import { CountUpScore } from '@/components/common/CountUpScore';
 import { usePlays } from '@/providers/PlaysContext';
-import { useLeague } from '@/providers/LeagueContext';
 import { getHeadshotUrl } from '@/utils/espnImages';
 import type { Summary } from '@/types/espn/summary';
+
+const NBA_REGULATION_SECONDS = 12 * 60;
+const NBA_OT_SECONDS = 5 * 60;
+const RUN_WINDOW_SECONDS = 240; // 4 minutes of game time
+
+const clockToSeconds = (clock: string): number => {
+  if (!clock) return 0;
+  const parts = clock.split(':').map(part => Number(part));
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return Number.isFinite(Number(clock)) ? Number(clock) : 0;
+};
+
+const elapsedGameSeconds = (quarter: number, clock: string): number => {
+  const q = Number.isFinite(quarter) && quarter > 0 ? quarter : 1;
+  const clockSeconds = clockToSeconds(clock);
+  const periodLength = q <= 4 ? NBA_REGULATION_SECONDS : NBA_OT_SECONDS;
+  const boundedClock = Math.max(0, Math.min(periodLength, clockSeconds));
+  let elapsed = 0;
+  for (let p = 1; p < q; p += 1) {
+    elapsed += p <= 4 ? NBA_REGULATION_SECONDS : NBA_OT_SECONDS;
+  }
+  return elapsed + (periodLength - boundedClock);
+};
+
+const formatDuration = (totalSeconds: number): string => {
+  const seconds = Math.max(0, Math.round(totalSeconds));
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${minutes}:${remainder.toString().padStart(2, '0')}`;
+};
 
 interface InfoProps {
   homeTeam: any;
@@ -48,6 +78,7 @@ const Info: React.FC<InfoProps> = ({
 
   // Derive league from URL to avoid race condition with LeagueContext
   const urlLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
+  const isNba = urlLeague === 'nba';
 
   const [currentPicks, setCurrentPicks] = useState<any[]>([]);
   const [picksScores, setPicksScores] = useState<Record<string, number>>({});
@@ -80,6 +111,59 @@ const Info: React.FC<InfoProps> = ({
       }
     }
   }, [homeTeamId, awayTeamId, playLog]);
+
+  const nbaRun = useMemo(() => {
+    if (!isNba || !homeTeam?.id || !awayTeam?.id || !Array.isArray(playLog) || playLog.length === 0) return null;
+
+    const scoringPlays = playLog.filter(play => {
+      const points = Number(play?.scoreValue ?? 0);
+      const teamId = play?.team || play?.possession;
+      return points > 0 && !!teamId;
+    });
+
+    if (scoringPlays.length === 0) return null;
+
+    const latest = scoringPlays[0];
+    const latestElapsed = elapsedGameSeconds(Number(latest.quarter || 0), latest.clock || '0:00');
+
+    const windowPlays = scoringPlays.filter(play => {
+      const elapsed = elapsedGameSeconds(Number(play.quarter || 0), play.clock || '0:00');
+      return latestElapsed - elapsed <= RUN_WINDOW_SECONDS;
+    });
+
+    if (windowPlays.length === 0) return null;
+
+    const totals: Record<string, number> = {};
+    windowPlays.forEach(play => {
+      const teamId = play.team || play.possession;
+      if (!teamId) return;
+      const points = Number(play.scoreValue || 0);
+      if (!Number.isFinite(points) || points <= 0) return;
+      totals[teamId] = (totals[teamId] || 0) + points;
+    });
+
+    const homePoints = totals[homeTeam.id] || 0;
+    const awayPoints = totals[awayTeam.id] || 0;
+    if (homePoints === awayPoints || (homePoints === 0 && awayPoints === 0)) return null;
+
+    const runTeamId = homePoints > awayPoints ? homeTeam.id : awayTeam.id;
+    const runPoints = runTeamId === homeTeam.id ? homePoints : awayPoints;
+    const oppPoints = runTeamId === homeTeam.id ? awayPoints : homePoints;
+
+    const earliestElapsed = Math.min(
+      ...windowPlays.map(play => elapsedGameSeconds(Number(play.quarter || 0), play.clock || '0:00'))
+    );
+    const durationSeconds = Math.max(5, latestElapsed - earliestElapsed);
+
+    return {
+      teamId: runTeamId,
+      runPoints,
+      oppPoints,
+      durationLabel: formatDuration(durationSeconds)
+    };
+  }, [isNba, homeTeam?.id, awayTeam?.id, playLog]);
+
+  const runTeam = nbaRun ? (nbaRun.teamId === homeTeam?.id ? homeTeam : awayTeam) : null;
 
   const latestPlay: Play | undefined = playLog?.[0];
   const latestPlayType = typeof latestPlay?.type === 'string'
@@ -147,55 +231,61 @@ const Info: React.FC<InfoProps> = ({
         </div>
       </div>
 
-      {/* Team Scores */}
-      <div className="border border-neon-cyan/30 rounded-lg bg-bg-dark/30">
-        <div className="flex items-center justify-between">
-          {/* Away Team */}
-          <button
-            onClick={() => awayTeam?.id && navigate(`/nfl/team/${awayTeam.id}`)}
-            className="flex flex-col items-center hover:bg-neon-cyan/10 active:bg-neon-cyan/20 rounded-lg py-3 transition-all group cursor-pointer flex-1 focus:outline-none"
-          >
+        {/* Team Scores */}
+        <div className="border border-neon-cyan/30 rounded-lg bg-bg-dark/30">
+          <div className="flex items-stretch justify-between">
+            {/* Away Team */}
+            <button
+          onClick={() => awayTeam?.id && navigate(`/nfl/team/${awayTeam.id}`)}
+          className="flex flex-col items-center hover:bg-neon-cyan/10 active:bg-neon-cyan/20 rounded-lg py-3 transition-all group cursor-pointer flex-1 focus:outline-none"
+            >
+          <div className="w-20 h-20 md:w-20 md:h-20 mb-2 flex items-center justify-center">
             <img
               src={getTeamLogo(awayTeam?.team)}
               alt={awayTeam?.team?.displayName}
-              className="w-20 h-20 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
-            />
-            <h2 className="text-text-light font-bold text-sm md:text-base text-center px-2 group-hover:text-neon-cyan transition-colors">
-              {awayTeam?.team?.displayName}
-            </h2>
-            <p className="text-text-muted text-xs">{awayTeam?.records?.[0]?.summary}</p>
-          </button>
-
-          {/* Center Scores */}
-          <div className="flex items-center gap-4 px-6">
-            <CountUpScore 
-              value={currentAwayScore}
-              className="text-neon-cyan text-4xl md:text-5xl font-bold"
-            />
-            <span className="text-text-muted text-2xl">-</span>
-            <CountUpScore 
-              value={currentHomeScore}
-              className="text-neon-cyan text-4xl md:text-5xl font-bold"
+              className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform"
             />
           </div>
+          <h2 className="text-text-light font-bold text-sm md:text-base text-center px-2 group-hover:text-neon-cyan transition-colors">
+            {awayTeam?.team?.displayName}
+          </h2>
+          <p className="text-text-muted text-xs">{awayTeam?.records?.[0]?.summary}</p>
+            </button>
 
-          {/* Home Team */}
-          <button
-            onClick={() => homeTeam?.id && navigate(`/nfl/team/${homeTeam.id}`)}
-            className="flex flex-col items-center hover:bg-neon-cyan/10 active:bg-neon-cyan/20 rounded-lg py-3 transition-all group cursor-pointer flex-1 focus:outline-none"
-          >
+            {/* Center Scores */}
+            <div className="flex items-center gap-4 px-6">
+          <CountUpScore 
+            value={currentAwayScore}
+            className="text-neon-cyan text-4xl md:text-5xl font-bold"
+          />
+          <span className="text-text-muted text-2xl">-</span>
+          <CountUpScore 
+            value={currentHomeScore}
+            className="text-neon-cyan text-4xl md:text-5xl font-bold"
+          />
+            </div>
+
+            {/* Home Team */}
+            <button
+          onClick={() => homeTeam?.id && navigate(`/nfl/team/${homeTeam.id}`)}
+          className="flex flex-col items-center hover:bg-neon-cyan/10 active:bg-neon-cyan/20 rounded-lg py-3 transition-all group cursor-pointer flex-1 focus:outline-none"
+            >
+          <div className="w-20 h-20 md:w-20 md:h-20 mb-2 flex items-center justify-center">
             <img
               src={getTeamLogo(homeTeam?.team)}
               alt={homeTeam?.team?.displayName}
-              className="w-20 h-20 md:w-20 md:h-20 mb-2 group-hover:scale-110 transition-transform"
+              className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform"
             />
-            <h2 className="text-text-light font-bold text-sm md:text-base text-center px-2 group-hover:text-neon-cyan transition-colors">
-              {homeTeam?.team?.displayName}
-            </h2>
-            <p className="text-text-muted text-xs">{homeTeam?.records?.[0]?.summary}</p>
-          </button>
+          </div>
+          <h2 className="text-text-light font-bold text-sm md:text-base text-center px-2 group-hover:text-neon-cyan transition-colors">
+            {homeTeam?.team?.displayName}
+          </h2>
+          <p className="text-text-muted text-xs">{homeTeam?.records?.[0]?.summary}</p>
+            </button>
+          </div>
         </div>
-      </div>
+
+
         </div>
       </div>
 
@@ -227,22 +317,54 @@ const Info: React.FC<InfoProps> = ({
                 <div className="pt-2 ">
                   <div className='mx-2'>
                     {/* Down & Distance and Possession - Above Field */}
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      {/* Down & Distance */}
-                      <div className="bg-bg-dark/50 rounded-lg p-3 border border-neon-pink/20">
-                        <p className="text-text-muted text-xs mb-1">Down & Distance</p>
-                        {competition.situation?.downDistanceText ? (
-                          <p className="text-neon-pink font-bold text-base">{competition.situation.downDistanceText}</p>
-                        ) : (
-                          <p className="text-text-light text-sm">-</p>
-                        )}
-                      </div>
+                    <div className={`grid ${isNba ? 'grid-cols-2' : 'grid-cols-2'} gap-2 mb-2`}>
+                      {/* Run Tracker (NBA) or Down & Distance (NFL) */}
+                      {isNba ? (
+                        <div className="bg-bg-dark/50 rounded-lg p-3 border border-neon-cyan/20">
+                          <p className="text-text-muted text-xs mb-1">Current Run</p>
+                          {nbaRun && runTeam ? (
+                            <div className="flex items-center justify-center gap-4">
+                              <div className="flex items-center gap-2">
+                                {getTeamLogo && runTeam?.team && (
+                                  <img
+                                    src={getTeamLogo(runTeam.team)}
+                                    alt={runTeam.team?.displayName}
+                                    className="w-8 h-8"
+                                  />
+                                )}
+                                <span className="text-text-light font-bold text-sm">
+                                  {runTeam?.team?.abbreviation}
+                                </span>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-neon-cyan font-bold text-lg">
+                                  {nbaRun.runPoints}-{nbaRun.oppPoints}
+                                </div>
+                                <div className="text-text-muted text-[11px] font-semibold">
+                                  last {nbaRun.durationLabel}
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-text-light text-sm">Run will appear after first score</span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="bg-bg-dark/50 rounded-lg p-3 border border-neon-pink/20">
+                          <p className="text-text-muted text-xs mb-1">Down & Distance</p>
+                          {competition.situation?.downDistanceText ? (
+                            <p className="text-neon-pink font-bold text-base">{competition.situation.downDistanceText}</p>
+                          ) : (
+                            <p className="text-text-light text-sm">-</p>
+                          )}
+                        </div>
+                      )}
 
                       {/* Possession */}
                       <div className="bg-bg-dark/50 rounded-lg p-3 border border-neon-cyan/20">
-                        <p className="text-text-muted text-xs mb-1">Possession</p>
+                        <p className="text-text-muted text-xs mb-1 my-auto">Possession</p>
                         {livePossession ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 mt-4 justify-center">
                             {homeTeam?.id && awayTeam?.id && (
                               <img
                                 src={livePossession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
@@ -261,59 +383,59 @@ const Info: React.FC<InfoProps> = ({
                     </div>
 
                     {/* Timeouts and Play Type - Combined Row */}
-                    <div className="flex items-center justify-between gap-3 mb-3 bg-bg-dark/30 rounded-xl p-3 border border-neon-cyan/20">
+                    <div className="items-center justify-between gap-3 mb-3 bg-bg-dark/30 rounded-xl border border-neon-cyan/20 overflow-hidden">
+                      <div className='flex p-2'>
                       {/* Away Team Timeouts */}
                       <div className="flex items-center gap-2">
                         <span className="text-text-muted text-xs font-semibold">{awayTeam?.team.abbreviation}</span>
                         <div className="flex gap-1">
-                          {[1, 2, 3].map((_, idx) => (
-                            <div
-                              key={idx}
-                              className={`w-2 h-2 rounded-full ${
-                                idx < (situation.awayTimeouts ?? 3)
-                                  ? 'bg-neon-cyan shadow-[0_0_8px_rgba(0,255,231,0.6)]'
-                                  : 'bg-gray-600'
-                              }`}
-                            />
-                          ))}
+                        {[1, 2, 3].map((_, idx) => (
+                          <div
+                          key={idx}
+                          className={`w-2 h-2 rounded-full ${
+                            idx < (situation.awayTimeouts ?? 3)
+                            ? 'bg-neon-cyan shadow-[0_0_8px_rgba(0,255,231,0.6)]'
+                            : 'bg-gray-600'
+                          }`}
+                          />
+                        ))}
                         </div>
                       </div>
-
                       {/* Play Type - Center */}
                       <div className="flex-1 flex justify-center">
                         <div className="px-4 py-1.5 bg-yellow-500/20 border border-yellow-500/50 rounded-full">
-                          <span className="text-yellow-400 font-bold text-sm">
-                            {latestPlayType || 'Play'}
-                          </span>
+                        <span className="text-yellow-400 font-bold text-sm">
+                          {latestPlayType || 'Play'}
+                        </span>
                         </div>
                       </div>
-
                       {/* Home Team Timeouts */}
                       <div className="flex items-center gap-2">
                         <div className="flex gap-1">
-                          {[1, 2, 3].map((_, idx) => (
-                            <div
-                              key={idx}
-                              className={`w-2 h-2 rounded-full ${
-                                idx < (situation.homeTimeouts ?? 3)
-                                  ? 'bg-neon-pink shadow-[0_0_8px_rgba(250,175,232,0.6)]'
-                                  : 'bg-gray-600'
-                              }`}
-                            />
-                          ))}
+                        {[1, 2, 3].map((_, idx) => (
+                          <div
+                          key={idx}
+                          className={`w-2 h-2 rounded-full ${
+                            idx < (situation.homeTimeouts ?? 3)
+                            ? 'bg-neon-pink shadow-[0_0_8px_rgba(250,175,232,0.6)]'
+                            : 'bg-gray-600'
+                          }`}
+                          />
+                        ))}
                         </div>
                         <span className="text-text-muted text-xs font-semibold">{homeTeam?.team.abbreviation}</span>
                       </div>
-                    </div>
-
-                    <FootballField
+                      </div>
+                      <FootballField
                       homeTeam={homeTeam}
                       awayTeam={awayTeam}
                       lastPlay={situation.lastPlay}
                       situation={situation}
                       playLog={playLog}
                       getTeamLogo={getTeamLogo}
-                    />
+                      />
+                    </div>
+
 
           {/* Current Picks Display */}
           {currentPicks.length > 0 && (
@@ -505,7 +627,7 @@ const Info: React.FC<InfoProps> = ({
                 <img
                   src={getTeamLogo(summary.boxscore.teams.find((t: any) => t.homeAway === 'away')?.team)}
                   alt={summary.boxscore.teams.find((t: any) => t.homeAway === 'away')?.team.displayName}
-                  className="w-12 h-12"
+                  className="w-10 h-10"
                 />
               </div>
               <div className="flex items-center justify-center">
@@ -515,7 +637,7 @@ const Info: React.FC<InfoProps> = ({
                 <img
                   src={getTeamLogo(summary.boxscore.teams.find((t: any) => t.homeAway === 'home')?.team)}
                   alt={summary.boxscore.teams.find((t: any) => t.homeAway === 'home')?.team.displayName}
-                  className="w-12 h-12"
+                  className="w-10 h-10"
                 />
               </div>
             </div>

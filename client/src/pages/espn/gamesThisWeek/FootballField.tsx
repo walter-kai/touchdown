@@ -316,6 +316,17 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const [loopCycle, setLoopCycle] = React.useState(0);
   const debugLogs = false;
 
+  const [viewportWidth, setViewportWidth] = React.useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth : 1280
+  );
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Normalize team abbreviations for yard conversions
   const abbrMatches = (abbr?: string, target?: string) => {
     if (!abbr || !target) return false;
@@ -328,9 +339,48 @@ const FootballField: React.FC<FootballFieldProps> = ({
     return false;
   };
   
-  // Single source of truth for all headshot vertical positions
-  const HEADSHOT_VERTICAL_POSITION = '64%';
-  const ARROW_VERTICAL_POSITION = '32%';
+  // Trapezoid field geometry (top narrower than bottom)
+  const TRAPEZOID_TOP_INSET = 16; // percent inset on each side at the top edge for stronger angle
+  const trapezoidBottomInset = React.useMemo(() => {
+    const baseInset = -100; // design inset at reference width
+    const referenceWidth = 1280; // px baseline for taper calculation
+    const minInset = -12;
+    const maxInset = -36;
+    const scaled = baseInset * (viewportWidth / referenceWidth);
+    return Math.max(maxInset, Math.min(minInset, scaled));
+  }, [viewportWidth]);
+  const BASE_LEFT_PERCENT = 0; // use full trapezoid width so yard lines align with edges
+  const BASE_WIDTH_PERCENT = 100; // full playable span projected to the trapezoid
+
+  const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const projectTrapezoidX = (basePercent: number, depth: number) => {
+    const t = clamp01(depth);
+    const leftEdge = lerp(TRAPEZOID_TOP_INSET, trapezoidBottomInset, t);
+    const rightEdge = lerp(100 - TRAPEZOID_TOP_INSET, 100 - trapezoidBottomInset, t);
+    const width = rightEdge - leftEdge;
+    return leftEdge + clamp01(basePercent) * width;
+  };
+
+  const yardToBasePercent = (yard: number) => {
+    const clamped = Math.max(-10, Math.min(110, yard));
+    return (BASE_LEFT_PERCENT + clamped * (BASE_WIDTH_PERCENT / 100)) / 100;
+  };
+
+  const projectYardX = (yard: number, depthPercent: number) => {
+    const depth = clamp01(depthPercent / 100);
+    return projectTrapezoidX(yardToBasePercent(yard), depth);
+  };
+
+  // Single source of truth for vertical depth positions (expressed as 0-1)
+  const ARROW_DEPTH = 0.30; // slightly above mid-plane
+  const HEADSHOT_DEPTH = 0.64; // lower on the surface
+  const NUMBER_DEPTH = 0.70; // yard numbers near the front edge
+  const arrowTopPercent = ARROW_DEPTH * 100;
+  const headshotTopPercent = HEADSHOT_DEPTH * 100;
+  const numberTopPercent = NUMBER_DEPTH * 100;
+  const arrowX = (yard: number | undefined, depthPercent = arrowTopPercent) => projectYardX(yard ?? 0, depthPercent);
+  const headshotX = (yard: number | undefined, depthPercent = headshotTopPercent) => projectYardX(yard ?? 0, depthPercent);
   // Duration of rush animation (matches rush-slide timing)
   const RUSH_ANIMATION_MS = 3000;
   const PASS_PAUSE_MS = 2000;
@@ -597,9 +647,16 @@ const FootballField: React.FC<FootballFieldProps> = ({
   }
 
   // Distance-aware timing helpers so kick/return animations scale with travel distance
-  const distancePxFromYards = (start: number | null | undefined, end: number | null | undefined, fallbackPx = 0) => {
+  const distancePxFromYards = (
+    start: number | null | undefined,
+    end: number | null | undefined,
+    fallbackPx = 0,
+    depthPercent = headshotTopPercent
+  ) => {
     if (start === null || end === null || start === undefined || end === undefined) return fallbackPx;
-    const distancePercent = (end - start) * 0.8; // yards to field percent (80% playable width)
+    const startX = projectYardX(start, depthPercent);
+    const endX = projectYardX(end, depthPercent);
+    const distancePercent = endX - startX;
     const distancePx = (distancePercent / 100) * fieldWidthPx;
     const absPx = Math.abs(distancePx);
     return absPx > 0 ? absPx : fallbackPx;
@@ -755,7 +812,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   // Drive a per-play loop length so animations restart only after their real duration plus a short buffer
   const playDurationMs = React.useMemo(() => {
     const distancePercent = (playStartYard !== undefined && playEndYard !== undefined)
-      ? (playEndYard - playStartYard) * 0.8
+      ? headshotX(playEndYard) - headshotX(playStartYard)
       : 0;
     const signedDistancePx = (distancePercent / 100) * fieldWidthPx;
     const distancePx = Math.abs(signedDistancePx);
@@ -824,45 +881,97 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
       {/* Football Field */}
       <div className={showGameInfo ? "border-t border-neon-cyan/10 pt-6" : ""}>
-    <div ref={fieldRef} className="relative w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg" style={{ height: '200px' }}>
-      {/* End zones - 10% each */}
-      <div className="absolute left-0 top-0 bottom-0 w-[10%] bg-blue-900/40 flex items-center justify-center">
-        <img src={getTeamLogo(leftTeam?.team)} alt="" className="w-12 h-12 opacity-60" />
-      </div>
-      <div className="absolute right-0 top-0 bottom-0 w-[10%] bg-red-900/40 flex items-center justify-center">
-        <img src={getTeamLogo(rightTeam?.team)} alt="" className="w-12 h-12 opacity-60" />
-      </div>
+    <div
+      ref={fieldRef}
+      className="relative w-full overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.45)]"
+      style={{
+        height: '140px',
+        background: 'linear-gradient(180deg, #0f3d15 0%, #0f5320 55%, #0a2d10 100%)',
+        clipPath: `polygon(${TRAPEZOID_TOP_INSET}% 0%, ${100 - TRAPEZOID_TOP_INSET}% 0%, 100% 100%, 0 100%)`,
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: '0'
+      }}
+    >
+      <svg className="absolute inset-0 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+        {/* Subtle shine */}
+        <linearGradient id="field-gloss" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.06)" />
+          <stop offset="35%" stopColor="rgba(255,255,255,0.0)" />
+        </linearGradient>
+        <rect x="0" y="0" width="100" height="100" fill="url(#field-gloss)" />
+        {/* End zones anchored to trapezoid corners with bottom inset */}
+        <polygon
+          points={`${TRAPEZOID_TOP_INSET},0 ${projectYardX(10, 0)},0 ${projectYardX(10, 100)},100 ${trapezoidBottomInset},100`}
+          fill="rgba(59, 130, 246, 0.20)"
+        />
+        <polygon
+          points={`${100 - TRAPEZOID_TOP_INSET},0 ${projectYardX(90, 0)},0 ${projectYardX(90, 100)},100 ${100 - trapezoidBottomInset},100`}
+          fill="rgba(239, 68, 68, 0.20)"
+        />
 
-      {/* Playing field - 80% between end zones */}
-      {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((fieldPercent) => {
-        const actualPosition = 10 + (fieldPercent * 0.8);
-        const yardNumber = fieldPercent <= 50 ? fieldPercent : 100 - fieldPercent;
-        
-        return (
-          <div
-            key={fieldPercent}
-            className="absolute top-0 bottom-0 border-l border-white/20"
-            style={{ left: `${actualPosition}%` }}
-          >
-            {fieldPercent % 10 === 0 && (
-              <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 text-white/40 text-xs font-bold">
-                {yardNumber}
-              </div>
-            )}
-          </div>
-        );
-      })}
+        {/* Yard lines with taper, projected to match angled edges */}
+        {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((fieldPercent) => {
+          const xTop = projectYardX(fieldPercent, 0);
+          const xBottom = projectYardX(fieldPercent, 100);
+          const yardNumber = fieldPercent <= 50 ? fieldPercent : 100 - fieldPercent;
+          const isFifty = fieldPercent === 50;
+          return (
+            <React.Fragment key={`line-${fieldPercent}`}>
+              <line
+                x1={`${xTop}%`}
+                y1="0%"
+                x2={`${xBottom}%`}
+                y2="100%"
+                stroke={isFifty ? 'rgba(255, 226, 143, 0.55)' : 'rgba(255,255,255,0.18)'}
+                strokeWidth={isFifty ? 0.8 : 0.45}
+              />
+              {fieldPercent % 10 === 0 && (
+                <text
+                  x={`${xBottom}%`}
+                  y={`${numberTopPercent}`}
+                  textAnchor="middle"
+                  fill="rgba(255,255,255,0.50)"
+                  fontSize="3.6"
+                  fontWeight="700"
+                  style={{ paintOrder: 'stroke', stroke: 'rgba(0,0,0,0.35)', strokeWidth: 0.5 }}
+                >
+                  {yardNumber}
+                </text>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </svg>
 
-      {/* 50 yard line highlight */}
-      <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-yellow-400/30" />
+      {/* End zone logos anchored to trapezoid projection */}
+      <div
+        className="absolute z-10"
+        style={{
+          left: `11%`,
+          top: '55%',
+          transform: 'translate(-50%, -50%)'
+        }}
+      >
+        <img src={getTeamLogo(leftTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
+      </div>
+      <div
+        className="absolute z-10"
+        style={{
+          left: `89%`,
+          top: '55%',
+          transform: 'translate(-50%, -50%)'
+        }}
+      >
+        <img src={getTeamLogo(rightTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
+      </div>
 
       {/* Start position dot - positioned at arrow/football level */}
       {playStartYard !== undefined && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
         <div
           className="absolute transform -translate-x-1/2 -translate-y-1/2"
           style={{ 
-            left: `${10 + (playStartYard * 0.8)}%`,
-            top: ARROW_VERTICAL_POSITION
+            left: `${arrowX(playStartYard)}%`,
+            top: `${arrowTopPercent}%`
           }}
         >
           <div 
@@ -884,7 +993,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               className="absolute left-0 top-0 w-full h-full"
             >
               <path
-                d={`M ${10 + (playStartYard * 0.8)}%,${ARROW_VERTICAL_POSITION} Q ${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%,13% ${10 + (playEndYard * 0.8)}%,${ARROW_VERTICAL_POSITION}`}
+                d={`M ${arrowX(playStartYard)}%,${arrowTopPercent}% Q ${arrowX(((playStartYard ?? 0) + (playEndYard ?? 0)) / 2)}%,13% ${arrowX(playEndYard)}%,${arrowTopPercent}%`}
                 stroke={playViz.color}
                 strokeWidth={playViz.width}
                 fill="none"
@@ -898,8 +1007,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
           <div
             className="absolute"
             style={{
-              left: `${10 + (playStartYard * 0.8)}%`,
-              top: ARROW_VERTICAL_POSITION,
+              left: `${arrowX(playStartYard)}%`,
+              top: `${arrowTopPercent}%`,
               transform: `translateY(-50%) rotate(${playEndYard > playStartYard ? 0 : 180}deg)`,
               transformOrigin: '0 50%'
             }}
@@ -921,7 +1030,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             <div
               className="absolute transform -translate-x-1/2 -translate-y-1/2 text-2xl z-20"
               style={{
-                left: `${10 + ((playStartYard + playEndYard) / 2 * 0.8)}%`,
+                left: `${arrowX(((playStartYard ?? 0) + (playEndYard ?? 0)) / 2)}%`,
                 top: '50%',
                 filter: `drop-shadow(0 0 8px ${playViz.glowColor})`
               }}
@@ -1041,10 +1150,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
         const passStartYard = resolvedStartYard;
         const passEndYard = resolvedEndYard;
         const baseStartX = 10 + (resolvedStartYard * 0.8);
-        const baseEndX = 10 + (resolvedEndYard * 0.8);
+        const baseEndX = headshotX(resolvedEndYard);
         // Use raw start/end yard lines to keep arrow and animation aligned
-        const passStartX = 10 + (passStartYard * 0.8);
-        const passEndX = 10 + (passEndYard * 0.8);
+        const passStartX = headshotX(passStartYard);
+        const passEndX = headshotX(passEndYard);
         const distance = passEndX - passStartX;
         const signedDistancePx = distance / 100 * fieldWidthPx;
         const distancePx = Math.abs(signedDistancePx);
@@ -1071,7 +1180,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-10"
                 style={{ 
                   left: `${baseStartX}%`,
-                  top: HEADSHOT_VERTICAL_POSITION,
+                  top: `${headshotTopPercent}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -1155,7 +1264,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${passStartX}%`,
-                  top: HEADSHOT_VERTICAL_POSITION,
+                  top: `${headshotTopPercent}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -1184,7 +1293,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-10"
                 style={{ 
                   left: `${headshotStartX}%`,
-                  top: HEADSHOT_VERTICAL_POSITION,
+                  top: `${headshotTopPercent}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -1261,7 +1370,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${kickStartX}%`,
-                  top: HEADSHOT_VERTICAL_POSITION,
+                  top: `${headshotTopPercent}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -1305,7 +1414,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     className="absolute z-10"
                     style={{ 
                       left: `calc(${returnStartX}% - 10px)`,
-                      top: HEADSHOT_VERTICAL_POSITION,
+                      top: `${headshotTopPercent}%`,
                       transform: 'translate(-50%, -50%)'
                     }}
                   >
@@ -1390,7 +1499,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${baseStartX}%`,
-                  top: HEADSHOT_VERTICAL_POSITION,
+                  top: `${headshotTopPercent}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -1417,7 +1526,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
                   left: `${baseEndX}%`,
-                  top: HEADSHOT_VERTICAL_POSITION
+                  top: `${headshotTopPercent}%`
                 }}
               >
                 <div className="relative group">
@@ -1454,7 +1563,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
                   left: `${baseEndX}%`,
-                  top: HEADSHOT_VERTICAL_POSITION
+                  top: `${headshotTopPercent}%`
                 }}
               >
                 <div className="relative group">
@@ -1487,7 +1596,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 text-2xl"
                 style={{ 
                   left: `${baseEndX - 8}%`,
-                  top: HEADSHOT_VERTICAL_POSITION,
+                  top: `${headshotTopPercent}%`,
                   filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
                 }}
                 >
@@ -1497,7 +1606,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 text-2xl"
                 style={{ 
                   left: `${baseEndX + 8}%`,
-                  top: HEADSHOT_VERTICAL_POSITION,
+                  top: `${headshotTopPercent}%`,
                   filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
                 }}
                 >
@@ -1528,7 +1637,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${baseStartX}%`,
-                  top: HEADSHOT_VERTICAL_POSITION,
+                  top: `${headshotTopPercent}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -1568,7 +1677,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-10"
                 style={{ 
                   left: `${baseEndX}%`,
-                  top: HEADSHOT_VERTICAL_POSITION,
+                  top: `${headshotTopPercent}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -1610,7 +1719,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
             className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
             style={{ 
               left: `${baseEndX}%`,
-              top: HEADSHOT_VERTICAL_POSITION
+              top: `${headshotTopPercent}%`
             }}
           >
             <div className="relative group">
