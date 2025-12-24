@@ -1,0 +1,554 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { jwtStorage } from '../../../utils/jwtStorage';
+import LoadingFootball from '../../../components/common/LoadingFootball';
+import { CountUpScore } from '../../../components/common/CountUpScore';
+import { useAuth } from '../../../providers/AuthContext';
+import { useLeague } from '../../../providers/LeagueContext';
+import TelegramCard from './TelegramCard';
+import { debugLog } from '@/utils/debugLog';
+import { getSummaryUrl } from '@/utils/espnApi';
+import { getTeamLogoUrl } from '@/utils/espnImages';
+
+interface Player {
+  id: string;
+  displayName: string;
+  position: string;
+  headshot?: string;
+  jersey?: string;
+}
+
+interface Pick {
+  players: Player[];
+  totalScore: number;
+  timestamp: string;
+}
+
+interface GamePick {
+  gameId: string;
+  picks: Pick[];
+  lastUpdated: string | null;
+  totalPicks: number;
+  teamData?: {
+    league: 'nba' | 'nfl';
+    homeTeam: {
+      name: string;
+      abbreviation: string;
+    };
+    awayTeam: {
+      name: string;
+      abbreviation: string;
+    };
+  };
+  teamLogos?: {  // Legacy support
+    awayLogo: string;
+    homeLogo: string;
+  };
+}
+
+interface GameScores {
+  gameScores: Record<string, number>;
+  sessionScores: Record<string, number>;
+  userScores: Record<string, number>;
+  totalScore: number;
+}
+
+interface GameData {
+  gameId: string;
+  gameName?: string;
+  homeTeam?: any;
+  awayTeam?: any;
+  picks: Pick[];
+  scores?: GameScores;
+  totalUserScore: number;
+  status?: 'pre' | 'in' | 'post';
+  league?: 'nfl' | 'nba';
+}
+
+const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { league } = useLeague();
+  const [loading, setLoading] = useState(true);
+  const [gamesWithPicks, setGamesWithPicks] = useState<GameData[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
+
+  // Fetch all user picks and related game data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      // Clear cache first to ensure fresh data
+      const cacheKey = 'dashboard_processed_cache';
+      localStorage.removeItem(cacheKey);
+      
+      // Wait for auth to finish loading
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const token = jwtStorage.getToken();
+
+        if (!token) {
+          setError('Please log in to view your dashboard');
+          setLoading(false);
+          return;
+        }
+
+        // Check localStorage cache first (for processed data)
+        const cacheKey = 'dashboard_processed_cache';
+        const cachedData = localStorage.getItem(cacheKey);
+        
+        if (cachedData) {
+          try {
+            const { data, timestamp } = JSON.parse(cachedData);
+            const cacheAge = Date.now() - timestamp;
+            const CACHE_DURATION = 3 * 60 * 1000; // 3 minutes
+            
+            // Use cached data if less than 3 minutes old
+            if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
+              debugLog(`✅ Using cached dashboard data (${Math.round(cacheAge / 1000)}s old)`);
+              setGamesWithPicks(data);
+              setLoading(false);
+              return;
+            } else {
+              debugLog('Cache expired, fetching fresh data...');
+              localStorage.removeItem(cacheKey);
+            }
+          } catch (error) {
+            console.error('Error parsing cached dashboard data:', error);
+            localStorage.removeItem(cacheKey);
+          }
+        }
+
+        debugLog('🔄 Fetching fresh dashboard data from API...');
+
+        // Fetch all user picks WITH scores in a single optimized call!
+        const picksResponse = await axios.get('/api/picks/user/all-with-scores', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        interface GamePickWithScores extends GamePick {
+          scores: GameScores;
+        }
+
+        const userGames: GamePickWithScores[] = picksResponse.data.games || [];
+        debugLog('📊 User games with picks and scores:', userGames);
+
+        if (userGames.length === 0) {
+          setGamesWithPicks([]);
+          setLoading(false);
+          return;
+        }
+
+        // Process all games in parallel to fetch additional game info
+        const gamePromises = userGames.map(async (gamePick) => {
+          try {
+            const totalUserScore = gamePick.scores?.totalScore || 0;
+
+            // Try to get game info from scoreboard or summary
+            let gameName = '';
+            let gameStatus: 'pre' | 'in' | 'post' = 'post';
+            let homeTeam: any = null;
+            let awayTeam: any = null;
+
+            // First priority: Check if teamData is stored (includes names & abbreviations)
+            if (gamePick.teamData) {
+              // Use stored team data
+              homeTeam = { 
+                team: { 
+                  displayName: gamePick.teamData.homeTeam.name,
+                  abbreviation: gamePick.teamData.homeTeam.abbreviation,
+                  // Use stored logo if available, otherwise construct from abbreviation
+                  logo: (gamePick.teamData.homeTeam as any).logo || getTeamLogoUrl(gamePick.teamData.homeTeam.abbreviation, gamePick.teamData.league)
+                } 
+              };
+              awayTeam = { 
+                team: { 
+                  displayName: gamePick.teamData.awayTeam.name,
+                  abbreviation: gamePick.teamData.awayTeam.abbreviation,
+                  // Use stored logo if available, otherwise construct from abbreviation
+                  logo: (gamePick.teamData.awayTeam as any).logo || getTeamLogoUrl(gamePick.teamData.awayTeam.abbreviation, gamePick.teamData.league)
+                } 
+              };
+              gameName = `${gamePick.teamData.awayTeam.abbreviation} @ ${gamePick.teamData.homeTeam.abbreviation}`;
+              debugLog(`✅ Using stored teamData for game ${gamePick.gameId}:`, {
+                away: gamePick.teamData.awayTeam.abbreviation,
+                home: gamePick.teamData.homeTeam.abbreviation
+              });
+            }
+
+            try {
+              // Always fetch from ESPN API to get team names/abbreviations and game status
+              const gameInfoResponse = await axios.get(getSummaryUrl(league, gamePick.gameId));
+              const gameInfo = gameInfoResponse.data;
+              
+              if (gameInfo.header) {
+                const competition = gameInfo.header.competitions?.[0];
+                if (competition) {
+                  const competitors = competition.competitors || [];
+                  const apiHomeTeam = competitors.find((c: any) => c.homeAway === 'home');
+                  const apiAwayTeam = competitors.find((c: any) => c.homeAway === 'away');
+                  
+                  // Use API data for team names/abbreviations
+                  // If we don't have teamData, use API as source of truth
+                  if (!gamePick.teamData) {
+                    if (apiHomeTeam) {
+                      homeTeam = {
+                        ...apiHomeTeam,
+                        team: {
+                          ...apiHomeTeam.team,
+                          // Prefer stored logo from teamLogos, otherwise construct from abbreviation
+                          logo: gamePick.teamLogos?.homeLogo || getTeamLogoUrl(apiHomeTeam.team.abbreviation, league)
+                        }
+                      };
+                    }
+                    if (apiAwayTeam) {
+                      awayTeam = {
+                        ...apiAwayTeam,
+                        team: {
+                          ...apiAwayTeam.team,
+                          // Prefer stored logo from teamLogos, otherwise construct from abbreviation
+                          logo: gamePick.teamLogos?.awayLogo || getTeamLogoUrl(apiAwayTeam.team.abbreviation, league)
+                        }
+                      };
+                    }
+                    
+                    // Set game name from API
+                    if (apiHomeTeam && apiAwayTeam) {
+                      gameName = `${apiAwayTeam.team.abbreviation} @ ${apiHomeTeam.team.abbreviation}`;
+                    }
+                  }
+                  
+                  // Determine game status from API
+                  if (competition.status?.type?.state === 'in') {
+                    gameStatus = 'in';
+                  } else if (competition.status?.type?.state === 'pre') {
+                    gameStatus = 'pre';
+                  }
+                }
+              }
+            } catch (err) {
+              console.warn(`Could not fetch game info for ${gamePick.gameId}`, err);
+            }
+            
+            // Final fallback - construct from team info if available
+            if (!gameName && homeTeam && awayTeam) {
+              const awayAbbr = awayTeam.team?.abbreviation || awayTeam.team?.displayName?.substring(0, 3).toUpperCase() || 'AWAY';
+              const homeAbbr = homeTeam.team?.abbreviation || homeTeam.team?.displayName?.substring(0, 3).toUpperCase() || 'HOME';
+              gameName = `${awayAbbr} @ ${homeAbbr}`;
+            }
+            
+            // Absolute fallback
+            if (!gameName) {
+              gameName = `Game ${gamePick.gameId}`;
+            }
+
+            return {
+              gameId: gamePick.gameId,
+              gameName,
+              homeTeam,
+              awayTeam,
+              picks: gamePick.picks,
+              scores: gamePick.scores,
+              totalUserScore,
+              status: gameStatus,
+              league: gamePick.teamData?.league || 'nfl' // Store the league for navigation
+            };
+          } catch (err) {
+            console.error(`Error fetching data for game ${gamePick.gameId}:`, err);
+            return null;
+          }
+        });
+
+        // Wait for all games to be processed
+        const results = await Promise.all(gamePromises);
+        
+        // Filter out any null results (failed requests)
+        const validGames = results.filter((game): game is NonNullable<typeof game> => game !== null);
+
+        // Sort by total score descending
+        validGames.sort((a, b) => b.totalUserScore - a.totalUserScore);
+        
+        // Cache the processed results
+        localStorage.setItem(cacheKey, JSON.stringify({
+          data: validGames,
+          timestamp: Date.now()
+        }));
+        
+        setGamesWithPicks(validGames);
+        setLoading(false);
+      } catch (err: any) {
+        console.error('Error fetching dashboard data:', err);
+        setError(err.response?.data?.message || 'Failed to load dashboard');
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user]);
+
+  // Calculate overall stats
+  const overallStats = useMemo(() => {
+    const totalGames = gamesWithPicks.length;
+    const totalScore = gamesWithPicks.reduce((sum, game) => sum + game.totalUserScore, 0);
+    const totalPlayers = new Set(
+      gamesWithPicks.flatMap(game => 
+        game.picks.flatMap(pick => 
+          pick.players.map(p => p.id)
+        )
+      )
+    ).size;
+
+    return { totalGames, totalScore, totalPlayers };
+  }, [gamesWithPicks]);
+
+  // Toggle game expansion
+  const toggleGameExpansion = (gameId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedGames(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(gameId)) {
+        newSet.delete(gameId);
+      } else {
+        newSet.add(gameId);
+      }
+      return newSet;
+    });
+  };
+
+  if (loading) {
+    return <LoadingFootball message="Loading your dashboard..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto py-8 px-4">
+        <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-6 text-center">
+          <p className="text-red-300">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto mt-2 px-2">
+      {/* Welcome Section */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-2">
+          Welcome back{user?.displayName ? `, ${user.displayName}` : ''}! 🏈
+        </h1>
+        <p className="text-gray-400">Here's your fantasy picks overview</p>
+      </div>
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="bg-bg-dark/30 border border-neon-cyan/20 rounded-lg px-6 py-2 text-center relative overflow-hidden flex flex-col">
+          <FaGamepad className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-neon-cyan/10" />
+          <h3 className="text-lg font-semibold mb-2 relative z-10">Games Played</h3>
+          <div className="flex-1 flex items-end justify-center pb-2">
+        <CountUpScore value={overallStats.totalGames} className="text-4xl font-bold text-neon-cyan relative z-10" />
+          </div>
+        </div>
+
+        <div className="bg-bg-dark/30 border border-neon-pink/20 rounded-lg p-6 text-center relative overflow-hidden flex flex-col">
+          <FaTrophy className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-neon-pink/10" />
+            <h3 className="text-lg font-semibold mb-2 relative z-10 leading-tight">Total<br />Score</h3>
+          <div className="flex-1 flex items-end justify-center pb-2">
+        <CountUpScore value={overallStats.totalScore} className="text-4xl font-bold text-neon-pink relative z-10" />
+          </div>
+        </div>
+
+        <div className="bg-bg-dark/30 border border-neon-cyan/20 rounded-lg px-6 py-2 text-center relative overflow-hidden flex flex-col">
+          <FaChartBar className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-neon-cyan/10" />
+          <h3 className="text-lg font-semibold mb-2 relative z-10">Unique Players</h3>
+          <div className="flex-1 flex items-end justify-center pb-2">
+        <CountUpScore value={overallStats.totalPlayers} className="text-4xl font-bold text-neon-cyan relative z-10" />
+          </div>
+        </div>
+      </div>
+
+      {/* Games List */}
+      <div className="space-y-6">
+        <h1 className="">
+          {/* <FaFootballBall className="text-neon-pink" /> */}
+          Your Games
+        </h1>
+
+        {gamesWithPicks.length === 0 ? (
+          <div className="text-center py-6 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg">
+            <FaFootballBall className="text-6xl text-neon-pink mx-auto my-4 animate-bounce" />
+            <h2 className="text-2xl font-bold mb-2">No Picks Yet</h2>
+            <p className="text-gray-400 mb-6">Start making picks to see your dashboard!</p>
+            <button
+              onClick={() => navigate('/nfl/games')}
+              className="btn-purple"
+            >
+              <FaGamepad className="inline mr-2" />
+              Browse Games
+            </button>
+          </div>
+        ) : (
+          gamesWithPicks.map((game) => {
+            const isExpanded = expandedGames.has(game.gameId);
+            
+            return (
+          <div
+            key={game.gameId}
+            className="bg-bg-dark/50 border border-neon-cyan/20 rounded-lg overflow-hidden hover:border-neon-cyan/50 transition-all"
+          >
+            {/* Game Header - Split into clickable areas */}
+            <div className="flex items-stretch">
+              {/* Left: Game Info - Clickable to navigate to game */}
+              <button
+                onClick={() => navigate(`/${game.league || 'nfl'}/game/${game.gameId}`)}
+                className="flex items-center gap-4 flex-1 p-4 hover:bg-neon-cyan/5 transition-all text-left"
+              >
+                {/* Team Logos */}
+                {game.awayTeam && game.homeTeam && (
+                  <div className="flex items-center gap-2">
+                    <img 
+                      src={game.awayTeam.team.logo} 
+                      alt={game.awayTeam.team.abbreviation}
+                      className="w-10 h-10"
+                    />
+                    <span className="text-lg font-bold text-gray-400">@</span>
+                    <img 
+                      src={game.homeTeam.team.logo} 
+                      alt={game.homeTeam.team.abbreviation}
+                      className="w-10 h-10"
+                    />
+                  </div>
+                )}
+                
+                {/* Game Details */}
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-white">
+                    {game.gameName}
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    {game.picks.length} pick{game.picks.length !== 1 ? 's' : ''} • {' '}
+                    {Array.from(new Set(game.picks.flatMap(pick => pick.players.map(p => p.id)))).length} players
+                  </p>
+                </div>
+
+                {/* Score Display */}
+                <div className="text-center px-6">
+                  <div className="flex items-center gap-2">
+                    <FaTrophy className="text-neon-pink text-xl" />
+                    <CountUpScore 
+                      value={game.totalUserScore} 
+                      className="text-3xl font-bold text-neon-pink"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Total Score</p>
+                </div>
+              </button>
+
+              {/* Right: Expand/Collapse Button - Full height */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleGameExpansion(game.gameId, e);
+                }}
+                className="flex items-center justify-center px-6 hover:bg-neon-cyan/10 transition-all border-l border-neon-cyan/20"
+              >
+                {isExpanded ? (
+                  <FaChevronUp className="text-neon-cyan text-xl" />
+                ) : (
+                  <FaChevronDown className="text-neon-cyan text-xl" />
+                )}
+              </button>
+            </div>
+
+            {/* Expanded Players Section */}
+            {isExpanded && (
+              <div className="border-t border-neon-cyan/20 bg-bg-darker/30">
+                <div className="p-4">
+                  <h4 className="text-sm font-semibold mb-3 flex items-center gap-2 text-gray-400 uppercase tracking-wide">
+                    <FaChartBar className="text-neon-cyan" />
+                    Your Players
+                  </h4>
+                  
+                  {game.scores && (
+                    <div className="space-y-2">
+                      {/* Get unique players with scores */}
+                      {Array.from(
+                        new Set(
+                          game.picks.flatMap(pick => 
+                            pick.players.map(p => p.id)
+                          )
+                        )
+                      ).map(playerId => {
+                        const player = game.picks
+                          .flatMap(pick => pick.players)
+                          .find(p => p.id === playerId);
+                        
+                        if (!player) return null;
+
+                        const userScore = game.scores?.userScores[playerId] || 0;
+                        const gameScore = game.scores?.gameScores[playerId] || 0;
+
+                        return (
+                          <div
+                            key={playerId}
+                            className="flex items-center justify-between p-3 bg-bg-dark/50 rounded-lg border border-neon-cyan/10 hover:border-neon-cyan/30 transition-all"
+                          >
+                            <div className="flex items-center gap-3">
+                              {player.headshot && (
+                                <img
+                                  src={player.headshot}
+                                  alt={player.displayName}
+                                  className="w-12 h-12 rounded-full bg-neon-cyan/10 object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              )}
+                              <div>
+                                <p className="font-semibold text-white">{player.displayName}</p>
+                                <p className="text-sm text-gray-400">{player.position}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center gap-2">
+                                <CountUpScore 
+                                  value={userScore} 
+                                  className="text-2xl font-bold text-neon-cyan"
+                                />
+                                <span className="text-sm text-gray-400">
+                                  / <CountUpScore value={gameScore} duration={800} />
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500">Your Score / Total</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* View Game Details Button */}
+                  <button
+                    onClick={() => navigate(`/${game.league || 'nfl'}/game/${game.gameId}`)}
+                    className="mt-4 w-full py-2 px-4 bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan/30 rounded-lg text-neon-cyan font-semibold transition-all"
+                  >
+                    View Game Details →
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;

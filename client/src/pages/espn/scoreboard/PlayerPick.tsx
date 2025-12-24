@@ -8,11 +8,12 @@ import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
 import FootballField from '@/components/espn/FootballField';
-import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
+import YourPicks from '@/pages/espn/scoreboard/YourPicks';
 import { useAuth } from '@/providers/AuthContext';
 import { useLeague } from '@/providers/LeagueContext';
 import { debugLog } from '@/utils/debugLog';
 import { getTeamApiUrl } from '@/utils/espnApi';
+import { getTeamLogoUrl } from '@/utils/espnImages';
 import type { Athlete } from '@/types/espn/athlete';
 import { Play } from '@/types/espn/playByplay';
 
@@ -309,8 +310,6 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   const { league } = useLeague();
   const [homeRoster, setHomeRoster] = useState<Athlete[]>([]);
   const [awayRoster, setAwayRoster] = useState<Athlete[]>([]);
-  const [homeTeamLogo, setHomeTeamLogo] = useState<string>('');
-  const [awayTeamLogo, setAwayTeamLogo] = useState<string>('');
   const [selectedPlayers, setSelectedPlayers] = useState<Athlete[]>([]);
   const [newPicks, setNewPicks] = useState<Athlete[]>([]); // New picks being selected
   const [isLocked, setIsLocked] = useState(false);
@@ -517,8 +516,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
   useEffect(() => {
     const fetchRoster = async (
       teamId: string, 
-      rosterSetter: React.Dispatch<React.SetStateAction<Athlete[]>>,
-      logoSetter: React.Dispatch<React.SetStateAction<string>>
+      rosterSetter: React.Dispatch<React.SetStateAction<Athlete[]>>
     ) => {
       try {
         const response = await axios.get(
@@ -526,20 +524,14 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
         );
         const athletes = response.data.team.athletes || [];
         rosterSetter(athletes);
-        
-        // Extract logo from team data
-        const logos = response.data.team.logos;
-        if (logos && logos.length > 0) {
-          logoSetter(logos[0].href);
-        }
       } catch (err) {
         console.error(`Error fetching roster for team ${teamId}:`, err);
       }
     };
 
     Promise.all([
-      fetchRoster(homeTeamId, setHomeRoster, setHomeTeamLogo),
-      fetchRoster(awayTeamId, setAwayRoster, setAwayTeamLogo)
+      fetchRoster(homeTeamId, setHomeRoster),
+      fetchRoster(awayTeamId, setAwayRoster)
     ]).finally(() => setLoading(false));
   }, [homeTeamId, awayTeamId]);
 
@@ -551,7 +543,6 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     debugLog('Player headshot value:', player.headshot);
 
     // Get the actual headshot URL - ESPN API provides it in player.headshot.href
-    const isHome = homeRoster.some(p => p.id === player.id);
     let headshotUrl: string | undefined = undefined;
     
     // Check if headshot exists and extract the URL
@@ -567,6 +558,11 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
     
     debugLog('Final headshot URL to save:', headshotUrl);
     
+    const isHome = player.team?.id === homeTeamId;
+    const teamAbbr = isHome 
+      ? (homeTeam?.team?.abbreviation || homeTeamInfo.name.substring(0, 3).toUpperCase())
+      : (awayTeam?.team?.abbreviation || awayTeamInfo.name.substring(0, 3).toUpperCase());
+    
     const normalizedPlayer: any = {
       id: player.id,
       displayName: player.displayName,
@@ -578,7 +574,7 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
       headshot: headshotUrl, // This is now guaranteed to be a string URL or undefined
       team: {
         id: isHome ? homeTeamId : awayTeamId,
-        logo: isHome ? homeTeamLogo : awayTeamLogo
+        logo: getTeamLogoUrl(teamAbbr, league)
       }
     };
 
@@ -706,9 +702,16 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
         totalScore: totalScore,
         playerLockTimes: playerLockTimes,
         playerHistory: playerHistory,
-        teamLogos: {
-          awayLogo: awayTeamLogo,
-          homeLogo: homeTeamLogo
+        teamData: {
+          league: league,
+          homeTeam: {
+            name: homeTeamInfo.name,
+            abbreviation: homeTeam?.team?.abbreviation || homeTeamInfo.name.substring(0, 3).toUpperCase()
+          },
+          awayTeam: {
+            name: awayTeamInfo.name,
+            abbreviation: awayTeam?.team?.abbreviation || awayTeamInfo.name.substring(0, 3).toUpperCase()
+          }
         }
       };
       localStorage.setItem(`playerPick_${homeTeamId}_${awayTeamId}`, JSON.stringify(state));
@@ -778,7 +781,12 @@ const PlayerPick: React.FC<PlayerPickProps> = ({
 
   const currentRoster = activeTeam === 'home' ? homeRoster : awayRoster;
   const currentTeamInfo = activeTeam === 'home' ? homeTeamInfo : awayTeamInfo;
-  const currentTeamLogo = activeTeam === 'home' ? homeTeamLogo : awayTeamLogo;
+  
+  // Construct logo URL dynamically from team abbreviation
+  const currentTeamAbbr = activeTeam === 'home' 
+    ? (homeTeam?.team?.abbreviation || homeTeamInfo?.name?.substring(0, 3).toUpperCase() || 'HOME')
+    : (awayTeam?.team?.abbreviation || awayTeamInfo?.name?.substring(0, 3).toUpperCase() || 'AWAY');
+  const currentTeamLogo = getTeamLogoUrl(currentTeamAbbr, league);
 
   if (loading) {
     return <LoadingFootball message="Loading players..." />;

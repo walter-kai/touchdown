@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
 import axios from 'axios';
-import ScoreboardView from '../scoreboard/Scoreboard';
+import ScoreboardView from '../scoreboard/Carousel';
 import SummaryView from '../summary/Summary';
 import FootballField from '@/components/espn/FootballField';
 import { useLoading } from '@/providers/LoadingContext';
@@ -297,7 +297,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
 
     fetchGameData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId, testGameId]); // Re-run when gameId or testGameId changes (for test mode)
+  }, [gameId, testGameId, league]); // Re-run when gameId, testGameId, or league changes
 
   // Derive competition + latest play for live/final handling
   const competitionLive = event?.competitions?.[0];

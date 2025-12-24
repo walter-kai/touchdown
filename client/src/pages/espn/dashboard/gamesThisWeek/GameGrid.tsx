@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaFootballBall, FaPlay, FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import LoadingFootball from '../../../components/common/LoadingFootball';
-import NewsTicker from '../../../components/espn/NewsTicker';
-import WeekNav from '../../../components/common/navs/WeekNav';
-import { useLeague } from '../../../providers/LeagueContext';
+import LoadingFootball from '../../../../components/common/LoadingFootball';
+import NewsTicker from '../../../../components/espn/NewsTicker';
+import WeekNav from '../../../../components/common/navs/WeekNav';
+import { useLeague } from '../../../../providers/LeagueContext';
 import { getScoreboardUrl, getNewsUrl } from '@/utils/espnApi';
 import type {
   Event,

@@ -46,9 +46,8 @@ const ProbabilityChart: React.FC<ProbabilityProps> = ({ gameId, competitionId, g
         setLoading(true);
         setError(null);
 
-        const response = await axios.get(
-          `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${gameId}/competitions/${competitionId}/probabilities?limit=200`
-        );
+        const probUrl = getProbabilitiesUrl(league, gameId, competitionId);
+        const response = await axios.get(probUrl);
 
         if (!response.data.items || response.data.items.length === 0) {
           throw new Error('No probability data available for this game yet');
@@ -64,7 +63,7 @@ const ProbabilityChart: React.FC<ProbabilityProps> = ({ gameId, competitionId, g
     };
 
     fetchProbabilities();
-  }, [gameId, competitionId, gameStatus]);
+  }, [gameId, competitionId, gameStatus, league]);
 
   // Filter out pre-game data and sort by time (must be before conditional returns)
   const filteredData = useMemo(() => {
@@ -160,13 +159,11 @@ const ProbabilityChart: React.FC<ProbabilityProps> = ({ gameId, competitionId, g
 
   // Handle touch events for mobile
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    e.preventDefault();
     setIsDragging(true);
     updateCursorPositionFromTouch(e);
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    e.preventDefault();
     if (isDragging) {
       updateCursorPositionFromTouch(e);
     }

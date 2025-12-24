@@ -4,11 +4,11 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import GameNavBar from './components/common/navs/NavBar';
 import LoginNav from './components/common/navs/LoginNav';
 
-import DashboardCarousel from './pages/nfl/dashoboard/DashboardCarousel';
-import GameGrid from './pages/nfl/dashoboard/GameGrid';
-import NFLTeamPage from './pages/nfl/Team';
-import NFLPlayerPage from './pages/nfl/Player';
-import GameContainer from './pages/nfl/dashoboard/GameContainer';
+import DashboardCarousel from './pages/espn/dashboard/Carousel';
+import GameGrid from './pages/espn/dashboard/gamesThisWeek/GameGrid';
+import NFLTeamPage from './pages/espn/Team';
+import NFLPlayerPage from './pages/espn/Player';
+import GameContainer from './pages/espn/dashboard/gamesThisWeek/GameContainer';
 
 
 

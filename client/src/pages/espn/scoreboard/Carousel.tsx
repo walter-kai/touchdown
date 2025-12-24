@@ -5,8 +5,8 @@ import { useAuth } from '@/providers/AuthContext';
 import HeadToHead from '@/components/espn/HeadToHead';
 import ProbChart from '@/components/espn/ProbabilityChart';
 import PointsChart from '@/components/espn/PointsChart';
-import PlayerPick from '@/pages/nfl/scoreboard/PlayerPick';
-import Info from '@/pages/nfl/scoreboard/Info';
+import PlayerPick from '@/pages/espn/scoreboard/PlayerPick';
+import Info from '@/pages/espn/scoreboard/Info';
 import type { Event } from '@/types/espn/scoreboard';
 import { Play } from '@/types/espn/playByplay';
 

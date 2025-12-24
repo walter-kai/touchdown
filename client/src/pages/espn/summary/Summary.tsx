@@ -1,12 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock, FaLock, FaCheckCircle, FaBolt, FaChartLine, FaUsers } from 'react-icons/fa';
-import PredictionChart from '@/components/espn/PredictionChart';
+import PredictionChart from '@/pages/espn/gameView/info/PredictionChart';
 import PlayLog from '@/components/espn/PlayLog';
 import PointsChart from '@/components/espn/PointsChart';
-import Info from '@/pages/nfl/scoreboard/Info';
-import YourPicks from '@/pages/nfl/scoreboard/YourPicks';
-import TopPicks from '@/pages/nfl/scoreboard/TopPicks';
+import Info from '@/pages/espn/scoreboard/Info';
+import YourPicks from '@/pages/espn/scoreboard/YourPicks';
+import TopPicks from '@/pages/espn/scoreboard/TopPicks';
 import { useAuth } from '@/providers/AuthContext';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';

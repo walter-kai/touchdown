@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export type LeagueType = 'nfl' | 'nba';
 
@@ -45,11 +46,30 @@ interface LeagueContextType {
 const LeagueContext = createContext<LeagueContextType | undefined>(undefined);
 
 export const LeagueProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  
   const [league, setLeagueState] = useState<LeagueType>(() => {
-    // Load from localStorage or default to NFL
+    // Check URL first for league context
+    const path = window.location.pathname;
+    if (path.startsWith('/nba')) return 'nba';
+    if (path.startsWith('/nfl')) return 'nfl';
+    
+    // Otherwise load from localStorage or default to NFL
     const saved = localStorage.getItem('selectedLeague');
     return (saved === 'nba' ? 'nba' : 'nfl') as LeagueType;
   });
+
+  // Update league based on URL changes
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.startsWith('/nba')) {
+      setLeagueState('nba');
+      localStorage.setItem('selectedLeague', 'nba');
+    } else if (path.startsWith('/nfl')) {
+      setLeagueState('nfl');
+      localStorage.setItem('selectedLeague', 'nfl');
+    }
+  }, [location.pathname]);
 
   const leagueConfig = leagueConfigs[league];
 

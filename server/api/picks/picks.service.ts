@@ -14,6 +14,17 @@ type CreatePickArgs = {
       awayLogo: string;
       homeLogo: string;
     };
+    teamData?: {
+      league: 'nba' | 'nfl';
+      homeTeam: {
+        name: string;
+        abbreviation: string;
+      };
+      awayTeam: {
+        name: string;
+        abbreviation: string;
+      };
+    };
   };
   gameId?: string;
   selection?: string;
@@ -101,14 +112,18 @@ export async function createPick(args: CreatePickArgs) {
   // Update in a batch for atomicity
   const batch = db.batch();
 
-  // Prepare the document update - store teamLogos at document root level
+  // Prepare the document update - store teamData at document root level
   const docUpdate: any = {
     picks: admin.firestore.FieldValue.arrayUnion(newPick),
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
   };
 
-  // Add team logos at document root if provided
-  if (args.picksState.teamLogos) {
+  // Add team data if provided (includes league, team names, and logos)
+  if (args.picksState.teamData) {
+    docUpdate.teamData = args.picksState.teamData;
+  } 
+  // Fallback: support legacy teamLogos format
+  else if (args.picksState.teamLogos) {
     docUpdate.teamLogos = {
       awayLogo: args.picksState.teamLogos.awayLogo,
       homeLogo: args.picksState.teamLogos.homeLogo
@@ -475,6 +490,7 @@ export async function getAllUserPicksWithScores(userId: string, getPlayByPlayFn:
             lastUpdated: null,
             totalPicks: 0,
             scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 },
+            teamData: data?.teamData,
             teamLogos: data?.teamLogos
           };
         }
@@ -493,7 +509,8 @@ export async function getAllUserPicksWithScores(userId: string, getPlayByPlayFn:
               })),
               lastUpdated: data?.timestamp?.toDate ? data.timestamp.toDate().toISOString() : null,
               totalPicks: picks.length,
-              scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 }
+              scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 },
+              teamData: data?.teamData,
             };
           }
 
@@ -509,7 +526,7 @@ export async function getAllUserPicksWithScores(userId: string, getPlayByPlayFn:
             lastUpdated: data?.timestamp?.toDate ? data.timestamp.toDate().toISOString() : null,
             totalPicks: picks.length,
             scores,
-            teamLogos: data?.teamLogos
+            teamData: data?.teamData
           };
         } catch (error) {
           logger.error(`Error calculating scores for game ${gameId}: ${error}`);
@@ -522,7 +539,7 @@ export async function getAllUserPicksWithScores(userId: string, getPlayByPlayFn:
             lastUpdated: data?.timestamp?.toDate ? data.timestamp.toDate().toISOString() : null,
             totalPicks: picks.length,
             scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 },
-            teamLogos: data?.teamLogos
+            teamData: data?.teamData
           };
         }
       })

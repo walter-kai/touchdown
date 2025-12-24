@@ -23,3 +23,10 @@ export const getHeadshotFromIdOrUrl = (id?: string | number, raw?: string, leagu
   const sport = league === 'nba' ? 'nba' : 'nfl';
   return `https://a.espncdn.com/i/headshots/${league}/players/full/${id}.png`;
 };
+
+// Get team logo URL from abbreviation
+// Example: getTeamLogoUrl('wsh', 'nba') => 'https://a.espncdn.com/i/teamlogos/nba/500/wsh.png'
+export const getTeamLogoUrl = (abbreviation: string, league: 'nfl' | 'nba'): string => {
+  if (!abbreviation) return '';
+  return `https://a.espncdn.com/i/teamlogos/${league}/500/${abbreviation.toLowerCase()}.png`;
+};
