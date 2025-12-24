@@ -6,7 +6,7 @@
 /**
  * Play types from ESPN API
  */
-export type PlayType =
+export type PlayTypeNFL =
   | 'Rush'
   | 'Pass Reception'
   | 'Pass Incompletion'
@@ -69,7 +69,7 @@ export interface Play {
   team?: string;
   
   /** Type of play */
-  type: PlayType;
+  type: PlayTypeNFL;
   
   /** Points scored on this play (0 if no score) */
   scoreValue?: number;

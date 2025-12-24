@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaFootballBall } from 'react-icons/fa';
-import { Play, PlayType } from '@/types/espn/playByplay';
+import { Play, PlayTypeNFL } from '@/types/espn/playByplay';
 import '@/styles/football.css';
 import { useLeague } from '@/providers/LeagueContext';
 import { usePlays } from '@/providers/PlaysContext';
@@ -45,7 +45,7 @@ interface FootballFieldProps {
 }
 
 // Play visualization config
-const getPlayVisualization = (playType?: PlayType | string | { text: string }) => {
+const getPlayVisualization = (playType?: PlayTypeNFL | string | { text: string }) => {
   // Handle both string and object types - ensure we always have a string
   let typeStr = '';
   if (typeof playType === 'string') {
@@ -883,87 +883,96 @@ const FootballField: React.FC<FootballFieldProps> = ({
       <div className={showGameInfo ? "border-t border-neon-cyan/10 pt-6" : ""}>
     <div
       ref={fieldRef}
-      className="relative w-full overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.45)]"
+      className="relative w-full overflow-visible shadow-[0_24px_60px_rgba(0,0,0,0.45)]"
       style={{
-        height: '140px',
-        background: 'linear-gradient(180deg, #0f3d15 0%, #0f5320 55%, #0a2d10 100%)',
-        clipPath: `polygon(${TRAPEZOID_TOP_INSET}% 0%, ${100 - TRAPEZOID_TOP_INSET}% 0%, 100% 100%, 0 100%)`,
-        border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '0'
+        height: '140px'
       }}
     >
-      <svg className="absolute inset-0 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-        {/* Subtle shine */}
-        <linearGradient id="field-gloss" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.06)" />
-          <stop offset="35%" stopColor="rgba(255,255,255,0.0)" />
-        </linearGradient>
-        <rect x="0" y="0" width="100" height="100" fill="url(#field-gloss)" />
-        {/* End zones anchored to trapezoid corners with bottom inset */}
-        <polygon
-          points={`${TRAPEZOID_TOP_INSET},0 ${projectYardX(10, 0)},0 ${projectYardX(10, 100)},100 ${trapezoidBottomInset},100`}
-          fill="rgba(59, 130, 246, 0.20)"
-        />
-        <polygon
-          points={`${100 - TRAPEZOID_TOP_INSET},0 ${projectYardX(90, 0)},0 ${projectYardX(90, 100)},100 ${100 - trapezoidBottomInset},100`}
-          fill="rgba(239, 68, 68, 0.20)"
-        />
-
-        {/* Yard lines with taper, projected to match angled edges */}
-        {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((fieldPercent) => {
-          const xTop = projectYardX(fieldPercent, 0);
-          const xBottom = projectYardX(fieldPercent, 100);
-          const yardNumber = fieldPercent <= 50 ? fieldPercent : 100 - fieldPercent;
-          const isFifty = fieldPercent === 50;
-          return (
-            <React.Fragment key={`line-${fieldPercent}`}>
-              <line
-                x1={`${xTop}%`}
-                y1="0%"
-                x2={`${xBottom}%`}
-                y2="100%"
-                stroke={isFifty ? 'rgba(255, 226, 143, 0.55)' : 'rgba(255,255,255,0.18)'}
-                strokeWidth={isFifty ? 0.8 : 0.45}
-              />
-              {fieldPercent % 10 === 0 && (
-                <text
-                  x={`${xBottom}%`}
-                  y={`${numberTopPercent}`}
-                  textAnchor="middle"
-                  fill="rgba(255,255,255,0.50)"
-                  fontSize="3.6"
-                  fontWeight="700"
-                  style={{ paintOrder: 'stroke', stroke: 'rgba(0,0,0,0.35)', strokeWidth: 0.5 }}
-                >
-                  {yardNumber}
-                </text>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </svg>
-
-      {/* End zone logos anchored to trapezoid projection */}
       <div
-        className="absolute z-10"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          left: `11%`,
-          top: '55%',
-          transform: 'translate(-50%, -50%)'
+          background: 'linear-gradient(180deg, #0f3d15 0%, #0f5320 55%, #0a2d10 100%)',
+          clipPath: `polygon(${TRAPEZOID_TOP_INSET}% 0%, ${100 - TRAPEZOID_TOP_INSET}% 0%, 100% 100%, 0 100%)`,
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '0',
+          overflow: 'hidden'
         }}
       >
-        <img src={getTeamLogo(leftTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
+        <svg className="absolute inset-0 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+          {/* Subtle shine */}
+          <linearGradient id="field-gloss" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.06)" />
+            <stop offset="35%" stopColor="rgba(255,255,255,0.0)" />
+          </linearGradient>
+          <rect x="0" y="0" width="100" height="100" fill="url(#field-gloss)" />
+          {/* End zones anchored to trapezoid corners with bottom inset */}
+          <polygon
+            points={`${TRAPEZOID_TOP_INSET},0 ${projectYardX(10, 0)},0 ${projectYardX(10, 100)},100 ${trapezoidBottomInset},100`}
+            fill="rgba(59, 130, 246, 0.20)"
+          />
+          <polygon
+            points={`${100 - TRAPEZOID_TOP_INSET},0 ${projectYardX(90, 0)},0 ${projectYardX(90, 100)},100 ${100 - trapezoidBottomInset},100`}
+            fill="rgba(239, 68, 68, 0.20)"
+          />
+
+          {/* Yard lines with taper, projected to match angled edges */}
+          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((fieldPercent) => {
+            const xTop = projectYardX(fieldPercent, 0);
+            const xBottom = projectYardX(fieldPercent, 100);
+            const yardNumber = fieldPercent <= 50 ? fieldPercent : 100 - fieldPercent;
+            const isFifty = fieldPercent === 50;
+            return (
+              <React.Fragment key={`line-${fieldPercent}`}>
+                <line
+                  x1={`${xTop}%`}
+                  y1="0%"
+                  x2={`${xBottom}%`}
+                  y2="100%"
+                  stroke={isFifty ? 'rgba(255, 226, 143, 0.55)' : 'rgba(255,255,255,0.18)'}
+                  strokeWidth={isFifty ? 0.8 : 0.45}
+                />
+                {fieldPercent % 10 === 0 && (
+                  <text
+                    x={`${xBottom}%`}
+                    y={`${numberTopPercent}`}
+                    textAnchor="middle"
+                    fill="rgba(255,255,255,0.50)"
+                    fontSize="3.6"
+                    fontWeight="700"
+                    style={{ paintOrder: 'stroke', stroke: 'rgba(0,0,0,0.35)', strokeWidth: 0.5 }}
+                  >
+                    {yardNumber}
+                  </text>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </svg>
+
+        {/* End zone logos anchored to trapezoid projection */}
+        <div
+          className="absolute z-10"
+          style={{
+            left: `11%`,
+            top: '55%',
+            transform: 'translate(-50%, -50%)'
+          }}
+        >
+          <img src={getTeamLogo(leftTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
+        </div>
+        <div
+          className="absolute z-10"
+          style={{
+            left: `89%`,
+            top: '55%',
+            transform: 'translate(-50%, -50%)'
+          }}
+        >
+          <img src={getTeamLogo(rightTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
+        </div>
       </div>
-      <div
-        className="absolute z-10"
-        style={{
-          left: `89%`,
-          top: '55%',
-          transform: 'translate(-50%, -50%)'
-        }}
-      >
-        <img src={getTeamLogo(rightTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
-      </div>
+
+      <div className="absolute inset-0 z-[40]">
 
       {/* Start position dot - positioned at arrow/football level */}
       {playStartYard !== undefined && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
@@ -1762,11 +1771,13 @@ const FootballField: React.FC<FootballFieldProps> = ({
             </div>
           </div>
         );
-      })()}
-    </div>
+    })()}
 
-      {/* Latest Play - Only show if showGameInfo is true */}
-      {showGameInfo && lastPlay && (() => {
+    </div> {/* overlay */}
+    </div> {/* field container */}
+
+    {/* Latest Play - Only show if showGameInfo is true */}
+    {showGameInfo && lastPlay && (() => {
         const latestPlay = lastPlay;
         const team = latestPlay.possession === homeTeam?.id ? homeTeam : awayTeam;
         const quarter = (latestPlay as any).quarter;
@@ -1815,7 +1826,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           </div>
         );
       })()}
-      </div>
+    </div>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad, FaChevronDown, FaChevronUp, FaUser } from 'react-icons/fa';
 import { jwtStorage } from '../../../utils/jwtStorage';
 import LoadingFootball from '../../../components/common/LoadingFootball';
 import { CountUpScore } from '../../../components/common/CountUpScore';
@@ -75,6 +75,14 @@ const Dashboard: React.FC = () => {
   const [gamesWithPicks, setGamesWithPicks] = useState<GameData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
+  const [avatarError, setAvatarError] = useState(false);
+
+  const profilePicture = user?.photoUrl || user?.googlePicture || user?.providerData?.googlePicture;
+
+  useEffect(() => {
+    // Reset avatar error when the source changes
+    setAvatarError(false);
+  }, [profilePicture]);
 
   // Fetch all user picks and related game data
   useEffect(() => {
@@ -337,29 +345,35 @@ const Dashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto mt-2 px-2">
       {/* Welcome Section */}
-      <div className="mb-8 flex items-center gap-6">
+      <div className="mb-4 flex items-center gap-6">
         {/* Dancing gif with profile picture as head */}
         <div className="relative flex-shrink-0">
           <img
             src="/assets/football_dance.gif"
             alt="Dancing"
-            className="w-24 h-24 object-contain"
+            className="w-24 h-24 object-contain mt-4"
           />
-          {user?.photoUrl && (
+          {profilePicture && !avatarError ? (
             <img
-              src={user.photoUrl}
-              alt={user.displayName}
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full border-2 border-neon-cyan shadow-lg object-cover"
+              src={profilePicture}
+              alt={user?.displayName || 'User'}
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full border-2 border-neon-cyan shadow-lg object-cover bg-bg-dark/50"
+              onError={() => setAvatarError(true)}
+              referrerPolicy="no-referrer"
             />
+          ) : (
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full border-2 border-neon-cyan shadow-lg bg-bg-dark flex items-center justify-center">
+              <FaUser className="text-neon-cyan text-sm" />
+            </div>
           )}
         </div>
         
         {/* Welcome text */}
         <div className="flex-1">
-          <h2 className="text-xl sm:text-2xl text-gray-400 font-normal mb-1">
+          <h3 className="mb-0 text-left">
             Welcome back
-          </h2>
-          <h1 className="text-3xl sm:text-5xl font-bold text-neon-cyan">
+          </h3>
+          <h1>
             {user?.displayName || 'Player'}!
           </h1>
           <p className="text-gray-400 text-sm sm:text-base mt-2">Here's your fantasy picks overview</p>
@@ -367,18 +381,18 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-bg-dark/30 border border-neon-cyan/20 rounded-lg px-6 py-2 text-center relative overflow-hidden flex flex-col">
           <FaGamepad className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-neon-cyan/10" />
-          <h3 className="text-lg font-semibold mb-2 relative z-10">Games Played</h3>
+          <h3 className="mb-2 relative z-10">Games Played</h3>
           <div className="flex-1 flex items-end justify-center pb-2">
-        <CountUpScore value={overallStats.totalGames} className="text-4xl font-bold text-neon-cyan relative z-10" />
+        <CountUpScore value={overallStats.totalGames} className="text-4xl font-bold text-neon-pink relative z-10" />
           </div>
         </div>
 
-        <div className="bg-bg-dark/30 border border-neon-pink/20 rounded-lg p-6 text-center relative overflow-hidden flex flex-col">
+        <div className="bg-bg-dark/30 border border-neon-pink/20 rounded-lg  px-6 py-2 text-center relative overflow-hidden flex flex-col ">
           <FaTrophy className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-neon-pink/10" />
-            <h3 className="text-lg font-semibold mb-2 relative z-10 leading-tight">Total<br />Score</h3>
+          <h3 className="mb-2 relative z-10">Total<br />Score</h3>
           <div className="flex-1 flex items-end justify-center pb-2">
         <CountUpScore value={overallStats.totalScore} className="text-4xl font-bold text-neon-pink relative z-10" />
           </div>
@@ -386,15 +400,15 @@ const Dashboard: React.FC = () => {
 
         <div className="bg-bg-dark/30 border border-neon-cyan/20 rounded-lg px-6 py-2 text-center relative overflow-hidden flex flex-col">
           <FaChartBar className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-neon-cyan/10" />
-          <h3 className="text-lg font-semibold mb-2 relative z-10">Unique Players</h3>
+          <h3 className="mb-2 relative z-10">Unique Players</h3>
           <div className="flex-1 flex items-end justify-center pb-2">
-        <CountUpScore value={overallStats.totalPlayers} className="text-4xl font-bold text-neon-cyan relative z-10" />
+        <CountUpScore value={overallStats.totalPlayers} className="text-4xl font-bold text-neon-pink relative z-10" />
           </div>
         </div>
       </div>
 
       {/* Games List */}
-      <div className="space-y-6">
+      <div className="space-y-2">
         <h1 className="">
           {/* <FaFootballBall className="text-neon-pink" /> */}
           Your Games

@@ -1,0 +1,356 @@
+.basketball-wrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.basketball-court {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.1)),
+		linear-gradient(90deg, #2f1f12 0%, #3a2415 50%, #2f1f12 100%);
+	border: 2px solid rgba(255, 255, 255, 0.15);
+	border-radius: 18px;
+	overflow: hidden;
+	box-shadow: 0 0 30px rgba(0, 0, 0, 0.4), 0 0 25px rgba(0, 255, 231, 0.08) inset;
+}
+
+.court-lines,
+.half-line,
+.center-circle,
+.paint,
+.three-arc,
+.hoop {
+	position: absolute;
+	pointer-events: none;
+}
+
+.court-lines {
+	inset: 6% 4%;
+	border: 2px solid rgba(255, 255, 255, 0.35);
+	border-radius: 12px;
+}
+
+.half-line {
+	left: 50%;
+	top: 4%;
+	bottom: 4%;
+	width: 2px;
+	background: rgba(255, 255, 255, 0.35);
+	transform: translateX(-50%);
+}
+
+.center-circle {
+	width: 18%;
+	height: 18%;
+	border: 2px solid rgba(255, 255, 255, 0.35);
+	border-radius: 50%;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
+}
+
+.paint {
+	width: 16%;
+	height: 34%;
+	top: 33%;
+	border: 2px solid rgba(255, 255, 255, 0.35);
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+}
+
+.paint-left {
+	left: 5%;
+}
+
+.paint-right {
+	right: 5%;
+}
+
+.three-arc {
+	width: 22%;
+	height: 60%;
+	top: 20%;
+	border: 2px solid rgba(255, 255, 255, 0.35);
+	border-radius: 50% / 60%;
+}
+
+.three-left {
+	left: -12%;
+}
+
+.three-right {
+	right: -12%;
+}
+
+.hoop {
+	width: 26px;
+	height: 26px;
+	border: 3px solid #ff7b5f;
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.4), rgba(255, 123, 95, 0.2));
+	top: 50%;
+	transform: translateY(-50%);
+	box-shadow: 0 0 20px rgba(255, 123, 95, 0.6);
+}
+
+.hoop-left {
+	left: 3.5%;
+}
+
+.hoop-right {
+	right: 3.5%;
+}
+
+.team-badge {
+	position: absolute;
+	top: 8px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background: rgba(0, 0, 0, 0.45);
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	padding: 6px 10px;
+	border-radius: 999px;
+	backdrop-filter: blur(6px);
+}
+
+.team-left {
+	left: 10px;
+}
+
+.team-right {
+	right: 10px;
+	flex-direction: row-reverse;
+}
+
+.team-badge img {
+	width: 28px;
+	height: 28px;
+	object-fit: contain;
+	filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.45));
+}
+
+.team-meta {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.1;
+}
+
+.team-meta.align-right {
+	text-align: right;
+}
+
+.team-name {
+	font-size: 0.85rem;
+	color: #f7fafc;
+	letter-spacing: 0.01em;
+}
+
+.team-score {
+	font-weight: 700;
+	color: #00ffe7;
+	font-size: 1rem;
+}
+
+.play-ball,
+.play-trail {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 18px;
+	height: 18px;
+	display: grid;
+	place-items: center;
+	color: #0b0b0b;
+	transform: translate(var(--sx, 50%), var(--sy, 50%));
+	will-change: transform, opacity;
+}
+
+.play-ball {
+	background: radial-gradient(circle at 30% 30%, #ffefba, #ff7b5f 70%);
+	border: 2px solid rgba(255, 255, 255, 0.4);
+	border-radius: 50%;
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 22px rgba(255, 123, 95, 0.5);
+	filter: drop-shadow(0 0 16px rgba(0, 255, 231, 0.5));
+}
+
+.play-ball::after {
+	content: '';
+	position: absolute;
+	inset: -4px;
+	border-radius: 50%;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.play-ball-icon {
+	font-size: 12px;
+}
+
+.play-trail {
+	width: 14px;
+	height: 14px;
+	opacity: 0.55;
+	color: rgba(255, 255, 255, 0.85);
+	filter: blur(1px) drop-shadow(0 0 14px rgba(0, 255, 231, 0.4));
+}
+
+.play-banner {
+	background: rgba(10, 12, 18, 0.7);
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	border-radius: 12px;
+	padding: 10px 12px;
+	display: grid;
+	gap: 4px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.play-banner-type {
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	font-size: 0.9rem;
+}
+
+.play-banner-text {
+	color: #e2e8f0;
+	font-size: 0.95rem;
+	line-height: 1.35;
+}
+
+.play-banner-meta {
+	display: flex;
+	gap: 10px;
+	font-size: 0.8rem;
+	color: #a0aec0;
+}
+
+.points-tag {
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: rgba(0, 255, 231, 0.15);
+	border: 1px solid rgba(0, 255, 231, 0.35);
+	color: #00ffe7;
+}
+
+@keyframes shot-arc {
+	0% { transform: translate(var(--sx), var(--sy)) scale(0.96); opacity: 1; }
+	50% { transform: translate(var(--mx), var(--my)) scale(1.08); opacity: 1; }
+	100% { transform: translate(var(--ex), var(--ey)) scale(1); opacity: 1; }
+}
+
+@keyframes three-arc {
+	0% { transform: translate(var(--sx), var(--sy)) scale(0.94); opacity: 1; }
+	45% { transform: translate(var(--mx), calc(var(--my) - 6%)) scale(1.12); opacity: 1; }
+	100% { transform: translate(var(--ex), var(--ey)) scale(1); opacity: 1; }
+}
+
+@keyframes dunk-slam {
+	0% { transform: translate(var(--sx), var(--sy)) scale(0.9); }
+	45% { transform: translate(var(--mx), calc(var(--my) - 8%)) scale(1.05); }
+	70% { transform: translate(var(--ex), var(--ey)) scale(1.2); filter: drop-shadow(0 0 24px rgba(255, 183, 3, 0.7)); }
+	100% { transform: translate(var(--ex), calc(var(--ey) + 6%)) scale(0.95); opacity: 0.9; }
+}
+
+@keyframes layup-flow {
+	0% { transform: translate(var(--sx), var(--sy)) scale(0.92); }
+	55% { transform: translate(var(--mx), calc(var(--my) - 4%)) scale(1.04); }
+	100% { transform: translate(var(--ex), var(--ey)) scale(0.98); opacity: 1; }
+}
+
+@keyframes hook-curve {
+	0% { transform: translate(var(--sx), var(--sy)) rotate(-4deg); }
+	60% { transform: translate(var(--mx), calc(var(--my) - 2%)) rotate(8deg); }
+	100% { transform: translate(var(--ex), var(--ey)) rotate(14deg); }
+}
+
+@keyframes alley-oop {
+	0% { transform: translate(var(--sx), var(--sy)) scale(0.9); }
+	40% { transform: translate(var(--mx), calc(var(--my) - 10%)) scale(1.05); }
+	70% { transform: translate(var(--ex), var(--ey)) scale(1.18); }
+	100% { transform: translate(var(--ex), calc(var(--ey) + 4%)) scale(0.98); opacity: 0.92; }
+}
+
+@keyframes tip-in {
+	0% { transform: translate(var(--sx), var(--sy)) scale(0.9); }
+	35% { transform: translate(var(--mx), calc(var(--my) - 6%)) scale(1.1); }
+	60% { transform: translate(var(--ex), var(--ey)) scale(1.15); }
+	100% { transform: translate(var(--ex), calc(var(--ey) + 3%)) scale(0.94); opacity: 0.95; }
+}
+
+@keyframes rebound-bounce {
+	0% { transform: translate(var(--ex), calc(var(--ey) - 8%)) scale(1.1); }
+	45% { transform: translate(var(--ex), calc(var(--ey) + 10%)) scale(0.9); }
+	80% { transform: translate(var(--ex), var(--ey)) scale(1.02); }
+	100% { transform: translate(var(--ex), var(--ey)) scale(1); }
+}
+
+@keyframes steal-dash {
+	0% { transform: translate(var(--sx), var(--sy)) scale(0.9); opacity: 0.9; }
+	100% { transform: translate(var(--ex), var(--ey)) scale(1); opacity: 1; }
+}
+
+@keyframes block-swat {
+	0% { transform: translate(var(--sx), var(--sy)) scale(1); }
+	40% { transform: translate(var(--mx), calc(var(--my) - 6%)) scale(1.08); }
+	70% { transform: translate(var(--ex), calc(var(--ey) - 8%)) scale(1.12) rotate(-10deg); }
+	100% { transform: translate(var(--ex), calc(var(--ey) + 4%)) scale(0.94); opacity: 0.8; }
+}
+
+@keyframes turnover-pop {
+	0% { transform: translate(var(--sx), var(--sy)) scale(1); }
+	35% { transform: translate(var(--mx), calc(var(--my) - 5%)) scale(1.08); }
+	65% { transform: translate(var(--ex), var(--ey)) scale(0.92); filter: grayscale(0.4); }
+	100% { transform: translate(var(--sx), calc(var(--sy) + 6%)) scale(0.85); opacity: 0.75; }
+}
+
+@keyframes fast-break {
+	0% { transform: translate(var(--sx), var(--sy)); filter: drop-shadow(0 0 10px rgba(0, 255, 231, 0.6)); }
+	50% { transform: translate(var(--mx), var(--my)); filter: drop-shadow(0 0 20px rgba(0, 255, 231, 0.8)); }
+	100% { transform: translate(var(--ex), var(--ey)); filter: drop-shadow(0 0 26px rgba(0, 255, 231, 0.9)); }
+}
+
+@keyframes foul-flag {
+	0% { transform: translate(var(--sx), var(--sy)) rotate(0deg); opacity: 1; }
+	50% { transform: translate(var(--mx), var(--my)) rotate(14deg); opacity: 0.9; }
+	100% { transform: translate(var(--ex), var(--ey)) rotate(-10deg); opacity: 0.85; }
+}
+
+@keyframes timeout-pulse {
+	0% { transform: translate(var(--sx), var(--sy)) scale(0.92); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+	50% { transform: translate(var(--sx), var(--sy)) scale(1.06); box-shadow: 0 0 18px 8px rgba(255, 255, 255, 0.15); }
+	100% { transform: translate(var(--sx), var(--sy)) scale(0.92); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.05); }
+}
+
+@keyframes period-breath {
+	0% { transform: translate(var(--sx), var(--sy)) scale(0.9); opacity: 0.8; }
+	50% { transform: translate(var(--sx), var(--sy)) scale(1.08); opacity: 1; }
+	100% { transform: translate(var(--sx), var(--sy)) scale(0.9); opacity: 0.8; }
+}
+
+.animate-jumper { animation: shot-arc 2.6s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
+.animate-jumper-trail { animation: shot-arc 2.6s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; animation-delay: 0.06s; }
+
+.animate-three-arc { animation: three-arc 3.2s cubic-bezier(0.34, 0.01, 0.28, 1) infinite; }
+.animate-three-arc-trail { animation: three-arc 3.2s cubic-bezier(0.34, 0.01, 0.28, 1) infinite; animation-delay: 0.08s; opacity: 0.5; }
+
+.animate-dunk-slam { animation: dunk-slam 2.2s cubic-bezier(0.25, 0.75, 0.4, 1) infinite; }
+.animate-layup { animation: layup-flow 2.4s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
+.animate-layup-trail { animation: layup-flow 2.4s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; animation-delay: 0.08s; opacity: 0.5; }
+
+.animate-free-throw { animation: shot-arc 2.8s ease-in-out infinite; }
+.animate-free-throw-trail { animation: shot-arc 2.8s ease-in-out infinite; animation-delay: 0.08s; opacity: 0.45; }
+
+.animate-hook-shot { animation: hook-curve 2.6s ease-in-out infinite; }
+.animate-alley-oop { animation: alley-oop 2.6s ease-in-out infinite; }
+.animate-tip-in { animation: tip-in 2.2s ease-in-out infinite; }
+.animate-rebound { animation: rebound-bounce 2s ease-out infinite; }
+
+.animate-steal { animation: steal-dash 1.8s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
+.animate-block { animation: block-swat 2.1s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite; }
+.animate-turnover { animation: turnover-pop 2.4s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
+.animate-fast-break { animation: fast-break 1.8s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
+
+.animate-foul { animation: foul-flag 2.2s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
+.animate-timeout { animation: timeout-pulse 2.6s ease-in-out infinite; }
+.animate-period { animation: period-breath 3s ease-in-out infinite; }
