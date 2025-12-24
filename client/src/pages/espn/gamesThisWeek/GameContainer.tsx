@@ -68,6 +68,13 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
   const refreshPlaysFromApi = useCallback(async () => {
     if (!gameId) return;
 
+    // Only fetch plays for in-progress or completed games
+    const status = event?.status?.type?.state;
+    if (status !== 'in' && status !== 'post') {
+      debugLog('⏸ Skipping plays refresh: game not started yet');
+      return;
+    }
+
     const cacheKey = `playlog_${gameId}`;
     const actualGameId = gameId === 'test' ? testGameId : gameId;
     const compId = event?.competitions?.[0]?.id || actualGameId;
@@ -92,6 +99,15 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
   useEffect(() => {
     const loadPreviousPlays = async () => {
       if (!gameId || playsLoaded) return;
+
+      // Only fetch plays for in-progress or completed games
+      const status = event?.status?.type?.state;
+      if (status !== 'in' && status !== 'post') {
+        debugLog('⏸ Skipping pregame plays fetch');
+        setPlayLog([]);
+        setPlaysLoaded(true);
+        return;
+      }
 
       // Check localStorage first
       const cacheKey = `playlog_${gameId}`;

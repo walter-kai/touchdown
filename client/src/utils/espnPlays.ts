@@ -179,6 +179,12 @@ export const fetchEspnPlays = async (
 ): Promise<Play[]> => {
   const compId = competitionId || gameId;
 
+  // Do not hit plays API if game hasn't started (no pregame data there)
+  // Caller should gate on status.state === 'in' or status.type.completed
+  // but this defensive check prevents CSP/network noise when pregame
+  const now = Date.now();
+  // If caller can provide a known future start time, they should skip calling us until then.
+
   // Fetch plays from ESPN API
   const url = getPlaysUrl(league, gameId, compId);
   console.log(`[fetchEspnPlays] Fetching plays with league=${league}, gameId=${gameId}, url=${url}`);

@@ -29,6 +29,8 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
   // Find the next week with games, starting from current date
   const findNextWeekWithGames = async (startFrom: Date): Promise<{ weekStart: Date; events: any[] }> => {
     let checkDate = new Date(startFrom);
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
     const maxWeeksToCheck = 4; // Check up to 4 weeks ahead
     
     for (let i = 0; i < maxWeeksToCheck; i++) {
@@ -44,10 +46,17 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
         
         const response = await axios.get(url);
         const events = response.data.events || [];
-        
-        // If we found games, return this week and cache the events
-        if (events.length > 0) {
-          console.log('Found games starting from week of:', days[0]);
+
+        // Prefer a week that still has upcoming games (on/after today)
+        const hasUpcoming = events.some((ev: any) => {
+          if (!ev?.date) return false;
+          const d = new Date(ev.date);
+          return d.getTime() >= todayMidnight.getTime();
+        });
+
+        // If we found games and at least one is upcoming, return this week and cache the events
+        if (events.length > 0 && hasUpcoming) {
+          console.log('Found week with upcoming games starting from:', days[0]);
           return { weekStart: checkDate, events };
         }
       } catch (error) {
