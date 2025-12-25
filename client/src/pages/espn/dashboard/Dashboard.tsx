@@ -81,7 +81,42 @@ const Dashboard: React.FC = () => {
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
 
   const profilePicture = user?.photoUrl || user?.googlePicture || user?.providerData?.googlePicture;
+  // Helper function to render text with emojis properly
+  const renderTextWithEmojis = (text: string) => {
+    const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/gu;
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match;
 
+    while ((match = emojiRegex.exec(text)) !== null) {
+      // Add text before emoji
+      if (match.index > lastIndex) {
+        parts.push(
+          <span key={`text-${lastIndex}`}>
+            {text.slice(lastIndex, match.index)}
+          </span>
+        );
+      }
+      // Add emoji with explicit color to override h1 transparency
+      parts.push(
+        <span key={`emoji-${match.index}`} style={{ color: '#fff', backgroundClip: 'unset', WebkitBackgroundClip: 'unset', textShadow: 'none' }}>
+          {match[0]}
+        </span>
+      );
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      parts.push(
+        <span key={`text-${lastIndex}`}>
+          {text.slice(lastIndex)}
+        </span>
+      );
+    }
+
+    return parts.length > 0 ? parts : text;
+  };
   useEffect(() => {
     // Reset avatar error when the source changes
     setAvatarError(false);
@@ -396,7 +431,7 @@ const Dashboard: React.FC = () => {
             Welcome back
           </h3>
           <h1>
-            {user?.displayName || 'Player'}!
+            {renderTextWithEmojis(user?.displayName || 'Player')}!
           </h1>
           <p className="text-gray-400 text-sm sm:text-base mt-2">Here's your fantasy picks overview</p>
         </div>
@@ -470,7 +505,7 @@ const Dashboard: React.FC = () => {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate text-white">
-                      {displayName}
+                      {renderTextWithEmojis(displayName)}
                       {isCurrentUser && <span className="text-neon-cyan ml-1">(You)</span>}
                     </p>
                   </div>
