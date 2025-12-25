@@ -80,7 +80,7 @@ const Dashboard: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
 
-  const profilePicture = user?.photoURL || user?.photoUrl || user?.googlePicture || user?.providerData?.googlePicture;
+  const profilePicture = user?.photoUrl || user?.googlePicture || user?.providerData?.googlePicture;
 
   useEffect(() => {
     // Reset avatar error when the source changes
