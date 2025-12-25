@@ -554,7 +554,7 @@ const Dashboard: React.FC = () => {
             {/* Game Header - Mobile Optimized */}
             <button
               onClick={() => navigate(`/${game.league || 'nfl'}/game/${game.gameId}`)}
-              className="w-full p-4 hover:bg-neon-cyan/5 transition-all text-left"
+              className="w-full p-2 hover:bg-neon-cyan/5 transition-all text-left"
             >
               <div className="flex items-center gap-3">
                 {/* Team Logos with abbreviations below */}
@@ -564,7 +564,7 @@ const Dashboard: React.FC = () => {
                       <img 
                         src={game.league === 'nfl' ? '/logos/logo-nfl.svg' : '/logos/logo-nba.svg'} 
                         alt={game.league?.toUpperCase()}
-                        className="w-12 h-6 absolute -translate-y-[50px] translate-x-2 p-1 bg-bg-dark/50 rounded-md border border-neon-cyan/30"
+                        className="w-12 h-6 absolute -translate-y-[42px] translate-x-4 p-1 bg-bg-dark/50 rounded-md border border-neon-cyan/30"
                       />
                     </div>
                     <div className="flex flex-col items-center gap-1">
