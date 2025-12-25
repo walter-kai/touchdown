@@ -11,8 +11,8 @@ const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	const leagues: { id: LeagueType; name: string; icon: React.ReactNode }[] = [
-		{ id: 'nfl', name: 'NFL Drive', icon: <FaFootballBall className="text-neon-cyan" /> },
-		{ id: 'nba', name: 'NBA Drive', icon: <FaBasketballBall className="text-orange-500" /> },
+		{ id: 'nfl', name: 'NFL Drive', icon: <img src="/logos/logo-nfl.svg" alt="NFL" className="h-6 w-6" /> },
+		{ id: 'nba', name: 'NBA Drive', icon: <img src="/logos/logo-nba.svg" alt="NBA" className="h-6 w-6" /> },
 	];
 
 	const handleLeagueChange = (newLeague: LeagueType) => {
@@ -60,9 +60,9 @@ const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
 								<span className="text-text-light font-semibold tracking-wide">{leagueConfig.displayName}</span>
 								<span className="ml-1 text-xs text-neon-cyan">v0.7</span>
 								{league === 'nfl' ? (
-									<FaFootballBall className="text-neon-cyan ml-2" />
+									<img src="/logos/logo-nfl.svg" alt="Football" className="h-7 w-5 ml-2" />
 								) : (
-									<FaBasketballBall className="text-orange-500 ml-2" />
+									<img src="/logos/logo-nba.svg" alt="Basketball" className="h-7 w-5 ml-2" />
 								)}
 								<FaChevronDown className={`text-xs text-text-muted transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
 							</div>
@@ -76,11 +76,11 @@ const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
 										key={l.id}
 										onClick={() => handleLeagueChange(l.id)}
 										className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-bg-dark transition-colors ${
-											league === l.id ? 'bg-bg-dark/50' : ''
+											league === l.id ? 'bg-neon-cyan/20 border-l-2 border-neon-cyan' : ''
 										}`}
 									>
 										{l.icon}
-										<span className="text-text-light font-medium">{l.name}</span>
+										<span className={`font-medium ${league === l.id ? 'text-neon-cyan' : 'text-text-light'}`}>{l.name}</span>
 									</button>
 								))}
 							</div>
