@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad, FaChevronDown, FaChevronUp, FaUser } from 'react-icons/fa';
+import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad, FaChevronDown, FaChevronUp, FaUser, FaMedal } from 'react-icons/fa';
 import { jwtStorage } from '../../../utils/jwtStorage';
 import LoadingFootball from '../../../components/common/LoadingFootball';
 import { CountUpScore } from '../../../components/common/CountUpScore';
@@ -11,6 +11,7 @@ import TelegramCard from './TelegramCard';
 import { debugLog } from '@/utils/debugLog';
 import { getSummaryUrl } from '@/utils/espnApi';
 import { getTeamLogoUrl, getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
+import { LeaderboardEntry } from '../../../../../types/espn/leaderboard';
 
 interface Player {
   id: string;
@@ -76,6 +77,8 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
   const [avatarError, setAvatarError] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
 
   const profilePicture = user?.photoUrl || user?.googlePicture || user?.providerData?.googlePicture;
 
@@ -83,6 +86,25 @@ const Dashboard: React.FC = () => {
     // Reset avatar error when the source changes
     setAvatarError(false);
   }, [profilePicture]);
+
+  // Fetch leaderboard data
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        setLeaderboardLoading(true);
+        const response = await axios.get('/api/leaderboard');
+        if (response.data.success) {
+          setLeaderboard(response.data.leaderboard);
+        }
+      } catch (err) {
+        console.error('Error fetching leaderboard:', err);
+      } finally {
+        setLeaderboardLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+  }, []);
 
   // Fetch all user picks and related game data
   useEffect(() => {
@@ -407,6 +429,67 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Leaderboard */}
+      {!leaderboardLoading && leaderboard.length > 0 && (
+        <div className="mb-6 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg p-4">
+          <h3 className="flex items-center gap-2 mb-3 text-neon-cyan">
+            <FaMedal className="text-neon-pink" />
+            Top 10 Leaderboard
+          </h3>
+          <div className="space-y-1.5">
+            {leaderboard.map((entry) => {
+              const isCurrentUser = entry.userId === user?.uid;
+              // Extract username from email if displayName looks like an email
+              const displayName = entry.displayName?.includes('@') 
+                ? entry.displayName.split('@')[0] 
+                : (entry.displayName || 'Player');
+              
+              return (
+                <div
+                  key={entry.userId}
+                  className={`flex items-center gap-3 p-2 rounded transition-all ${
+                    isCurrentUser ? 'bg-neon-cyan/10 border border-neon-cyan/30' : 'bg-bg-darker/30'
+                  }`}
+                >
+                  <div className={`text-sm font-bold w-6 text-center ${
+                    entry.rank === 1 ? 'text-yellow-400' :
+                    entry.rank === 2 ? 'text-gray-300' :
+                    entry.rank === 3 ? 'text-orange-400' :
+                    'text-gray-500'
+                  }`}>
+                    {entry.rank}
+                  </div>
+                  {entry.photoURL ? (
+                    <img
+                      src={entry.photoURL}
+                      alt={displayName}
+                      className="w-8 h-8 rounded-full border border-neon-cyan/30"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full border border-neon-cyan/30 bg-bg-dark flex items-center justify-center">
+                      <FaUser className="text-neon-cyan text-xs" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate text-white">
+                      {displayName}
+                      {isCurrentUser && <span className="text-neon-cyan ml-1">(You)</span>}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <FaTrophy className="text-neon-pink text-xs" />
+                    <span className="text-sm font-bold text-neon-pink">
+                      {entry.totalScore.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Games List */}
       <div className="space-y-2">
         <h1 className="">
@@ -449,7 +532,7 @@ const Dashboard: React.FC = () => {
                       <img 
                         src={game.league === 'nfl' ? '/logos/logo-nfl.svg' : '/logos/logo-nba.svg'} 
                         alt={game.league?.toUpperCase()}
-                        className="w-12 h-6 absolute -translate-y-[50px] translate-x-2 px-3 py-0 bg-bg-dark/50 rounded-md border border-neon-cyan/30"
+                        className="w-12 h-6 absolute -translate-y-[50px] translate-x-2 p-1 bg-bg-dark/50 rounded-md border border-neon-cyan/30"
                       />
                     </div>
                     <div className="flex flex-col items-center gap-1">
