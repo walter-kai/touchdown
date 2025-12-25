@@ -218,11 +218,7 @@ const App: React.FC = () => {
           onTabClick={handleTabClick} 
           preset={isDashboardOrGames ? 'dashboard' : (isTeamPage ? 'team' : isPlayerPage ? 'player' : navPreset)}
           gameStatus={isGamePage ? gameStatus : undefined}
-          isVisible={
-            isGamePage 
-              ? (gameStatus !== undefined && navPreset !== 'scoreboard') || (gameStatus !== undefined) // Wait for game data to load
-              : (isTeamPage || isPlayerPage || (isDashboardOrGames && !!user))
-          }
+          isVisible={isGamePage || isTeamPage || isPlayerPage || (isDashboardOrGames && !!user)}
         />
         
         {/* Always render LoginModal globally, not conditionally */}
