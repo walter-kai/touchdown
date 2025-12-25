@@ -7,6 +7,8 @@ import PointsChart from '@/components/espn/PointsChart';
 import Info from '@/pages/espn/scoreboard/Info';
 import YourPicks from '@/pages/espn/scoreboard/YourPicks';
 import TopPicks from '@/pages/espn/scoreboard/TopPicks';
+import FootballField from '@/pages/espn/gamesThisWeek/FootballField';
+import BasketballCourt from '@/pages/espn/gamesThisWeek/BasketballCourt';
 import { useAuth } from '@/providers/AuthContext';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
@@ -48,6 +50,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   const [gameCountdown, setGameCountdown] = useState<number>(0);
   const [isPickExpanded, setIsPickExpanded] = useState(true);
   const [apiPlayLog, setApiPlayLog] = useState<Play[]>([]);
+  const [selectedPlayIndex, setSelectedPlayIndex] = useState<number>(0);
 
   const competition = event.competitions[0];
   const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
@@ -272,6 +275,76 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 summary={summary}
                 gameId={gameId}
               />
+              
+              {/* Field/Court Visualization with Play Selector */}
+              {!isPreGame && effectivePlayLog.length > 0 && (
+                <div className="mx-2">
+                  <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
+                  <div className="bg-bg-dark/50 rounded-lg p-4 border border-neon-cyan/20">
+                    <h3 className="text-neon-cyan font-bold text-lg mb-4">
+                      {urlLeague === 'nba' ? 'Court Visualization' : 'Field Animation'}
+                    </h3>
+                    
+                    {/* Play Selector */}
+                    <div className="mb-4">
+                      <label className="block text-text-muted text-sm mb-2">
+                        Select Play to Visualize ({effectivePlayLog.length} plays)
+                      </label>
+                      <select
+                        value={selectedPlayIndex}
+                        onChange={(e) => setSelectedPlayIndex(Number(e.target.value))}
+                        className="w-full bg-bg-darkest border border-neon-cyan/30 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-neon-cyan"
+                      >
+                        {effectivePlayLog.map((play, index) => (
+                          <option key={play.id || index} value={index}>
+                            Q{play.quarter} {play.clock} - {play.text}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {/* Render Field or Court based on league */}
+                    {urlLeague === 'nba' ? (
+                      <BasketballCourt
+                        homeTeam={homeTeam}
+                        awayTeam={awayTeam}
+                        lastPlay={effectivePlayLog[selectedPlayIndex]}
+                        playLog={effectivePlayLog}
+                        getTeamLogo={getTeamLogo}
+                        showGameInfo={true}
+                      />
+                    ) : (
+                      <FootballField
+                        homeTeam={homeTeam}
+                        awayTeam={awayTeam}
+                        lastPlay={{
+                          id: effectivePlayLog[selectedPlayIndex].id,
+                          text: effectivePlayLog[selectedPlayIndex].text,
+                          possession: effectivePlayLog[selectedPlayIndex].possession,
+                          start: effectivePlayLog[selectedPlayIndex].start,
+                          end: effectivePlayLog[selectedPlayIndex].end,
+                          type: typeof effectivePlayLog[selectedPlayIndex].type === 'string' ? { text: effectivePlayLog[selectedPlayIndex].type } : effectivePlayLog[selectedPlayIndex].type,
+                          team: effectivePlayLog[selectedPlayIndex].team ? { id: effectivePlayLog[selectedPlayIndex].team } : undefined,
+                          athletesInvolved: effectivePlayLog[selectedPlayIndex].athletesInvolved
+                        }}
+                        situation={{
+                          downDistanceText: competition.situation?.downDistanceText,
+                          possession: competition.situation?.possession,
+                          awayTimeouts: competition.situation?.awayTimeouts,
+                          homeTimeouts: competition.situation?.homeTimeouts,
+                          yardLine: competition.situation?.yardLine,
+                          lastPlay: {
+                            possession: effectivePlayLog[selectedPlayIndex].possession || effectivePlayLog[selectedPlayIndex].team
+                          }
+                        }}
+                        playLog={effectivePlayLog}
+                        getTeamLogo={getTeamLogo}
+                        showGameInfo={true}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
               
               {/* Points Chart - Show for all games with scoring data */}
               {scoringPlays.length > 0 && (

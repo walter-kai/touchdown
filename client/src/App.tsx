@@ -9,8 +9,7 @@ import GameGrid from './pages/espn/dashboard/gamesThisWeek/GameGrid';
 import NFLTeamPage from './pages/espn/Team';
 import NFLPlayerPage from './pages/espn/Player';
 import GameContainer from './pages/espn/dashboard/gamesThisWeek/GameContainer';
-
-
+import TestAnimation from './pages/espn/testAnimation';
 
 import NotFound from './pages/NotFound';
 
@@ -186,6 +185,8 @@ const App: React.FC = () => {
                   <Route path="/nba/dashboard" element={<DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nba/games' : '/nba/dashboard')} />} />
                   <Route path="/nba/games" element={<DashboardCarousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/nba/games' : '/nba/dashboard')} />} />
                   <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
+                  <Route path="/nfl/game/test" element={<TestAnimation />} />
+                  <Route path="/nba/game/test" element={<TestAnimation />} />
                   <Route path="/nfl/game/:gameId" element={<GameContainer activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays'} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/player/:playerId" element={<NFLPlayerPage activeTab={gameTab as 'info' | 'schedule' | 'news'} onTabChange={(tab) => setGameTab(tab as any)} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />

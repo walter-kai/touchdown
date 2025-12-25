@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaFootballBall } from 'react-icons/fa';
-import { Play, PlayTypeNFL } from '@/types/espn/playByplay';
+import { Play, PlayTypeNFL, NflPositionType } from '@/types/espn/playByplay';
 import '@/styles/football.css';
 import { useLeague } from '@/providers/LeagueContext';
 import { usePlays } from '@/providers/PlaysContext';
@@ -102,15 +102,16 @@ const getPlayVisualization = (playType?: PlayTypeNFL | string | { text: string }
     };
   }
   
-  // Fumbles - Orange
+  // Fumbles - Orange (distinguish between rush and pass fumbles)
   if (type.includes('fumble')) {
+    const isRushFumble = type.includes('rush') || type.includes('run') || type.includes('left') || type.includes('right') || type.includes('middle') || type.includes('tackle') || type.includes('guard') || type.includes('end');
     return {
       color: '#FF8800',
       glowColor: 'rgba(255, 136, 0, 0.6)',
       icon: '⚠️',
       pattern: 'solid',
       width: 3,
-      animate: 'shake'
+      animate: isRushFumble ? 'fumble-rush' : 'fumble'
     };
   }
   
@@ -342,10 +343,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
   // Trapezoid field geometry (top narrower than bottom)
   const TRAPEZOID_TOP_INSET = 16; // percent inset on each side at the top edge for stronger angle
   const trapezoidBottomInset = React.useMemo(() => {
-    const baseInset = -100; // design inset at reference width
+    const baseInset = -112; // design inset at reference width
     const referenceWidth = 1280; // px baseline for taper calculation
     const minInset = -12;
-    const maxInset = -36;
+    const maxInset = -1028;
     const scaled = baseInset * (viewportWidth / referenceWidth);
     return Math.max(maxInset, Math.min(minInset, scaled));
   }, [viewportWidth]);
@@ -521,8 +522,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
     return athletes[1] || athletes[0];
   }, [lastPlay.athletesInvolved, lastPlay.text]);
 
-  const qbHeadshot = getHeadshotUrl({ id: qbCandidate?.id, headshot: qbCandidate?.headshot });
-
   // Prefer athletes from lastPlay, but fall back to latest playLog entry when situation.lastPlay lacks participants
   const resolvedAthletes = React.useMemo(() => {
     if (lastPlay?.athletesInvolved?.length) return lastPlay.athletesInvolved;
@@ -533,6 +532,56 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const primaryAthlete = resolvedAthletes[0] || qbCandidate;
   const primaryHeadshot = getHeadshotUrl({ id: primaryAthlete?.id, headshot: primaryAthlete?.headshot });
   const hasPrimaryAthlete = Boolean(primaryAthlete);
+
+  // For pass plays, separate QB and receiver using type field from play data
+  const qbAthlete = React.useMemo(() => {
+    const athletes = resolvedAthletes || [];
+    // Try to find by type field first (most reliable)
+    const byType = athletes.find(a => (a as any).type === 'passer' || (a as any).type === 'QB');
+    if (byType) return byType;
+    // Try to find QB by position
+    const byPosition = athletes.find(a => a.position?.toUpperCase?.() === 'QB');
+    if (byPosition) return byPosition;
+    // Fall back to first athlete (usually QB on pass plays)
+    return athletes[0] || qbCandidate;
+  }, [resolvedAthletes, qbCandidate]);
+
+  const receiverAthlete = React.useMemo(() => {
+    const athletes = resolvedAthletes || [];
+    // Try to find by type field first (most reliable)
+    const byType = athletes.find(a => (a as any).type === 'receiver' || (a as any).type === 'target');
+    if (byType) return byType;
+    // Receiver is typically the second athlete in pass plays
+    if (athletes.length >= 2) {
+      // Make sure it's not the QB
+      const secondAthlete = athletes[1];
+      if (secondAthlete?.position?.toUpperCase?.() !== 'QB' && (secondAthlete as any).type !== 'passer') {
+        return secondAthlete;
+      }
+    }
+    // Fall back to any non-QB athlete
+    return athletes.find(a => a.position?.toUpperCase?.() !== 'QB' && a.id !== qbAthlete?.id && (a as any).type !== 'passer');
+  }, [resolvedAthletes, qbAthlete]);
+
+  const qbHeadshotUrl = getHeadshotUrl({ id: qbAthlete?.id, headshot: qbAthlete?.headshot });
+  const receiverHeadshotUrl = getHeadshotUrl({ id: receiverAthlete?.id, headshot: receiverAthlete?.headshot });
+  const hasReceiver = Boolean(receiverAthlete);
+
+  // Possession-based normalization: orientation depends on which side home is on
+  const possessionIsHome = situation?.possession === homeTeam?.id;
+  const homeOnLeft = leftTeam?.id === homeTeam?.id;
+  const possessionAbbr = possessionIsHome ? homeAbbrRaw : awayAbbrRaw;
+  const teamColor = possessionIsHome ? '#FAAFE8' : '#00FFE7'; // pink for home, cyan for away
+  // Helper: derive headshot color by athlete team id (fallback to possession color)
+  const getTeamColorForTeamId = React.useCallback(
+    (teamId?: string) => {
+      if (!teamId) return teamColor;
+      if (teamId === homeTeam?.id) return '#FAAFE8';
+      if (teamId === awayTeam?.id) return '#00FFE7';
+      return teamColor;
+    },
+    [awayTeam?.id, homeTeam?.id, teamColor]
+  );
 
   // For kickoffs/punts, extract accurate yard lines from text since start/end data is unreliable
   let kickStartYard: number | null = null;
@@ -705,11 +754,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
     };
   }, [kickArcDurationMs, playKey, isKickPlay, loopCycle]);
   
-  // Possession-based normalization: orientation depends on which side home is on
-  const possessionIsHome = situation?.possession === homeTeam?.id;
-  const homeOnLeft = leftTeam?.id === homeTeam?.id;
-  const possessionAbbr = possessionIsHome ? homeAbbrRaw : awayAbbrRaw;
-  const teamColor = possessionIsHome ? '#FAAFE8' : '#00FFE7'; // pink for home, cyan for away
   const possessionDirection = possessionIsHome
     ? (homeOnLeft ? 1 : -1)
     : (homeOnLeft ? -1 : 1);
@@ -1158,8 +1202,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
         const passStartYard = resolvedStartYard;
         const passEndYard = resolvedEndYard;
-        const baseStartX = 10 + (resolvedStartYard * 0.8);
-        const baseEndX = headshotX(resolvedEndYard);
+        // Clamp end yard to visible field bounds for display (0-100) to prevent animations going off screen
+        const displayEndYard = Math.max(0, Math.min(100, resolvedEndYard));
+        // Use proper trapezoid projection for consistent positioning
+        const baseStartX = headshotX(resolvedStartYard);
+        const baseEndX = headshotX(displayEndYard);
         // Use raw start/end yard lines to keep arrow and animation aligned
         const passStartX = headshotX(passStartYard);
         const passEndX = headshotX(passEndYard);
@@ -1178,8 +1225,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
           const distanceWithOffset = distancePixels + (Math.sign(distancePixels || 0) * 12);
           const hasMovement = Math.abs(distanceWithOffset) > 1;
           const hasGain = (playEndYard ?? getEndYard(lastPlay) ?? 0) > (playStartYard ?? getStartYard(lastPlay) ?? 0);
+          // Determine rush direction for football positioning
+          const rushDirection = Math.sign(distanceWithOffset);
+          const footballOnRight = rushDirection >= 0; // rushing right = ball on right side
           
-          console.log('Rush animation:', { startX: baseStartX, endX: baseEndX, distancePercent, fieldWidth, distanceWithOffset, hasGain });
+          console.log('Rush animation:', { startX: baseStartX, endX: baseEndX, distancePercent, fieldWidth, distanceWithOffset, hasGain, footballOnRight });
           
           return (
             <>
@@ -1231,9 +1281,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     {/* Football being carried - show for any movement (gain or loss) */}
                     {hasMovement && (
                       <div 
-                        className="absolute -right-1 top-1/2 transform -translate-y-1/3 -rotate-45"
+                        className={`absolute top-1/2 transform -translate-y-1/3 -rotate-45 ${footballOnRight ? '-right-1' : '-left-1'}`}
                         style={{
-                          filter: `drop-shadow(0 0 8px ${playViz.glowColor})`
+                          filter: `drop-shadow(0 0 8px ${playViz.glowColor})`,
+                          transform: footballOnRight ? 'translateY(-33%) rotate(-45deg)' : 'translateY(-33%) rotate(45deg) scaleX(-1)'
                         }}
                       >
                         <img
@@ -1261,11 +1312,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
           );
         }
         
-        // Pass animations - football spins with headshot following
+        // Pass animations - football spins from QB to receiver
         if (playViz.animate === 'pass-complete' || playViz.animate === 'pass-incomplete') {
-          const headshotOffsetPx = 20; // keep the receiver slightly offset so the ball lands beside the headshot
-          const headshotOffsetPercent = (headshotOffsetPx / fieldWidthPx) * 100;
-          const headshotStartX = passStartX + (Math.sign(distance) || 1) * -headshotOffsetPercent;
+          // Receiver starts near the line of scrimmage and runs to the catch point
+          const receiverOffsetYards = 3; // yards ahead of QB at start
+          const receiverStartYard = passStartYard + (Math.sign(distance) || 1) * receiverOffsetYards;
+          const receiverStartX = headshotX(receiverStartYard);
+          const receiverDistancePx = (passEndX - receiverStartX) / 100 * fieldWidthPx;
+          
           return (
             <React.Fragment key={`pass-${playKey}-${isTouchdownPlay ? 'static' : loopCycle}`}>
               {/* Football animation */}
@@ -1282,7 +1336,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     '--distance': distance,
                     '--distance-px': `${signedDistancePx}px`,
                     '--arc-height': `${Math.abs(distance) * 2.5}px`,
-                    animation: `${playViz.animate === 'pass-complete' ? 'pass-arc' : 'pass-incomplete'} ${passDurationMs + PASS_PAUSE_MS}ms cubic-bezier(0.4, 0.0, 0.2, 1) 0s 1 forwards`,
+                    animation: `${playViz.animate === 'pass-complete' ? 'pass-arc' : 'pass-incomplete'} ${passDurationMs + PASS_PAUSE_MS}ms cubic-bezier(0.1, 0.0, 0.4, 1) 0s 1 forwards`,
                     willChange: 'transform, opacity'
                   } as React.CSSProperties}
                 >
@@ -1297,62 +1351,106 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 </div>
               </div>
               
-              {/* Headshot follows */}
+              {/* QB at start position (stationary) */}
               <div
                 className="absolute z-10"
                 style={{ 
-                  left: `${headshotStartX}%`,
+                  left: `${passStartX}%`,
                   top: `${headshotTopPercent}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
-                <div
-                  style={{
-                    '--distance': distance,
-                    '--distance-px': `${signedDistancePx}px`,
-                    animation: `headshot-follow ${passDurationMs + PASS_PAUSE_MS}ms cubic-bezier(0.4, 0.0, 0.2, 1) 0s 1 forwards`,
-                    willChange: 'transform, opacity'
-                  } as React.CSSProperties}
-                >
-                  <div className="relative group">
-                    <div 
-                      className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
-                      style={{
-                        backgroundColor: `${playViz.color}30`,
-                        boxShadow: `0 0 20px ${playViz.glowColor}`
-                      }}
-                    >
-                        {hasPrimaryAthlete && (
-                          <img
-                            src={primaryHeadshot || '/assets/football.png'}
-                            alt={primaryAthlete?.displayName || 'Player'}
-                            className="w-12 h-12 rounded-full object-cover z-10 border-2"
-                            style={{ borderColor: teamColor }}
-                          />
-                        )}
-                        {!hasPrimaryAthlete && (
-                          <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
-                        )}
-                      {isTouchdownPlay && (
-                        <img
-                          src="/assets/football_dance.gif"
-                          alt="Football Dance"
-                          className="w-16 h-full object-contain absolute top-2/3 td-dance"
-                          style={{
-                            animationDuration: `${passDurationMs + PASS_PAUSE_MS}ms`
-                          }}
-                        />
-                      )}
-                    </div>
+                <div className="relative group">
+                  <div 
+                    className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                    style={{
+                      backgroundColor: `${playViz.color}30`,
+                      boxShadow: `0 0 20px ${playViz.glowColor}`
+                    }}
+                  >
+                    {qbAthlete && (
+                      <img
+                        src={qbHeadshotUrl || '/assets/football.png'}
+                        alt={qbAthlete?.displayName || 'QB'}
+                        className="w-12 h-12 rounded-full object-cover z-10 border-2"
+                        style={{ borderColor: teamColor }}
+                      />
+                    )}
+                    {!qbAthlete && (
+                      <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
+                    )}
                   </div>
                 </div>
               </div>
+
+              {/* Receiver runs to catch position */}
+              {hasReceiver && (
+                <div
+                  className="absolute z-10"
+                  style={{ 
+                    left: `${receiverStartX}%`,
+                    top: `${headshotTopPercent}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                >
+                  <div
+                    style={{
+                      '--distance': distance,
+                      '--distance-px': `${receiverDistancePx}px`,
+                      animation: `headshot-follow ${passDurationMs + PASS_PAUSE_MS}ms cubic-bezier(0.4, 0.0, 0.2, 1) 0s 1 forwards`,
+                      willChange: 'transform, opacity'
+                    } as React.CSSProperties}
+                  >
+                    <div className="relative group">
+                      <div 
+                        className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                        style={{
+                          backgroundColor: `${playViz.color}30`,
+                          boxShadow: `0 0 20px ${playViz.glowColor}`
+                        }}
+                      >
+                        <img
+                          src={receiverHeadshotUrl || '/assets/football.png'}
+                          alt={receiverAthlete?.displayName || 'Receiver'}
+                          className="w-12 h-12 rounded-full object-cover z-10 border-2"
+                          style={{ borderColor: teamColor }}
+                        />
+                        {isTouchdownPlay && (
+                          <img
+                            src="/assets/football_dance.gif"
+                            alt="Football Dance"
+                            className="w-16 h-full object-contain absolute top-2/3 td-dance"
+                            style={{
+                              animationDuration: `${passDurationMs + PASS_PAUSE_MS}ms`
+                            }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </React.Fragment>
           );
         }
         
         // Punt/Kickoff - high arc trajectory with football and headshot at end
         if (playViz.animate === 'punt' || playViz.animate === 'kickoff' || playViz.animate === 'kickoff-fail') {
+          // Use type field to identify kicker and returner
+          const kicker = resolvedAthletes.find(a => (a as any).type === 'kicker' || (a as any).type === 'punter');
+          const returner = resolvedAthletes.find(a => (a as any).type === 'returner' || (a as any).type === 'return');
+          const kickerAthlete = kicker || resolvedAthletes[0];
+          const kickerHeadshot = getHeadshotUrl({ id: kickerAthlete?.id, headshot: kickerAthlete?.headshot });
+          const kickerColor = getTeamColorForTeamId(kickerAthlete?.team?.id);
+          // Returner should be the second athlete if not found by type (don't use the kicker as fallback)
+          const returnerAthlete = returner || resolvedAthletes.find(a => a.id !== kickerAthlete?.id) || resolvedAthletes[1];
+          const returnerHeadshot = getHeadshotUrl({ id: returnerAthlete?.id, headshot: returnerAthlete?.headshot });
+          let returnerColor = getTeamColorForTeamId(returnerAthlete?.team?.id);
+          // If team id missing or matches kicker color, flip to opposite color to avoid collisions
+          if (!returnerAthlete?.team?.id || returnerColor === kickerColor) {
+            returnerColor = kickerColor === '#FAAFE8' ? '#00FFE7' : '#FAAFE8';
+          }
+          
           // Use pass-arc for the kick, rush-slide for the return
           const kickStartX = kickStartYard !== null ? 10 + (kickStartYard * 0.8) : baseStartX;
           const kickLandX = kickEndYard !== null ? 10 + (kickEndYard * 0.8) : baseEndX;
@@ -1373,6 +1471,36 @@ const FootballField: React.FC<FootballFieldProps> = ({
           
           return (
             <>
+              {/* Kicker headshot at kick start position */}
+              {kickerAthlete && (
+                <div
+                  key={`kicker-${playKey}-${loopCycle}`}
+                  className="absolute z-20"
+                  style={{
+                    left: `${kickStartX}%`,
+                    top: `${headshotTopPercent}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                >
+                  <div className="relative group">
+                    <div 
+                      className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                      style={{
+                        backgroundColor: `${playViz.color}30`,
+                        boxShadow: `0 0 20px ${playViz.glowColor}`
+                      }}
+                    >
+                      <img
+                        src={kickerHeadshot || '/assets/football.png'}
+                        alt={kickerAthlete?.displayName || 'Kicker'}
+                        className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                        style={{ borderColor: kickerColor }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Phase 1: Football arc (reuse pass-arc animation) */}
               <div
                 key={`kick-arc-${playKey}-${kickStartX}-${kickLandX}-${loopCycle}`}
@@ -1413,7 +1541,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
               {/* Receiver headshot always present at landing spot; animates only after kick completes */}
               {(() => {
-                const shouldShowReturn = playViz.animate !== 'kickoff-fail' && hasPrimaryAthlete;
+                const shouldShowReturn = playViz.animate !== 'kickoff-fail' && returnerAthlete;
                 const showReturnPhase = shouldShowReturn;
                 const canSlide = (Math.abs(returnDistance) > 1 || needsReturnNudge) && (kickDone || returnStarted);
 
@@ -1442,15 +1570,15 @@ const FootballField: React.FC<FootballFieldProps> = ({
                               boxShadow: `0 0 20px ${playViz.glowColor}`
                             }}
                           >
-                            {hasPrimaryAthlete && (
+                            {returnerAthlete && (
                               <img
-                                src={primaryHeadshot || '/assets/football.png'}
-                                alt={primaryAthlete?.displayName || 'Player'}
+                                src={returnerHeadshot || '/assets/football.png'}
+                                alt={returnerAthlete?.displayName || 'Player'}
                                 className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                                style={{ borderColor: teamColor }}
+                                style={{ borderColor: returnerColor }}
                               />
                             )}
-                            {!hasPrimaryAthlete && (
+                            {!returnerAthlete && (
                               <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
                             )}
                           </div>
@@ -1477,15 +1605,15 @@ const FootballField: React.FC<FootballFieldProps> = ({
                             boxShadow: `0 0 20px ${playViz.glowColor}`
                           }}
                         >
-                          {hasPrimaryAthlete && (
+                          {returnerAthlete && (
                             <img
-                              src={primaryHeadshot || '/assets/football.png'}
-                              alt={primaryAthlete?.displayName || 'Player'}
+                              src={returnerHeadshot || '/assets/football.png'}
+                              alt={returnerAthlete?.displayName || 'Player'}
                               className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                              style={{ borderColor: teamColor }}
+                              style={{ borderColor: returnerColor }}
                             />
                           )}
-                          {!hasPrimaryAthlete && (
+                          {!returnerAthlete && (
                             <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
                           )}
                         </div>
@@ -1577,7 +1705,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               >
                 <div className="relative group">
                   <div 
-                    className="w-20 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                    className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
                     style={{
                       backgroundColor: `${playViz.color}30`,
                       boxShadow: `0 0 20px ${playViz.glowColor}`
@@ -1587,7 +1715,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                       <img
                         src={primaryHeadshot || '/assets/football.png'}
                         alt={primaryAthlete?.displayName || 'Player'}
-                        className="w-14 h-14 rounded-full object-cover z-1 border-2"
+                        className="w-12 h-12 rounded-full object-cover z-1 border-2"
                         style={{ 
                           borderColor: teamColor,
                           filter: 'grayscale(100%)'
@@ -1625,6 +1753,302 @@ const FootballField: React.FC<FootballFieldProps> = ({
           );
         }
         
+        // Fumble - ball carrier rushes, fumbles the ball (bounces), then recovered by opponent
+        if (playViz.animate === 'fumble' || playViz.animate === 'fumble-rush') {
+          const isRushFumble = playViz.animate === 'fumble-rush';
+          
+          // Use type field to identify ball carrier (rusher/passer) and recoverer
+          const ballCarrier = resolvedAthletes.find(a => 
+            (a as any).type === 'rusher' || 
+            (a as any).type === 'ballcarrier' || 
+            (a as any).type === 'passer'
+          ) || resolvedAthletes[0]; // First athlete is ball carrier
+          
+          const recoverer = resolvedAthletes.find(a => 
+            (a as any).type === 'fumble recovery' || 
+            (a as any).type === 'recovery'
+          ) || resolvedAthletes[resolvedAthletes.length - 1]; // Last athlete is usually the recoverer
+          
+          const ballCarrierHeadshot = getHeadshotUrl({ id: ballCarrier?.id, headshot: ballCarrier?.headshot });
+          const recovererHeadshot = getHeadshotUrl({ id: recoverer?.id, headshot: recoverer?.headshot });
+          const recovererTeamColor = recoverer?.team?.id === homeTeam?.id ? '#FAAFE8' : '#00FFE7';
+          
+          if (isRushFumble) {
+            // Rush fumble: ball carrier runs with ball, fumbles, ball bounces, then recovered
+            const rushDistance = baseEndX - baseStartX;
+            const rushDistancePx = (rushDistance / 100) * fieldWidthPx;
+            const fumblePointPercent = 0.7; // Fumbles 70% of the way
+            const fumblePointX = baseStartX + (rushDistance * fumblePointPercent);
+            const rushToFumblePx = rushDistancePx * fumblePointPercent;
+            const rushDirection = Math.sign(rushDistancePx);
+            const footballOnRight = rushDirection >= 0;
+            
+            // Recoverer starts near fumble point
+            const recovererStartX = fumblePointX + rushDirection * 2;
+            const recovererDistancePx = ((baseEndX - recovererStartX) / 100) * fieldWidthPx;
+            
+            return (
+              <React.Fragment key={`fumble-rush-${playKey}-${loopCycle}`}>
+                {/* Ball carrier rushes with football */}
+                <div
+                  className="absolute z-10"
+                  style={{ 
+                    left: `${baseStartX}%`,
+                    top: `${headshotTopPercent}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                >
+                  <div
+                    style={{
+                      animation: `headshot-follow 1400ms linear 0s 1 forwards`,
+                      '--distance-px': `${rushToFumblePx}px`
+                    } as React.CSSProperties}
+                  >
+                    <div className="relative group">
+                      <div 
+                        className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                        style={{
+                          backgroundColor: `${playViz.color}30`,
+                          boxShadow: `0 0 20px ${playViz.glowColor}`
+                        }}
+                      >
+                        {ballCarrier && (
+                          <img
+                            src={ballCarrierHeadshot || '/assets/football.png'}
+                            alt={ballCarrier?.displayName || 'Ball Carrier'}
+                            className="w-12 h-12 rounded-full object-cover z-10 border-2"
+                            style={{ borderColor: teamColor }}
+                          />
+                        )}
+                      </div>
+                      {/* Football being carried */}
+                      <div 
+                        className={`absolute top-1/2 transform -translate-y-1/3 -rotate-45 ${footballOnRight ? '-right-1' : '-left-1'}`}
+                        style={{
+                          filter: `drop-shadow(0 0 8px ${playViz.glowColor})`,
+                          transform: footballOnRight ? 'translateY(-33%) rotate(-45deg)' : 'translateY(-33%) rotate(45deg) scaleX(-1)',
+                          animation: 'fadeOutFast 200ms linear 1200ms 1 forwards'
+                        }}
+                      >
+                        <img
+                          src="/assets/football.png"
+                          alt="Football"
+                          className="w-8 h-8 object-contain"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Football bounces at fumble point */}
+                <div
+                  className="absolute z-20"
+                  style={{ 
+                    left: `${fumblePointX}%`,
+                    top: `${headshotTopPercent}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                >
+                  <div
+                    style={{
+                      '--distance-px': `${((baseEndX - fumblePointX) / 100) * fieldWidthPx}px`,
+                      '--arc-height': `${Math.abs(rushDistance) * 1.8}px`,
+                      animation: `pass-incomplete 2200ms linear 1400ms 1 forwards`,
+                      opacity: 0,
+                      animationFillMode: 'both'
+                    } as React.CSSProperties}
+                  >
+                    <img
+                      src="/assets/football_spin.gif"
+                      alt="Football"
+                      className="w-8 h-8 object-contain"
+                      style={{
+                        filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                {/* Recoverer runs to grab it */}
+                {recoverer && (
+                  <div
+                    className="absolute z-10"
+                    style={{ 
+                      left: `${recovererStartX}%`,
+                      top: `${headshotTopPercent}%`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                  >
+                    <div
+                      style={{
+                        animation: `headshot-follow 1600ms linear 2000ms 1 forwards`,
+                        '--distance-px': `${recovererDistancePx}px`
+                      } as React.CSSProperties}
+                    >
+                      <div className="relative group">
+                        <div 
+                          className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                          style={{
+                            backgroundColor: `${playViz.color}30`,
+                            boxShadow: `0 0 20px ${playViz.glowColor}`
+                          }}
+                        >
+                          <img
+                            src={recovererHeadshot || '/assets/football.png'}
+                            alt={recoverer?.displayName || 'Recoverer'}
+                            className="w-12 h-12 rounded-full object-cover z-10 border-2"
+                            style={{ borderColor: recovererTeamColor }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          }
+          
+          // Pass fumble: QB at line, ball arcs forward then bounces (fumble), recovered by opponent
+          // Identify QB (usually first) and recoverer (usually last)
+          const qb = qbAthlete || resolvedAthletes[0];
+          const qbHeadshot = getHeadshotUrl({ id: qb?.id, headshot: qb?.headshot });
+          
+          // Ball arcs from QB to fumble point
+          const fumblePointYard = passStartYard + (Math.sign(distance) || 1) * Math.abs(passEndYard - passStartYard) * 0.5;
+          const fumblePointX = headshotX(fumblePointYard);
+          const passToFumbleDistance = (fumblePointX - passStartX) / 100 * fieldWidthPx;
+          
+          // Recoverer starts near fumble point and grabs it
+          const recovererStartX = fumblePointX + (Math.sign(distance) || 1) * 2;
+          const recovererDistancePx = ((passEndX - recovererStartX) / 100) * fieldWidthPx;
+          
+          return (
+            <React.Fragment key={`fumble-${playKey}-${loopCycle}`}>
+              {/* QB stays at line (stationary) */}
+              <div
+                className="absolute z-10"
+                style={{ 
+                  left: `${passStartX}%`,
+                  top: `${headshotTopPercent}%`,
+                  transform: 'translate(-50%, -50%)'
+                }}
+              >
+                <div className="relative group">
+                  <div 
+                    className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                    style={{
+                      backgroundColor: `${playViz.color}30`,
+                      boxShadow: `0 0 20px ${playViz.glowColor}`
+                    }}
+                  >
+                    {qb && (
+                      <img
+                        src={qbHeadshot || '/assets/football.png'}
+                        alt={qb?.displayName || 'QB'}
+                        className="w-12 h-12 rounded-full object-cover z-10 border-2"
+                        style={{ borderColor: teamColor }}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Football arcs from QB then fumbles/bounces */}
+              <div
+                className="absolute z-20"
+                style={{ 
+                  left: `${passStartX}%`,
+                  top: `${headshotTopPercent}%`,
+                  transform: 'translate(-50%, -50%)'
+                }}
+              >
+                <div
+                  style={{
+                    '--distance-px': `${passToFumbleDistance}px`,
+                    '--arc-height': `${Math.abs(distance) * 2}px`,
+                    animation: `pass-arc 1400ms linear 0s 1 forwards`,
+                    willChange: 'transform, opacity'
+                  } as React.CSSProperties}
+                >
+                  <img
+                    src="/assets/football_spin.gif"
+                    alt="Football"
+                    className="w-8 h-8 object-contain"
+                    style={{
+                      filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
+                    }}
+                  />
+                </div>
+              </div>
+              
+              {/* Football bounces at fumble point */}
+              <div
+                className="absolute z-20"
+                style={{ 
+                  left: `${fumblePointX}%`,
+                  top: `${headshotTopPercent}%`,
+                  transform: 'translate(-50%, -50%)'
+                }}
+              >
+                <div
+                  style={{
+                    '--distance-px': `${((passEndX - fumblePointX) / 100) * fieldWidthPx}px`,
+                    '--arc-height': `${Math.abs(distance) * 1.5}px`,
+                    animation: `pass-incomplete 2200ms linear 1400ms 1 forwards`,
+                    opacity: 0,
+                    animationFillMode: 'both'
+                  } as React.CSSProperties}
+                >
+                  <img
+                    src="/assets/football_spin.gif"
+                    alt="Football"
+                    className="w-8 h-8 object-contain"
+                    style={{
+                      filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
+                    }}
+                  />
+                </div>
+              </div>
+              
+              {/* Recoverer runs to grab it */}
+              {recoverer && (
+                <div
+                  className="absolute z-10"
+                  style={{ 
+                    left: `${recovererStartX}%`,
+                    top: `${headshotTopPercent}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                >
+                  <div
+                    style={{
+                      animation: `headshot-follow 1600ms linear 2000ms 1 forwards`,
+                      '--distance-px': `${recovererDistancePx}px`
+                    } as React.CSSProperties}
+                  >
+                    <div className="relative group">
+                      <div 
+                        className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                        style={{
+                          backgroundColor: `${playViz.color}30`,
+                          boxShadow: `0 0 20px ${playViz.glowColor}`
+                        }}
+                      >
+                        <img
+                          src={recovererHeadshot || '/assets/football.png'}
+                          alt={recoverer?.displayName || 'Recoverer'}
+                          className="w-12 h-12 rounded-full object-cover z-10 border-2"
+                          style={{ borderColor: recovererTeamColor }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </React.Fragment>
+          );
+        }
+        
         // Sack - rusher slides in, QB sits at spot and gets bumped/rolled on impact
         if (playViz.animate === 'sack') {
           const distancePercent = baseEndX - baseStartX;
@@ -1634,9 +2058,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
           const hitRollSigned = (Math.sign(distancePercent) || 1) * hitRollPx;
           const hitRotSign = Math.sign(hitRollSigned) || 1;
 
-          const rusherAthlete = primaryAthlete;
-          const qbAthlete = qbCandidate;
-          const qbHeadshotUrl = qbHeadshot;
+          // Use type field to identify sacker/rusher vs QB
+          const rusherAthlete = resolvedAthletes.find(a => 
+            (a as any).type === 'sacker' || 
+            (a as any).type === 'defense'
+          ) || primaryAthlete;
 
           return (
             <>
@@ -1733,7 +2159,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           >
             <div className="relative group">
               <div 
-                className="w-20 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
                 style={{
                   backgroundColor: `${playViz.color}30`,
                   boxShadow: `0 0 20px ${playViz.glowColor}`
@@ -1743,7 +2169,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   <img
                     src={primaryHeadshot || '/assets/football.png'}
                     alt={primaryAthlete?.displayName || 'Player'}
-                    className="w-14 h-14 rounded-full object-cover z-1 border-2"
+                    className="w-12 h-12 rounded-full object-cover z-1 border-2"
                     style={{ borderColor: teamColor }}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';

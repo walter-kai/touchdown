@@ -28,6 +28,34 @@ export type PlayTypeNFL =
   | 'End of Game'
   | string; // Allow other types that might come from ESPN
 
+export type NflPositionType =
+  // Offensive player types
+  | 'passer'
+  | 'rusher'
+  | 'receiver'
+  | 'kicker'
+  | 'punter'
+  | 'scorer'
+  | 'patScorer'
+  // Defensive player types
+  | 'tackler'
+  | 'assistedBy'
+  | 'passDefender'
+  | 'sacker'
+  // Fumble-related types
+  | 'fumbler'
+  | 'recoverer'
+  | 'forcedBy'
+  // Special teams types
+  | 'returner'
+  // Penalty types
+  | 'penalized'
+  // Team types (for teamParticipants)
+  | 'offense'
+  | 'defense'
+  // Allow other types that might come from ESPN
+  | string;
+
 /**
  * Athlete involved in a play
  */

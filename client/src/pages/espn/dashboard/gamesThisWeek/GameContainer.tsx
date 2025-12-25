@@ -45,9 +45,15 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
   const [playsLoaded, setPlaysLoaded] = useState(false);
   const [currentLeague, setCurrentLeague] = useState<string>(league);
   
-  // Test mode controls
-  const [testGameId, setTestGameId] = useState<string>('401772949');
+  // Test mode controls - league-aware default game IDs
+  const defaultTestGameId = league === 'nba' ? '401810277' : '401772804';
+  const [testGameId, setTestGameId] = useState<string>(defaultTestGameId);
   const [selectedPlayIndex, setSelectedPlayIndex] = useState<number>(0);
+
+  // Update testGameId when league changes
+  useEffect(() => {
+    setTestGameId(league === 'nba' ? '401810277' : '401772804');
+  }, [league]);
 
   // Reset state when league changes to prevent using old game IDs with new league
   useEffect(() => {

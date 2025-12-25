@@ -7,7 +7,6 @@
 @import './colors.css';
 @import './animations.css';
 @import './buttons.css';
-@import './cards.css';
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";

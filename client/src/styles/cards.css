@@ -1,8 +1,0 @@
-.passport-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(135deg, var(--bg-darker) 0 2px, var(--bg-dark) 2px 8px);
-  opacity: 0.12;
-  z-index: 0;
-}

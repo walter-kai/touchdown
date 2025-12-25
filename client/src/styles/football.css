@@ -192,7 +192,7 @@
 @keyframes rush-slide {
   0% {
     transform: translateX(0);
-    opacity: 0;
+    opacity: 1;
   }
   8% {
     opacity: 1;
@@ -206,11 +206,12 @@
     opacity: 1;
   }
   72% {
+    transform: translateX(var(--distance));
     opacity: 0;
   }
   100% {
     transform: translateX(0);
-    opacity: 0;
+    opacity: 1;
   }
 }
 
@@ -222,10 +223,6 @@
   }
   50% {
     transform: translateX(calc(var(--distance-px) * 0.5)) translateY(calc(var(--arc-height, -90px) * -1)) rotate(0deg) scale(1);
-    opacity: 1;
-  }
-  70% {
-    transform: translateX(var(--distance-px)) translateY(0) rotate(45deg) scale(0.8);
     opacity: 1;
   }
   100% {
@@ -267,10 +264,6 @@
   }
   50% {
     transform: translateX(calc(var(--distance-px) * 0.5)) scale(1);
-    opacity: 1;
-  }
-  70% {
-    transform: translateX(var(--distance-px)) scale(0.9);
     opacity: 1;
   }
   100% {
@@ -363,12 +356,7 @@
 
 .animate-rush-slide {
   animation: rush-slide 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
-  animation-delay: 0s;
-}
-
-.animate-rush-slide-delayed {
-  animation: rush-slide 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
-  animation-delay: 6s;
+  animation-delay: 1.3s;
 }
 
 .animate-pass-arc {

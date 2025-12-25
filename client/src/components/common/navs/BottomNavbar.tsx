@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall } from 'react-icons/fa';
 import { debugLog } from '@/utils/debugLog';
+import { useLeague } from '@/providers/LeagueContext';
 
 interface GameNavBarProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games';
@@ -14,6 +15,7 @@ interface GameNavBarProps {
 
 const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabClick, preset = 'scoreboard', gameStatus, isVisible = true }) => {
   const navigate = useNavigate();
+  const { league } = useLeague();
   const prevVisibleRef = useRef(isVisible);
   const shouldAnimateRef = useRef(false);
   const prevPresetRef = useRef(preset);
@@ -60,7 +62,7 @@ const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTab
 
   // All available navigation items
   const allNavItems = [
-    { id: 'back', label: 'Back to Games', icon: <FaArrowLeft />, action: () => navigate('/nfl') },
+    { id: 'back', label: 'Back to Games', icon: <FaArrowLeft />, action: () => navigate(`/${league.toLowerCase()}`) },
     { id: 'info', label: 'Info', icon: <FaInfoCircle /> },
     { id: 'player', label: 'Players', icon: <FaTrophy /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
