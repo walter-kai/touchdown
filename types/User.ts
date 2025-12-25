@@ -18,6 +18,7 @@ export interface User {
   createdAt: Date;
   lastLogin: Date;
   providerData: ProviderData;
+  displayNameSet?: boolean; // Whether user has set their display name (default: false)
   
   // Optional fields for backward compatibility
   username?: string;

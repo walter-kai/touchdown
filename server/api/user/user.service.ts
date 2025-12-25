@@ -60,6 +60,7 @@ export async function getUserProfile(uid: string): Promise<User> {
       providerData,
       username: data?.username,
       referralId: data?.referralId,
+      displayNameSet: data?.displayNameSet,
       // Deprecated fields for backward compatibility
       googleId: data?.providerData?.googleId,
       googleEmail: data?.providerData?.googleEmail,
@@ -126,7 +127,7 @@ export async function checkUsernameAvailability(username: string, currentUid?: s
   try {
     const query = admin.firestore()
       .collection('users')
-      .where('username', '==', username.trim())
+      .where('displayName', '==', username.trim())
       .limit(1);
 
     const snapshot = await query.get();
@@ -144,5 +145,41 @@ export async function checkUsernameAvailability(username: string, currentUid?: s
   } catch (error) {
     logger.error(error, 'Error checking username availability:');
     throw new ApiError(500, 'Failed to check username availability');
+  }
+}
+
+/**
+ * Set user's display name (one-time only)
+ */
+export async function setDisplayName(email: string, displayName: string): Promise<User> {
+  try {
+    const userDocRef = admin.firestore().collection('users').doc(email);
+    const userDoc = await userDocRef.get();
+
+    if (!userDoc.exists) {
+      throw new ApiError(404, 'User not found');
+    }
+
+    const data = userDoc.data();
+
+    // Check if display name has already been set AND is different from what they're trying to set
+    if (data?.displayNameSet === true && data?.displayName !== displayName) {
+      throw new ApiError(400, 'Display name has already been set and cannot be changed');
+    }
+
+    // Update display name and set flag
+    await userDocRef.update({
+      displayName,
+      displayNameSet: true,
+    });
+
+    // Return updated user
+    return getUserProfile(data?.uid || email);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    logger.error(error, 'Error setting display name:');
+    throw new ApiError(500, 'Failed to set display name');
   }
 }

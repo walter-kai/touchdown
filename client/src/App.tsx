@@ -19,6 +19,7 @@ import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useAuth } from './providers/AuthContext';
 import { PicksProvider } from './providers/PicksContext';
 import LoginModal from './components/common/LoginModal';
+import DisplayNameChecker from './components/DisplayNameChecker';
 
 // Google OAuth callback handler (in-tab redirect)
 const GoogleOAuthCallback: React.FC = () => {
@@ -152,10 +153,11 @@ const App: React.FC = () => {
 
   return (
     <PicksProvider>
-      <div className="min-h-screen overflow-x-hidden relative bg-black/90 bg-blend-overlay">
-      
-      {/* Top Login/Nav (hide on auth processing page) */}
-      {location.pathname !== '/auth/google/callback' && <LoginNav />}
+      <DisplayNameChecker>
+        <div className="min-h-screen overflow-x-hidden relative bg-black/90 bg-blend-overlay">
+        
+        {/* Top Login/Nav (hide on auth processing page) */}
+        {location.pathname !== '/auth/google/callback' && <LoginNav />}
 
       {/* Content Container */}
       <div className="relative z-10 flex flex-col min-h-screen">
@@ -225,6 +227,7 @@ const App: React.FC = () => {
         
       </div>
     </div>
+      </DisplayNameChecker>
     </PicksProvider>
   );
 };

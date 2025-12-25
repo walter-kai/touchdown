@@ -1,5 +1,5 @@
 import express from 'express';
-import { getProfile, updateProfile, checkUsername } from './user.controller';
+import { getProfile, updateProfile, checkUsername, updateDisplayName } from './user.controller';
 import { authenticate } from '../../auth/middleware/auth';
 
 const router = express.Router();
@@ -15,6 +15,12 @@ router.get('/profile', authenticate, getProfile);
  * Update current user's profile
  */
 router.put('/profile', authenticate, updateProfile);
+
+/**
+ * PUT /user/display-name
+ * Set display name (one-time only)
+ */
+router.put('/display-name', authenticate, updateDisplayName);
 
 /**
  * GET /user/checkName

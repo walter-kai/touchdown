@@ -85,6 +85,7 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
         lastLogin: now,
         providerData,
         username: name || email.split('@')[0],
+        displayNameSet: false,
       };
 
       await userDocRef.set({
@@ -102,6 +103,7 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
         },
         displayName: name || '',
         photoUrl: picture || '',
+        displayNameSet: false,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         lastLogin: admin.firestore.FieldValue.serverTimestamp(),
       });
@@ -151,6 +153,7 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
         lastLogin: now,
         providerData,
         username: existingData?.username || name || email.split('@')[0],
+        displayNameSet: existingData?.displayNameSet ?? false,
         ...(existingData?.referralId && { referralId: existingData.referralId }),
       };
 

@@ -9,6 +9,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  hasEmoji: boolean;
   setUser: (user: User | null) => void;
   login: (token: string, user: User, expiresIn?: number) => void;
   logout: () => void;
@@ -20,6 +21,14 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Utility function to detect emojis in a string
+const hasEmojiCharacters = (str: string | undefined | null): boolean => {
+  if (!str) return false;
+  // Emoji regex pattern covering most common emoji ranges
+  const emojiRegex = /[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{FE00}-\u{FE0F}]/u;
+  return emojiRegex.test(str);
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -34,11 +43,24 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
+  const [hasEmoji, setHasEmoji] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const location = useLocation();
   const currentRoute = location.pathname;
+
+  // Wrapper to detect emojis when setting user
+  const setUser = (userData: User | null) => {
+    setUserState(userData);
+    if (userData?.displayName) {
+      const containsEmoji = hasEmojiCharacters(userData.displayName);
+      setHasEmoji(containsEmoji);
+      debugLog(`Display name "${userData.displayName}" ${containsEmoji ? 'contains' : 'does not contain'} emojis`);
+    } else {
+      setHasEmoji(false);
+    }
+  };
 
   // Check for existing JWT token on app load
   useEffect(() => {
@@ -171,6 +193,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isAuthenticated: !!user,
     isLoading,
+    hasEmoji,
     setUser,
     login,
     logout,

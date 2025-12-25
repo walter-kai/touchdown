@@ -80,7 +80,7 @@ const Dashboard: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
 
-  const profilePicture = user?.photoUrl || user?.googlePicture || user?.providerData?.googlePicture;
+  const profilePicture = user?.photoURL || user?.photoUrl || user?.googlePicture || user?.providerData?.googlePicture;
 
   useEffect(() => {
     // Reset avatar error when the source changes
@@ -439,10 +439,7 @@ const Dashboard: React.FC = () => {
           <div className="space-y-1.5">
             {leaderboard.map((entry) => {
               const isCurrentUser = entry.userId === user?.uid;
-              // Extract username from email if displayName looks like an email
-              const displayName = entry.displayName?.includes('@') 
-                ? entry.displayName.split('@')[0] 
-                : (entry.displayName || 'Player');
+              const displayName = entry.displayName || 'Player';
               
               return (
                 <div
