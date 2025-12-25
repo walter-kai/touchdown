@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall } from 'react-icons/fa';
 import { debugLog } from '@/utils/debugLog';
@@ -16,6 +16,8 @@ const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTab
   const navigate = useNavigate();
   const prevVisibleRef = useRef(isVisible);
   const shouldAnimateRef = useRef(false);
+  const prevPresetRef = useRef(preset);
+  const [animatingButtons, setAnimatingButtons] = useState(new Set<string>());
 
   // Track visibility changes and determine if animation should occur
   useEffect(() => {
@@ -27,6 +29,34 @@ const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTab
       shouldAnimateRef.current = false;
     }
   }, [isVisible]);
+
+  // Track preset changes and trigger button animations
+  useEffect(() => {
+    if (prevPresetRef.current !== preset) {
+      // Get current and previous button IDs
+      const prevButtons = new Set(presetConfig[prevPresetRef.current]);
+      const currentButtons = new Set(presetConfig[preset]);
+      
+      // Find new buttons that need to animate in
+      const newButtons = new Set<string>();
+      currentButtons.forEach(id => {
+        if (!prevButtons.has(id)) {
+          newButtons.add(id);
+        }
+      });
+      
+      setAnimatingButtons(newButtons);
+      
+      // Clear animation state after animation completes
+      if (newButtons.size > 0) {
+        setTimeout(() => {
+          setAnimatingButtons(new Set());
+        }, 300);
+      }
+      
+      prevPresetRef.current = preset;
+    }
+  }, [preset]);
 
   // All available navigation items
   const allNavItems = [
@@ -77,6 +107,7 @@ const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTab
           {navItems.map((item) => {
             const isActive = item.id === activeTab;
             const isBackButton = item.id === 'back';
+            const isAnimating = animatingButtons.has(item.id);
             
             return (
               <button
@@ -98,6 +129,7 @@ const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTab
                   flex flex-col items-center justify-center gap-1 sm:gap-1.5 
                   px-2 sm:px-4 py-2 sm:py-2.5 rounded-lg 
                   transition-all duration-200 min-w-0 flex-1
+                  ${isAnimating ? 'animate-expand-from-center' : ''}
                   ${isBackButton
                     ? 'btn-purple'
                     : isActive 
