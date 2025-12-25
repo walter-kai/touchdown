@@ -317,6 +317,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                       <FootballField
                         homeTeam={homeTeam}
                         awayTeam={awayTeam}
+                        leftTeamOverride={((effectivePlayLog[selectedPlayIndex]?.quarter ?? competition.status?.period ?? 1) >= 3) ? homeTeam : awayTeam}
+                        rightTeamOverride={((effectivePlayLog[selectedPlayIndex]?.quarter ?? competition.status?.period ?? 1) >= 3) ? awayTeam : homeTeam}
                         lastPlay={{
                           id: effectivePlayLog[selectedPlayIndex].id,
                           text: effectivePlayLog[selectedPlayIndex].text,

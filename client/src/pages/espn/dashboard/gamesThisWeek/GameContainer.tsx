@@ -567,6 +567,12 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
       }
     : undefined;
 
+  // Orientation: away left, home right; switch at Q3
+  const currentQuarterForField = effectivePlayLog?.[0]?.quarter ?? competition?.status?.period ?? 1;
+  const switchAtQ3 = (currentQuarterForField ?? 1) >= 3;
+  const leftOverride = switchAtQ3 ? homeCompetitor : awayCompetitor;
+  const rightOverride = switchAtQ3 ? awayCompetitor : homeCompetitor;
+
   // Test mode football field visualization - must be after effectiveEvent is defined
   const testFieldVisualization = isTestMode && event && playLog.length > 0 && effectiveEvent ? (
     <div className="mx-2 my-4">
@@ -577,6 +583,8 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
           awayTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'away')}
           lastPlay={effectiveEvent.competitions[0].situation?.lastPlay}
           situation={situationForField}
+          leftTeamOverride={leftOverride}
+          rightTeamOverride={rightOverride}
           getTeamLogo={getTeamLogo}
         />
       </div>

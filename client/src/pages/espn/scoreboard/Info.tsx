@@ -429,6 +429,8 @@ const Info: React.FC<InfoProps> = ({
                       <FootballField
                       homeTeam={homeTeam}
                       awayTeam={awayTeam}
+                      leftTeamOverride={(latestPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? homeTeam : awayTeam}
+                      rightTeamOverride={(latestPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? awayTeam : homeTeam}
                       lastPlay={situation.lastPlay}
                       situation={situation}
                       playLog={playLog}

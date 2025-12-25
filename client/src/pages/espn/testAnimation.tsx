@@ -189,6 +189,8 @@ const TestAnimation: React.FC = () => {
                 <FootballField
                   homeTeam={homeTeam}
                   awayTeam={awayTeam}
+                  leftTeamOverride={(selectedPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? homeTeam : awayTeam}
+                  rightTeamOverride={(selectedPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? awayTeam : homeTeam}
                   lastPlay={selectedPlay ? {
                     id: selectedPlay.id,
                     text: selectedPlay.text,

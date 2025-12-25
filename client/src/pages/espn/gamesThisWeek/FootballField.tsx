@@ -8,6 +8,9 @@ import { usePlays } from '@/providers/PlaysContext';
 interface FootballFieldProps {
   homeTeam?: any;
   awayTeam?: any;
+  // Optional orientation overrides provided by parent
+  leftTeamOverride?: any;
+  rightTeamOverride?: any;
   lastPlay?: {
     id?: string;
     possession?: string;
@@ -253,6 +256,8 @@ const getPlayVisualization = (playType?: PlayTypeNFL | string | { text: string }
 const FootballField: React.FC<FootballFieldProps> = ({
   homeTeam: homeTeamProp,
   awayTeam: awayTeamProp,
+  leftTeamOverride,
+  rightTeamOverride,
   lastPlay: lastPlayProp,
   situation: situationProp,
   playLog: playLogProp = [],
@@ -411,24 +416,39 @@ const FootballField: React.FC<FootballFieldProps> = ({
     });
   }, [playLog]);
 
+  // Parse coin toss to determine which team is receiving (gets ball first)
   const receiverTeam = React.useMemo(() => {
     if (!coinTossPlay) return undefined;
     const tossText = (coinTossPlay.text || '').toUpperCase();
-    const winner = matchTeamFromText(tossText);
+    
+    // Find which team won the toss or made the decision
+    const mentionedTeam = matchTeamFromText(tossText);
+    if (!mentionedTeam) return undefined;
 
-    if (tossText.includes('RECEIVE') || tossText.includes('RECIEVE')) {
-      return matchTeamFromText(tossText) || winner;
+    // Check if they elected to receive
+    const elects = tossText.includes('ELECT');
+    const receives = tossText.includes('RECEIVE') || tossText.includes('RECIEVE');
+    
+    if (elects && receives) {
+      return mentionedTeam; // This team elected to receive
     }
 
+    // If they deferred, the other team receives
     if (tossText.includes('DEFER')) {
-      if (winner) return winner.id === homeTeam?.id ? awayTeam : homeTeam;
+      return mentionedTeam.id === homeTeam?.id ? awayTeam : homeTeam;
     }
 
-    return winner;
+    return undefined;
   }, [coinTossPlay, homeTeam, awayTeam]);
 
-  const leftTeam = receiverTeam ?? awayTeam;
-  const rightTeam = leftTeam?.id === homeTeam?.id ? awayTeam : homeTeam;
+  // Standard TV convention: away team on left, home team on right
+  // Switch sides at Q3 (3rd quarter). Allow parent overrides to take precedence.
+  const currentQuarter = lastPlay?.quarter ?? 1;
+  const shouldSwitch = currentQuarter >= 3;
+  const computedLeft = shouldSwitch ? homeTeam : awayTeam;
+  const computedRight = shouldSwitch ? awayTeam : homeTeam;
+  const leftTeam = leftTeamOverride ?? computedLeft;
+  const rightTeam = rightTeamOverride ?? computedRight;
   const leftAbbr = leftTeam?.team?.abbreviation?.toUpperCase() || leftTeam?.abbreviation?.toUpperCase() || leftTeam?.shortDisplayName?.toUpperCase();
   const rightAbbr = rightTeam?.team?.abbreviation?.toUpperCase() || rightTeam?.abbreviation?.toUpperCase() || rightTeam?.shortDisplayName?.toUpperCase();
 
@@ -893,6 +913,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
     return () => clearTimeout(timer);
   }, [playDurationMs, playKey, loopCycle]);
 
+          const losTopX = projectYardX(playStartYard, 0);
+          const losBottomX = projectYardX(playStartYard, 100);
+
   return (
     <div className="space-y-2">
       {/* Current Drive Info - Only show if showGameInfo is true */}
@@ -1018,6 +1041,30 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
       <div className="absolute inset-0 z-[40]">
 
+      {/* Line of scrimmage - projected like yard lines and clipped to the field bounds */}
+      {playStartYard !== undefined && (
+        <div
+          className="absolute inset-0 pointer-events-none z-[5]"
+          style={{
+            clipPath: `polygon(${TRAPEZOID_TOP_INSET}% 0%, ${100 - TRAPEZOID_TOP_INSET}% 0%, ${100 - trapezoidBottomInset}% 100%, ${trapezoidBottomInset}% 100%)`
+          }}
+        >
+          <svg className="absolute inset-0" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <line
+              x1={`${projectYardX(playStartYard, 0)}%`}
+              y1="0%"
+              x2={`${projectYardX(playStartYard, 100)}%`}
+              y2="100%"
+              stroke="rgba(0, 255, 231, 0.9)"
+              strokeWidth="0.4"
+              strokeDasharray="2 1"
+              strokeLinecap="round"
+              style={{ filter: 'drop-shadow(0 0 6px rgba(0,255,231,0.45))' }}
+            />
+          </svg>
+        </div>
+      )}
+
       {/* Start position dot - positioned at arrow/football level */}
       {playStartYard !== undefined && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
         <div
@@ -1056,27 +1103,58 @@ const FootballField: React.FC<FootballFieldProps> = ({
             </svg>
           )}
 
-          {/* Standalone arrowhead starting at the play dot (base sits on the dot) */}
-          <div
-            className="absolute"
-            style={{
-              left: `${arrowX(playStartYard)}%`,
-              top: `${arrowTopPercent}%`,
-              transform: `translateY(-50%) rotate(${playEndYard > playStartYard ? 0 : 180}deg)`,
-              transformOrigin: '0 50%'
-            }}
-          >
-            <div
-              style={{
-                width: 0,
-                height: 0,
-                borderTop: '7px solid transparent',
-                borderBottom: '7px solid transparent',
-                borderLeft: `22px solid ${playViz.color}`,
-                filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
-              }}
-            />
-          </div>
+          {/* Direction arrow: shaft plus arrowhead that reaches the end yard */}
+          {(() => {
+            const startX = arrowX(playStartYard);
+            const endX = arrowX(playEndYard);
+            const distance = endX - startX;
+            const width = Math.abs(distance);
+            const left = distance >= 0 ? startX : endX;
+            const pointingRight = distance >= 0;
+            return (
+              <div
+                className="absolute"
+                style={{
+                  left: `${left}%`,
+                  top: `${arrowTopPercent}%`,
+                  width: `${width}%`,
+                  transform: 'translateY(-50%)'
+                }}
+              >
+                <div
+                  className="absolute top-1/2"
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    transform: 'translateY(-50%)',
+                    background: `linear-gradient(90deg, ${playViz.glowColor}, ${playViz.color})`,
+                    boxShadow: `0 0 8px ${playViz.glowColor}`
+                  }}
+                />
+                <div
+                  className="absolute"
+                  style={{
+                    right: pointingRight ? '-2px' : 'auto',
+                    left: pointingRight ? 'auto' : '-2px',
+                    top: '50%',
+                    transform: `translate(0, -50%) rotate(${pointingRight ? 0 : 180}deg)`
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 0,
+                      height: 0,
+                      borderTop: '9px solid transparent',
+                      borderBottom: '9px solid transparent',
+                      borderLeft: `28px solid ${playViz.color}`,
+                      filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Play type icon at midpoint - only show for fail cases */}
           {playViz.icon === '🚫' && (
@@ -1319,6 +1397,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
           const receiverStartYard = passStartYard + (Math.sign(distance) || 1) * receiverOffsetYards;
           const receiverStartX = headshotX(receiverStartYard);
           const receiverDistancePx = (passEndX - receiverStartX) / 100 * fieldWidthPx;
+
+          // QB starts a few yards behind the line of scrimmage, then steps up to the snap spot (dot)
+          const qbDropYards = 3;
+          const qbSnapYard = clampYard(passStartYard - possessionDirection * qbDropYards);
+          const qbSnapX = headshotX(qbSnapYard);
+          const qbStepPx = (passStartX - qbSnapX) / 100 * fieldWidthPx;
+          const qbHasMove = Math.abs(qbStepPx) > 0.5;
+          const qbStepDurationMs = Math.min(Math.max(Math.abs(qbStepPx) * 5, 280), 900);
           
           return (
             <React.Fragment key={`pass-${playKey}-${isTouchdownPlay ? 'static' : loopCycle}`}>
@@ -1351,16 +1437,23 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 </div>
               </div>
               
-              {/* QB at start position (stationary) */}
+              {/* QB starts behind LOS and steps up to the snap/dot position */}
               <div
                 className="absolute z-10"
                 style={{ 
-                  left: `${passStartX}%`,
+                  left: `${qbSnapX}%`,
                   top: `${headshotTopPercent}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
               >
-                <div className="relative group">
+                <div
+                  style={{
+                    '--distance-px': `${qbStepPx}px`,
+                    animation: qbHasMove ? `headshot-follow ${qbStepDurationMs}ms cubic-bezier(0.4, 0.0, 0.2, 1) 0s 1 forwards` : 'none',
+                    willChange: qbHasMove ? 'transform, opacity' : 'auto'
+                  } as React.CSSProperties}
+                >
+                  <div className="relative group">
                   <div 
                     className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
                     style={{
@@ -1379,6 +1472,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     {!qbAthlete && (
                       <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
                     )}
+                  </div>
                   </div>
                 </div>
               </div>
