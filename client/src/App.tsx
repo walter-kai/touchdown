@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
-import GameNavBar from './components/common/navs/NavBar';
+import BottomNavbar from './components/common/navs/BottomNavbar';
 import LoginNav from './components/common/navs/LoginNav';
 
 import DashboardCarousel from './pages/espn/dashboard/Carousel';
@@ -202,25 +202,28 @@ const App: React.FC = () => {
           </TransitionGroup>
         </div>
         
-        {/* Game Navigation Bar - Show on game pages, team pages, player pages, and dashboard/games when logged in */}
-        {(isGamePage || isTeamPage || isPlayerPage || (isDashboardOrGames && user)) && (
-          <GameNavBar 
-            activeTab={isDashboardOrGames ? (location.pathname.endsWith('/games') ? 'games' : 'dashboard') : gameTab} 
-            onTabChange={(tab) => {
-              if (tab === 'dashboard' || tab === 'games') {
-                // For dashboard/games tabs, determine if we're in NBA or NFL context
-                const isNBA = location.pathname.startsWith('/nba');
-                const league = isNBA ? 'nba' : 'nfl';
-                navigate(tab === 'games' ? `/${league}/games` : `/${league}/dashboard`);
-              } else {
-                setGameTab(tab);
-              }
-            }}
-            onTabClick={handleTabClick} 
-            preset={isDashboardOrGames ? 'dashboard' : (isTeamPage ? 'team' : isPlayerPage ? 'player' : navPreset)}
-            gameStatus={isGamePage ? gameStatus : undefined}
-          />
-        )}
+        {/* Game Navigation Bar - Always rendered, visibility controlled by isVisible prop */}
+        <BottomNavbar 
+          activeTab={isDashboardOrGames ? (location.pathname.endsWith('/games') ? 'games' : 'dashboard') : gameTab} 
+          onTabChange={(tab) => {
+            if (tab === 'dashboard' || tab === 'games') {
+              // For dashboard/games tabs, determine if we're in NBA or NFL context
+              const isNBA = location.pathname.startsWith('/nba');
+              const league = isNBA ? 'nba' : 'nfl';
+              navigate(tab === 'games' ? `/${league}/games` : `/${league}/dashboard`);
+            } else {
+              setGameTab(tab);
+            }
+          }}
+          onTabClick={handleTabClick} 
+          preset={isDashboardOrGames ? 'dashboard' : (isTeamPage ? 'team' : isPlayerPage ? 'player' : navPreset)}
+          gameStatus={isGamePage ? gameStatus : undefined}
+          isVisible={
+            isGamePage 
+              ? (gameStatus !== undefined && navPreset !== 'scoreboard') || (gameStatus !== undefined) // Wait for game data to load
+              : (isTeamPage || isPlayerPage || (isDashboardOrGames && !!user))
+          }
+        />
         
         {/* Always render LoginModal globally, not conditionally */}
         <LoginModal isOpen={showLoginModal} onClose={closeLoginModal} />

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall } from 'react-icons/fa';
 import { debugLog } from '@/utils/debugLog';
@@ -9,10 +9,24 @@ interface GameNavBarProps {
   onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games') => void; // Called when button is clicked
   preset?: 'scoreboard' | 'summary' | 'team' | 'player' | 'dashboard'; // Determines which buttons to show
   gameStatus?: 'pre' | 'in' | 'post'; // Game status to conditionally show tabs
+  isVisible?: boolean; // Controls visibility with slide animation
 }
 
-const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabClick, preset = 'scoreboard', gameStatus }) => {
+const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabClick, preset = 'scoreboard', gameStatus, isVisible = true }) => {
   const navigate = useNavigate();
+  const prevVisibleRef = useRef(isVisible);
+  const shouldAnimateRef = useRef(false);
+
+  // Track visibility changes and determine if animation should occur
+  useEffect(() => {
+    // Only animate if visibility is actually changing (true -> false or false -> true)
+    if (prevVisibleRef.current !== isVisible) {
+      shouldAnimateRef.current = true;
+      prevVisibleRef.current = isVisible;
+    } else {
+      shouldAnimateRef.current = false;
+    }
+  }, [isVisible]);
 
   // All available navigation items
   const allNavItems = [
@@ -53,9 +67,13 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
     .filter((item): item is NonNullable<typeof item> => item !== undefined);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-bg-dark/60 border-t border-neon-cyan/30 shadow-[0_-2px_24px_0_#00ffe7/20] backdrop-blur-md animate-slide-up-from-bottom">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4">
-        <div className="flex items-center justify-around py-2 sm:py-3 gap-1 sm:gap-2">
+    <nav className={`fixed bottom-0 left-0 right-0 z-50 bg-bg-dark/60 border-t border-neon-cyan/30 shadow-[0_-2px_24px_0_#00ffe7/20] backdrop-blur-md ${
+      shouldAnimateRef.current ? 'transition-transform duration-300' : ''
+    } ${
+      isVisible ? 'translate-y-0' : 'translate-y-full'
+    }`}>
+      <div className="max-w-7xl mx-auto px-1">
+        <div className="flex items-center justify-around py-1 gap-1 sm:gap-2">
           {navItems.map((item) => {
             const isActive = item.id === activeTab;
             const isBackButton = item.id === 'back';
@@ -103,4 +121,4 @@ const GameNavBar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabCl
   );
 };
 
-export default GameNavBar;
+export default BottomNavbar;
