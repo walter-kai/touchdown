@@ -93,31 +93,28 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
       timeoutId = setTimeout(() => {
         const sectionsToCheck = ['info', 'schedule', 'news'];
         const navbarHeight = 80;
-        const scrollPosition = window.scrollY + navbarHeight + 100;
+        const viewportCenter = window.scrollY + window.innerHeight / 2;
         
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-        const scrolledToBottom = windowHeight + window.scrollY >= documentHeight - 200;
+        let closestSection = 'info';
+        let closestDistance = Infinity;
         
-        if (scrolledToBottom) {
-          onTabChange('news');
-          return;
-        }
-        
-        for (let i = sectionsToCheck.length - 1; i >= 0; i--) {
-          const sectionId = sectionsToCheck[i];
+        sectionsToCheck.forEach(sectionId => {
           const ref = sectionRefs[sectionId as keyof typeof sectionRefs];
           
           if (ref.current) {
             const rect = ref.current.getBoundingClientRect();
-            const absoluteTop = rect.top + window.scrollY;
+            const sectionTop = rect.top + window.scrollY;
+            const sectionCenter = sectionTop + rect.height / 2;
+            const distance = Math.abs(viewportCenter - sectionCenter);
             
-            if (scrollPosition >= absoluteTop) {
-              onTabChange(sectionId as 'info' | 'schedule' | 'news');
-              break;
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestSection = sectionId;
             }
           }
-        }
+        });
+        
+        onTabChange(closestSection as 'info' | 'schedule' | 'news');
       }, 100);
     };
     
@@ -299,14 +296,56 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
           </div>
         )}
 
+                {/* News Section */}
+        <div id="news" ref={newsRef} className="space-y-6 scroll-mt-20 pb-4">
+          {overview.news && overview.news.length > 0 && (
+            <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 p-6">
+              <h2 className="text-2xl font-bold text-neon-cyan mb-6 flex items-center gap-2">
+                <FaNewspaper />
+                News
+              </h2>
+              <div className="overflow-x-auto custom-scrollbar -mx-6 px-6">
+                <div className="flex gap-4 pb-4">
+                  {overview.news.map((article, idx) => (
+                    <div key={idx} className="bg-bg-darker/50 rounded-xl border border-neon-cyan/20 p-6 hover:border-neon-cyan/40 transition-all flex-shrink-0 w-[400px]">
+                      <div className="flex flex-col gap-4">
+                        {article.images && article.images.length > 0 && (
+                          <img
+                            src={article.images[0].url}
+                            alt={article.headline}
+                            className="w-full h-48 object-cover rounded-lg"
+                          />
+                        )}
+                        <div className="flex-1 flex flex-col">
+                          <div className="text-sm text-gray-400 mb-2">
+                            {new Date(article.published).toLocaleDateString()} • {article.byline || 'ESPN'}
+                          </div>
+                          <h3 className="text-xl font-bold text-neon-cyan mb-3 line-clamp-2">
+                            {article.headline}
+                          </h3>
+                          <p className="text-gray-300 mb-4 line-clamp-3 flex-1">{article.description}</p>
+                          <a
+                            href={article.links.web.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block px-4 py-2 bg-neon-cyan/20 border border-neon-cyan/30 rounded-lg text-neon-cyan hover:bg-neon-cyan/30 transition-colors text-sm text-center"
+                          >
+                            Read Full Article →
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Overview/Stats Section */}
         <div id="info" ref={infoRef} className="space-y-6 scroll-mt-20">
           {overview.statistics && (
-            <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 p-2">
-              <h2 className="text-2xl font-bold text-neon-cyan mb-6 flex items-center gap-2">
-                <FaInfoCircle />
-                Overview
-              </h2>
+            <div className="">
               
               {/* Stats by Category */}
               {overview.statistics.categories && overview.statistics.categories.map((category, idx) => (
@@ -409,50 +448,6 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
               </div>
             )}
           </div>
-        </div>
-
-        {/* News Section */}
-        <div id="news" ref={newsRef} className="space-y-6 scroll-mt-20">
-          {overview.news && overview.news.length > 0 && (
-            <div className="bg-bg-dark/90 rounded-xl border border-neon-cyan/30 p-6">
-              <h2 className="text-2xl font-bold text-neon-cyan mb-6 flex items-center gap-2">
-                <FaNewspaper />
-                News
-              </h2>
-              <div className="space-y-4">
-                {overview.news.map((article, idx) => (
-                  <div key={idx} className="bg-bg-darker/50 rounded-xl border border-neon-cyan/20 p-6 hover:border-neon-cyan/40 transition-all">
-                    <div className="flex flex-col md:flex-row gap-6">
-                    {article.images && article.images.length > 0 && (
-                      <img
-                        src={article.images[0].url}
-                        alt={article.headline}
-                        className="w-full md:w-64 h-48 object-cover rounded-lg"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-2">
-                        {new Date(article.published).toLocaleDateString()} • {article.byline || 'ESPN'}
-                      </div>
-                      <h3 className="text-xl font-bold text-neon-cyan mb-3">
-                        {article.headline}
-                      </h3>
-                      <p className="text-gray-300 mb-4">{article.description}</p>
-                      <a
-                        href={article.links.web.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block px-4 py-2 bg-neon-cyan/20 border border-neon-cyan/30 rounded-lg text-neon-cyan hover:bg-neon-cyan/30 transition-colors text-sm"
-                      >
-                        Read Full Article →
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Next Game */}
