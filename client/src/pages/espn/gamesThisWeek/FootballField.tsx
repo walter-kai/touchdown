@@ -385,8 +385,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const arrowTopPercent = ARROW_DEPTH * 100;
   const headshotTopPercent = HEADSHOT_DEPTH * 100;
   const numberTopPercent = NUMBER_DEPTH * 100;
-  const arrowX = (yard: number | undefined, depthPercent = arrowTopPercent) => projectYardX(yard ?? 0, depthPercent);
-  const headshotX = (yard: number | undefined, depthPercent = headshotTopPercent) => projectYardX(yard ?? 0, depthPercent);
+  
+  // CRITICAL: For horizontal X-positioning, all elements at the same yard must use the SAME depth
+  // to ensure they align properly on the trapezoid. We use HEADSHOT_DEPTH as the reference.
+  const ALIGNMENT_DEPTH = HEADSHOT_DEPTH * 100;
+  
+  // arrowX and headshotX both use ALIGNMENT_DEPTH for X-coordinates to ensure yard alignment
+  const arrowX = (yard: number | undefined) => projectYardX(yard ?? 0, ALIGNMENT_DEPTH);
+  const headshotX = (yard: number | undefined) => projectYardX(yard ?? 0, ALIGNMENT_DEPTH);
   // Duration of rush animation (matches rush-slide timing)
   const RUSH_ANIMATION_MS = 3000;
   const PASS_PAUSE_MS = 2000;
@@ -931,19 +937,44 @@ const FootballField: React.FC<FootballFieldProps> = ({
               <p className="text-neon-pink font-bold text-xl">{(situation as any).downDistanceText}</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Diagnostics View - Field Yard Calculations */}
+      {showGameInfo && (
+        <div className="bg-bg-darker/50 border border-neon-cyan/20 rounded p-3 mb-4 text-xs font-mono">
+          <div className="text-neon-cyan font-bold mb-2">📊 Field Diagnostics</div>
           
-          {/* Possession */}
-          <div className="flex-1 text-center">
-            <p className="text-text-muted text-xs mb-2">Possession</p>
-            <div className="flex items-center justify-center gap-2">
-              <img
-                src={situation.possession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
-                alt="Possession"
-                className="w-10 h-10"
-              />
-              <p className="text-neon-cyan font-bold text-xl">
-                {situation.possession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
-              </p>
+          {/* Play Yardages */}
+          <div className="mb-3 pb-3 border-b border-neon-cyan/10">
+            <div className="text-neon-pink mb-1">Play Yardages (from ESPN):</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><span className="text-text-muted">Start Yard:</span> <span className="text-neon-cyan">{playStartYard?.toFixed(1) ?? 'N/A'}</span></div>
+              <div><span className="text-text-muted">End Yard:</span> <span className="text-neon-cyan">{playEndYard?.toFixed(1) ?? 'N/A'}</span></div>
+              <div><span className="text-text-muted">Possession:</span> <span className="text-neon-cyan">{possessionAbbr ?? 'N/A'}</span></div>
+              <div><span className="text-text-muted">Direction:</span> <span className="text-neon-cyan">{possessionDirection > 0 ? '→ Right' : '← Left'}</span></div>
+            </div>
+          </div>
+
+          {/* Projected Field Positions */}
+          <div className="mb-3 pb-3 border-b border-neon-cyan/10">
+            <div className="text-neon-pink mb-1">Projected Field Positions (0-100%):</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><span className="text-text-muted">Arrow X:</span> <span className="text-neon-cyan">{arrowX(playStartYard)?.toFixed(2) ?? 'N/A'}%</span></div>
+              <div><span className="text-text-muted">Headshot X:</span> <span className="text-neon-cyan">{headshotX(playStartYard)?.toFixed(2) ?? 'N/A'}%</span></div>
+              <div><span className="text-text-muted">End Arrow X:</span> <span className="text-neon-cyan">{arrowX(playEndYard)?.toFixed(2) ?? 'N/A'}%</span></div>
+              <div><span className="text-text-muted">End Headshot X:</span> <span className="text-neon-cyan">{headshotX(playEndYard)?.toFixed(2) ?? 'N/A'}%</span></div>
+            </div>
+          </div>
+
+          {/* Field Dimensions */}
+          <div>
+            <div className="text-neon-pink mb-1">Field Geometry:</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><span className="text-text-muted">Trapezoid Top Inset:</span> <span className="text-neon-cyan">{TRAPEZOID_TOP_INSET}%</span></div>
+              <div><span className="text-text-muted">Trapezoid Bottom Inset:</span> <span className="text-neon-cyan">{trapezoidBottomInset?.toFixed(1)}%</span></div>
+              <div><span className="text-text-muted">Viewport Width:</span> <span className="text-neon-cyan">{viewportWidth}px</span></div>
+              <div><span className="text-text-muted">Field Ref Width:</span> <span className="text-neon-cyan">{fieldWidthPx}px</span></div>
             </div>
           </div>
         </div>
@@ -985,13 +1016,13 @@ const FootballField: React.FC<FootballFieldProps> = ({
             fill="rgba(239, 68, 68, 0.20)"
           />
 
-          {/* Yard lines with taper, projected to match angled edges - now 0-120 with 10 yard end zones */}
-          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120].map((yard) => {
+          {/* Yard lines - only within playing field (goal lines and 10-yard increments) */}
+          {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110].map((yard) => {
             const xTop = projectYardX(yard, 0);
             const xBottom = projectYardX(yard, 100);
-            // Display yard numbers for the playing field (10-110 maps to 0-100 yard lines)
-            const yardNumber = yard < 10 || yard > 110 ? null : (yard <= 60 ? yard - 10 : 110 - yard);
-            const isFifty = yard === 60;
+            // Display yard numbers: 10=0, 20=10, 30=20, 40=30, 50=40, 60=50, 70=40, 80=30, 90=20, 100=10, 110=0
+            const yardNumber = yard <= 60 ? yard - 10 : 110 - yard;
+            const isGoalLine = yard === 10 || yard === 110;
             return (
               <React.Fragment key={`line-${yard}`}>
                 <line
@@ -999,10 +1030,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   y1="0%"
                   x2={`${xBottom}%`}
                   y2="100%"
-                  stroke={isFifty ? 'rgba(255, 226, 143, 0.55)' : 'rgba(255,255,255,0.18)'}
-                  strokeWidth={isFifty ? 0.8 : 0.45}
+                  stroke={isGoalLine ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255,255,255,0.18)'}
+                  strokeWidth={isGoalLine ? 0.6 : 0.45}
                 />
-                {yard % 10 === 0 && yardNumber !== null && (
+                {yardNumber !== undefined && (
                   <text
                     x={`${xBottom}%`}
                     y={`${numberTopPercent}`}
@@ -1047,22 +1078,25 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
       {/* Line of scrimmage - projected like yard lines and clipped to the field bounds */}
       {playStartYard !== undefined && (() => {
-        // Parse down information from situation.downDistanceText (e.g., "1st & 10", "4th & 2")
+        // Try to get down/distance from situation
+        let yardsToGo: number | undefined;
         const downDistanceText = situation?.downDistanceText || '';
-        const downMatch = downDistanceText.match(/(\d+)(st|nd|rd|th)/);
-        const down = downMatch ? parseInt(downMatch[1]) : undefined;
         const distanceMatch = downDistanceText.match(/&\s*(\d+)/);
-        const yardsToGo = distanceMatch ? parseInt(distanceMatch[1]) : undefined;
+        if (distanceMatch) {
+          yardsToGo = parseInt(distanceMatch[1]);
+        } else {
+          // Fallback: assume standard 10 yards to first down if not specified
+          yardsToGo = 10;
+        }
         
         // Calculate first down line position
-        const firstDownYard = yardsToGo !== undefined && playStartYard !== undefined
-          ? clampYard(playStartYard + possessionDirection * yardsToGo)
-          : undefined;
+        const actualMoveDirection = playEndYard !== undefined && playStartYard !== undefined 
+          ? Math.sign(playEndYard - playStartYard) || possessionDirection
+          : possessionDirection;
         
-        // Determine colors based on down
-        const is4thDown = down === 4;
-        const losColor = 'rgba(30, 144, 255, 0.95)'; // Blue for line of scrimmage
-        const firstDownColor = is4thDown ? 'rgba(255, 50, 50, 0.95)' : 'rgba(255, 200, 0, 0.95)'; // Red for 4th, yellow for others
+        const firstDownYard = yardsToGo !== undefined && playStartYard !== undefined
+          ? clampYard(playStartYard + actualMoveDirection * yardsToGo)
+          : undefined;
         
         return (
           <div
@@ -1072,29 +1106,29 @@ const FootballField: React.FC<FootballFieldProps> = ({
             }}
           >
             <svg className="absolute inset-0" viewBox="0 0 100 100" preserveAspectRatio="none">
-              {/* Line of scrimmage - blue line */}
+              {/* Line of scrimmage - blue line following trapezoid perspective */}
               <line
                 x1={`${projectYardX(playStartYard, 0)}%`}
                 y1="0%"
                 x2={`${projectYardX(playStartYard, 100)}%`}
                 y2="100%"
-                stroke={losColor}
+                stroke="rgba(30, 144, 255, 0.95)"
                 strokeWidth="0.5"
                 strokeLinecap="round"
-                style={{ filter: `drop-shadow(0 0 6px ${losColor})` }}
+                style={{ filter: 'drop-shadow(0 0 6px rgba(30, 144, 255, 0.95))' }}
               />
               
-              {/* First down line - yellow for 1st-3rd down, red for 4th down */}
-              {firstDownYard !== undefined && yardsToGo !== undefined && (
+              {/* First down line - yellow line */}
+              {firstDownYard !== undefined && (
                 <line
                   x1={`${projectYardX(firstDownYard, 0)}%`}
                   y1="0%"
                   x2={`${projectYardX(firstDownYard, 100)}%`}
                   y2="100%"
-                  stroke={firstDownColor}
+                  stroke="rgba(255, 200, 0, 0.95)"
                   strokeWidth="0.5"
                   strokeLinecap="round"
-                  style={{ filter: `drop-shadow(0 0 6px ${firstDownColor})` }}
+                  style={{ filter: 'drop-shadow(0 0 6px rgba(255, 200, 0, 0.95))' }}
                 />
               )}
             </svg>
@@ -1330,6 +1364,80 @@ const FootballField: React.FC<FootballFieldProps> = ({
         const distancePx = Math.abs(signedDistancePx);
         const passDurationMs = Math.min(Math.max(distancePx * 5, 900), 4800); // clamp for fluid speed
         
+        // Render detailed diagnostics
+        const renderDiagnostics = () => {
+          if (!showGameInfo) return null;
+          
+          return (
+            <div className="bg-bg-darker/70 border border-neon-pink/20 rounded p-3 mb-4 text-xs font-mono">
+              <div className="text-neon-pink font-bold mb-2">🎯 Play Animation Diagnostics</div>
+              
+              {/* Raw play data */}
+              <div className="mb-3 pb-3 border-b border-neon-pink/10">
+                <div className="text-neon-cyan mb-1">Raw Play Yards:</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><span className="text-text-muted">Resolved Start:</span> <span className="text-neon-pink">{resolvedStartYard?.toFixed(1)}</span></div>
+                  <div><span className="text-text-muted">Resolved End:</span> <span className="text-neon-pink">{resolvedEndYard?.toFixed(1)}</span></div>
+                  <div><span className="text-text-muted">Pass Start:</span> <span className="text-neon-pink">{passStartYard?.toFixed(1)}</span></div>
+                  <div><span className="text-text-muted">Pass End:</span> <span className="text-neon-pink">{passEndYard?.toFixed(1)}</span></div>
+                </div>
+              </div>
+
+              {/* Line of scrimmage & first down */}
+              <div className="mb-3 pb-3 border-b border-neon-pink/10">
+                <div className="text-neon-cyan mb-1">Line of Scrimmage & First Down:</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><span className="text-text-muted">LOS Yard:</span> <span className="text-blue-400">{playStartYard?.toFixed(1)}</span></div>
+                  <div><span className="text-text-muted">LOS X:</span> <span className="text-blue-400">{arrowX(playStartYard)?.toFixed(2)}%</span></div>
+                  <div><span className="text-text-muted">1st Down Yard:</span> <span className="text-yellow-400">{(playStartYard !== undefined && situation?.downDistanceText ? clampYard(playStartYard + possessionDirection * (parseInt(situation.downDistanceText.match(/&\s*(\d+)/)?.[1] || '0') || 0)).toFixed(1) : 'N/A')}</span></div>
+                  <div><span className="text-text-muted">Arrow Top %:</span> <span className="text-text-muted">{arrowTopPercent}%</span></div>
+                </div>
+              </div>
+
+              {/* Headshot positions */}
+              <div className="mb-3 pb-3 border-b border-neon-pink/10">
+                <div className="text-neon-cyan mb-1">Headshot Positions (Player Locations):</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><span className="text-text-muted">Start X:</span> <span className="text-neon-cyan">{baseStartX?.toFixed(2)}%</span></div>
+                  <div><span className="text-text-muted">End X:</span> <span className="text-neon-cyan">{baseEndX?.toFixed(2)}%</span></div>
+                  <div><span className="text-text-muted">Headshot Top %:</span> <span className="text-neon-cyan">{headshotTopPercent}%</span></div>
+                  {playViz.animate === 'pass-complete' || playViz.animate === 'pass-incomplete' ? (
+                    <>
+                      <div><span className="text-text-muted">QB Start X:</span> <span className="text-yellow-300">{headshotX(Math.max(10, Math.min(110, passStartYard - possessionDirection * 3)))?.toFixed(2)}%</span></div>
+                      <div><span className="text-text-muted">Receiver Start X:</span> <span className="text-yellow-300">{headshotX(passStartYard + (Math.sign(distance) || 1) * 3)?.toFixed(2)}%</span></div>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Football trajectory */}
+              <div className="mb-3 pb-3 border-b border-neon-pink/10">
+                <div className="text-neon-cyan mb-1">Football Trajectory:</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><span className="text-text-muted">Start X:</span> <span className="text-green-400">{passStartX?.toFixed(2)}%</span></div>
+                  <div><span className="text-text-muted">End X:</span> <span className="text-green-400">{passEndX?.toFixed(2)}%</span></div>
+                  <div><span className="text-text-muted">Distance (%):</span> <span className="text-green-400">{distance?.toFixed(2)}%</span></div>
+                  <div><span className="text-text-muted">Distance (px):</span> <span className="text-green-400">{signedDistancePx?.toFixed(1)}px</span></div>
+                  <div><span className="text-text-muted">Duration:</span> <span className="text-green-400">{passDurationMs}ms</span></div>
+                  <div><span className="text-text-muted">Play Type:</span> <span className="text-green-400">{playViz.animate}</span></div>
+                </div>
+              </div>
+
+              {/* Athletes involved */}
+              <div>
+                <div className="text-neon-cyan mb-1">Athletes ({resolvedAthletes?.length ?? 0}):</div>
+                <div className="space-y-1">
+                  {resolvedAthletes?.slice(0, 3).map((athlete: any, idx: number) => (
+                    <div key={idx} className="text-text-muted text-[10px]">
+                      <span className="text-yellow-300">{athlete?.displayName}</span> - {athlete?.position} ({athlete?.team?.abbreviation})
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        };
+        
         // Rush animation - headshot slides from dot with football (supports losses/backwards motion)
         if (playViz.animate === 'rush') {
           // Calculate distance as percentage of field width (signed)
@@ -1348,6 +1456,15 @@ const FootballField: React.FC<FootballFieldProps> = ({
           
           return (
             <>
+              {showGameInfo && (
+                <div className="bg-bg-darker/70 border border-neon-pink/20 rounded p-3 mb-4 text-xs font-mono">
+                  <div className="text-neon-pink font-bold mb-2">🎯 Rush Play Diagnostics</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><span className="text-text-muted">Distance Px:</span> <span className="text-green-400">{distanceWithOffset?.toFixed(1)}</span></div>
+                    <div><span className="text-text-muted">Has Gain:</span> <span className="text-yellow-300">{hasGain ? 'Yes' : 'No'}</span></div>
+                  </div>
+                </div>
+              )}
               {/* Headshot with football starts at dot */}
               <div
                 key={`rush-${getStartYard(lastPlay)}-${getEndYard(lastPlay)}-${isTouchdownPlay ? 'static' : loopCycle}`}
@@ -1445,6 +1562,15 @@ const FootballField: React.FC<FootballFieldProps> = ({
           
           return (
             <React.Fragment key={`pass-${playKey}-${isTouchdownPlay ? 'static' : loopCycle}`}>
+              {showGameInfo && (
+                <div className="bg-bg-darker/70 border border-neon-pink/20 rounded p-3 mb-4 text-xs font-mono">
+                  <div className="text-neon-pink font-bold mb-2">🎯 Pass Play Diagnostics</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><span className="text-text-muted">Start X:</span> <span className="text-green-400">{passStartX?.toFixed(2)}%</span></div>
+                    <div><span className="text-text-muted">End X:</span> <span className="text-green-400">{passEndX?.toFixed(2)}%</span></div>
+                  </div>
+                </div>
+              )}
               {/* Football animation */}
               <div
                 className="absolute z-20"
@@ -2197,6 +2323,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
           return (
             <>
+              {renderDiagnostics()}
               {/* Rusher sliding in */}
               <div
                 key={`sack-rusher-${playKey}-${loopCycle}`}
@@ -2281,54 +2408,57 @@ const FootballField: React.FC<FootballFieldProps> = ({
         
         // Default - static position at end
         return (
-          <div
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
-            style={{ 
-              left: `${baseEndX}%`,
-              top: `${headshotTopPercent}%`
-            }}
-          >
-            <div className="relative group">
-              <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
-                style={{
-                  backgroundColor: `${playViz.color}30`,
-                  boxShadow: `0 0 20px ${playViz.glowColor}`
-                }}
-              >
-                {hasPrimaryAthlete && (
-                  <img
-                    src={primaryHeadshot || '/assets/football.png'}
-                    alt={primaryAthlete?.displayName || 'Player'}
-                    className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                    style={{ borderColor: teamColor }}
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      const parent = e.currentTarget.parentElement;
-                      if (parent) {
-                        const fallback = document.createElement('div');
-                        fallback.className = 'flex items-center justify-center text-2xl';
-                        fallback.innerHTML = playViz.icon;
-                        parent.appendChild(fallback);
-                      }
-                    }}
-                  />
-                )}
-                {!hasPrimaryAthlete && (
-                  <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
-                )}
-              </div>
-              {/* Player name tooltip */}
-              <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-bg-darker border rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-[9999]"
-                style={{ borderColor: `${playViz.color}80` }}
-              >
-                <p className="text-xs font-bold" style={{ color: playViz.color }}>{primaryAthlete?.displayName || 'Player'}</p>
-                <p className="text-text-muted text-xs">{primaryAthlete?.position || ''}</p>
+          <>
+            {/* Headshot with no animation */}
+            <div
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
+              style={{ 
+                left: `${baseEndX}%`,
+                top: `${headshotTopPercent}%`
+              }}
+            >
+              <div className="relative group">
+                <div 
+                  className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                  style={{
+                    backgroundColor: `${playViz.color}30`,
+                    boxShadow: `0 0 20px ${playViz.glowColor}`
+                  }}
+                >
+                  {hasPrimaryAthlete && (
+                    <img
+                      src={primaryHeadshot || '/assets/football.png'}
+                      alt={primaryAthlete?.displayName || 'Player'}
+                      className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                      style={{ borderColor: teamColor }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const parent = e.currentTarget.parentElement;
+                        if (parent) {
+                          const fallback = document.createElement('div');
+                          fallback.className = 'flex items-center justify-center text-2xl';
+                          fallback.innerHTML = playViz.icon;
+                          parent.appendChild(fallback);
+                        }
+                      }}
+                    />
+                  )}
+                  {!hasPrimaryAthlete && (
+                    <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
+                  )}
+                </div>
+                {/* Player name tooltip */}
+                <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-bg-darker border rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-[9999]"
+                  style={{ borderColor: `${playViz.color}80` }}
+                >
+                  <p className="text-xs font-bold" style={{ color: playViz.color }}>{primaryAthlete?.displayName || 'Player'}</p>
+                  <p className="text-text-muted text-xs">{primaryAthlete?.position || ''}</p>
+                </div>
               </div>
             </div>
-          </div>
+          </>
         );
-    })()}
+      })()}
 
     </div> {/* overlay */}
     </div> {/* field container */}
