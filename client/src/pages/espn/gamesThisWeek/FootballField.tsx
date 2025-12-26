@@ -1042,28 +1042,61 @@ const FootballField: React.FC<FootballFieldProps> = ({
       <div className="absolute inset-0 z-[40]">
 
       {/* Line of scrimmage - projected like yard lines and clipped to the field bounds */}
-      {playStartYard !== undefined && (
-        <div
-          className="absolute inset-0 pointer-events-none z-[5]"
-          style={{
-            clipPath: `polygon(${TRAPEZOID_TOP_INSET}% 0%, ${100 - TRAPEZOID_TOP_INSET}% 0%, ${100 - trapezoidBottomInset}% 100%, ${trapezoidBottomInset}% 100%)`
-          }}
-        >
-          <svg className="absolute inset-0" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <line
-              x1={`${projectYardX(playStartYard, 0)}%`}
-              y1="0%"
-              x2={`${projectYardX(playStartYard, 100)}%`}
-              y2="100%"
-              stroke="rgba(0, 255, 231, 0.9)"
-              strokeWidth="0.4"
-              strokeDasharray="2 1"
-              strokeLinecap="round"
-              style={{ filter: 'drop-shadow(0 0 6px rgba(0,255,231,0.45))' }}
-            />
-          </svg>
-        </div>
-      )}
+      {playStartYard !== undefined && (() => {
+        // Parse down information from situation.downDistanceText (e.g., "1st & 10", "4th & 2")
+        const downDistanceText = situation?.downDistanceText || '';
+        const downMatch = downDistanceText.match(/(\d+)(st|nd|rd|th)/);
+        const down = downMatch ? parseInt(downMatch[1]) : undefined;
+        const distanceMatch = downDistanceText.match(/&\s*(\d+)/);
+        const yardsToGo = distanceMatch ? parseInt(distanceMatch[1]) : undefined;
+        
+        // Calculate first down line position
+        const firstDownYard = yardsToGo !== undefined && playStartYard !== undefined
+          ? clampYard(playStartYard + possessionDirection * yardsToGo)
+          : undefined;
+        
+        // Determine colors based on down
+        const is4thDown = down === 4;
+        const losColor = 'rgba(30, 144, 255, 0.95)'; // Blue for line of scrimmage
+        const firstDownColor = is4thDown ? 'rgba(255, 50, 50, 0.95)' : 'rgba(255, 200, 0, 0.95)'; // Red for 4th, yellow for others
+        
+        return (
+          <div
+            className="absolute inset-0 pointer-events-none z-[5]"
+            style={{
+              clipPath: `polygon(${TRAPEZOID_TOP_INSET}% 0%, ${100 - TRAPEZOID_TOP_INSET}% 0%, ${100 - trapezoidBottomInset}% 100%, ${trapezoidBottomInset}% 100%)`
+            }}
+          >
+            <svg className="absolute inset-0" viewBox="0 0 100 100" preserveAspectRatio="none">
+              {/* Line of scrimmage - blue line */}
+              <line
+                x1={`${projectYardX(playStartYard, 0)}%`}
+                y1="0%"
+                x2={`${projectYardX(playStartYard, 100)}%`}
+                y2="100%"
+                stroke={losColor}
+                strokeWidth="0.5"
+                strokeLinecap="round"
+                style={{ filter: `drop-shadow(0 0 6px ${losColor})` }}
+              />
+              
+              {/* First down line - yellow for 1st-3rd down, red for 4th down */}
+              {firstDownYard !== undefined && yardsToGo !== undefined && (
+                <line
+                  x1={`${projectYardX(firstDownYard, 0)}%`}
+                  y1="0%"
+                  x2={`${projectYardX(firstDownYard, 100)}%`}
+                  y2="100%"
+                  stroke={firstDownColor}
+                  strokeWidth="0.5"
+                  strokeLinecap="round"
+                  style={{ filter: `drop-shadow(0 0 6px ${firstDownColor})` }}
+                />
+              )}
+            </svg>
+          </div>
+        );
+      })()}
 
       {/* Start position dot - positioned at arrow/football level */}
       {playStartYard !== undefined && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
