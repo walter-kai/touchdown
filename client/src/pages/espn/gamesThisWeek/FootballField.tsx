@@ -350,10 +350,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const trapezoidBottomInset = React.useMemo(() => {
     const baseInset = -112; // design inset at reference width
     const referenceWidth = 1280; // px baseline for taper calculation
-    const minInset = -12;
-    const maxInset = -1028;
+    const minInset = -1028; // most negative (widest at bottom)
+    const maxInset = -12; // least negative (narrowest)
     const scaled = baseInset * (viewportWidth / referenceWidth);
-    return Math.max(maxInset, Math.min(minInset, scaled));
+    return Math.max(minInset, Math.min(maxInset, scaled));
   }, [viewportWidth]);
   const BASE_LEFT_PERCENT = 0; // use full trapezoid width so yard lines align with edges
   const BASE_WIDTH_PERCENT = 100; // full playable span projected to the trapezoid
@@ -386,13 +386,32 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const headshotTopPercent = HEADSHOT_DEPTH * 100;
   const numberTopPercent = NUMBER_DEPTH * 100;
   
-  // CRITICAL: For horizontal X-positioning, all elements at the same yard must use the SAME depth
-  // to ensure they align properly on the trapezoid. We use HEADSHOT_DEPTH as the reference.
-  const ALIGNMENT_DEPTH = HEADSHOT_DEPTH * 100;
+  // Simple linear yard-to-X mapping for animations (no trapezoid distortion)
+  // All animations positioned on a flat 2D plane with consistent boundaries
+  const linearYardX = (yard: number | undefined) => {
+    if (yard === undefined || Number.isNaN(yard)) return 0;
+    const clamped = clampYard(yard);
+    return (clamped / 120) * 100; // Simple 0-120 yards → 0-100% screen X
+  };
   
-  // arrowX and headshotX both use ALIGNMENT_DEPTH for X-coordinates to ensure yard alignment
-  const arrowX = (yard: number | undefined) => projectYardX(yard ?? 0, ALIGNMENT_DEPTH);
-  const headshotX = (yard: number | undefined) => projectYardX(yard ?? 0, ALIGNMENT_DEPTH);
+  // Use linear mapping for all animation positions
+  const arrowX = linearYardX;
+  const headshotX = linearYardX;
+
+  // Normalize a 0-120 yard value to a 0-100% span (full field, includes end zones)
+  const playablePercent = (yard: number | undefined) => {
+    if (yard === undefined || Number.isNaN(yard)) return undefined;
+    const clamped = clampYard(yard);
+    return (clamped / 120) * 100;
+  };
+
+  // Offense-relative percent: attacking goal line is 100% regardless of direction
+  const offensePercent = (yard: number | undefined, direction: number) => {
+    const base = playablePercent(yard);
+    if (base === undefined) return undefined;
+    // If driving left (direction < 0), flip so left goal line becomes 100%
+    return direction > 0 ? (100 - base) : base;
+  };
   // Duration of rush animation (matches rush-slide timing)
   const RUSH_ANIMATION_MS = 3000;
   const PASS_PAUSE_MS = 2000;
@@ -794,6 +813,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
     ? undefined
     : convertToFieldYard(possessionAbbr, getEndYard(lastPlay) ?? fallbackYard);
 
+  // Keep raw ESPN values for diagnostic display
+  const rawEspnStartYard = getStartYard(lastPlay);
+  const rawEspnEndYard = getEndYard(lastPlay);
+
   // Use kick yards if available, otherwise use normalized-by-possession yard data
   let playStartYard = isKickPlay && kickStartYard !== null
     ? kickStartYard
@@ -949,21 +972,28 @@ const FootballField: React.FC<FootballFieldProps> = ({
           <div className="mb-3 pb-3 border-b border-neon-cyan/10">
             <div className="text-neon-pink mb-1">Play Yardages (from ESPN):</div>
             <div className="grid grid-cols-2 gap-2">
-              <div><span className="text-text-muted">Start Yard:</span> <span className="text-neon-cyan">{playStartYard?.toFixed(1) ?? 'N/A'}</span></div>
-              <div><span className="text-text-muted">End Yard:</span> <span className="text-neon-cyan">{playEndYard?.toFixed(1) ?? 'N/A'}</span></div>
+              <div><span className="text-text-muted">Start Yard:</span> <span className="text-neon-cyan">{rawEspnStartYard?.toFixed(1) ?? 'N/A'}</span></div>
+              <div><span className="text-text-muted">End Yard:</span> <span className="text-neon-cyan">{rawEspnEndYard?.toFixed(1) ?? 'N/A'}</span></div>
               <div><span className="text-text-muted">Possession:</span> <span className="text-neon-cyan">{possessionAbbr ?? 'N/A'}</span></div>
-              <div><span className="text-text-muted">Direction:</span> <span className="text-neon-cyan">{possessionDirection > 0 ? '→ Right' : '← Left'}</span></div>
+              <div><span className="text-text-muted">Direction:</span> <span className="text-neon-cyan">{playStartYard !== undefined && playEndYard !== undefined && playEndYard > playStartYard ? '→ Right' : playStartYard !== undefined && playEndYard !== undefined && playEndYard < playStartYard ? '← Left' : 'N/A'}</span></div>
             </div>
           </div>
 
           {/* Projected Field Positions */}
           <div className="mb-3 pb-3 border-b border-neon-cyan/10">
-            <div className="text-neon-pink mb-1">Projected Field Positions (0-100%):</div>
+            <div className="text-neon-pink mb-1">Projected Field Positions:</div>
             <div className="grid grid-cols-2 gap-2">
-              <div><span className="text-text-muted">Arrow X:</span> <span className="text-neon-cyan">{arrowX(playStartYard)?.toFixed(2) ?? 'N/A'}%</span></div>
-              <div><span className="text-text-muted">Headshot X:</span> <span className="text-neon-cyan">{headshotX(playStartYard)?.toFixed(2) ?? 'N/A'}%</span></div>
-              <div><span className="text-text-muted">End Arrow X:</span> <span className="text-neon-cyan">{arrowX(playEndYard)?.toFixed(2) ?? 'N/A'}%</span></div>
-              <div><span className="text-text-muted">End Headshot X:</span> <span className="text-neon-cyan">{headshotX(playEndYard)?.toFixed(2) ?? 'N/A'}%</span></div>
+              <div className="col-span-2 text-text-muted mt-1">Field Percent (left→right, goal-line span 0–100%)</div>
+              <div><span className="text-text-muted">Start:</span> <span className="text-neon-cyan">{playablePercent(playStartYard)?.toFixed(2) ?? 'N/A'}%</span></div>
+              <div><span className="text-text-muted">End:</span> <span className="text-neon-cyan">{playablePercent(playEndYard)?.toFixed(2) ?? 'N/A'}%</span></div>
+
+              <div className="col-span-2 text-text-muted mt-2">Offense Percent (attacking goal = 100%)</div>
+              <div><span className="text-text-muted">Start:</span> <span className="text-neon-cyan">{offensePercent(playStartYard, possessionDirection)?.toFixed(2) ?? 'N/A'}%</span></div>
+              <div><span className="text-text-muted">End:</span> <span className="text-neon-cyan">{offensePercent(playEndYard, possessionDirection)?.toFixed(2) ?? 'N/A'}%</span></div>
+
+              <div className="col-span-2 text-text-muted mt-2">Screen X (projected at player depth)</div>
+              <div><span className="text-text-muted">Start:</span> <span className="text-neon-cyan">{headshotX(playStartYard)?.toFixed(2) ?? 'N/A'}%</span></div>
+              <div><span className="text-text-muted">End:</span> <span className="text-neon-cyan">{headshotX(playEndYard)?.toFixed(2) ?? 'N/A'}%</span></div>
             </div>
           </div>
 
@@ -1552,8 +1582,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
           const receiverStartX = headshotX(receiverStartYard);
           const receiverDistancePx = (passEndX - receiverStartX) / 100 * fieldWidthPx;
 
-          // QB starts a few yards behind the line of scrimmage, then steps up to the snap spot (dot)
-          const qbDropYards = 3;
+          // QB begins on the line of scrimmage (same as the start dot) for alignment
+          const qbDropYards = 0;
           const qbSnapYard = clampYard(passStartYard - possessionDirection * qbDropYards);
           const qbSnapX = headshotX(qbSnapYard);
           const qbStepPx = (passStartX - qbSnapX) / 100 * fieldWidthPx;
