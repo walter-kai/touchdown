@@ -369,8 +369,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
   };
 
   const yardToBasePercent = (yard: number) => {
-    const clamped = Math.max(-10, Math.min(110, yard));
-    return (BASE_LEFT_PERCENT + clamped * (BASE_WIDTH_PERCENT / 100)) / 100;
+    const clamped = Math.max(0, Math.min(120, yard));
+    return (BASE_LEFT_PERCENT + clamped * (BASE_WIDTH_PERCENT / 120)) / 100;
   };
 
   const projectYardX = (yard: number, depthPercent: number) => {
@@ -391,7 +391,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const RUSH_ANIMATION_MS = 3000;
   const PASS_PAUSE_MS = 2000;
   const PLAY_END_DELAY_MS = 600;
-  const clampYard = (yard: number) => Math.max(0, Math.min(100, yard));
+  const clampYard = (yard: number) => Math.max(0, Math.min(120, yard));
   const fieldWidthPx = fieldRef.current?.offsetWidth || 1000;
   
   if (!lastPlay) return null;
@@ -454,12 +454,15 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
   const convertToFieldYard = (abbr?: string, yard?: number) => {
     if (yard === undefined || yard < 0 || yard > 100) return undefined;
-    if (yard === 0 || yard === 100) return yard; // end zones stay at their absolute edges
-    if (!abbr) return yard; // unknown team, assume left-to-right as-is
-    if (abbrMatches(abbr, leftAbbr)) return yard; // left team keeps yard as-is
-    if (abbrMatches(abbr, rightAbbr)) return 100 - yard; // flip for right team
+    // Convert 0-100 yard line to 0-120 field position (add 10 for left end zone)
+    const fieldYard = yard + 10;
+    if (yard === 0) return 10; // left goal line
+    if (yard === 100) return 110; // right goal line
+    if (!abbr) return fieldYard; // unknown team, assume left-to-right as-is
+    if (abbrMatches(abbr, leftAbbr)) return fieldYard; // left team keeps yard as-is
+    if (abbrMatches(abbr, rightAbbr)) return 120 - fieldYard; // flip for right team
     // Unrecognized team token: leave as-is to avoid stalling the animation
-    return yard;
+    return fieldYard;
   };
   
   // Get visualization config for this play type - handle both string and object
@@ -635,14 +638,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
       if (fromTeamAbbr && typeof fromYardLine === 'number' && !Number.isNaN(fromYardLine)) {
         const isPuntTeamLeft = abbrMatches(fromTeamAbbr, leftAbbr);
-        kickStartYard = isPuntTeamLeft ? fromYardLine : (100 - fromYardLine);
+        kickStartYard = isPuntTeamLeft ? fromYardLine + 10 : (110 - fromYardLine);
       } else {
         const rawStart = getStartYard(lastPlay);
-        if (typeof rawStart === 'number') kickStartYard = rawStart;
+        if (typeof rawStart === 'number') kickStartYard = rawStart + 10; // add end zone offset
       }
 
       const isLandTeamLeft = abbrMatches(landTeamAbbr, leftAbbr);
-      kickEndYard = isLandTeamLeft ? landYardLine : (100 - landYardLine);
+      kickEndYard = isLandTeamLeft ? landYardLine + 10 : (110 - landYardLine);
       returnStartYard = kickEndYard;
 
       // If no explicit from yard, infer a reasonable snap spot using distance when possible
@@ -655,11 +658,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
       const fromYardLine = puntToEndZoneMatch[2] ? parseInt(puntToEndZoneMatch[2]) : undefined;
       if (fromTeamAbbr && typeof fromYardLine === 'number' && !Number.isNaN(fromYardLine)) {
         const isPuntTeamLeft = abbrMatches(fromTeamAbbr, leftAbbr);
-        kickStartYard = isPuntTeamLeft ? fromYardLine : (100 - fromYardLine);
+        kickStartYard = isPuntTeamLeft ? fromYardLine + 10 : (110 - fromYardLine);
       }
       const isPuntTeamLeft = fromTeamAbbr ? abbrMatches(fromTeamAbbr, leftAbbr) : false;
-      // Punt touchbacks go to receiving team's 20
-      kickEndYard = isPuntTeamLeft ? 80 : 20;
+      // Punt touchbacks go to receiving team's 20 (yard 30 or 90 in 120-yard system)
+      kickEndYard = isPuntTeamLeft ? 90 : 30;
       returnStartYard = kickEndYard;
       returnEndYard = kickEndYard;
     } else if (kickMatch) {
@@ -670,11 +673,11 @@ const FootballField: React.FC<FootballFieldProps> = ({
       
       // Convert kick start position
       const isKickTeamLeft = abbrMatches(kickTeamAbbr, leftAbbr);
-      kickStartYard = isKickTeamLeft ? kickYardLine : (100 - kickYardLine);
+      kickStartYard = isKickTeamLeft ? kickYardLine + 10 : (110 - kickYardLine);
       
       // Convert landing position (where ball first lands)
       const isLandTeamLeft = abbrMatches(landTeamAbbr, leftAbbr);
-      kickEndYard = isLandTeamLeft ? landYardLine : (100 - landYardLine);
+      kickEndYard = isLandTeamLeft ? landYardLine + 10 : (110 - landYardLine);
       
       // Default return start is where ball lands
       returnStartYard = kickEndYard;
@@ -684,10 +687,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
       const kickYardLine = parseInt(toEndZoneMatch[2]);
       
       const isKickTeamLeft = abbrMatches(kickTeamAbbr, leftAbbr);
-      kickStartYard = isKickTeamLeft ? kickYardLine : (100 - kickYardLine);
+      kickStartYard = isKickTeamLeft ? kickYardLine + 10 : (110 - kickYardLine);
       
-      // Touchback goes to receiving team's 25
-      kickEndYard = isKickTeamLeft ? 75 : 25;
+      // Touchback goes to receiving team's 25 (yard 35 or 85 in 120-yard system)
+      kickEndYard = isKickTeamLeft ? 85 : 35;
       returnStartYard = kickEndYard;
       returnEndYard = kickEndYard; // No return on touchback
     }
@@ -698,7 +701,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       const recoveryYardLine = parseInt(recoveryMatch[2]);
       
       const isRecoveryTeamLeft = abbrMatches(recoveryTeamAbbr, leftAbbr);
-      returnStartYard = isRecoveryTeamLeft ? recoveryYardLine : (100 - recoveryYardLine);
+      returnStartYard = isRecoveryTeamLeft ? recoveryYardLine + 10 : (110 - recoveryYardLine);
     }
     
     // Get return end position if there's a return
@@ -707,7 +710,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       const returnYardLine = parseInt(returnMatch[2]);
       
       const isReturnTeamLeft = abbrMatches(returnTeamAbbr, leftAbbr);
-      returnEndYard = isReturnTeamLeft ? returnYardLine : (100 - returnYardLine);
+      returnEndYard = isReturnTeamLeft ? returnYardLine + 10 : (110 - returnYardLine);
     } else {
       // No return, final position is where ball was caught/recovered
       returnEndYard = returnStartYard;
@@ -839,7 +842,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
     }
   }
   if (!isKickPlay && isTouchdownPlay) {
-    const goalCenter = possessionIsHome ? -5 : 105; // middle of end zone (inside)
+    const goalCenter = possessionIsHome ? 5 : 115; // middle of end zone (0-10 or 110-120)
     playEndYard = goalCenter;
     if (distanceYards && distanceYards > 0) {
       const inferredStart = clampYard(goalCenter - possessionDirection * distanceYards);
@@ -978,18 +981,19 @@ const FootballField: React.FC<FootballFieldProps> = ({
             fill="rgba(59, 130, 246, 0.20)"
           />
           <polygon
-            points={`${100 - TRAPEZOID_TOP_INSET},0 ${projectYardX(90, 0)},0 ${projectYardX(90, 100)},100 ${100 - trapezoidBottomInset},100`}
+            points={`${100 - TRAPEZOID_TOP_INSET},0 ${projectYardX(110, 0)},0 ${projectYardX(110, 100)},100 ${100 - trapezoidBottomInset},100`}
             fill="rgba(239, 68, 68, 0.20)"
           />
 
-          {/* Yard lines with taper, projected to match angled edges */}
-          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((fieldPercent) => {
-            const xTop = projectYardX(fieldPercent, 0);
-            const xBottom = projectYardX(fieldPercent, 100);
-            const yardNumber = fieldPercent <= 50 ? fieldPercent : 100 - fieldPercent;
-            const isFifty = fieldPercent === 50;
+          {/* Yard lines with taper, projected to match angled edges - now 0-120 with 10 yard end zones */}
+          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120].map((yard) => {
+            const xTop = projectYardX(yard, 0);
+            const xBottom = projectYardX(yard, 100);
+            // Display yard numbers for the playing field (10-110 maps to 0-100 yard lines)
+            const yardNumber = yard < 10 || yard > 110 ? null : (yard <= 60 ? yard - 10 : 110 - yard);
+            const isFifty = yard === 60;
             return (
-              <React.Fragment key={`line-${fieldPercent}`}>
+              <React.Fragment key={`line-${yard}`}>
                 <line
                   x1={`${xTop}%`}
                   y1="0%"
@@ -998,7 +1002,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   stroke={isFifty ? 'rgba(255, 226, 143, 0.55)' : 'rgba(255,255,255,0.18)'}
                   strokeWidth={isFifty ? 0.8 : 0.45}
                 />
-                {fieldPercent % 10 === 0 && (
+                {yard % 10 === 0 && yardNumber !== null && (
                   <text
                     x={`${xBottom}%`}
                     y={`${numberTopPercent}`}
@@ -1313,8 +1317,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
         const passStartYard = resolvedStartYard;
         const passEndYard = resolvedEndYard;
-        // Clamp end yard to visible field bounds for display (0-100) to prevent animations going off screen
-        const displayEndYard = Math.max(0, Math.min(100, resolvedEndYard));
+        // Clamp end yard to visible field bounds for display (0-120) to prevent animations going off screen
+        const displayEndYard = Math.max(0, Math.min(120, resolvedEndYard));
         // Use proper trapezoid projection for consistent positioning
         const baseStartX = headshotX(resolvedStartYard);
         const baseEndX = headshotX(displayEndYard);
@@ -1579,10 +1583,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
           }
           
           // Use pass-arc for the kick, rush-slide for the return
-          const kickStartX = kickStartYard !== null ? 10 + (kickStartYard * 0.8) : baseStartX;
-          const kickLandX = kickEndYard !== null ? 10 + (kickEndYard * 0.8) : baseEndX;
-                const returnStartX = returnStartYard !== null ? 10 + (returnStartYard * 0.8) : kickLandX;
-          const returnEndX = returnEndYard !== null ? 10 + (returnEndYard * 0.8) : baseEndX;
+          const kickStartX = kickStartYard !== null ? headshotX(kickStartYard) : baseStartX;
+          const kickLandX = kickEndYard !== null ? headshotX(kickEndYard) : baseEndX;
+          const returnStartX = returnStartYard !== null ? headshotX(returnStartYard) : kickLandX;
+          const returnEndX = returnEndYard !== null ? headshotX(returnEndYard) : baseEndX;
           
           const kickDistance = kickLandX - kickStartX;
           const returnDistance = returnEndX - returnStartX;
