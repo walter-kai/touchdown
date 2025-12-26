@@ -385,6 +385,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const arrowTopPercent = ARROW_DEPTH * 100;
   const headshotTopPercent = HEADSHOT_DEPTH * 100;
   const numberTopPercent = NUMBER_DEPTH * 100;
+  // Slightly shrink the arrow/dot plane to appear further away
+  const ARROW_PLANE_SCALE = 0.78;
+  const PLAY_PLANE_SCALE = 0.9;
   
   // Simple linear yard-to-X mapping for animations (no trapezoid distortion)
   // All animations positioned on a flat 2D plane with consistent boundaries
@@ -1166,28 +1169,30 @@ const FootballField: React.FC<FootballFieldProps> = ({
         );
       })()}
 
-      {/* Start position dot - positioned at arrow/football level */}
+      {/* Start position dot - positioned on a slightly scaled back plane */}
       {playStartYard !== undefined && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
         <div
-          className="absolute transform -translate-x-1/2 -translate-y-1/2"
-          style={{ 
-            left: `${arrowX(playStartYard)}%`,
-            top: `${arrowTopPercent}%`
-          }}
+          className="absolute inset-0 z-[1] pointer-events-none"
+          style={{ transform: `scale(${ARROW_PLANE_SCALE})`, transformOrigin: `50% ${arrowTopPercent}%` }}
         >
-          <div 
-            className="w-3 h-3 rounded-full border-2 border-white shadow-lg"
-            style={{ 
-              backgroundColor: playViz.color,
-              boxShadow: `0 0 10px ${playViz.glowColor}`
-            }}
-          />
+          <div
+            className="absolute transform -translate-x-1/2 -translate-y-1/2"
+            style={{ left: `${arrowX(playStartYard)}%`, top: `${arrowTopPercent}%` }}
+          >
+            <div
+              className="w-3 h-3 rounded-full border-2 border-white shadow-lg"
+              style={{ backgroundColor: playViz.color, boxShadow: `0 0 10px ${playViz.glowColor}` }}
+            />
+          </div>
         </div>
       )}
 
       {/* Arrow showing play direction - arrowhead only */}
       {playStartYard !== undefined && playEndYard !== undefined && playStartYard !== playEndYard && (
-        <div className="absolute left-0 top-0 w-full h-full pointer-events-none">
+        <div
+          className="absolute left-0 top-0 w-full h-full pointer-events-none z-[1]"
+          style={{ transform: `scale(${ARROW_PLANE_SCALE})`, transformOrigin: `50% ${arrowTopPercent}%` }}
+        >
           {/* Arc path for punts/kickoffs */}
           {playViz.animate === 'arc' && (
             <svg
@@ -1495,78 +1500,80 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   </div>
                 </div>
               )}
-              {/* Headshot with football starts at dot */}
-              <div
-                key={`rush-${getStartYard(lastPlay)}-${getEndYard(lastPlay)}-${isTouchdownPlay ? 'static' : loopCycle}`}
-                className="absolute z-10"
-                style={{ 
-                  left: `${baseStartX}%`,
-                  top: `${headshotTopPercent}%`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-              >
+              {/* Headshot with football starts at dot - scaled play plane */}
+              <div className="absolute inset-0 z-[5] pointer-events-none" style={{ transform: `scale(${PLAY_PLANE_SCALE})`, transformOrigin: `50% ${headshotTopPercent}%` }}>
                 <div
-                  className={hasMovement ? "animate-rush-slide" : ""}
-                  style={{
-                    '--distance': `${distanceWithOffset}px`
-                  } as React.CSSProperties}
+                  key={`rush-${getStartYard(lastPlay)}-${getEndYard(lastPlay)}-${isTouchdownPlay ? 'static' : loopCycle}`}
+                  className="absolute z-10"
+                  style={{ 
+                    left: `${baseStartX}%`,
+                    top: `${headshotTopPercent}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
                 >
-                  <div className="relative group">
-                    {/* Headshot */}
-                    <div 
-                      className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
-                      style={{
-                        backgroundColor: `${playViz.color}30`,
-                        boxShadow: `0 0 20px ${playViz.glowColor}`
-                      }}
-                    >
-                      {hasPrimaryAthlete && (
-                        <img
-                          src={primaryHeadshot || '/assets/football.png'}
-                          alt={primaryAthlete?.displayName || 'Player'}
-                          className="w-12 h-12 rounded-full object-cover z-1 border-2"
-                          style={{ borderColor: teamColor }}
-                        />
+                  <div
+                    className={hasMovement ? "animate-rush-slide" : ""}
+                    style={{
+                      '--distance': `${distanceWithOffset}px`
+                    } as React.CSSProperties}
+                  >
+                    <div className="relative group">
+                      {/* Headshot */}
+                      <div 
+                        className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                        style={{
+                          backgroundColor: `${playViz.color}30`,
+                          boxShadow: `0 0 20px ${playViz.glowColor}`
+                        }}
+                      >
+                        {hasPrimaryAthlete && (
+                          <img
+                            src={primaryHeadshot || '/assets/football.png'}
+                            alt={primaryAthlete?.displayName || 'Player'}
+                            className="w-12 h-12 rounded-full object-cover z-1 border-2"
+                            style={{ borderColor: teamColor }}
+                          />
+                        )}
+                        {!hasPrimaryAthlete && (
+                          <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
+                        )}
+                        {isTouchdownPlay && (
+                          <img
+                            src="/assets/football_dance.gif"
+                            alt="Football Dance"
+                            className="w-16 h-full object-contain absolute top-2/3 td-dance"
+                            style={{ animationDuration: `${RUSH_ANIMATION_MS}ms` }}
+                          />
+                        )}
+                      </div>
+                      {/* Football being carried - show for any movement (gain or loss) */}
+                      {hasMovement && (
+                        <div 
+                          className={`absolute top-1/2 transform -translate-y-1/3 -rotate-45 ${footballOnRight ? '-right-1' : '-left-1'}`}
+                          style={{
+                            filter: `drop-shadow(0 0 8px ${playViz.glowColor})`,
+                            transform: footballOnRight ? 'translateY(-33%) rotate(-45deg)' : 'translateY(-33%) rotate(45deg) scaleX(-1)'
+                          }}
+                        >
+                          <img
+                            src="/assets/football.png"
+                            alt="Football"
+                            className="w-8 h-8 object-contain"
+                          />
+                        </div>
                       )}
-                      {!hasPrimaryAthlete && (
-                        <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
-                      )}
-                      {isTouchdownPlay && (
-                        <img
-                          src="/assets/football_dance.gif"
-                          alt="Football Dance"
-                          className="w-16 h-full object-contain absolute top-2/3 td-dance"
-                          style={{ animationDuration: `${RUSH_ANIMATION_MS}ms` }}
-                        />
+                      {/* No movement emoji - animated overlay */}
+                      {!hasMovement && (
+                        <div 
+                          className="absolute top-[30px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl animate-fadeInOut z-20"
+                          style={{
+                            filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
+                          }}
+                        >
+                          😰
+                        </div>
                       )}
                     </div>
-                    {/* Football being carried - show for any movement (gain or loss) */}
-                    {hasMovement && (
-                      <div 
-                        className={`absolute top-1/2 transform -translate-y-1/3 -rotate-45 ${footballOnRight ? '-right-1' : '-left-1'}`}
-                        style={{
-                          filter: `drop-shadow(0 0 8px ${playViz.glowColor})`,
-                          transform: footballOnRight ? 'translateY(-33%) rotate(-45deg)' : 'translateY(-33%) rotate(45deg) scaleX(-1)'
-                        }}
-                      >
-                        <img
-                          src="/assets/football.png"
-                          alt="Football"
-                          className="w-8 h-8 object-contain"
-                        />
-                      </div>
-                    )}
-                    {/* No movement emoji - animated overlay */}
-                    {!hasMovement && (
-                      <div 
-                        className="absolute top-[30px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl animate-fadeInOut z-20"
-                        style={{
-                          filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
-                        }}
-                      >
-                        😰
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -1601,81 +1608,13 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   </div>
                 </div>
               )}
-              {/* Football animation */}
-              <div
-                className="absolute z-20"
-                style={{ 
-                  left: `${passStartX}%`,
-                  top: `${headshotTopPercent}%`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-              >
+              {/* Scaled play plane for ball + QB + receiver */}
+              <div className="absolute inset-0 z-[5] pointer-events-none" style={{ transform: `scale(${PLAY_PLANE_SCALE})`, transformOrigin: `50% ${headshotTopPercent}%` }}>
+                {/* Football animation */}
                 <div
-                  style={{
-                    '--distance': distance,
-                    '--distance-px': `${signedDistancePx}px`,
-                    '--arc-height': `${Math.abs(distance) * 2.5}px`,
-                    animation: `${playViz.animate === 'pass-complete' ? 'pass-arc' : 'pass-incomplete'} ${passDurationMs + PASS_PAUSE_MS}ms cubic-bezier(0.1, 0.0, 0.4, 1) 0s 1 forwards`,
-                    willChange: 'transform, opacity'
-                  } as React.CSSProperties}
-                >
-                  <img
-                    src="/assets/football_spin.gif"
-                    alt="Football"
-                    className="w-8 h-8 object-contain"
-                    style={{
-                      filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
-                    }}
-                  />
-                </div>
-              </div>
-              
-              {/* QB starts behind LOS and steps up to the snap/dot position */}
-              <div
-                className="absolute z-10"
-                style={{ 
-                  left: `${qbSnapX}%`,
-                  top: `${headshotTopPercent}%`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-              >
-                <div
-                  style={{
-                    '--distance-px': `${qbStepPx}px`,
-                    animation: qbHasMove ? `headshot-follow ${qbStepDurationMs}ms cubic-bezier(0.4, 0.0, 0.2, 1) 0s 1 forwards` : 'none',
-                    willChange: qbHasMove ? 'transform, opacity' : 'auto'
-                  } as React.CSSProperties}
-                >
-                  <div className="relative group">
-                  <div 
-                    className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
-                    style={{
-                      backgroundColor: `${playViz.color}30`,
-                      boxShadow: `0 0 20px ${playViz.glowColor}`
-                    }}
-                  >
-                    {qbAthlete && (
-                      <img
-                        src={qbHeadshotUrl || '/assets/football.png'}
-                        alt={qbAthlete?.displayName || 'QB'}
-                        className="w-12 h-12 rounded-full object-cover z-10 border-2"
-                        style={{ borderColor: teamColor }}
-                      />
-                    )}
-                    {!qbAthlete && (
-                      <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
-                    )}
-                  </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Receiver runs to catch position */}
-              {hasReceiver && (
-                <div
-                  className="absolute z-10"
+                  className="absolute z-20"
                   style={{ 
-                    left: `${receiverStartX}%`,
+                    left: `${passStartX}%`,
                     top: `${headshotTopPercent}%`,
                     transform: 'translate(-50%, -50%)'
                   }}
@@ -1683,40 +1622,111 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   <div
                     style={{
                       '--distance': distance,
-                      '--distance-px': `${receiverDistancePx}px`,
-                      animation: `headshot-follow ${passDurationMs + PASS_PAUSE_MS}ms cubic-bezier(0.4, 0.0, 0.2, 1) 0s 1 forwards`,
+                      '--distance-px': `${signedDistancePx}px`,
+                      '--arc-height': `${Math.abs(distance) * 2.5}px`,
+                      animation: `${playViz.animate === 'pass-complete' ? 'pass-arc' : 'pass-incomplete'} ${passDurationMs + PASS_PAUSE_MS}ms cubic-bezier(0.1, 0.0, 0.4, 1) 0s 1 forwards`,
                       willChange: 'transform, opacity'
                     } as React.CSSProperties}
                   >
+                    <img
+                      src="/assets/football_spin.gif"
+                      alt="Football"
+                      className="w-8 h-8 object-contain"
+                      style={{
+                        filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                {/* QB at LOS */}
+                <div
+                  className="absolute z-10"
+                  style={{ 
+                    left: `${qbSnapX}%`,
+                    top: `${headshotTopPercent}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                >
+                  <div
+                    style={{
+                      '--distance-px': `${qbStepPx}px`,
+                      animation: qbHasMove ? `headshot-follow ${qbStepDurationMs}ms cubic-bezier(0.4, 0.0, 0.2, 1) 0s 1 forwards` : 'none',
+                      willChange: qbHasMove ? 'transform, opacity' : 'auto'
+                    } as React.CSSProperties}
+                  >
                     <div className="relative group">
-                      <div 
-                        className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
-                        style={{
-                          backgroundColor: `${playViz.color}30`,
-                          boxShadow: `0 0 20px ${playViz.glowColor}`
-                        }}
-                      >
+                    <div 
+                      className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                      style={{
+                        backgroundColor: `${playViz.color}30`,
+                        boxShadow: `0 0 20px ${playViz.glowColor}`
+                      }}
+                    >
+                      {qbAthlete && (
                         <img
-                          src={receiverHeadshotUrl || '/assets/football.png'}
-                          alt={receiverAthlete?.displayName || 'Receiver'}
+                          src={qbHeadshotUrl || '/assets/football.png'}
+                          alt={qbAthlete?.displayName || 'QB'}
                           className="w-12 h-12 rounded-full object-cover z-10 border-2"
                           style={{ borderColor: teamColor }}
                         />
-                        {isTouchdownPlay && (
-                          <img
-                            src="/assets/football_dance.gif"
-                            alt="Football Dance"
-                            className="w-16 h-full object-contain absolute top-2/3 td-dance"
-                            style={{
-                              animationDuration: `${passDurationMs + PASS_PAUSE_MS}ms`
-                            }}
-                          />
-                        )}
-                      </div>
+                      )}
+                      {!qbAthlete && (
+                        <FaFootballBall className="text-2xl" style={{ color: playViz.color }} />
+                      )}
+                    </div>
                     </div>
                   </div>
                 </div>
-              )}
+
+                {/* Receiver runs to catch position */}
+                {hasReceiver && (
+                  <div
+                    className="absolute z-10"
+                    style={{ 
+                      left: `${receiverStartX}%`,
+                      top: `${headshotTopPercent}%`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                  >
+                    <div
+                      style={{
+                        '--distance': distance,
+                        '--distance-px': `${receiverDistancePx}px`,
+                        animation: `headshot-follow ${passDurationMs + PASS_PAUSE_MS}ms cubic-bezier(0.4, 0.0, 0.2, 1) 0s 1 forwards`,
+                        willChange: 'transform, opacity'
+                      } as React.CSSProperties}
+                    >
+                      <div className="relative group">
+                        <div 
+                          className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
+                          style={{
+                            backgroundColor: `${playViz.color}30`,
+                            boxShadow: `0 0 20px ${playViz.glowColor}`
+                          }}
+                        >
+                          <img
+                            src={receiverHeadshotUrl || '/assets/football.png'}
+                            alt={receiverAthlete?.displayName || 'Receiver'}
+                            className="w-12 h-12 rounded-full object-cover z-10 border-2"
+                            style={{ borderColor: teamColor }}
+                          />
+                          {isTouchdownPlay && (
+                            <img
+                              src="/assets/football_dance.gif"
+                              alt="Football Dance"
+                              className="w-16 h-full object-contain absolute top-2/3 td-dance"
+                              style={{
+                                animationDuration: `${passDurationMs + PASS_PAUSE_MS}ms`
+                              }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </React.Fragment>
           );
         }
