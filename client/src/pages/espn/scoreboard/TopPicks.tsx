@@ -6,6 +6,7 @@ import { usePicks } from '../../../providers/PicksContext';
 import { debugLog } from '@/utils/debugLog';
 import { Play } from '@/types/espn/playByplay';
 import { useLeague } from '@/providers/LeagueContext';
+import { useAuth } from '@/providers/AuthContext';
 
 interface TopPicksProps {
   gameId: string;
@@ -44,6 +45,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
   isGameInSession,
 }) => {
   const { getHeadshotUrl } = useLeague();
+  const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
   const [userPickIds, setUserPickIds] = useState<Set<string>>(new Set());
   const [currentPickIds, setCurrentPickIds] = useState<Set<string>>(new Set()); // Currently active picks only
@@ -233,10 +235,8 @@ const TopPicks: React.FC<TopPicksProps> = ({
     return sorted;
   }, [playLog, userPickIds, currentPickIds, gameId, getScores, isLoading, playerDetailsMap]);
 
-  // Calculate total user score from the topPicks data
-  const userTotalScore = topPicks
-    .filter(p => p.isUserPick)
-    .reduce((sum, player) => sum + player.userScore, 0);
+  // Use backend total score from user document
+  const userTotalScore = user?.totalScore ?? 0;
 
   const displayedPicks = isExpanded ? topPicks : topPicks.slice(0, 5);
   const hasMore = topPicks.length > 5;

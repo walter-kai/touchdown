@@ -12,25 +12,24 @@ export interface User {
   uid: string;
   email: string;
   displayName: string;
+  displayNameSet?: boolean; // Whether user has set their display name (default: false)
   photoUrl: string;
+  username?: string;
+  referralId?: string;
   authMethod: 'google' | 'metamask' | 'simple';
   provider: 'google' | 'metamask' | 'simple';
   createdAt: Date;
   lastLogin: Date;
   providerData: ProviderData;
-  displayNameSet?: boolean; // Whether user has set their display name (default: false)
-  
-  // Optional fields for backward compatibility
-  username?: string;
-  referralId?: string;
-  
-  // Deprecated fields (kept for backward compatibility)
+  // Legacy/provider-derived fields for backward compatibility
   googleId?: string;
   googleEmail?: string;
   googleName?: string;
   googlePicture?: string;
   isEmailVerified?: boolean;
   locale?: string;
+
+  totalScore?: number;
 }
 
 export interface PlayerPick {
