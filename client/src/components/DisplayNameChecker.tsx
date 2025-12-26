@@ -14,6 +14,13 @@ const DisplayNameChecker: React.FC<DisplayNameCheckerProps> = ({ children }) => 
   const [showModal, setShowModal] = useState(false);
   const wasAuthenticated = useRef<boolean>(false);
 
+  // Hide modal whenever not authenticated or no user is present
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      setShowModal(false);
+    }
+  }, [isAuthenticated, user]);
+
   useEffect(() => {
     // Only consider showing the modal on a fresh login transition
     const justLoggedIn = !wasAuthenticated.current && isAuthenticated;
