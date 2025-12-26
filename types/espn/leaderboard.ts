@@ -4,8 +4,7 @@
 export interface LeaderboardEntry {
   userId: string;
   displayName?: string;
-  email?: string;
-  photoURL?: string;
+  photoUrl?: string;
   totalScore: number;
   gamesPlayed: number;
   rank?: number;

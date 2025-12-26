@@ -24,27 +24,41 @@ export const getLeaderboard = catchAsync(async (req: Request, res: Response) => 
   // Get top 10 entries
   const top10Entries = entries.slice(0, 10);
   
-  // Fetch fresh user data (displayName, photoURL) from users collection
+  // Fetch fresh user data (displayName, photoUrl) from users collection
   const usersRef = db.collection('users');
   const userPromises = top10Entries.map(async (entry: any) => {
     try {
-      // Use email or userId as the document key
-      const userKey = entry.email || entry.userId;
+      // Use userId as the document key
+      const userKey = entry.userId;
       if (!userKey) return entry;
       
       const userDoc = await usersRef.doc(userKey).get();
       if (userDoc.exists) {
         const userData = userDoc.data();
         return {
-          ...entry,
-          displayName: userData?.displayName || entry.displayName || 'Player',
-          photoURL: userData?.photoURL || entry.photoURL
+          userId: entry.userId,
+          displayName: userData?.displayName || 'Player',
+          photoUrl: userData?.photoUrl,
+          totalScore: entry.totalScore,
+          gamesPlayed: entry.gamesPlayed
         };
       }
-      return entry;
+      // Return minimal data without email
+      return {
+        userId: entry.userId,
+        displayName: entry.displayName || 'Player',
+        photoUrl: entry.photoUrl,
+        totalScore: entry.totalScore,
+        gamesPlayed: entry.gamesPlayed
+      };
     } catch (error) {
       console.error(`Error fetching user data for ${entry.userId}:`, error);
-      return entry;
+      return {
+        userId: entry.userId,
+        displayName: entry.displayName || 'Player',
+        totalScore: entry.totalScore,
+        gamesPlayed: entry.gamesPlayed
+      };
     }
   });
   

@@ -491,9 +491,9 @@ const Dashboard: React.FC = () => {
                   }`}>
                     {entry.rank}
                   </div>
-                  {entry.photoURL ? (
+                  {entry.photoUrl ? (
                     <img
-                      src={entry.photoURL}
+                      src={entry.photoUrl}
                       alt={displayName}
                       className="w-8 h-8 rounded-full border border-neon-cyan/30"
                       referrerPolicy="no-referrer"
@@ -564,7 +564,7 @@ const Dashboard: React.FC = () => {
                       <img 
                         src={game.league === 'nfl' ? '/logos/logo-nfl.svg' : '/logos/logo-nba.svg'} 
                         alt={game.league?.toUpperCase()}
-                        className="w-12 h-6 absolute -translate-y-[42px] translate-x-4 p-1 bg-bg-dark/50 rounded-md border border-neon-cyan/30"
+                        className="w-9 h-6 absolute -translate-y-[42px] translate-x-4 p-1 bg-bg-dark/50 rounded-md border border-neon-cyan/30"
                       />
                     </div>
                     <div className="flex flex-col items-center gap-1">
