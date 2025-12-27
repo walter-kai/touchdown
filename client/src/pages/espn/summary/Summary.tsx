@@ -5,7 +5,7 @@ import PredictionChart from '@/pages/espn/gameView/info/PredictionChart';
 import PlayLog from '@/components/espn/PlayLog';
 import PointsChart from '@/components/espn/PointsChart';
 import Info from '@/pages/espn/scoreboard/Info';
-import YourPicks from '@/pages/espn/scoreboard/YourPicks';
+import ChoosePicks from '@/pages/espn/scoreboard/ChoosePicks';
 import TopPicks from '@/pages/espn/scoreboard/TopPicks';
 import FootballField from '@/pages/espn/gamesThisWeek/FootballField';
 import BasketballCourt from '@/pages/espn/gamesThisWeek/BasketballCourt';
@@ -477,7 +477,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                       isGameInSession={false}
                     />
                   ) : (
-                    <YourPicks
+                    <ChoosePicks
                       gameId={event.id}
                       homeTeamId={homeTeam.id}
                       awayTeamId={awayTeam.id}

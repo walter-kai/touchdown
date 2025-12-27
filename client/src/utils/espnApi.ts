@@ -119,5 +119,5 @@ return `https://sports.core.api.espn.com/v2/sports/${sport}/leagues/${league}/ev
 
 export const getPlaysUrl = (league: 'nfl' | 'nba', gameId: string, competitionId: string): string => {
   const sport = league === 'nba' ? 'basketball' : 'football';
-  return `https://sports.core.api.espn.com/v2/sports/${sport}/leagues/${league}/events/${gameId}/competitions/${competitionId}/plays?limit=300&lang=en&region=us`;
+  return `https://sports.core.api.espn.com/v2/sports/${sport}/leagues/${league}/events/${gameId}/competitions/${competitionId}/plays?limit=1000&lang=en&region=us`;
 };

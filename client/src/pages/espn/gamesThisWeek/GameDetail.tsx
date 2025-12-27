@@ -315,12 +315,18 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
 
   // Countdown timer effect for auto-refresh (only while game is live)
   useEffect(() => {
-    if (!gameId || isGameFinal) return;
+    console.log(`🔍 [Effect Running] gameId=${gameId}, isGameFinal=${isGameFinal}`);
+    if (!gameId || isGameFinal) {
+      console.log(`❌ [Early Return] gameId=${gameId}, isGameFinal=${isGameFinal}`);
+      return;
+    }
 
+    console.log(`🕐 [Timer] Setup for gameId=${gameId}`);
     const timer = setInterval(() => {
+      console.log('🔄 [Tick]');
       setCountdown((prev) => {
         if (prev <= 1) {
-          debugLog('⏰ Countdown reached 0, refreshing plays from ESPN API...');
+          console.log('⏰ [REFRESH NOW]');
           refreshPlaysFromApi();
           return 30;
         }

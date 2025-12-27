@@ -8,6 +8,7 @@ import GameLeaders from '@/pages/espn/summary/GameLeaders';
 import PredictionChart from '@/pages/espn/gameView/info/PredictionChart';
 import { CountUpScore } from '@/components/common/CountUpScore';
 import { usePlays } from '@/providers/PlaysContext';
+import { useAuth } from '@/providers/AuthContext';
 import { getHeadshotUrl } from '@/utils/espnImages';
 import type { Summary } from '@/types/espn/summary';
 
@@ -72,6 +73,7 @@ const Info: React.FC<InfoProps> = ({
   onOpenPicks,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { homeScore: contextHomeScore, awayScore: contextAwayScore } = usePlays();
   const currentHomeScore = contextHomeScore ?? (homeTeam?.score !== undefined ? Number(homeTeam.score) : 0);
   const currentAwayScore = contextAwayScore ?? (awayTeam?.score !== undefined ? Number(awayTeam.score) : 0);
@@ -84,62 +86,76 @@ const Info: React.FC<InfoProps> = ({
   const [picksScores, setPicksScores] = useState<Record<string, number>>({});
   const [hasFetchedUserScores, setHasFetchedUserScores] = useState(false);
 
-  // Load picks from localStorage
+  // Load picks from localStorage - with reactive updates
   useEffect(() => {
     if (!homeTeamId || !awayTeamId) return;
     
-    const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState);
-        if (parsed.players && parsed.players.length > 0) {
-          setCurrentPicks(parsed.players);
-          
-          // Calculate scores from playLog
-          const scores: Record<string, number> = {};
-          parsed.players.forEach((player: any) => {
-            scores[player.id] = 0;
-            playLog.forEach(play => {
-              if (play.athletesInvolved?.some((a: any) => a?.id === player.id)) {
-                scores[player.id]++;
-              }
+    const loadPicks = () => {
+      const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          if (parsed.players && parsed.players.length > 0) {
+            setCurrentPicks(parsed.players);
+            
+            // Calculate MY SCORE (session score - only plays after lock time)
+            const pickLockTime = parsed.lockedAt;
+            const lockTimeMs = typeof pickLockTime === 'number' ? pickLockTime : new Date(pickLockTime).getTime();
+            
+            const scores: Record<string, number> = {};
+            parsed.players.forEach((player: any) => {
+              scores[player.id] = 0;
+              playLog.forEach(play => {
+                if (play.athletesInvolved?.some((a: any) => a?.id === player.id)) {
+                  const playTimeMs = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
+                  if (playTimeMs >= lockTimeMs) {
+                    scores[player.id]++;
+                  }
+                }
+              });
             });
-          });
-          setPicksScores(scores);
-        }
-      } catch (e) {
-        console.error('Error loading picks:', e);
-      }
-    }
-  }, [homeTeamId, awayTeamId, playLog]);
-
-  // Prefer backend-calculated user scores (stored totals) instead of ad-hoc play counts
-  useEffect(() => {
-    if (!gameId || hasFetchedUserScores) return;
-
-    const token = localStorage.getItem('dexter_access_token');
-    if (!token) return;
-
-    const fetchUserScores = async () => {
-      try {
-        const resp = await fetch(`/api/picks/game/${gameId}/user/scores`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
+            setPicksScores(scores);
+          } else {
+            setCurrentPicks([]);
+            setPicksScores({});
           }
-        });
-        if (!resp.ok) return;
-        const data = await resp.json();
-        if (data?.userScores && typeof data.userScores === 'object') {
-          setPicksScores(data.userScores);
-          setHasFetchedUserScores(true);
+        } catch (e) {
+          console.error('Error loading picks:', e);
         }
-      } catch (err) {
-        console.warn('Failed to load user scores from API:', err);
+      } else {
+        setCurrentPicks([]);
+        setPicksScores({});
       }
     };
+    
+    // Load immediately
+    loadPicks();
+    
+    // Listen for storage events (updates from other tabs/components)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === `playerPick_${homeTeamId}_${awayTeamId}`) {
+        loadPicks();
+      }
+    };
+    
+    // Listen for custom event from same tab
+    const handleLocalUpdate = (e: CustomEvent) => {
+      if (e.detail.key === `playerPick_${homeTeamId}_${awayTeamId}`) {
+        loadPicks();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('localStorageUpdate' as any, handleLocalUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('localStorageUpdate' as any, handleLocalUpdate);
+    };
+  }, [homeTeamId, awayTeamId, playLog]);
 
-    fetchUserScores();
-  }, [gameId, hasFetchedUserScores]);
+  // Update picks display when playLog changes (already handled in useEffect above)
+  // No need to fetch from backend - use session scores calculated from playLog
 
   const nbaRun = useMemo(() => {
     if (!isNba || !homeTeam?.id || !awayTeam?.id || !Array.isArray(playLog) || playLog.length === 0) return null;
@@ -468,16 +484,16 @@ const Info: React.FC<InfoProps> = ({
                     </div>
 
 
-                    {/* Current Picks Display */}
-                    {currentPicks.length > 0 && (
+                    {/* Current Picks Display - Only show if user is logged in */}
+                    {user && currentPicks.length > 0 && (
                       <button
                               onClick={onOpenPicks}
                               className="bg-neon-pink/20 hover:bg-neon-pink/30 border border-neon-pink/50 rounded-lg px-4 py-2 text-neon-pink font-bold text-sm transition-all whitespace-nowrap"
                             >
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-neon-pink text-xs font-bold">YOUR PICKS</span>
+                          <span className="text-neon-pink text-xs font-bold">MY SCORE</span>
                           <span className="text-text-muted text-[10px]">
-                            Total: {Object.values(picksScores).reduce((sum, score) => sum + score, 0)} pts
+                            Session: {Object.values(picksScores).reduce((sum, score) => sum + score, 0)} pts
                           </span>
                         </div>
                         <div className="flex items-center gap-3">

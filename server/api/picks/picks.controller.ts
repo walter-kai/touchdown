@@ -104,28 +104,24 @@ export const getScores = catchAsync(async (req: Request, res: Response) => {
     throw new ApiError(400, 'Missing gameId parameter');
   }
 
-  // Backend no longer calls ESPN Summary; rely on stored picks and frontend for live breakdowns
-  const plays: any[] = [];
-  const espnAvailable = false;
-
   try {
-    const scores = await calculateAthleteScores(user.email, gameId, plays);
-
-    console.log(`[Scoring] Returning stored scores for game ${gameId}:`, {
-      gameScoresCount: Object.keys(scores.gameScores).length,
-      sessionScoresCount: Object.keys(scores.sessionScores).length,
-      userScoresCount: Object.keys(scores.userScores).length,
-      totalScore: scores.totalScore
-    });
+    // Backend returns empty scores - client will calculate from playLog
+    // This tells the frontend: "use your client-side calculation"
+    const emptyScores = {
+      gameScores: {},
+      sessionScores: {},
+      userScores: {},
+      totalScore: 0
+    };
 
     return res.status(200).json({
       ok: true,
-      ...scores,
-      espnAvailable
+      ...emptyScores,
+      espnAvailable: false
     });
   } catch (error: any) {
-    console.error(`[Scoring] Error calculating scores for game ${gameId}:`, error);
-    throw new ApiError(500, `Failed to calculate scores: ${error.message}`);
+    console.error(`[Scoring] Error in getScores for game ${gameId}:`, error);
+    throw new ApiError(500, `Failed to get scores: ${error.message}`);
   }
 });
 

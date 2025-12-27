@@ -303,7 +303,7 @@ const MyPreview = () => {
   );
 };
 
-const YourPicks = forwardRef<{ openRoster: () => void }, PlayerPickProps>((
+const ChoosePicks = forwardRef<{ openRoster: () => void }, PlayerPickProps>((
   {
   gameId,
   homeTeamId,
@@ -351,7 +351,7 @@ ref
   const preGameUnlockTimestamp = React.useMemo(() => {
     if (!gameStartDate) return null;
     const timestamp = new Date(gameStartDate).getTime() - 2 * 60 * 1000;
-    console.log('YourPicks - Game start:', gameStartDate, 'Unlock timestamp:', new Date(timestamp).toISOString(), 'Diff from now:', timestamp - Date.now());
+    console.log('ChoosePicks - Game start:', gameStartDate, 'Unlock timestamp:', new Date(timestamp).toISOString(), 'Diff from now:', timestamp - Date.now());
     return timestamp;
   }, [gameStartDate]);
   const [preGameCountdownMs, setPreGameCountdownMs] = React.useState<number | null>(null);
@@ -531,7 +531,7 @@ ref
   // Refresh backend scores when playLog updates (separate effect to avoid infinite loops)
   useEffect(() => {
     if (playLog.length > 0) {
-      debugLog('📊 YourPicks: PlayLog updated, refreshing backend scores...');
+      debugLog('📊 ChoosePicks: PlayLog updated, refreshing backend scores...');
       refreshScores(gameId);
     }
   }, [playLog.length, gameId, refreshScores]);
@@ -542,7 +542,7 @@ ref
     
     // If backend scores not available, calculate locally from playLog (or default to 0 if no plays yet)
     if ((!scores || Object.keys(scores.gameScores).length === 0) && selectedPlayers.length > 0) {
-      debugLog('📊 YourPicks: Backend scores not available, calculating locally');
+      debugLog('📊 ChoosePicks: Backend scores not available, calculating locally');
       
       // Calculate game scores from playLog (empty if pre-game)
       const localGameScores: Record<string, number> = {};
@@ -626,11 +626,11 @@ ref
     }
     
     if (!scores) {
-      console.warn('⚠️ YourPicks: No scores available from context yet');
+      console.warn('⚠️ ChoosePicks: No scores available from context yet');
       return;
     }
 
-    debugLog('📊 YourPicks: Using scores from context:', scores);
+    debugLog('📊 ChoosePicks: Using scores from context:', scores);
 
     // Set game scores for all roster players (TOTAL column)
     setAllPlayerScores(scores.gameScores);
@@ -1492,6 +1492,6 @@ ref
   );
 });
 
-YourPicks.displayName = 'YourPicks';
+ChoosePicks.displayName = 'ChoosePicks';
 
-export default YourPicks;
+export default ChoosePicks;

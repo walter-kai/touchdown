@@ -263,6 +263,12 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
 
     // Get the latest pick (current session)
     const latestPick = picks[picks.length - 1];
+    logger.info(`[Scoring] All picks for game:`, picks.map((p: any, i: any) => ({ 
+      index: i, 
+      timestamp: p.timestamp,
+      playerCount: p.players?.length 
+    })));
+    logger.info(`[Scoring] Latest pick timestamp: ${latestPick.timestamp}, now: ${new Date().toISOString()}`);
     const currentPlayers = new Set<string>(latestPick.players.map((p: any) => p.id as string));
 
     // If we have no play log (e.g., backend no longer calling ESPN summary), fall back to stored totals
@@ -291,6 +297,7 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
     
     playLog.forEach(play => {
       try {
+        // If we have athletesInvolved (normalized plays), use that
         if (play.athletesInvolved && play.athletesInvolved.length > 0) {
           play.athletesInvolved.forEach((athlete: any) => {
             if (athlete?.id) {
@@ -299,6 +306,8 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
             }
           });
         }
+        // If we have raw ESPN plays, they'll just count as 1 play and we can't attribute to specific athletes
+        // This is fine for gameScores - we'll just have 0 for game scores from raw ESPN plays
       } catch (err) {
         logger.warn(`Error processing play for scoring: ${err}`);
       }
@@ -322,6 +331,7 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
       
       try {
         const lockTimeMs = new Date(latestPick.timestamp).getTime();
+        logger.info(`[Scoring] Lock time: ${new Date(lockTimeMs).toISOString()}`);
         
         // Count plays that happened AFTER the pick was locked
         playLog.forEach(play => {
@@ -331,7 +341,9 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
             const hasPlayer = play.athletesInvolved.some((a: any) => a?.id === playerId);
             if (!hasPlayer) return;
             
-            const playTime = new Date(play.timestamp).getTime();
+            // Use wallclock (ESPN format) or timestamp (normalized format)
+            const playTimeStr = play.wallclock || play.timestamp;
+            const playTime = new Date(playTimeStr).getTime();
             
             // Check if play happened after lock time
             if (playTime >= lockTimeMs) {
@@ -341,6 +353,8 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
             // Skip plays with invalid timestamps
           }
         });
+        
+        logger.info(`[Scoring] ${playerId} session score: ${sessionScores[playerId]} plays after lock`);
       } catch (err) {
         logger.warn(`Error calculating session score for player ${playerId}: ${err}`);
       }

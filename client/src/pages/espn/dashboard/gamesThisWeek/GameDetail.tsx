@@ -57,13 +57,13 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
     try {
       setIsRefreshing(true);
       const latestPlays = await fetchEspnPlays(actualGameId, String(compId), undefined, league);
+      console.log(`✅ [Refresh] Got ${latestPlays?.length} plays, updating state...`);
 
-      // cache latest pulls for quick resume
       localStorage.setItem(cacheKey, JSON.stringify({ plays: latestPlays, timestamp: Date.now() }));
       setPlayLog(latestPlays);
       setLastUpdated(new Date());
     } catch (err) {
-      console.error('Error refreshing plays from ESPN:', err);
+      console.error('[Refresh] Error:', err);
     } finally {
       setIsRefreshing(false);
       setCountdown(30);
@@ -296,12 +296,19 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
 
   // Countdown timer effect for auto-refresh (only while game is live)
   useEffect(() => {
-    if (!gameId || isGameFinal) return;
+    console.log(`🔍 [Effect Running] gameId=${gameId}, isGameFinal=${isGameFinal}`);
+    if (!gameId || isGameFinal) {
+      console.log(`❌ [Early Return] gameId=${gameId}, isGameFinal=${isGameFinal}`);
+      return;
+    }
 
+    console.log(`🕐 [Timer] Setup for gameId=${gameId}`);
     const timer = setInterval(() => {
+      console.log('🔄 [Tick]');
       setCountdown((prev) => {
+        console.log(`📍 [Countdown] prev=${prev}`);
         if (prev <= 1) {
-          debugLog('⏰ Countdown reached 0, refreshing plays from ESPN API...');
+          console.log('⏰ [REFRESH NOW]');
           refreshPlaysFromApi();
           return 30;
         }

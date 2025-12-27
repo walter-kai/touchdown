@@ -8,7 +8,7 @@ import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
 import FootballField from '@/pages/espn/gamesThisWeek/FootballField';
-import YourPicks from '@/pages/espn/scoreboard/YourPicks';
+import ChoosePicks from '@/pages/espn/scoreboard/ChoosePicks';
 import { useAuth } from '@/providers/AuthContext';
 import { useLeague } from '@/providers/LeagueContext';
 import { debugLog } from '@/utils/debugLog';
@@ -896,7 +896,7 @@ const PlayerPick = forwardRef<{ openRoster: () => void }, PlayerPickProps>(
   return (
     <>
       {/* Your Picks Section */}
-      <YourPicks
+      <ChoosePicks
         ref={yourPicksRef}
         gameId={gameId}
         homeTeamId={homeTeamId}
