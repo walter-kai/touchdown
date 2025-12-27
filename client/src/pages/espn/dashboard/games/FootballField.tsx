@@ -1118,8 +1118,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
           : undefined;
         
         return (
-          <div className="absolute inset-0 pointer-events-none z-[5]">
-            <svg className="absolute inset-0" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ clipPath: 'inset(6% 4%)' }}>
+          <div className="absolute inset-0 pointer-events-none z-[5]" style={{ clipPath: 'inset(6% 4%)' }}>
+            <svg className="absolute inset-0" viewBox="0 0 100 100" preserveAspectRatio="none">
               {/* Line of scrimmage - vertical line on the flattened field */}
               <line
                 x1={`${linearYardX(playStartYard)}%`}
