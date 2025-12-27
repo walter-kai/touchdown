@@ -49,8 +49,16 @@ const PlayLog: React.FC<PlayLogProps> = ({
   const progress = Math.max(0, Math.min(100, ((effectiveCountdown ?? REFRESH_TOTAL_SECONDS) / REFRESH_TOTAL_SECONDS) * 100));
   const [newPlayIds, setNewPlayIds] = useState<Set<string>>(new Set());
   const prevPlayCountRef = useRef(resolvedPlayLog.length);
+  const hasRefreshedInitially = useRef(false);
   const [lockUntil, setLockUntil] = useState<number | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
+
+  // Trigger an initial refresh on mount so the countdown follows a fresh fetch
+  useEffect(() => {
+    if (!refresh || hasRefreshedInitially.current) return;
+    hasRefreshedInitially.current = true;
+    Promise.resolve(refresh()).catch(err => console.error('Initial play log refresh failed', err));
+  }, [refresh]);
 
   // Track lock countdown ticks
   useEffect(() => {
