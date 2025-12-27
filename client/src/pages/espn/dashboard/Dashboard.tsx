@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad, FaChevronDown, FaChevronUp, FaUser, FaMedal } from 'react-icons/fa';
@@ -78,6 +78,7 @@ const Dashboard: React.FC = () => {
   const [avatarError, setAvatarError] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const fetchedRef = useRef(false); // Prevent double-fetching
 
   const profilePicture = user?.photoUrl || user?.googlePicture || user?.providerData?.googlePicture;
   // Helper function to render text with emojis properly
@@ -142,6 +143,9 @@ const Dashboard: React.FC = () => {
 
   // Fetch all user picks and related game data
   useEffect(() => {
+    // Prevent double-fetching on mount or user change
+    if (fetchedRef.current) return;
+    
     const fetchDashboardData = async () => {
       // Clear cache first to ensure fresh data
       const cacheKey = 'dashboard_processed_cache';
@@ -324,6 +328,7 @@ const Dashboard: React.FC = () => {
       }
     };
 
+    fetchedRef.current = true;
     fetchDashboardData();
   }, [user]);
 
