@@ -551,7 +551,7 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Games List */}
-      <div className="space-y-2">
+      <div className="space-y-2 mb-16">
         <h1 className="">
           {/* <FaFootballBall className="text-neon-pink" /> */}
           Your Games
@@ -577,8 +577,14 @@ const Dashboard: React.FC = () => {
             return (
           <div
             key={game.gameId}
-            className="bg-bg-dark/50 border border-neon-cyan/20 rounded-lg overflow-hidden hover:border-neon-cyan/50 transition-all"
+            className="relative bg-bg-dark/50 border border-neon-cyan/20 rounded-lg overflow-hidden hover:border-neon-cyan/50 transition-all"
           >
+            {/* League Badge - anchored to card */}
+            <img
+              src={game.league === 'nfl' ? '/logos/logo-nfl.svg' : '/logos/logo-nba.svg'}
+              alt={game.league?.toUpperCase()}
+              className="absolute top-0 left-0 w-7 h-7 p-1 bg-bg-dark/40 rounded-md border border-neon-cyan/30"
+            />
             {/* Game Header - Mobile Optimized */}
             <button
               onClick={() => navigate(`/${game.league || 'nfl'}/game/${game.gameId}`)}
@@ -588,13 +594,6 @@ const Dashboard: React.FC = () => {
                 {/* Team Logos with abbreviations below */}
                 {game.awayTeam && game.homeTeam && (
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="flex flex-col items-center gap-1">
-                      <img 
-                        src={game.league === 'nfl' ? '/logos/logo-nfl.svg' : '/logos/logo-nba.svg'} 
-                        alt={game.league?.toUpperCase()}
-                        className="w-7 h-6 absolute -translate-y-[42px] translate-x-0 p-1 bg-bg-dark/50 rounded-md border border-neon-cyan/30"
-                      />
-                    </div>
                     <div className="flex flex-col items-center gap-1">
                       <img 
                         src={game.awayTeam.team.logo} 
