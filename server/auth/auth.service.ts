@@ -113,7 +113,8 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
       // Update existing user
       const existingData = userDoc.data();
       
-      await userDocRef.set({
+      // Build update object, only updating displayName if it hasn't been manually set
+      const updateData: any = {
         email,
         authMethod: 'google',
         provider: 'google',
@@ -127,10 +128,16 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
           isEmailVerified: email_verified ?? existingData?.providerData?.isEmailVerified ?? false,
           locale: locale || existingData?.providerData?.locale || '',
         },
-        displayName: name || existingData?.displayName,
         photoUrl: picture || existingData?.photoUrl,
         lastLogin: admin.firestore.FieldValue.serverTimestamp(),
-      }, { merge: true });
+      };
+      
+      // Only update displayName if user hasn't manually set it
+      if (!existingData?.displayNameSet) {
+        updateData.displayName = name || existingData?.displayName;
+      }
+      
+      await userDocRef.set(updateData, { merge: true });
 
       const providerData: ProviderData = {
         authTime: existingData?.providerData?.authTime?.toDate() || now,
@@ -142,10 +149,11 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
         locale: locale || existingData?.providerData?.locale || '',
       };
 
+      // Return user data, preserving displayName if it was manually set
       userData = {
         uid,
         email,
-        displayName: name || existingData?.displayName || '',
+        displayName: existingData?.displayName || name || '',
         photoUrl: picture || existingData?.photoUrl || '',
         authMethod: 'google' as const,
         provider: 'google' as const,

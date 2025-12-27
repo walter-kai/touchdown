@@ -62,7 +62,7 @@ const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTab
 
   // All available navigation items
   const allNavItems = [
-    { id: 'back', label: 'Back to Games', icon: <FaArrowLeft />, action: () => navigate(`/${league.toLowerCase()}`) },
+    { id: 'back', label: 'Back to Games', icon: <FaArrowLeft />, action: () => navigate(`/${league.toLowerCase()}/games`) },
     { id: 'info', label: 'Info', icon: <FaInfoCircle /> },
     { id: 'player', label: 'Players', icon: <FaTrophy /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },

@@ -288,8 +288,8 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
       game = scoreboardResponse.data.events?.find(e => e.id === gid);
       const gameStatus = game?.competitions[0].status.type.state;
       
-      // Only fetch summary if game is NOT in session (pre or post game)
-      if (!game || (gameStatus !== 'in' && gameStatus !== 'post')) {
+      // Fetch summary for pregame and finished games (skip only while live)
+      if (!game || gameStatus !== 'in') {
         try {
           const summaryResponse = await axios.get<Summary>(
             getSummaryUrl(league, gid)

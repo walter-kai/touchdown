@@ -79,7 +79,7 @@ const Dashboard: React.FC = () => {
   const [avatarError, setAvatarError] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
-  const fetchedRef = useRef(false); // Prevent double-fetching
+  const fetchedUserRef = useRef<string | null>(null); // Track which user was fetched
 
   const profilePicture = user?.photoUrl || user?.googlePicture || user?.providerData?.googlePicture;
   // Helper function to render text with emojis properly
@@ -144,19 +144,21 @@ const Dashboard: React.FC = () => {
 
   // Fetch all user picks and related game data
   useEffect(() => {
-    // Prevent double-fetching on mount or user change
-    if (fetchedRef.current) return;
+    // Reset when no user
+    if (!user || !user.email) {
+      fetchedUserRef.current = null;
+      setLoading(false);
+      setGamesWithPicks([]);
+      return;
+    }
+
+    // Prevent double-fetching for the same user
+    if (fetchedUserRef.current === user.email) return;
     
     const fetchDashboardData = async () => {
       // Clear cache first to ensure fresh data
       const cacheKey = 'dashboard_processed_cache';
       localStorage.removeItem(cacheKey);
-      
-      // Wait for auth to finish loading
-      if (!user) {
-        setLoading(false);
-        return;
-      }
 
       try {
         setLoading(true);
@@ -213,6 +215,33 @@ const Dashboard: React.FC = () => {
           setLoading(false);
           return;
         }
+
+        // Helper: infer league from stored data to call the right ESPN summary
+        const inferLeague = (gamePick: GamePick): 'nfl' | 'nba' => {
+          // 1) Explicit teamData league
+          if (gamePick.teamData?.league === 'nba' || gamePick.teamData?.league === 'nfl') {
+            return gamePick.teamData.league;
+          }
+
+          // 2) Check logos for hints
+          const logoStrings: string[] = [];
+          if (gamePick.teamLogos) {
+            logoStrings.push(gamePick.teamLogos.awayLogo, gamePick.teamLogos.homeLogo);
+          }
+          gamePick.picks?.forEach(p => {
+            p.players.forEach(pl => {
+              const l = (pl as any)?.team?.logo || (pl as any)?.logo || '';
+              if (l) logoStrings.push(l);
+            });
+          });
+          const hasNBA = logoStrings.some(l => typeof l === 'string' && l.toLowerCase().includes('/nba/'));
+          const hasNFL = logoStrings.some(l => typeof l === 'string' && l.toLowerCase().includes('/nfl/'));
+          if (hasNBA && !hasNFL) return 'nba';
+          if (hasNFL && !hasNBA) return 'nfl';
+
+          // 3) Fallback to current UI league
+          return league;
+        };
 
         // Process all games - extract team info and then enhance scores from ESPN plays on the client
         const gamePromises = userGames.map(async (gamePick) => {
@@ -291,7 +320,7 @@ const Dashboard: React.FC = () => {
             // Kick off background fetch to get plays and calculate per-athlete scores on the client
             const fetchAndCalculateScores = async () => {
               try {
-                const gameLeague = (gamePick.teamData?.league || league) as 'nfl' | 'nba';
+                const gameLeague = inferLeague(gamePick);
                 const plays = await fetchPlaysByPlayFromESPN(gamePick.gameId, gameLeague);
                 const calculatedScores = calculateAthleteScoresFromPlays(gamePick.picks, plays, gamePick.gameId);
 
@@ -351,7 +380,7 @@ const Dashboard: React.FC = () => {
       }
     };
 
-    fetchedRef.current = true;
+    fetchedUserRef.current = user.email; // Mark this user as fetched
     fetchDashboardData();
   }, [user]);
 

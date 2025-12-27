@@ -82,6 +82,7 @@ const Info: React.FC<InfoProps> = ({
 
   const [currentPicks, setCurrentPicks] = useState<any[]>([]);
   const [picksScores, setPicksScores] = useState<Record<string, number>>({});
+  const [hasFetchedUserScores, setHasFetchedUserScores] = useState(false);
 
   // Load picks from localStorage
   useEffect(() => {
@@ -111,6 +112,34 @@ const Info: React.FC<InfoProps> = ({
       }
     }
   }, [homeTeamId, awayTeamId, playLog]);
+
+  // Prefer backend-calculated user scores (stored totals) instead of ad-hoc play counts
+  useEffect(() => {
+    if (!gameId || hasFetchedUserScores) return;
+
+    const token = localStorage.getItem('dexter_access_token');
+    if (!token) return;
+
+    const fetchUserScores = async () => {
+      try {
+        const resp = await fetch(`/api/picks/game/${gameId}/user/scores`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (data?.userScores && typeof data.userScores === 'object') {
+          setPicksScores(data.userScores);
+          setHasFetchedUserScores(true);
+        }
+      } catch (err) {
+        console.warn('Failed to load user scores from API:', err);
+      }
+    };
+
+    fetchUserScores();
+  }, [gameId, hasFetchedUserScores]);
 
   const nbaRun = useMemo(() => {
     if (!isNba || !homeTeam?.id || !awayTeam?.id || !Array.isArray(playLog) || playLog.length === 0) return null;
@@ -439,57 +468,55 @@ const Info: React.FC<InfoProps> = ({
                     </div>
 
 
-          {/* Current Picks Display */}
-          {currentPicks.length > 0 && (
-            <div className="bg-bg-dark/50 rounded-lg p-3 border border-neon-pink/20 my-2">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-neon-pink text-xs font-bold">YOUR PICKS</span>
-                <span className="text-text-muted text-[10px]">
-                  Total: {Object.values(picksScores).reduce((sum, score) => sum + score, 0)} pts
-                </span>
-              </div>
-              <div className="flex gap-2 mb-3 overflow-x-auto">
-                {currentPicks.map((player, idx) => {
-                  // Use utility with URL-derived league to avoid context race condition
-                  const headshotUrl = getHeadshotUrl({ id: player.id, headshot: player.headshot }, urlLeague);
-                  return (
-                    <div key={player.id} className="flex flex-col items-center min-w-[60px]">
-                      {headshotUrl ? (
-                        <img
-                          src={headshotUrl}
-                          alt={player.displayName}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-neon-pink/50"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = 'none';
-                            const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
-                            if (fallback) fallback.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div 
-                        className="w-12 h-12 rounded-full bg-bg-darker border-2 border-neon-pink/50 flex items-center justify-center"
-                        style={{ display: headshotUrl ? 'none' : 'flex' }}
-                      >
-                        <span className="text-neon-pink text-xs font-bold">
-                          {player.shortName?.substring(0, 2).toUpperCase()}
-                        </span>
-                      </div>
-                      <span className="text-white text-[10px] font-bold mt-1 text-center truncate w-full">
-                        {player.shortName}
-                      </span>
-                      <span className="text-neon-pink text-lg font-bold">{picksScores[player.id] || 0}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <button
-                onClick={onOpenPicks}
-                className="w-full bg-neon-pink/20 hover:bg-neon-pink/30 border border-neon-pink/50 rounded-lg py-2 text-neon-pink font-bold text-sm transition-all"
-              >
-                Manage Picks
-              </button>
-            </div>
-          )}
+                    {/* Current Picks Display */}
+                    {currentPicks.length > 0 && (
+                      <button
+                              onClick={onOpenPicks}
+                              className="bg-neon-pink/20 hover:bg-neon-pink/30 border border-neon-pink/50 rounded-lg px-4 py-2 text-neon-pink font-bold text-sm transition-all whitespace-nowrap"
+                            >
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-neon-pink text-xs font-bold">YOUR PICKS</span>
+                          <span className="text-text-muted text-[10px]">
+                            Total: {Object.values(picksScores).reduce((sum, score) => sum + score, 0)} pts
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex gap-2 overflow-x-auto pb-1 flex-1">
+                            {currentPicks.map((player) => {
+                              const headshotUrl = getHeadshotUrl({ id: player.id, headshot: player.headshot }, urlLeague);
+                              return (
+                                <div key={player.id} className="flex flex-col items-center min-w-[60px]">
+                                  {headshotUrl ? (
+                                    <img
+                                      src={headshotUrl}
+                                      alt={player.displayName}
+                                      className="w-12 h-12 rounded-full object-cover border-2 border-neon-pink/50"
+                                      onError={(e) => {
+                                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                        const fallback = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement;
+                                        if (fallback) fallback.style.display = 'flex';
+                                      }}
+                                    />
+                                  ) : null}
+                                  <div 
+                                    className="w-12 h-12 rounded-full bg-bg-darker border-2 border-neon-pink/50 flex items-center justify-center"
+                                    style={{ display: headshotUrl ? 'none' : 'flex' }}
+                                  >
+                                    <span className="text-neon-pink text-xs font-bold">
+                                      {player.shortName?.substring(0, 2).toUpperCase()}
+                                    </span>
+                                  </div>
+                                  <span className="text-white text-[10px] font-bold mt-1 text-center truncate w-full">
+                                    {player.shortName}
+                                  </span>
+                                  <span className="text-neon-pink text-lg font-bold">{picksScores[player.id] || 0}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </button>
+                    )}
 
                     {/* Play Log */}
                     <div className="mt-2">

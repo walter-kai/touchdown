@@ -264,6 +264,26 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
     // Get the latest pick (current session)
     const latestPick = picks[picks.length - 1];
     const currentPlayers = new Set<string>(latestPick.players.map((p: any) => p.id as string));
+
+    // If we have no play log (e.g., backend no longer calling ESPN summary), fall back to stored totals
+    if (!playLog || playLog.length === 0) {
+      const totalScore = Number(latestPick?.totalScore || 0);
+      const playerIds = Array.from(currentPlayers);
+      const perPlayerScore = playerIds.length > 0 ? totalScore / playerIds.length : 0;
+
+      const userScores: Record<string, number> = {};
+      playerIds.forEach(pid => {
+        userScores[pid] = perPlayerScore;
+      });
+
+      logger.info(`Using stored totals for user ${userId} in game ${gameId} (no play log). TotalScore=${totalScore}`);
+      return {
+        gameScores: {},
+        sessionScores: { ...userScores },
+        userScores,
+        totalScore
+      };
+    }
     
     // Calculate game scores (all plays for each athlete)
     const gameScores: Record<string, number> = {};

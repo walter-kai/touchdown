@@ -92,13 +92,20 @@ export async function updateUserProfile(uid: string, updates: any): Promise<User
       throw new ApiError(404, 'User not found');
     }
 
+    const data = userDoc.data();
+
     // Filter out fields that shouldn't be updated directly
-    const allowedUpdates = {
+    const allowedUpdates: any = {
       ...(updates.username && { username: updates.username }),
       ...(updates.email && { email: updates.email }),
-      ...(updates.displayName && { displayName: updates.displayName }),
       ...(updates.photoUrl && { photoUrl: updates.photoUrl }),
     };
+
+    // displayName can only be updated if it hasn't been manually set via setDisplayName
+    // Use the dedicated setDisplayName endpoint for proper validation
+    if (updates.displayName) {
+      throw new ApiError(400, 'Use the /display-name endpoint to set your display name');
+    }
 
     if (Object.keys(allowedUpdates).length === 0) {
       throw new ApiError(400, 'No valid fields to update');
