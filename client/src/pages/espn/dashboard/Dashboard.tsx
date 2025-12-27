@@ -348,7 +348,7 @@ const Dashboard: React.FC = () => {
               scores: gamePick.scores,
               totalUserScore,
               status: gameStatus,
-              league: gamePick.teamData?.league || 'nfl' // Store the league for navigation
+              league: inferLeague(gamePick) // Store the resolved league for navigation
             };
           } catch (err) {
             console.error(`Error fetching data for game ${gamePick.gameId}:`, err);
