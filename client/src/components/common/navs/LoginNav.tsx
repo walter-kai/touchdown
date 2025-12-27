@@ -58,7 +58,7 @@ const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
 							/>
 							<div className="flex items-center gap-2 leading-tight">
 								<span className="text-text-light font-semibold tracking-wide">{leagueConfig.displayName}</span>
-								<span className="ml-1 text-xs text-neon-cyan">v0.7</span>
+								<span className="ml-1 text-xs text-neon-cyan">v0.8</span>
 								{league === 'nfl' ? (
 									<img src="/logos/logo-nfl.svg" alt="Football" className="h-7 w-5 ml-2" />
 								) : (
