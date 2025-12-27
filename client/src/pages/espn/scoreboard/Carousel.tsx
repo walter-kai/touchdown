@@ -8,14 +8,14 @@ import PointsChart from '@/components/espn/PointsChart';
 import PlayerPick from '@/pages/espn/scoreboard/PlayerPick';
 import Info from '@/pages/espn/scoreboard/Info';
 import type { Event } from '@/types/espn/scoreboard';
-import { Play } from '@/types/espn/plays';
+import { PlayNfl } from '@/types/espn/plays';
 
 interface ScoreboardViewProps {
   event: Event;
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
   onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games') => void;
   getTeamLogo: (team: any) => string;
-  playLog: Play[];
+  playLog: PlayNfl[];
   lastUpdated: Date | null;
   countdown: number;
   isRefreshing: boolean;

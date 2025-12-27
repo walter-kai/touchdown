@@ -12,7 +12,7 @@ import BasketballCourt from '@/pages/espn/dashboard/games/BasketballCourt';
 import { useAuth } from '@/providers/AuthContext';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
-import { Play } from '@/types/espn/plays';
+import { PlayNfl } from '@/types/espn/plays';
 import { useLeague } from '@/providers/LeagueContext';
 import { fetchEspnPlays } from '@/utils/espnPlays';
 import { getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
@@ -23,7 +23,7 @@ interface SummaryViewProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
   onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games') => void;
   getTeamLogo: (team: any) => string;
-  playLog: Play[];
+  playLog: PlayNfl[];
   gameId: string;
 }
 
@@ -49,7 +49,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   const [timeUntilGame, setTimeUntilGame] = useState<string>('');
   const [gameCountdown, setGameCountdown] = useState<number>(0);
   const [isPickExpanded, setIsPickExpanded] = useState(true);
-  const [apiPlayLog, setApiPlayLog] = useState<Play[]>([]);
+  const [apiPlayLog, setApiPlayLog] = useState<PlayNfl[]>([]);
   const [selectedPlayIndex, setSelectedPlayIndex] = useState<number>(0);
 
   const competition = event.competitions[0];
@@ -100,7 +100,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
       return apiPlayLog;
     }
     if (state === 'post' && summary?.drives?.previous && summary.drives.previous.length > 0) {
-      const plays: Play[] = [];
+      const plays: PlayNfl[] = [];
 
       summary.drives.previous.forEach((drive) => {
         drive.plays.forEach((p: any) => {

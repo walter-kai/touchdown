@@ -12,7 +12,7 @@ import FootballField from '@/pages/espn/dashboard/games/FootballField';
 import type { Athlete } from '@/types/espn/athlete';
 import { usePicks } from '../../../providers/PicksContext';
 import { useLeague } from '../../../providers/LeagueContext';
-import { Play } from '@/types/espn/plays';
+import { PlayNfl } from '@/types/espn/plays';
 import { debugLog } from '@/utils/debugLog';
 import { getTeamApiUrl } from '@/utils/espnApi';
 import { getTeamLogoUrl, getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
@@ -53,7 +53,7 @@ interface PlayerPickProps {
   gameStartDate: string;
   isExpanded: boolean;
   onToggle: () => void;
-  playLog: Play[];
+  playLog: PlayNfl[];
   situation?: {
     lastPlay?: {
       start?: { yardLine?: number };

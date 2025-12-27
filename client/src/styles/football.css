@@ -6,7 +6,7 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 18px;
-  overflow: hidden;
+  overflow: visible; /* allow overlays without clipping */
 }
 
 /* Playable area inset to mirror basketball court framing */

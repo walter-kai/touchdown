@@ -1,8 +1,8 @@
 import React from 'react';
-import { Play } from '@/types/espn/plays';
+import { PlayNfl } from '@/types/espn/plays';
 
 interface PlaysContextValue {
-  playLog: Play[];
+  playLog: PlayNfl[];
   lastUpdated?: Date | null;
   isRefreshing?: boolean;
   countdown?: number;

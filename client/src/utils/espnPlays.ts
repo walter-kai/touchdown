@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Play, PlayAthlete } from '@/types/espn/plays';
+import { PlayNfl, PlayAthlete } from '@/types/espn/plays';
 import { getPlaysUrl } from './espnApi';
 
 export const extractAthleteIdFromRef = (ref?: string): string => {
@@ -104,7 +104,7 @@ export const normalizePlayFromItem = (
   fallbackDate?: string | Date,
   headshotLookup?: Map<string, string>,
   getHeadshotUrl?: (opts: { id?: string | number; headshot?: string | { href?: string } | null } | null | undefined) => string
-): Play => {
+): PlayNfl => {
   const textBlob = rawPlay?.text || rawPlay?.shortText || rawPlay?.alternativeText || '';
   const teamParticipants = rawPlay?.teamParticipants || rawPlay?.participants || [];
   const offenseTeamId =
@@ -176,7 +176,7 @@ export const fetchEspnPlays = async (
   headshotLookup?: Map<string, string>,
   league: 'nfl' | 'nba' = 'nfl',
   getHeadshotUrl?: (opts: { id?: string | number; headshot?: string | { href?: string } | null } | null | undefined) => string
-): Promise<Play[]> => {
+): Promise<PlayNfl[]> => {
   const compId = competitionId || gameId;
 
   // Do not hit plays API if game hasn't started (no pregame data there)
@@ -212,7 +212,7 @@ export const fetchEspnPlays = async (
   const normalized = plays
     .filter((p): p is any => Boolean(p))
     .map((p: any) => normalizePlayFromItem(p, data?.gameDate, headshotLookup, getHeadshotUrl))
-    .filter((p: Play) => Boolean(p.text));
+    .filter((p: PlayNfl) => Boolean(p.text));
 
   // Sort by true game order (latest first): period, clock, fallback to timestamp
   const clockToSeconds = (clock: string) => {

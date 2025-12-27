@@ -16,7 +16,7 @@ import { PlaysProvider } from '@/providers/PlaysContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
-import { Play } from '@/types/espn/plays';
+import { PlayNfl } from '@/types/espn/plays';
 
 interface GameContainerProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
@@ -42,7 +42,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState<number>(30);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [playLog, setPlayLog] = useState<Play[]>([]);
+  const [playLog, setPlayLog] = useState<PlayNfl[]>([]);
   const [playsLoaded, setPlaysLoaded] = useState(false);
   const [currentLeague, setCurrentLeague] = useState<string>(league);
   
@@ -231,7 +231,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
 
         if (!isDuplicate) {
           const possession = comp.situation?.possession;
-          const newPlay: Play = {
+          const newPlay: PlayNfl = {
             text: playText,
             quarter: period,
             clock,

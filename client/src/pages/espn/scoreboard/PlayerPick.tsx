@@ -15,7 +15,7 @@ import { debugLog } from '@/utils/debugLog';
 import { getTeamApiUrl } from '@/utils/espnApi';
 import { getTeamLogoUrl } from '@/utils/espnImages';
 import type { Athlete } from '@/types/espn/athlete';
-import { Play } from '@/types/espn/plays';
+import { PlayNfl } from '@/types/espn/plays';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {
@@ -53,7 +53,7 @@ interface PlayerPickProps {
   gameStartDate: string;
   isExpanded: boolean;
   onToggle: () => void;
-  playLog: Play[];
+  playLog: PlayNfl[];
   situation?: {
     lastPlay?: {
       start?: { yardLine?: number };

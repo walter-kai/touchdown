@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
 import FootballField from '@/pages/espn/dashboard/games/FootballField';
-import type { Play } from '@/types/espn/plays';
+import BasketballCourt from '@/pages/espn/dashboard/games/BasketballCourt';
+import type { PlayNfl } from '@/types/espn/plays';
 import PlayLog from '@/components/espn/PlayLog';
 import GameLeaders from '@/pages/espn/summary/GameLeaders';
 import PredictionChart from '@/pages/espn/gameView/info/PredictionChart';
@@ -52,7 +53,7 @@ interface InfoProps {
   summary?: Summary | null;
   gameId?: string;
   countdown?: number;
-  playLog: Play[];
+  playLog: PlayNfl[];
   homeTeamId?: string;
   awayTeamId?: string;
   onOpenPicks?: () => void;
@@ -210,7 +211,7 @@ const Info: React.FC<InfoProps> = ({
 
   const runTeam = nbaRun ? (nbaRun.teamId === homeTeam?.id ? homeTeam : awayTeam) : null;
 
-  const latestPlay: Play | undefined = playLog?.[0];
+  const latestPlay: PlayNfl | undefined = playLog?.[0];
   const latestPlayType = typeof latestPlay?.type === 'string'
     ? latestPlay.type
     : (latestPlay?.type as any)?.text || (latestPlay?.type as any)?.displayName || '';
@@ -471,16 +472,26 @@ const Info: React.FC<InfoProps> = ({
                         <span className="text-text-muted text-xs font-semibold">{homeTeam?.team.abbreviation}</span>
                       </div>
                       </div>
-                      <FootballField
-                      homeTeam={homeTeam}
-                      awayTeam={awayTeam}
-                      leftTeamOverride={(latestPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? homeTeam : awayTeam}
-                      rightTeamOverride={(latestPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? awayTeam : homeTeam}
-                      lastPlay={situation.lastPlay}
-                      situation={situation}
-                      playLog={playLog}
-                      getTeamLogo={getTeamLogo}
-                      />
+                      {isNba ? (
+                        <BasketballCourt
+                          homeTeam={homeTeam}
+                          awayTeam={awayTeam}
+                          lastPlay={situation.lastPlay}
+                          playLog={playLog}
+                          getTeamLogo={getTeamLogo}
+                        />
+                      ) : (
+                        <FootballField
+                          homeTeam={homeTeam}
+                          awayTeam={awayTeam}
+                          leftTeamOverride={(latestPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? homeTeam : awayTeam}
+                          rightTeamOverride={(latestPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? awayTeam : homeTeam}
+                          lastPlay={situation.lastPlay}
+                          situation={situation}
+                          playLog={playLog}
+                          getTeamLogo={getTeamLogo}
+                        />
+                      )}
                     </div>
 
 

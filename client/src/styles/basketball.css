@@ -580,14 +580,14 @@
 .primary-athlete {
 	left: var(--sx);
 	top: var(--sy);
-	transform: translate(-50%, -120px);
+	transform: translate(-50%, -140px);
 }
 
 .secondary-athlete {
 	left: var(--ex);
 	top: var(--ey);
 	transform: translate(-50%, -140px);
-	opacity: 0.9;
+
 }
 
 .secondary-athlete img {

@@ -54,7 +54,7 @@ const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, hom
           getPredictorUrl(league, gameId, competitionId)
         );
 
-        console.log('Predictor API response:', response.data);
+        // console.log('Predictor API response:', response.data);
         
         // Validate that we have the expected structure
         if (!response.data || !response.data.homeTeam || !response.data.awayTeam) {

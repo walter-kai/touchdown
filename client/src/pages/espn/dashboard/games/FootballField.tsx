@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaFootballBall } from 'react-icons/fa';
-import { Play, PlayTypeNFL, NflPositionType } from '@/types/espn/plays';
+import { PlayNfl, PlayTypeNFL, NflPositionType } from '@/types/espn/plays';
 import '@/styles/football.css';
 import { useLeague } from '@/providers/LeagueContext';
 import { usePlays } from '@/providers/PlaysContext';
@@ -42,7 +42,7 @@ interface FootballFieldProps {
       possession?: string;
     };
   };
-  playLog?: Play[];
+  playLog?: PlayNfl[];
   getTeamLogo: (team: any) => string;
   showGameInfo?: boolean;
 }
@@ -291,7 +291,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const awayAbbrRaw = awayTeam?.team?.abbreviation?.toUpperCase() || awayTeam?.abbreviation?.toUpperCase() || awayTeam?.shortDisplayName?.toUpperCase();
   const { playLog: contextPlayLog = [] } = usePlays();
   const playLog = playLogProp?.length ? playLogProp : (contextPlayLog || []);
-  const lastPlay = (lastPlayProp ?? playLog[0]) as Partial<Play> | undefined;
+  const lastPlay = (lastPlayProp ?? playLog[0]) as Partial<PlayNfl> | undefined;
   const fallbackPossession = getTeamId((lastPlay as any)?.team)
     || (lastPlay as any)?.possession
     || (lastPlay as any)?.athletesInvolved?.[0]?.team?.id;
@@ -960,53 +960,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
               <p className="text-neon-pink font-bold text-xl">{(situation as any).downDistanceText}</p>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Diagnostics View - Field Yard Calculations */}
-      {showGameInfo && (
-        <div className="bg-bg-darker/50 border border-neon-cyan/20 rounded p-3 mb-4 text-xs font-mono">
-          <div className="text-neon-cyan font-bold mb-2">📊 Field Diagnostics</div>
-          
-          {/* Play Yardages */}
-          <div className="mb-3 pb-3 border-b border-neon-cyan/10">
-            <div className="text-neon-pink mb-1">Play Yardages (from ESPN):</div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><span className="text-text-muted">Start Yard:</span> <span className="text-neon-cyan">{rawEspnStartYard?.toFixed(1) ?? 'N/A'}</span></div>
-              <div><span className="text-text-muted">End Yard:</span> <span className="text-neon-cyan">{rawEspnEndYard?.toFixed(1) ?? 'N/A'}</span></div>
-              <div><span className="text-text-muted">Possession:</span> <span className="text-neon-cyan">{possessionAbbr ?? 'N/A'}</span></div>
-              <div><span className="text-text-muted">Direction:</span> <span className="text-neon-cyan">{playStartYard !== undefined && playEndYard !== undefined && playEndYard > playStartYard ? '→ Right' : playStartYard !== undefined && playEndYard !== undefined && playEndYard < playStartYard ? '← Left' : 'N/A'}</span></div>
-            </div>
-          </div>
-
-          {/* Projected Field Positions */}
-          <div className="mb-3 pb-3 border-b border-neon-cyan/10">
-            <div className="text-neon-pink mb-1">Projected Field Positions:</div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="col-span-2 text-text-muted mt-1">Field Percent (left→right, goal-line span 0–100%)</div>
-              <div><span className="text-text-muted">Start:</span> <span className="text-neon-cyan">{playablePercent(playStartYard)?.toFixed(2) ?? 'N/A'}%</span></div>
-              <div><span className="text-text-muted">End:</span> <span className="text-neon-cyan">{playablePercent(playEndYard)?.toFixed(2) ?? 'N/A'}%</span></div>
-
-              <div className="col-span-2 text-text-muted mt-2">Offense Percent (attacking goal = 100%)</div>
-              <div><span className="text-text-muted">Start:</span> <span className="text-neon-cyan">{offensePercent(playStartYard, possessionDirection)?.toFixed(2) ?? 'N/A'}%</span></div>
-              <div><span className="text-text-muted">End:</span> <span className="text-neon-cyan">{offensePercent(playEndYard, possessionDirection)?.toFixed(2) ?? 'N/A'}%</span></div>
-
-              <div className="col-span-2 text-text-muted mt-2">Screen X (projected at player depth)</div>
-              <div><span className="text-text-muted">Start:</span> <span className="text-neon-cyan">{headshotX(playStartYard)?.toFixed(2) ?? 'N/A'}%</span></div>
-              <div><span className="text-text-muted">End:</span> <span className="text-neon-cyan">{headshotX(playEndYard)?.toFixed(2) ?? 'N/A'}%</span></div>
-            </div>
-          </div>
-
-          {/* Field Dimensions */}
-          <div>
-            <div className="text-neon-pink mb-1">Field Geometry:</div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><span className="text-text-muted">Trapezoid Top Inset:</span> <span className="text-neon-cyan">{TRAPEZOID_TOP_INSET}%</span></div>
-              <div><span className="text-text-muted">Trapezoid Bottom Inset:</span> <span className="text-neon-cyan">{trapezoidBottomInset?.toFixed(1)}%</span></div>
-              <div><span className="text-text-muted">Viewport Width:</span> <span className="text-neon-cyan">{viewportWidth}px</span></div>
-              <div><span className="text-text-muted">Field Ref Width:</span> <span className="text-neon-cyan">{fieldWidthPx}px</span></div>
-            </div>
-          </div>
         </div>
       )}
 
@@ -2490,7 +2443,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       <img 
         src="/assets/football_post.png" 
         alt="Goal Post" 
-        className="absolute pointer-events-none left-10 top-[85px] w-6 transform -translate-x-1/2"
+        className="absolute pointer-events-none left-9 top-[85px] w-6 transform -translate-x-1/2"
       />
       <img 
         src="/assets/football_post.png" 

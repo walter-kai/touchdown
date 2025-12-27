@@ -113,9 +113,123 @@ export interface PlayAthlete {
 }
 
 /**
+ * Individual play in an NBA game
+ */
+export interface PlayNba {
+  /** Unique play identifier when available */
+  id?: string;
+  
+  /** Play description text */
+  text?: string;
+  
+  /** Short play description */
+  shortText?: string;
+  
+  /** Alternative play description */
+  alternativeText?: string;
+  
+  /** Short alternative play description */
+  shortAlternativeText?: string;
+  
+  /** Quarter/period number */
+  quarter?: number;
+  
+  /** Period object */
+  period?: {
+    number?: number;
+    displayValue?: string;
+  };
+  
+  /** Game clock time */
+  clock?: string | {
+    displayValue?: string;
+  };
+  
+  /** ISO 8601 timestamp string or Date object */
+  timestamp?: string | Date;
+  
+  /** Wall clock timestamp */
+  wallclock?: string;
+  
+  /** Team ID that has possession */
+  possession?: string;
+  
+  /** Team object or ID */
+  team?: {
+    id?: string;
+  } | string;
+  
+  /** Team that has possession */
+  possessionTeam?: {
+    id?: string;
+  };
+  
+  /** Type of play */
+  type?: PlayTypeNBA | {
+    id?: string;
+    text?: string;
+    description?: string;
+    displayName?: string;
+  };
+  
+  /** Away team score after play */
+  awayScore?: number;
+  
+  /** Home team score after play */
+  homeScore?: number;
+  
+  /** Whether this was a scoring play */
+  scoringPlay?: boolean;
+  
+  /** Whether this is a shooting play (shot attempt) */
+  shootingPlay?: boolean;
+  
+  /** Points scored on this play (0 if no score) */
+  scoreValue?: number;
+  
+  /** Points attempted on the play (2 or 3 for field goals, 1 for free throws) */
+  pointsAttempted?: number;
+  
+  /** Shot coordinate on the court */
+  coordinate?: {
+    /** X coordinate (-250 to 250, center is 0) */
+    x?: number;
+    /** Y coordinate (0 to 470, 0 is one end, 470 is the other) */
+    y?: number;
+  };
+  
+  /** Whether the play is valid */
+  valid?: boolean;
+  
+  /** Whether this is a priority play */
+  priority?: boolean;
+  
+  /** Sequence number of the play */
+  sequenceNumber?: string;
+  
+  /** Last modified timestamp */
+  modified?: string;
+  
+  /** Athletes involved in the play */
+  athletesInvolved?: PlayAthlete[];
+  
+  /** Participants in the play (alternative format) */
+  participants?: Array<{
+    athlete?: {
+      id?: string;
+      displayName?: string;
+      headshot?: string;
+      shortName?: string;
+    };
+    type?: string;
+    order?: number;
+  }>;
+}
+
+/**
  * Individual play in a game
  */
-export interface Play {
+export interface PlayNfl {
   /** Unique play identifier when available */
   id?: string;
   /** Play description text */
@@ -163,6 +277,11 @@ export interface Play {
   /** Athletes involved in the play */
   athletesInvolved?: PlayAthlete[];
 }
+
+/**
+ * Generic play type for both NBA and NFL
+ */
+export type Play = PlayNba | PlayNfl;
 
 /**
  * Play-by-play data for a game

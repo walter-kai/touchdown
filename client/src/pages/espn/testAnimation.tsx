@@ -9,7 +9,7 @@ import { getScoreboardUrl, getSummaryUrl } from '@/utils/espnApi';
 import { getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
-import { Play } from '@/types/espn/plays';
+import { PlayNfl } from '@/types/espn/plays';
 
 const TestAnimation: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
@@ -24,7 +24,7 @@ const TestAnimation: React.FC = () => {
   const [selectedPlayIndex, setSelectedPlayIndex] = useState<number>(0);
   const [event, setEvent] = useState<Event | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
-  const [playLog, setPlayLog] = useState<Play[]>([]);
+  const [playLog, setPlayLog] = useState<PlayNfl[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   // Update testGameId when league changes

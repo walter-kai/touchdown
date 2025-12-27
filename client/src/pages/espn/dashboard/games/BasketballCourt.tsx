@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLeague } from '@/providers/LeagueContext';
+import { PlayNba } from '@/types/espn/plays';
 import '@/styles/basketball.css';
 
 type PlaySide = 'home' | 'away' | 'neutral';
@@ -23,45 +24,11 @@ type PlayLabel =
 	| 'start-period'
 	| 'other';
 
-interface BasketballPlay {
-	id?: string;
-	text?: string;
-	type?: string | { text?: string; description?: string; displayName?: string; id?: string } | null;
-	team?: { id?: string } | string | null;
-	possession?: string | null;
-	possessionTeam?: { id?: string } | null;
-	clock?: string | { displayValue?: string } | null;
-	quarter?: number | null;
-	period?: { number?: number; displayValue?: string } | number | null;
-	scoreValue?: number | null;
-	coordinate?: { x?: number; y?: number };
-	shootingPlay?: boolean;
-	scoringPlay?: boolean;
-	participants?: Array<{
-		athlete?: {
-			id?: string;
-			displayName?: string;
-			headshot?: string;
-			shortName?: string;
-		};
-		type?: string;
-		order?: number;
-	}>;
-	athletesInvolved?: Array<{
-		id?: string;
-		displayName?: string;
-		headshot?: string;
-		shortName?: string;
-		position?: string;
-		team?: { id?: string };
-	}>;
-}
-
 interface BasketballCourtProps {
 	homeTeam?: any;
 	awayTeam?: any;
-	lastPlay?: BasketballPlay | null;
-	playLog?: BasketballPlay[];
+	lastPlay?: PlayNba | null;
+	playLog?: PlayNba[];
 	getTeamLogo: (team: any) => string;
 	showGameInfo?: boolean;
 	showDiagnostics?: boolean;
@@ -69,14 +36,14 @@ interface BasketballCourtProps {
 
 const normalizeText = (value?: string | null) => (value || '').toString().trim();
 
-const resolvePlayType = (play?: BasketballPlay | null) => {
+const resolvePlayType = (play?: PlayNba | null) => {
 	const raw = play?.type;
 	if (!raw) return normalizeText(play?.text).toLowerCase();
 	if (typeof raw === 'string') return normalizeText(raw).toLowerCase();
 	return normalizeText(raw.text || raw.description || raw.displayName).toLowerCase();
 };
 
-const derivePlayLabel = (typeText: string, play?: BasketballPlay | null): PlayLabel => {
+const derivePlayLabel = (typeText: string, play?: PlayNba | null): PlayLabel => {
 	if (/three|3pt|3-pt|3 point/.test(typeText)) return 'three';
 	if (/dunk/.test(typeText)) return 'dunk';
 	if (/layup|floater|finger roll/.test(typeText)) return 'layup';
@@ -101,26 +68,8 @@ const derivePlayLabel = (typeText: string, play?: BasketballPlay | null): PlayLa
 	return 'other';
 };
 
-const playClassByLabel: Record<PlayLabel, { ball: string; trail?: string; color: string; icon: string }> = {
-	three: { ball: 'animate-three-arc', trail: 'animate-three-arc-trail', color: '#ff7b5f', icon: '🏀' },
-	dunk: { ball: 'animate-dunk-slam', trail: 'animate-dunk-slam', color: '#ffb703', icon: '🔥' },
-	layup: { ball: 'animate-layup', trail: 'animate-layup-trail', color: '#7be0ff', icon: '✨' },
-	'free-throw': { ball: 'animate-free-throw', trail: 'animate-free-throw-trail', color: '#80ffea', icon: '🎯' },
-	hook: { ball: 'animate-hook-shot', trail: 'animate-hook-shot', color: '#ffd166', icon: '🌀' },
-	'alley-oop': { ball: 'animate-alley-oop', trail: 'animate-alley-oop', color: '#ff9a8b', icon: '⚡' },
-	jumper: { ball: 'animate-jumper', trail: 'animate-jumper-trail', color: '#a3ffb0', icon: '🏀' },
-	'tip-in': { ball: 'animate-tip-in', trail: 'animate-tip-in', color: '#b5aaff', icon: '⬆️' },
-	block: { ball: 'animate-block', trail: 'animate-block', color: '#ff5f7e', icon: '🛑' },
-	steal: { ball: 'animate-steal', trail: 'animate-steal', color: '#80ffea', icon: '💨' },
-	turnover: { ball: 'animate-turnover', trail: 'animate-turnover', color: '#f4c95d', icon: '⚠️' },
-	rebound: { ball: 'animate-rebound', trail: 'animate-rebound', color: '#b3e5ff', icon: '🔁' },
-	foul: { ball: 'animate-foul', trail: 'animate-foul', color: '#ffe066', icon: '🚩' },
-	timeout: { ball: 'animate-timeout', trail: 'animate-timeout', color: '#e2e8f0', icon: '⏱️' },
-	'fast-break': { ball: 'animate-fast-break', trail: 'animate-fast-break', color: '#00ffe7', icon: '⚡' },
-	'end-period': { ball: 'animate-period', trail: 'animate-period', color: '#8b9bb4', icon: '🔔' },
-	'start-period': { ball: 'animate-period', trail: 'animate-period', color: '#8b9bb4', icon: '🟢' },
-	other: { ball: 'animate-jumper', trail: 'animate-jumper-trail', color: '#00ffe7', icon: '🏀' },
-};
+// Simplified animation config (single style)
+const defaultPlayConfig = { ball: 'animate-jumper', trail: 'animate-jumper-trail', color: '#00ffe7', icon: '🏀' };
 
 const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	homeTeam,
@@ -149,7 +98,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	if (!lastPlay) return null;
 
 	const typeText = resolvePlayType(lastPlay);
-	const label = derivePlayLabel(typeText, lastPlay) as keyof typeof playClassByLabel;
+	const label = derivePlayLabel(typeText, lastPlay);
 	
 	// Extract team IDs
 	const homeTeamId = homeTeam?.id || homeTeam?.team?.id;
@@ -178,12 +127,20 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		setCycle((c) => c + 1);
 	}, [lastPlay?.id, lastPlay?.text, typeText, possessionId]);
 
-	const config = playClassByLabel[label] || playClassByLabel.other;
+	const config = defaultPlayConfig;
 
 	// ESPN NBA court coordinates: X ranges from -250 to 250 (500 units), Y ranges from 0 to 470 (470 units)
 	// Court dimensions: 94 feet long × 50 feet wide
 	// Coordinate system: (0, 0) is center court, X is width, Y is length
 	// Positive Y is towards one basket, negative Y is towards the other
+	
+	// Play Animation System:
+	// - shootingPlay flag indicates this is a shot attempt (ball animation shows arc to basket)
+	// - scoringPlay flag indicates the ball went in (animation ends at basketball_post.png)
+	// - coordinate provides the exact X,Y location where the play occurred on the court
+	// - If shootingPlay=true && scoringPlay=true: Ball animates from coordinate to basket (made shot)
+	// - If shootingPlay=true && scoringPlay=false: Ball animates but misses (miss animation)
+	// - If shootingPlay=false: Non-shooting play (no basket target, just position marker)
 	
 	const courtWidthPx = courtRef.current?.offsetWidth || 1000;
 	const courtHeightPx = courtRef.current?.offsetHeight || (courtWidthPx * 0.5625); // 16:9 aspect ratio
@@ -192,7 +149,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	const mapCoordinate = (coord?: { x?: number; y?: number }) => {
 		if (!coord || coord.x === undefined || coord.y === undefined) {
 			// Default to center court if no coordinates
-			return { xPercent: 50, yPercent: 50 };
+			return { xPercent: 50, yPercent: 50, hasCoordinates: false };
 		}
 		
 		// ESPN court coordinates
@@ -208,7 +165,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		
 		return {
 			xPercent: Math.max(0, Math.min(100, xPercent)),
-			yPercent: Math.max(0, Math.min(100, yPercent))
+			yPercent: Math.max(0, Math.min(100, yPercent)),
+			hasCoordinates: true
 		};
 	};
 
@@ -220,9 +178,10 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	const isHomeBasket = lastPlay.coordinate?.y ? lastPlay.coordinate.y > 235 : false; // Past half court
 	const isAwayBasket = lastPlay.coordinate?.y ? lastPlay.coordinate.y < 235 : false;
 	
-	// Extract athlete data
+	// Extract athlete data - prefer lastPlay, but fall back to playLog[0] if empty
 	const athletes = React.useMemo(() => {
 		if (lastPlay?.athletesInvolved?.length) return lastPlay.athletesInvolved;
+		if (playLog?.[0]?.athletesInvolved?.length) return playLog[0].athletesInvolved;
 		if (lastPlay?.participants?.length) {
 			return lastPlay.participants.map(p => ({
 				id: (p.athlete as any)?.id || '',
@@ -233,8 +192,18 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				team: lastPlay?.team as any
 			}));
 		}
+		if (playLog?.[0]?.participants?.length) {
+			return playLog[0].participants.map(p => ({
+				id: (p.athlete as any)?.id || '',
+				displayName: (p.athlete as any)?.displayName || '',
+				headshot: (p.athlete as any)?.headshot || '',
+				shortName: (p.athlete as any)?.shortName || '',
+				position: p.type || '',
+				team: playLog[0]?.team as any
+			}));
+		}
 		return [];
-	}, [lastPlay?.athletesInvolved, lastPlay?.participants, lastPlay?.team]);
+	}, [lastPlay?.athletesInvolved, lastPlay?.participants, lastPlay?.team, playLog]);
 
 	const primaryAthlete = athletes.find(a => a.position?.toLowerCase().includes('shooter')) || athletes[0];
 	const secondaryAthlete = athletes.find(a => a.position?.toLowerCase().includes('assist')) || athletes[1];
@@ -273,48 +242,9 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 
 	return (
 		<div className="space-y-2 relative">
-			{/* Court Diagnostics - Similar to Football Field Diagnostics */}
-			{showGameInfo && (
-				<div className="bg-bg-darker/50 border border-neon-cyan/20 rounded p-3 mb-4 text-xs font-mono">
-					<div className="text-neon-cyan font-bold mb-2">🏀 Court Diagnostics</div>
-					
-					{/* ESPN Coordinates */}
-					{lastPlay.coordinate && (
-						<div className="mb-3 pb-3 border-b border-neon-cyan/10">
-							<div className="text-neon-pink mb-1">Play Position (from ESPN):</div>
-							<div className="grid grid-cols-2 gap-2">
-								<div><span className="text-text-muted">ESPN X:</span> <span className="text-neon-cyan">{lastPlay.coordinate.x}</span></div>
-								<div><span className="text-text-muted">ESPN Y:</span> <span className="text-neon-cyan">{lastPlay.coordinate.y}</span></div>
-								<div><span className="text-text-muted">Court X:</span> <span className="text-neon-cyan">{shotLocation.xPercent.toFixed(1)}%</span></div>
-								<div><span className="text-text-muted">Court Y:</span> <span className="text-neon-cyan">{shotLocation.yPercent.toFixed(1)}%</span></div>
-							</div>
-						</div>
-					)}
-
-					{/* Game State */}
-					<div className="mb-3 pb-3 border-b border-neon-cyan/10">
-						<div className="text-neon-pink mb-1">Game State:</div>
-						<div className="grid grid-cols-2 gap-2">
-							<div><span className="text-text-muted">Possession:</span> <span className="text-neon-cyan">{possessionTeamName}</span></div>
-							<div><span className="text-text-muted">Direction:</span> <span className="text-neon-cyan">{attackingDirection}</span></div>
-							<div><span className="text-text-muted">Period:</span> <span className="text-neon-cyan">{periodDisplay}</span></div>
-							<div><span className="text-text-muted">Clock:</span> <span className="text-neon-cyan">{clockDisplay}</span></div>
-						</div>
-					</div>
-
-					{/* Play Type */}
-					<div>
-						<div className="text-neon-pink mb-1">Play Type:</div>
-						<div className="grid grid-cols-2 gap-2">
-							<div><span className="text-text-muted">Type:</span> <span style={{ color: config.color }}>{label.replace('-', ' ').toUpperCase()}</span></div>
-							<div><span className="text-text-muted">Points:</span> <span className="text-neon-cyan">{lastPlay.scoreValue || 0}</span></div>
-						</div>
-					</div>
-				</div>
-			)}
 
 			{/* Basketball Court Field Container */}
-			<div className="court-platform">
+			<div className="court-platform relative">
 				<div ref={courtRef} className="basketball-court">
 					<div className="court-lines" />
 					<div className="half-line" />
@@ -325,24 +255,31 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					<div className="free-throw-circle free-throw-right" />
 					<div className="three-arc three-left" />
 					<div className="three-arc three-right" />
+				</div> {/* basketball-court */}
+			</div> {/* court-platform */}
 
-				{/* Ball animation at shot location */}
-				{lastPlay.coordinate && (
-					<div 
-						key={`ball-${cycle}`} 
-						className={`play-ball-fixed ${config.ball}`}
-						style={{
-							left: `${shotLocation.xPercent}%`,
-							top: `${shotLocation.yPercent}%`,
-							['--play-color' as any]: config.color
-						}}
-					>
-						<span className="play-ball-icon">{config.icon}</span>
-					</div>
-				)}
+			{/* Ball animation and player headshots - positioned outside court-platform to avoid clipping and 3D transform */}
+			<div className="absolute inset-0 pointer-events-none z-[50] top-[300px]">
+				{/* Ball animation at shot location - Enhanced with shooting and scoring play detection */}
+				<div 
+					key={`ball-${cycle}`} 
+					className={`play-ball-fixed ${config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
+					style={{
+						left: `${shotLocation.xPercent}%`,
+						top: `${shotLocation.yPercent}%`,
+						['--play-color' as any]: config.color,
+						['--is-shooting' as any]: lastPlay.shootingPlay ? '1' : '0',
+						['--is-scoring' as any]: lastPlay.scoringPlay ? '1' : '0',
+						opacity: shotLocation.hasCoordinates ? 1 : 0.5,
+					}}
+					data-shooting={lastPlay.shootingPlay}
+					data-scoring={lastPlay.scoringPlay}
+				>
+					<span className="play-ball-icon">{config.icon}</span>
+				</div>
 
 				{/* Primary athlete headshot */}
-				{primaryAthlete && primaryHeadshot && lastPlay.coordinate && (
+				{primaryAthlete && primaryHeadshot && (
 					<div
 						key={`primary-${cycle}`}
 						className="athlete-headshot-fixed primary-athlete"
@@ -350,6 +287,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 							left: `${shotLocation.xPercent}%`,
 							top: `${shotLocation.yPercent}%`,
 							['--athlete-color' as any]: getAthleteTeamColor((primaryAthlete.team as any)?.id),
+							opacity: shotLocation.hasCoordinates ? 1 : 0.6,
 						}}
 					>
 						<img
@@ -357,12 +295,12 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 							alt={primaryAthlete.displayName || primaryAthlete.shortName || ''}
 							onError={(e) => (e.currentTarget.style.display = 'none')}
 						/>
-						<span className="athlete-name">{primaryAthlete.shortName || primaryAthlete.displayName}</span>
+		
 					</div>
 				)}
 
 				{/* Secondary athlete headshot (assister) */}
-				{secondaryAthlete && secondaryHeadshot && lastPlay.coordinate && (
+				{secondaryAthlete && secondaryHeadshot && (
 					<div
 						key={`secondary-${cycle}`}
 						className="athlete-headshot-fixed secondary-athlete"
@@ -370,6 +308,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 							left: `${Math.max(10, Math.min(90, shotLocation.xPercent + 8))}%`,
 							top: `${Math.max(10, Math.min(90, shotLocation.yPercent - 5))}%`,
 							['--athlete-color' as any]: getAthleteTeamColor((secondaryAthlete.team as any)?.id),
+							opacity: shotLocation.hasCoordinates ? 1 : 0.6,
 						}}
 					>
 						<img
@@ -377,74 +316,23 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 							alt={secondaryAthlete.displayName || secondaryAthlete.shortName || ''}
 							onError={(e) => (e.currentTarget.style.display = 'none')}
 						/>
-						<span className="athlete-name">{secondaryAthlete.shortName || secondaryAthlete.displayName}</span>
 					</div>
 				)}
-
-			</div> {/* basketball-court */}
-			</div> {/* court-platform */}
+			</div>
 
 			{/* Basketball goal posts - positioned completely outside court-platform to avoid 3D transform */}
 			<div className="absolute inset-0 pointer-events-none z-[100]">
 				<img 
 					src="/assets/basketbal_post.png" 
 					alt="Basketball Hoop" 
-					className="absolute pointer-events-none left-5 top-[257px] h-12 transform -translate-y-1/2"
+					className="absolute pointer-events-none left-4 top-[355px] h-12 transform -translate-y-1/2"
 				/>
 				<img 
 					src="/assets/basketbal_post.png" 
 					alt="Basketball Hoop" 
-					className="absolute pointer-events-none right-5 top-[257px] h-12 transform -translate-y-1/2 scale-x-[-1]"
+					className="absolute pointer-events-none right-3 top-[357px] h-12 transform -translate-y-1/2 scale-x-[-1]"
 				/>
 			</div>
-
-			{/* Latest Play Info - Similar to FootballField */}
-			{showGameInfo && lastPlay && (
-				<div className="mt-4">
-					<div className="text-text-muted text-xs mb-2 flex items-center gap-2">
-						🏀 Latest Play
-					</div>
-					<div className={`bg-gradient-to-r ${possessionIsHome ? 'from-neon-pink/10' : 'from-neon-cyan/10'} rounded-lg p-3 border-l-2 ${possessionIsHome ? 'border-neon-pink' : 'border-neon-cyan'}`}>
-						<div className="flex items-center gap-2 mb-2">
-							<img src={getTeamLogo(possessionIsHome ? leftTeam : rightTeam)} alt="" className="w-5 h-5" />
-							<span className={`text-xs font-bold ${possessionIsHome ? 'text-neon-pink' : 'text-neon-cyan'}`}>
-								{periodDisplay} · {clockDisplay}
-							</span>
-							{typeof lastPlay.scoreValue === 'number' && lastPlay.scoreValue !== 0 && (
-								<span className="ml-auto text-xs font-bold" style={{ color: config.color }}>
-									{lastPlay.scoreValue > 0 ? `+${lastPlay.scoreValue}` : `${lastPlay.scoreValue}`} PTS
-								</span>
-							)}
-						</div>
-						{/* Player headshots */}
-						{athletes.length > 0 && (
-							<div className="flex gap-2 mb-2">
-								{athletes.slice(0, 3).map((athlete, idx) => {
-									const headshot = getHeadshotUrl({ id: athlete.id, headshot: athlete.headshot });
-									return headshot ? (
-										<div key={idx} className="flex items-center gap-1">
-											<img
-												src={headshot}
-												alt={athlete.displayName}
-												className="w-8 h-8 rounded-full border-2 border-neon-cyan/30"
-												onError={(e) => (e.currentTarget.style.display = 'none')}
-											/>
-											<div className="flex flex-col">
-												<span className="text-text-light text-xs font-semibold">{athlete.shortName || athlete.displayName}</span>
-												<span className="text-text-muted text-[10px]">{athlete.position}</span>
-											</div>
-										</div>
-									) : null;
-								})}
-							</div>
-						)}
-						
-						<p className="text-text-light text-xs">
-							{lastPlay.text || 'Live play unfolding...'}
-						</p>
-					</div>
-				</div>
-			)}
 		</div>
 	);
 };

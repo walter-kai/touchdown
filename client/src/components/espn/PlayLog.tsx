@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play } from '@/types/espn/plays';
+import { PlayNfl } from '@/types/espn/plays';
 import { usePlays } from '@/providers/PlaysContext';
 
 interface PlayLogProps {
-  playLog: Play[];
+  playLog: PlayNfl[];
   homeTeam?: {
     id: string;
     team: {
