@@ -1,19 +1,44 @@
+/* Overall wrapper */
 .basketball-wrapper {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
 }
 
+/* 3D platform container to mimic the football trapezoid platform */
+.court-platform {
+	position: relative;
+	padding: 14px 14px 26px;
+	border: 1px solid rgba(0, 255, 231, 0.12);
+	border-radius: 12px;
+	box-shadow:
+		0 18px 36px rgba(0, 0, 0, 0.45),
+		0 0 24px rgba(0, 255, 231, 0.08),
+		0 1px 0 rgba(255, 255, 255, 0.08) inset;
+	perspective: 200px;
+	transform-style: preserve-3d;
+}
+
+/* Lift the court and tilt slightly for depth */
+.court-platform .basketball-court {
+	transform-origin: center center;
+	transform: perspective(1600px) rotateX(22deg) scale(0.98);
+	box-shadow:
+		0 20px 38px rgba(0, 0, 0, 0.5),
+		0 0 32px rgba(0, 255, 231, 0.12) inset;
+}
+
 .basketball-court {
 	position: relative;
 	width: 100%;
 	aspect-ratio: 16 / 9;
-	background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.1)),
-		linear-gradient(90deg, #2f1f12 0%, #3a2415 50%, #2f1f12 100%);
+	background:
+		radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.10), rgba(0, 0, 0, 0.05) 55%, rgba(0, 0, 0, 0.12) 100%),
+		linear-gradient(180deg, #5a3c28 0%, #7e4c31 40%, #381f14 100%);
 	border: 2px solid rgba(255, 255, 255, 0.15);
 	border-radius: 18px;
 	overflow: hidden;
-	box-shadow: 0 0 30px rgba(0, 0, 0, 0.4), 0 0 25px rgba(0, 255, 231, 0.08) inset;
+	box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), 0 0 12px rgba(0, 255, 231, 0.08) inset;
 }
 
 .court-lines,
@@ -27,9 +52,9 @@
 }
 
 .court-lines {
-	inset: 6% 4%;
+	inset: 5% 3%;
 	border: 2px solid rgba(255, 255, 255, 0.35);
-	border-radius: 12px;
+	border-radius: 0;
 }
 
 .half-line {
@@ -61,23 +86,23 @@
 }
 
 .paint-left {
-	left: 5%;
+	left: 3%;
 }
 
 .paint-right {
-	right: 5%;
+	right: 3%;
 }
 
 .three-arc {
-	width: 22%;
-	height: 60%;
-	top: 20%;
+	width: 40%;
+	height: 66%;
+	top: 18%;
 	border: 2px solid rgba(255, 255, 255, 0.35);
 	border-radius: 50% / 60%;
 }
 
 .three-left {
-	left: -12%;
+	left: -8%;
 }
 
 .three-right {
@@ -354,3 +379,228 @@
 .animate-foul { animation: foul-flag 2.2s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
 .animate-timeout { animation: timeout-pulse 2.6s ease-in-out infinite; }
 .animate-period { animation: period-breath 3s ease-in-out infinite; }
+
+/* Court Diagnostics */
+.court-diagnostics {
+	background: rgba(0, 0, 0, 0.85);
+	border: 1px solid rgba(0, 255, 231, 0.3);
+	border-radius: 8px;
+	padding: 12px 16px;
+	margin-bottom: 12px;
+	backdrop-filter: blur(8px);
+}
+
+.diagnostic-title {
+	font-size: 14px;
+	font-weight: 700;
+	color: #00FFE7;
+	margin-bottom: 8px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.diagnostic-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.diagnostic-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 12px;
+}
+
+.diagnostic-label {
+	color: rgba(255, 255, 255, 0.6);
+	font-weight: 500;
+}
+
+.diagnostic-value {
+	color: white;
+	font-weight: 600;
+	font-family: 'Courier New', monospace;
+}
+
+/* Fixed position ball (using ESPN coordinates) */
+.play-ball-fixed {
+	position: absolute;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 35% 35%, var(--play-color, #00FFE7), rgba(0, 0, 0, 0.4));
+	box-shadow: 0 0 20px var(--play-color, #00FFE7),
+	            0 4px 12px rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	z-index: 20;
+	transform: translate(-50%, -50%);
+	animation: ball-pulse 2s ease-in-out infinite;
+}
+
+.play-ball-icon {
+	font-size: 18px;
+	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+@keyframes ball-pulse {
+	0%, 100% {
+		transform: translate(-50%, -50%) scale(1);
+		box-shadow: 0 0 20px var(--play-color, #00FFE7),
+		            0 4px 12px rgba(0, 0, 0, 0.5);
+	}
+	50% {
+		transform: translate(-50%, -50%) scale(1.15);
+		box-shadow: 0 0 30px var(--play-color, #00FFE7),
+		            0 6px 18px rgba(0, 0, 0, 0.6);
+	}
+}
+
+/* Fixed position athlete headshots */
+.athlete-headshot-fixed {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	pointer-events: none;
+	z-index: 30;
+	transform: translate(-50%, -120px);
+	animation: fade-in-slide-fixed 0.6s ease-out forwards;
+}
+
+.athlete-headshot-fixed img {
+	width: 60px;
+	height: 60px;
+	border-radius: 50%;
+	border: 3px solid var(--athlete-color, #00FFE7);
+	box-shadow: 0 0 20px var(--athlete-color, #00FFE7),
+	            0 4px 12px rgba(0, 0, 0, 0.5);
+	object-fit: cover;
+	background: rgba(0, 0, 0, 0.3);
+	transition: transform 0.3s ease;
+}
+
+.athlete-headshot-fixed:hover img {
+	transform: scale(1.1);
+}
+
+.athlete-headshot-fixed .athlete-name {
+	font-size: 12px;
+	font-weight: 700;
+	color: white;
+	text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8),
+	             0 0 12px var(--athlete-color, #00FFE7);
+	white-space: nowrap;
+	background: rgba(0, 0, 0, 0.6);
+	padding: 4px 10px;
+	border-radius: 12px;
+	backdrop-filter: blur(4px);
+}
+
+.athlete-headshot-fixed.secondary-athlete {
+	transform: translate(-50%, -140px);
+	opacity: 0.9;
+}
+
+.athlete-headshot-fixed.secondary-athlete img {
+	width: 50px;
+	height: 50px;
+	border-width: 2px;
+}
+
+.athlete-headshot-fixed.secondary-athlete .athlete-name {
+	font-size: 11px;
+	padding: 3px 8px;
+}
+
+@keyframes fade-in-slide-fixed {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -80px);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, -120px);
+	}
+}
+
+/* Legacy animated positioning (kept for fallback) */
+.athlete-headshot {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	pointer-events: none;
+	z-index: 30;
+	animation: fade-in-slide 0.6s ease-out forwards;
+}
+
+.athlete-headshot img {
+	width: 60px;
+	height: 60px;
+	border-radius: 50%;
+	border: 3px solid var(--athlete-color, #00FFE7);
+	box-shadow: 0 0 20px var(--athlete-color, #00FFE7),
+	            0 4px 12px rgba(0, 0, 0, 0.5);
+	object-fit: cover;
+	background: rgba(0, 0, 0, 0.3);
+	transition: transform 0.3s ease;
+}
+
+.athlete-headshot:hover img {
+	transform: scale(1.1);
+}
+
+.athlete-name {
+	font-size: 12px;
+	font-weight: 700;
+	color: white;
+	text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8),
+	             0 0 12px var(--athlete-color, #00FFE7);
+	white-space: nowrap;
+	background: rgba(0, 0, 0, 0.6);
+	padding: 4px 10px;
+	border-radius: 12px;
+	backdrop-filter: blur(4px);
+}
+
+.primary-athlete {
+	left: var(--sx);
+	top: var(--sy);
+	transform: translate(-50%, -120px);
+}
+
+.secondary-athlete {
+	left: var(--ex);
+	top: var(--ey);
+	transform: translate(-50%, -140px);
+	opacity: 0.9;
+}
+
+.secondary-athlete img {
+	width: 50px;
+	height: 50px;
+	border-width: 2px;
+}
+
+.secondary-athlete .athlete-name {
+	font-size: 11px;
+	padding: 3px 8px;
+}
+
+@keyframes fade-in-slide {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -80px);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, -120px);
+	}
+}
+

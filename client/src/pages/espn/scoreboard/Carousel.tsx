@@ -8,7 +8,7 @@ import PointsChart from '@/components/espn/PointsChart';
 import PlayerPick from '@/pages/espn/scoreboard/PlayerPick';
 import Info from '@/pages/espn/scoreboard/Info';
 import type { Event } from '@/types/espn/scoreboard';
-import { Play } from '@/types/espn/playByplay';
+import { Play } from '@/types/espn/plays';
 
 interface ScoreboardViewProps {
   event: Event;

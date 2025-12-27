@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaFootballBall } from 'react-icons/fa';
-import { Play, PlayTypeNFL, NflPositionType } from '@/types/espn/playByplay';
+import { Play, PlayTypeNFL, NflPositionType } from '@/types/espn/plays';
 import '@/styles/football.css';
 import { useLeague } from '@/providers/LeagueContext';
 import { usePlays } from '@/providers/PlaysContext';
@@ -948,9 +948,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
     return () => clearTimeout(timer);
   }, [playDurationMs, playKey, loopCycle]);
 
-          const losTopX = projectYardX(playStartYard, 0);
-          const losBottomX = projectYardX(playStartYard, 100);
-
   return (
     <div className="space-y-2">
       {/* Current Drive Info - Only show if showGameInfo is true */}
@@ -1015,101 +1012,105 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
       {/* Football Field */}
       <div className={showGameInfo ? "border-t border-neon-cyan/10 pt-6" : ""}>
+        <div className="court-platform">
     <div
       ref={fieldRef}
-      className="relative w-full overflow-visible shadow-[0_24px_60px_rgba(0,0,0,0.45)]"
-      style={{
-        height: '140px'
-      }}
+      className="football-field relative w-full overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.45)]"
     >
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: 'linear-gradient(180deg, #0f3d15 0%, #0f5320 55%, #0a2d10 100%)',
-          clipPath: `polygon(${TRAPEZOID_TOP_INSET}% 0%, ${100 - TRAPEZOID_TOP_INSET}% 0%, 100% 100%, 0 100%)`,
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '0',
-          overflow: 'hidden'
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '18px'
         }}
       >
-        <svg className="absolute inset-0 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-          {/* Subtle shine */}
-          <linearGradient id="field-gloss" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.06)" />
-            <stop offset="35%" stopColor="rgba(255,255,255,0.0)" />
-          </linearGradient>
-          <rect x="0" y="0" width="100" height="100" fill="url(#field-gloss)" />
-          {/* End zones anchored to trapezoid corners with bottom inset */}
-          <polygon
-            points={`${TRAPEZOID_TOP_INSET},0 ${projectYardX(10, 0)},0 ${projectYardX(10, 100)},100 ${trapezoidBottomInset},100`}
-            fill="rgba(59, 130, 246, 0.20)"
-          />
-          <polygon
-            points={`${100 - TRAPEZOID_TOP_INSET},0 ${projectYardX(110, 0)},0 ${projectYardX(110, 100)},100 ${100 - trapezoidBottomInset},100`}
-            fill="rgba(239, 68, 68, 0.20)"
-          />
+        <div className="football-playable">
+          <svg className="absolute inset-0 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+            {/* Field outline to mirror court lines styling */}
+            <rect
+              x="2"
+              y="2"
+              width="96"
+              height="96"
+              rx="3"
+              ry="3"
+              fill="none"
+              stroke="rgba(255,255,255,0.28)"
+              strokeWidth="0.8"
+            />
 
-          {/* Yard lines - only within playing field (goal lines and 10-yard increments) */}
-          {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110].map((yard) => {
-            const xTop = projectYardX(yard, 0);
-            const xBottom = projectYardX(yard, 100);
-            // Display yard numbers: 10=0, 20=10, 30=20, 40=30, 50=40, 60=50, 70=40, 80=30, 90=20, 100=10, 110=0
-            const yardNumber = yard <= 60 ? yard - 10 : 110 - yard;
-            const isGoalLine = yard === 10 || yard === 110;
-            return (
-              <React.Fragment key={`line-${yard}`}>
-                <line
-                  x1={`${xTop}%`}
-                  y1="0%"
-                  x2={`${xBottom}%`}
-                  y2="100%"
-                  stroke={isGoalLine ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255,255,255,0.18)'}
-                  strokeWidth={isGoalLine ? 0.6 : 0.45}
-                />
-                {yardNumber !== undefined && (
-                  <text
-                    x={`${xBottom}%`}
-                    y={`${numberTopPercent}`}
-                    textAnchor="middle"
-                    fill="rgba(255,255,255,0.50)"
-                    fontSize="3.6"
-                    fontWeight="700"
-                    style={{ paintOrder: 'stroke', stroke: 'rgba(0,0,0,0.35)', strokeWidth: 0.5 }}
-                  >
-                    {yardNumber}
-                  </text>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </svg>
+            {/* Subtle shine */}
+            <linearGradient id="field-gloss" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.06)" />
+              <stop offset="35%" stopColor="rgba(255,255,255,0.0)" />
+            </linearGradient>
+            <rect x="0" y="0" width="100" height="100" fill="url(#field-gloss)" />
+            {/* End zones anchored to trapezoid corners with bottom inset */}
+            <rect x="0" y="0" width="8.33" height="100" fill="rgba(59, 130, 246, 0.20)" />
+            <rect x="91.67" y="0" width="8.33" height="100" fill="rgba(239, 68, 68, 0.20)" />
 
-        {/* End zone logos anchored to trapezoid projection */}
-        <div
-          className="absolute z-10"
-          style={{
-            left: `11%`,
-            top: '55%',
-            transform: 'translate(-50%, -50%)'
-          }}
-        >
-          <img src={getTeamLogo(leftTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
-        </div>
-        <div
-          className="absolute z-10"
-          style={{
-            left: `89%`,
-            top: '55%',
-            transform: 'translate(-50%, -50%)'
-          }}
-        >
-          <img src={getTeamLogo(rightTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
+            {/* Yard lines - only within playing field (goal lines and 10-yard increments) */}
+            {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110].map((yard) => {
+              const xPercent = linearYardX(yard);
+              // Display yard numbers: 10=0, 20=10, 30=20, 40=30, 50=40, 60=50, 70=40, 80=30, 90=20, 100=10, 110=0
+              const yardNumber = yard <= 60 ? yard - 10 : 110 - yard;
+              const isGoalLine = yard === 10 || yard === 110;
+              return (
+                <React.Fragment key={`line-${yard}`}>
+                  <line
+                    x1={`${xPercent}%`}
+                    y1="0%"
+                    x2={`${xPercent}%`}
+                    y2="100%"
+                    stroke={isGoalLine ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255,255,255,0.18)'}
+                    strokeWidth={isGoalLine ? 0.6 : 0.45}
+                  />
+                  {yardNumber !== undefined && (
+                    <text
+                      x={`${xPercent}%`}
+                      y={`${numberTopPercent}`}
+                      textAnchor="middle"
+                      fill="rgba(255,255,255,0.50)"
+                      fontSize="3.6"
+                      fontWeight="700"
+                      style={{ paintOrder: 'stroke', stroke: 'rgba(0,0,0,0.35)', strokeWidth: 0.5 }}
+                    >
+                      {yardNumber}
+                    </text>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </svg>
+
+          {/* End zone logos anchored within playable frame */}
+          <div
+            className="absolute z-10"
+            style={{
+              left: `11%`,
+              top: '55%',
+              transform: 'translate(-50%, -50%)'
+            }}
+          >
+            <img src={getTeamLogo(leftTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
+          </div>
+          <div
+            className="absolute z-10"
+            style={{
+              left: `89%`,
+              top: '55%',
+              transform: 'translate(-50%, -50%)'
+            }}
+          >
+            <img src={getTeamLogo(rightTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
+          </div>
         </div>
       </div>
 
-      <div className="absolute inset-0 z-[40]">
+      <div className="football-playable z-[40] pointer-events-none">
 
-      {/* Line of scrimmage - projected like yard lines and clipped to the field bounds */}
+      {/* Line of scrimmage - vertical overlay on the flattened field */}
       {playStartYard !== undefined && (() => {
         // Try to get down/distance from situation
         let yardsToGo: number | undefined;
@@ -1132,18 +1133,13 @@ const FootballField: React.FC<FootballFieldProps> = ({
           : undefined;
         
         return (
-          <div
-            className="absolute inset-0 pointer-events-none z-[5]"
-            style={{
-              clipPath: `polygon(${TRAPEZOID_TOP_INSET}% 0%, ${100 - TRAPEZOID_TOP_INSET}% 0%, ${100 - trapezoidBottomInset}% 100%, ${trapezoidBottomInset}% 100%)`
-            }}
-          >
+          <div className="absolute inset-0 pointer-events-none z-[5]">
             <svg className="absolute inset-0" viewBox="0 0 100 100" preserveAspectRatio="none">
-              {/* Line of scrimmage - blue line following trapezoid perspective */}
+              {/* Line of scrimmage - vertical line on the flattened field */}
               <line
-                x1={`${projectYardX(playStartYard, 0)}%`}
+                x1={`${linearYardX(playStartYard)}%`}
                 y1="0%"
-                x2={`${projectYardX(playStartYard, 100)}%`}
+                x2={`${linearYardX(playStartYard)}%`}
                 y2="100%"
                 stroke="rgba(30, 144, 255, 0.95)"
                 strokeWidth="0.5"
@@ -1151,12 +1147,12 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 style={{ filter: 'drop-shadow(0 0 6px rgba(30, 144, 255, 0.95))' }}
               />
               
-              {/* First down line - yellow line */}
+              {/* First down line - vertical on the flattened field */}
               {firstDownYard !== undefined && (
                 <line
-                  x1={`${projectYardX(firstDownYard, 0)}%`}
+                  x1={`${linearYardX(firstDownYard)}%`}
                   y1="0%"
-                  x2={`${projectYardX(firstDownYard, 100)}%`}
+                  x2={`${linearYardX(firstDownYard)}%`}
                   y2="100%"
                   stroke="rgba(255, 200, 0, 0.95)"
                   strokeWidth="0.5"
@@ -1172,7 +1168,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* Start position dot - positioned on a slightly scaled back plane */}
       {playStartYard !== undefined && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
         <div
-          className="absolute inset-0 z-[1] pointer-events-none"
+          className="football-playable z-[1] pointer-events-none"
           style={{ transform: `scale(${ARROW_PLANE_SCALE})`, transformOrigin: `50% ${arrowTopPercent}%` }}
         >
           <div
@@ -1190,7 +1186,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* Arrow showing play direction - arrowhead only */}
       {playStartYard !== undefined && playEndYard !== undefined && playStartYard !== playEndYard && (
         <div
-          className="absolute left-0 top-0 w-full h-full pointer-events-none z-[1]"
+          className="football-playable pointer-events-none z-[1]"
           style={{ transform: `scale(${ARROW_PLANE_SCALE})`, transformOrigin: `50% ${arrowTopPercent}%` }}
         >
           {/* Arc path for punts/kickoffs */}
@@ -2502,6 +2498,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
     </div> {/* overlay */}
     </div> {/* field container */}
+    </div> {/* court-platform */}
 
     {/* Latest Play - Only show if showGameInfo is true */}
     {showGameInfo && lastPlay && (() => {

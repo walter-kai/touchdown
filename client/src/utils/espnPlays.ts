@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Play, PlayAthlete } from '@/types/espn/playByplay';
+import { Play, PlayAthlete } from '@/types/espn/plays';
 import { getPlaysUrl } from './espnApi';
 
 export const extractAthleteIdFromRef = (ref?: string): string => {

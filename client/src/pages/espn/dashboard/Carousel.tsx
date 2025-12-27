@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import Dashboard from './Dashboard';
-import GamesList from './gamesThisWeek/GameGrid';
+import GamesList from './games/GameGrid';
 
 interface DashboardCarouselProps {
   activeTab: 'dashboard' | 'games';

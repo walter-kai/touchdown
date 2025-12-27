@@ -4,7 +4,8 @@ import { FaFootballBall } from 'react-icons/fa';
 import axios from 'axios';
 import ScoreboardView from '../../scoreboard/Carousel';
 import SummaryView from '../../summary/Summary';
-import FootballField from '@/pages/espn/gamesThisWeek/FootballField';
+import FootballField from '@/pages/espn/dashboard/games/FootballField';
+import BasketballCourt from '@/pages/espn/dashboard/games/BasketballCourt';
 import { useLoading } from '@/providers/LoadingContext';
 import { useLeague } from '@/providers/LeagueContext';
 import { debugLog } from '@/utils/debugLog';
@@ -15,7 +16,7 @@ import { PlaysProvider } from '@/providers/PlaysContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
-import { Play } from '@/types/espn/playByplay';
+import { Play } from '@/types/espn/plays';
 
 interface GameContainerProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
@@ -573,20 +574,31 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
   const leftOverride = switchAtQ3 ? homeCompetitor : awayCompetitor;
   const rightOverride = switchAtQ3 ? awayCompetitor : homeCompetitor;
 
-  // Test mode football field visualization - must be after effectiveEvent is defined
+  // Test mode field visualization - must be after effectiveEvent is defined
   const testFieldVisualization = isTestMode && event && playLog.length > 0 && effectiveEvent ? (
     <div className="mx-2 my-4">
       <div className="bg-bg-dark/50 rounded-lg p-4 border border-neon-cyan/20">
-        <h3 className="text-neon-cyan font-bold text-lg mb-4">Football Field Animation Test</h3>
-        <FootballField
-          homeTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'home')}
-          awayTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'away')}
-          lastPlay={effectiveEvent.competitions[0].situation?.lastPlay}
-          situation={situationForField}
-          leftTeamOverride={leftOverride}
-          rightTeamOverride={rightOverride}
-          getTeamLogo={getTeamLogo}
-        />
+        <h3 className="text-neon-cyan font-bold text-lg mb-4">
+          {league === 'nba' ? 'Basketball Court Animation Test' : 'Football Field Animation Test'}
+        </h3>
+        {league === 'nba' ? (
+          <BasketballCourt
+            homeTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'home')}
+            awayTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'away')}
+            lastPlay={effectiveEvent.competitions[0].situation?.lastPlay}
+            getTeamLogo={getTeamLogo}
+          />
+        ) : (
+          <FootballField
+            homeTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'home')}
+            awayTeam={effectiveEvent.competitions[0].competitors.find((c: any) => c.homeAway === 'away')}
+            lastPlay={effectiveEvent.competitions[0].situation?.lastPlay}
+            situation={situationForField}
+            leftTeamOverride={leftOverride}
+            rightTeamOverride={rightOverride}
+            getTeamLogo={getTeamLogo}
+          />
+        )}
       </div>
     </div>
   ) : null;

@@ -4,7 +4,47 @@
  */
 
 /**
- * Play types from ESPN API
+ * Play types from ESPN NBA API
+ */
+export type PlayTypeNBA =
+  | 'Jumpball'
+  | 'Cutting Layup Shot'
+  | 'Turnaround Jump Shot'
+  | 'Defensive Rebound'
+  | 'Offensive Rebound'
+  | 'Three Point Jumper'
+  | 'Driving Layup Shot'
+  | 'Dunk Shot'
+  | 'Alley Oop Dunk Shot'
+  | 'Hook Shot'
+  | 'Free Throw'
+  | 'Block'
+  | 'Steal'
+  | 'Turnover'
+  | 'Foul'
+  | 'Timeout'
+  | 'End Period'
+  | 'Jump Shot'
+  | 'Fadeaway Jump Shot'
+  | 'Tip Shot'
+  | 'Floating Jump Shot'
+  | 'Pullup Jump Shot'
+  | 'Running Layup Shot'
+  | 'Step Back Jump Shot'
+  | string; // Allow other types that might come from ESPN
+
+export type NbaPositionType =
+  | 'shooter'
+  | 'assister'
+  | 'blocker'
+  | 'rebounder'
+  | 'fouler'
+  | 'fouledBy'
+  | 'stealer'
+  | string;
+
+/**
+ * Play types from ESPN NFL API
  */
 export type PlayTypeNFL =
   | 'Rush'

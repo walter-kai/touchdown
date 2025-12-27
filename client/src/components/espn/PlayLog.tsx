@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play } from '@/types/espn/playByplay';
+import { Play } from '@/types/espn/plays';
 import { usePlays } from '@/providers/PlaysContext';
 
 interface PlayLogProps {

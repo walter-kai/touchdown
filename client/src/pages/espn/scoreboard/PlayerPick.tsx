@@ -7,7 +7,7 @@ import { HTML5Backend, getEmptyImage } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
-import FootballField from '@/pages/espn/gamesThisWeek/FootballField';
+import FootballField from '@/pages/espn/dashboard/games/FootballField';
 import ChoosePicks from '@/pages/espn/scoreboard/ChoosePicks';
 import { useAuth } from '@/providers/AuthContext';
 import { useLeague } from '@/providers/LeagueContext';
@@ -15,7 +15,7 @@ import { debugLog } from '@/utils/debugLog';
 import { getTeamApiUrl } from '@/utils/espnApi';
 import { getTeamLogoUrl } from '@/utils/espnImages';
 import type { Athlete } from '@/types/espn/athlete';
-import { Play } from '@/types/espn/playByplay';
+import { Play } from '@/types/espn/plays';
 
 // Multi-backend configuration for both desktop and mobile
 const HTML5toTouch = {

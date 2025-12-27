@@ -4,7 +4,7 @@ import axios from 'axios';
 import { jwtStorage } from '../../../utils/jwtStorage';
 import { usePicks } from '../../../providers/PicksContext';
 import { debugLog } from '@/utils/debugLog';
-import { Play } from '@/types/espn/playByplay';
+import { Play } from '@/types/espn/plays';
 import { useLeague } from '@/providers/LeagueContext';
 import { useAuth } from '@/providers/AuthContext';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play } from '@/types/espn/playByplay';
+import { Play } from '@/types/espn/plays';
 
 interface PlaysContextValue {
   playLog: Play[];

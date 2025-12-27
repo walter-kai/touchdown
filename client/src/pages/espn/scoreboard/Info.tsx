@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
-import FootballField from '@/pages/espn/gamesThisWeek/FootballField';
-import type { Play } from '@/types/espn/playByplay';
+import FootballField from '@/pages/espn/dashboard/games/FootballField';
+import type { Play } from '@/types/espn/plays';
 import PlayLog from '@/components/espn/PlayLog';
 import GameLeaders from '@/pages/espn/summary/GameLeaders';
 import PredictionChart from '@/pages/espn/gameView/info/PredictionChart';

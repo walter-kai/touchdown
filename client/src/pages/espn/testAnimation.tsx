@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import FootballField from '@/pages/espn/gamesThisWeek/FootballField';
-import BasketballCourt from '@/pages/espn/gamesThisWeek/BasketballCourt';
+import FootballField from '@/pages/espn/dashboard/games/FootballField';
+import BasketballCourt from '@/pages/espn/dashboard/games/BasketballCourt';
 import Info from '@/pages/espn/scoreboard/Info';
 import { useLoading } from '@/providers/LoadingContext';
 import { fetchEspnPlays } from '@/utils/espnPlays';
@@ -9,7 +9,7 @@ import { getScoreboardUrl, getSummaryUrl } from '@/utils/espnApi';
 import { getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
 import type { Summary } from '@/types/espn/summary';
-import { Play } from '@/types/espn/playByplay';
+import { Play } from '@/types/espn/plays';
 
 const TestAnimation: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();

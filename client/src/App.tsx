@@ -5,10 +5,10 @@ import BottomNavbar from './components/common/navs/BottomNavbar';
 import LoginNav from './components/common/navs/LoginNav';
 
 import DashboardCarousel from './pages/espn/dashboard/Carousel';
-import GameGrid from './pages/espn/dashboard/gamesThisWeek/GameGrid';
+import GameGrid from './pages/espn/dashboard/games/GameGrid';
 import NFLTeamPage from './pages/espn/Team';
 import NFLPlayerPage from './pages/espn/Player';
-import GameContainer from './pages/espn/dashboard/gamesThisWeek/GameContainer';
+import GameContainer from './pages/espn/dashboard/games/GameContainer';
 import TestAnimation from './pages/espn/testAnimation';
 
 import NotFound from './pages/NotFound';
