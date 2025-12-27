@@ -1027,19 +1027,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
       >
         <div className="football-playable">
           <svg className="absolute inset-0 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-            {/* Field outline to mirror court lines styling */}
-            <rect
-              x="2"
-              y="2"
-              width="96"
-              height="96"
-              rx="3"
-              ry="3"
-              fill="none"
-              stroke="rgba(255,255,255,0.28)"
-              strokeWidth="0.8"
-            />
-
             {/* Subtle shine */}
             <linearGradient id="field-gloss" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="rgba(255,255,255,0.06)" />
@@ -1108,7 +1095,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
         </div>
       </div>
 
-      <div className="football-playable z-[40] pointer-events-none">
+      <div className="football-overlay z-[40] pointer-events-none">
 
       {/* Line of scrimmage - vertical overlay on the flattened field */}
       {playStartYard !== undefined && (() => {
@@ -1134,17 +1121,17 @@ const FootballField: React.FC<FootballFieldProps> = ({
         
         return (
           <div className="absolute inset-0 pointer-events-none z-[5]">
-            <svg className="absolute inset-0" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <svg className="absolute inset-0" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ clipPath: 'inset(6% 4%)' }}>
               {/* Line of scrimmage - vertical line on the flattened field */}
               <line
                 x1={`${linearYardX(playStartYard)}%`}
                 y1="0%"
                 x2={`${linearYardX(playStartYard)}%`}
                 y2="100%"
-                stroke="rgba(30, 144, 255, 0.95)"
+                stroke="rgba(30, 144, 255, 0.5)"
                 strokeWidth="0.5"
                 strokeLinecap="round"
-                style={{ filter: 'drop-shadow(0 0 6px rgba(30, 144, 255, 0.95))' }}
+                style={{ filter: 'drop-shadow(0 0 4px rgba(30, 144, 255, 0.4))' }}
               />
               
               {/* First down line - vertical on the flattened field */}
@@ -1154,10 +1141,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   y1="0%"
                   x2={`${linearYardX(firstDownYard)}%`}
                   y2="100%"
-                  stroke="rgba(255, 200, 0, 0.95)"
+                  stroke="rgba(255, 200, 0, 0.5)"
                   strokeWidth="0.5"
                   strokeLinecap="round"
-                  style={{ filter: 'drop-shadow(0 0 6px rgba(255, 200, 0, 0.95))' }}
+                  style={{ filter: 'drop-shadow(0 0 4px rgba(255, 200, 0, 0.4))' }}
                 />
               )}
             </svg>
@@ -1168,7 +1155,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* Start position dot - positioned on a slightly scaled back plane */}
       {playStartYard !== undefined && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
         <div
-          className="football-playable z-[1] pointer-events-none"
+          className="football-arrow z-[1] pointer-events-none"
           style={{ transform: `scale(${ARROW_PLANE_SCALE})`, transformOrigin: `50% ${arrowTopPercent}%` }}
         >
           <div
@@ -1186,7 +1173,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       {/* Arrow showing play direction - arrowhead only */}
       {playStartYard !== undefined && playEndYard !== undefined && playStartYard !== playEndYard && (
         <div
-          className="football-playable pointer-events-none z-[1]"
+          className="football-arrow pointer-events-none z-[1]"
           style={{ transform: `scale(${ARROW_PLANE_SCALE})`, transformOrigin: `50% ${arrowTopPercent}%` }}
         >
           {/* Arc path for punts/kickoffs */}

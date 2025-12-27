@@ -16,6 +16,24 @@
   overflow: hidden;
   width: auto;
   height: auto;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Overlay layer for LOS/first-down lines */
+.football-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Arrow and dot containers */
+.football-arrow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .court-platform .football-field {
