@@ -9,7 +9,6 @@ import { useAuth } from '../../../providers/AuthContext';
 import { useLeague } from '../../../providers/LeagueContext';
 import TelegramCard from './TelegramCard';
 import { debugLog } from '@/utils/debugLog';
-import { getSummaryUrl } from '@/utils/espnApi';
 import { getTeamLogoUrl, getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
 import { LeaderboardEntry } from '../../../../../types/espn/leaderboard';
 
@@ -210,25 +209,22 @@ const Dashboard: React.FC = () => {
           return;
         }
 
-        // Process all games in parallel to fetch additional game info
+        // Process all games - extract team info directly from picks (no ESPN API calls!)
         const gamePromises = userGames.map(async (gamePick) => {
           try {
             const totalUserScore = gamePick.scores?.totalScore || 0;
 
-            // Try to get game info from scoreboard or summary
             let gameName = '';
             let gameStatus: 'pre' | 'in' | 'post' = 'post';
             let homeTeam: any = null;
             let awayTeam: any = null;
 
-            // First priority: Check if teamData is stored (includes names & abbreviations)
+            // Priority 1: Check if teamData is stored (includes names & abbreviations)
             if (gamePick.teamData) {
-              // Use stored team data - no need to fetch from ESPN API
               homeTeam = { 
                 team: { 
                   displayName: gamePick.teamData.homeTeam.name,
                   abbreviation: gamePick.teamData.homeTeam.abbreviation,
-                  // Use stored logo if available, otherwise construct from abbreviation
                   logo: (gamePick.teamData.homeTeam as any).logo || getTeamLogoUrl(gamePick.teamData.homeTeam.abbreviation, gamePick.teamData.league)
                 } 
               };
@@ -236,80 +232,55 @@ const Dashboard: React.FC = () => {
                 team: { 
                   displayName: gamePick.teamData.awayTeam.name,
                   abbreviation: gamePick.teamData.awayTeam.abbreviation,
-                  // Use stored logo if available, otherwise construct from abbreviation
                   logo: (gamePick.teamData.awayTeam as any).logo || getTeamLogoUrl(gamePick.teamData.awayTeam.abbreviation, gamePick.teamData.league)
                 } 
               };
               gameName = `${gamePick.teamData.awayTeam.abbreviation} @ ${gamePick.teamData.homeTeam.abbreviation}`;
-              debugLog(`✅ Using stored teamData for game ${gamePick.gameId}:`, {
-                away: gamePick.teamData.awayTeam.abbreviation,
-                home: gamePick.teamData.homeTeam.abbreviation
-              });
-            } else {
-              // Only fetch from ESPN API if we don't have stored teamData
-              // This avoids 404 errors for old games no longer available in ESPN API
-              try {
-                debugLog(`📡 Fetching game info from ESPN API for ${gamePick.gameId}...`);
-                const gameInfoResponse = await axios.get(getSummaryUrl(league, gamePick.gameId));
-                const gameInfo = gameInfoResponse.data;
-                
-                if (gameInfo.header) {
-                  const competition = gameInfo.header.competitions?.[0];
-                  if (competition) {
-                    const competitors = competition.competitors || [];
-                    const apiHomeTeam = competitors.find((c: any) => c.homeAway === 'home');
-                    const apiAwayTeam = competitors.find((c: any) => c.homeAway === 'away');
-                    
-                    if (apiHomeTeam) {
-                      homeTeam = {
-                        ...apiHomeTeam,
-                        team: {
-                          ...apiHomeTeam.team,
-                          // Prefer stored logo from teamLogos, otherwise construct from abbreviation
-                          logo: gamePick.teamLogos?.homeLogo || getTeamLogoUrl(apiHomeTeam.team.abbreviation, league)
-                        }
-                      };
-                    }
-                    if (apiAwayTeam) {
-                      awayTeam = {
-                        ...apiAwayTeam,
-                        team: {
-                          ...apiAwayTeam.team,
-                          // Prefer stored logo from teamLogos, otherwise construct from abbreviation
-                          logo: gamePick.teamLogos?.awayLogo || getTeamLogoUrl(apiAwayTeam.team.abbreviation, league)
-                        }
-                      };
-                    }
-                    
-                    // Set game name from API
-                    if (apiHomeTeam && apiAwayTeam) {
-                      gameName = `${apiAwayTeam.team.abbreviation} @ ${apiHomeTeam.team.abbreviation}`;
-                    }
-                    
-                    // Determine game status from API
-                    if (competition.status?.type?.state === 'in') {
-                      gameStatus = 'in';
-                    } else if (competition.status?.type?.state === 'pre') {
-                      gameStatus = 'pre';
-                    }
-                  }
+              debugLog(`✅ Using stored teamData for game ${gamePick.gameId}`);
+            } 
+            // Priority 2: Extract team info from players in picks (team logos already embedded!)
+            else if (gamePick.picks?.length > 0) {
+              const latestPick = gamePick.picks[gamePick.picks.length - 1];
+              const players = latestPick?.players || [];
+              
+              // Collect unique teams from all players
+              const teamsMap = new Map<string, any>();
+              players.forEach((player: any) => {
+                if (player.team?.id && player.team?.logo) {
+                  teamsMap.set(player.team.id, player.team);
                 }
-              } catch (err) {
-                console.warn(`Could not fetch game info for ${gamePick.gameId} - using fallback`, err);
-                // Fall through to fallback logic below
+              });
+              
+              const teams = Array.from(teamsMap.values());
+              
+              if (teams.length >= 2) {
+                // Assume first unique team is away, second is home
+                awayTeam = { team: { ...teams[0], displayName: teams[0].name || 'Away' } };
+                homeTeam = { team: { ...teams[1], displayName: teams[1].name || 'Home' } };
+                gameName = `${teams[0].abbreviation || 'AWAY'} @ ${teams[1].abbreviation || 'HOME'}`;
+                debugLog(`✅ Extracted team info from picks for game ${gamePick.gameId}`);
+              } else if (teams.length === 1) {
+                // Only one team found, use it for both (shouldn't happen but handle it)
+                const team = teams[0];
+                awayTeam = { team: { ...team, displayName: team.name || 'Away' } };
+                homeTeam = { team: { ...team, displayName: team.name || 'Home' } };
+                gameName = `${team.abbreviation || 'TEAM'} Game`;
+                debugLog(`⚠️ Only one team found in picks for game ${gamePick.gameId}`);
               }
             }
             
-            // Final fallback - construct from team info if available
-            if (!gameName && homeTeam && awayTeam) {
-              const awayAbbr = awayTeam.team?.abbreviation || awayTeam.team?.displayName?.substring(0, 3).toUpperCase() || 'AWAY';
-              const homeAbbr = homeTeam.team?.abbreviation || homeTeam.team?.displayName?.substring(0, 3).toUpperCase() || 'HOME';
-              gameName = `${awayAbbr} @ ${homeAbbr}`;
+            // Fallback: Use legacy teamLogos if available
+            if (!gameName && gamePick.teamLogos) {
+              awayTeam = { team: { logo: gamePick.teamLogos.awayLogo, displayName: 'Away' } };
+              homeTeam = { team: { logo: gamePick.teamLogos.homeLogo, displayName: 'Home' } };
+              gameName = `Game ${gamePick.gameId}`;
+              debugLog(`⚠️ Using legacy teamLogos for game ${gamePick.gameId}`);
             }
             
-            // Absolute fallback
+            // Final fallback
             if (!gameName) {
               gameName = `Game ${gamePick.gameId}`;
+              debugLog(`⚠️ No team data available for game ${gamePick.gameId}`);
             }
 
             return {
@@ -564,7 +535,7 @@ const Dashboard: React.FC = () => {
                       <img 
                         src={game.league === 'nfl' ? '/logos/logo-nfl.svg' : '/logos/logo-nba.svg'} 
                         alt={game.league?.toUpperCase()}
-                        className="w-9 h-6 absolute -translate-y-[42px] translate-x-4 p-1 bg-bg-dark/50 rounded-md border border-neon-cyan/30"
+                        className="w-7 h-6 absolute -translate-y-[42px] translate-x-0 p-1 bg-bg-dark/50 rounded-md border border-neon-cyan/30"
                       />
                     </div>
                     <div className="flex flex-col items-center gap-1">
