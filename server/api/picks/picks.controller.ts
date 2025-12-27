@@ -206,7 +206,45 @@ export const getAllUserPicks = catchAsync(async (req: Request, res: Response) =>
   return res.status(200).json({ ok: true, games: userPicks });
 });
 
-// GET /picks/user/all-with-scores - OPTIMIZED endpoint for dashboard
+// GET /picks/user/all-for-dashboard - FAST endpoint for dashboard (NO ESPN CALLS)
+// Returns stored totalScore from picks without fetching ESPN play-by-play data
+export const getAllUserPicksForDashboard = catchAsync(async (req: Request, res: Response) => {
+  const { user } = req as any;
+
+  if (!user?.email) {
+    throw new ApiError(400, 'Missing user email from token');
+  }
+
+  // Get all user picks from Firebase (fast - single collection read)
+  const userPicks = await getAllUserPicksAcrossGames(user.email);
+
+  // Transform to dashboard format with stored totalScore (no ESPN API calls!)
+  const dashboardGames = userPicks.map((game: any) => {
+    const latestPick = game.picks[game.picks.length - 1];
+    const totalScore = Number(latestPick?.totalScore || 0);
+
+    return {
+      gameId: game.gameId,
+      picks: game.picks,
+      lastUpdated: game.lastUpdated,
+      totalPicks: game.totalPicks,
+      teamData: game.teamData,
+      teamLogos: game.teamLogos,
+      scores: {
+        gameScores: {},
+        sessionScores: {},
+        userScores: {},
+        totalScore // ✅ From stored data, NO ESPN API call!
+      }
+    };
+  });
+
+  console.log(`[Dashboard] Returning ${dashboardGames.length} games with stored scores (NO ESPN API calls)`);
+  return res.status(200).json({ ok: true, games: dashboardGames });
+});
+
+// GET /picks/user/all-with-scores - OPTIMIZED endpoint for live score details (uses ESPN API)
+// Only use this when you need per-athlete live score breakdowns
 export const getAllUserPicksWithScoresController = catchAsync(async (req: Request, res: Response) => {
   const { user } = req as any;
   const { league = 'nfl' } = req.query; // Default to NFL

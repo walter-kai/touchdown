@@ -10,6 +10,7 @@ import { useLeague } from '../../../providers/LeagueContext';
 import TelegramCard from './TelegramCard';
 import { debugLog } from '@/utils/debugLog';
 import { getTeamLogoUrl, getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
+import { calculateAthleteScoresFromPlays, fetchPlaysByPlayFromESPN } from '@/utils/scoreCalculation';
 import { LeaderboardEntry } from '../../../../../types/espn/leaderboard';
 
 interface Player {
@@ -195,8 +196,8 @@ const Dashboard: React.FC = () => {
 
         debugLog('🔄 Fetching fresh dashboard data from API...');
 
-        // Fetch all user picks WITH scores in a single optimized call!
-        const picksResponse = await axios.get('/api/picks/user/all-with-scores', {
+        // Fetch all user picks from optimized dashboard endpoint (NO ESPN API calls!)
+        const picksResponse = await axios.get('/api/picks/user/all-for-dashboard', {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -213,7 +214,7 @@ const Dashboard: React.FC = () => {
           return;
         }
 
-        // Process all games - extract team info directly from picks (no ESPN API calls!)
+        // Process all games - extract team info and then enhance scores from ESPN plays on the client
         const gamePromises = userGames.map(async (gamePick) => {
           try {
             const totalUserScore = gamePick.scores?.totalScore || 0;
@@ -286,6 +287,28 @@ const Dashboard: React.FC = () => {
               gameName = `Game ${gamePick.gameId}`;
               debugLog(`⚠️ No team data available for game ${gamePick.gameId}`);
             }
+
+            // Kick off background fetch to get plays and calculate per-athlete scores on the client
+            const fetchAndCalculateScores = async () => {
+              try {
+                const gameLeague = (gamePick.teamData?.league || league) as 'nfl' | 'nba';
+                const plays = await fetchPlaysByPlayFromESPN(gamePick.gameId, gameLeague);
+                const calculatedScores = calculateAthleteScoresFromPlays(gamePick.picks, plays, gamePick.gameId);
+
+                setGamesWithPicks(prev =>
+                  prev.map(g =>
+                    g.gameId === gamePick.gameId
+                      ? { ...g, scores: calculatedScores, totalUserScore: calculatedScores.totalScore }
+                      : g
+                  )
+                );
+                debugLog(`✅ Calculated per-athlete scores for game ${gamePick.gameId}`);
+              } catch (err) {
+                console.error(`Error calculating scores for game ${gamePick.gameId}:`, err);
+              }
+            };
+
+            fetchAndCalculateScores().catch(console.error);
 
             return {
               gameId: gamePick.gameId,

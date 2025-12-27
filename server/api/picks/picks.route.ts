@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../../auth/middleware/auth';
-import { postPick, getUserPicks, getGameStats, getLatestPick, getPickHistory, getScores, getAllUserPicks, getAllUserPicksWithScoresController } from './picks.controller';
+import { postPick, getUserPicks, getGameStats, getLatestPick, getPickHistory, getScores, getAllUserPicks, getAllUserPicksForDashboard, getAllUserPicksWithScoresController } from './picks.controller';
 
 const router = express.Router();
 
@@ -25,7 +25,10 @@ router.get('/game/:gameId/stats', getGameStats);
 // GET /api/picks/user/all - Get all user picks across all games
 router.get('/user/all', authenticate, getAllUserPicks);
 
-// GET /api/picks/user/all-with-scores - Get all user picks with scores calculated (OPTIMIZED for dashboard)
+// GET /api/picks/user/all-for-dashboard - FAST endpoint for dashboard (NO ESPN CALLS)
+router.get('/user/all-for-dashboard', authenticate, getAllUserPicksForDashboard);
+
+// GET /api/picks/user/all-with-scores - Get all user picks with live scores calculated (uses ESPN API)
 router.get('/user/all-with-scores', authenticate, getAllUserPicksWithScoresController);
 
 export default router;
