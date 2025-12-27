@@ -272,7 +272,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		: (rightTeam?.shortDisplayName || rightTeam?.displayName || 'AWAY');
 
 	return (
-		<div className="space-y-2">
+		<div className="space-y-2 relative">
 			{/* Court Diagnostics - Similar to Football Field Diagnostics */}
 			{showGameInfo && (
 				<div className="bg-bg-darker/50 border border-neon-cyan/20 rounded p-3 mb-4 text-xs font-mono">
@@ -325,8 +325,6 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					<div className="free-throw-circle free-throw-right" />
 					<div className="three-arc three-left" />
 					<div className="three-arc three-right" />
-					<div className="hoop hoop-left" />
-					<div className="hoop hoop-right" />
 
 				{/* Ball animation at shot location */}
 				{lastPlay.coordinate && (
@@ -384,7 +382,21 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				)}
 
 			</div> {/* basketball-court */}
-			</div> {/* relative container */}
+			</div> {/* court-platform */}
+
+			{/* Basketball goal posts - positioned completely outside court-platform to avoid 3D transform */}
+			<div className="absolute inset-0 pointer-events-none z-[100]">
+				<img 
+					src="/assets/basketbal_post.png" 
+					alt="Basketball Hoop" 
+					className="absolute pointer-events-none left-5 top-[257px] h-12 transform -translate-y-1/2"
+				/>
+				<img 
+					src="/assets/basketbal_post.png" 
+					alt="Basketball Hoop" 
+					className="absolute pointer-events-none right-5 top-[257px] h-12 transform -translate-y-1/2 scale-x-[-1]"
+				/>
+			</div>
 
 			{/* Latest Play Info - Similar to FootballField */}
 			{showGameInfo && lastPlay && (

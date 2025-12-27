@@ -1011,7 +1011,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
       )}
 
       {/* Football Field */}
-      <div className={showGameInfo ? "border-t border-neon-cyan/10 pt-6" : ""}>
+      <div className={showGameInfo ? "border-t border-neon-cyan/10 pt-6 relative" : "relative"}>
         <div className="court-platform">
     <div
       ref={fieldRef}
@@ -1075,9 +1075,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
           <div
             className="absolute z-10"
             style={{
-              left: `11%`,
-              top: '55%',
-              transform: 'translate(-50%, -50%)'
+              left: `0%`,
+              top: '50%',
             }}
           >
             <img src={getTeamLogo(leftTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
@@ -1085,9 +1084,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
           <div
             className="absolute z-10"
             style={{
-              left: `89%`,
-              top: '55%',
-              transform: 'translate(-50%, -50%)'
+              right: `0%`,
+              top: '50%',
             }}
           >
             <img src={getTeamLogo(rightTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
@@ -2486,6 +2484,21 @@ const FootballField: React.FC<FootballFieldProps> = ({
     </div> {/* overlay */}
     </div> {/* field container */}
     </div> {/* court-platform */}
+
+    {/* Goal posts - positioned completely outside court-platform to avoid 3D transform */}
+    <div className="absolute inset-0 pointer-events-none z-[100]">
+      <img 
+        src="/assets/football_post.png" 
+        alt="Goal Post" 
+        className="absolute pointer-events-none left-10 top-[85px] w-6 transform -translate-x-1/2"
+      />
+      <img 
+        src="/assets/football_post.png" 
+        alt="Goal Post" 
+        className="absolute pointer-events-none right-4 top-[85px] w-6 transform -translate-x-1/2 scale-x-[-1]"
+
+      />
+    </div>
 
     {/* Latest Play - Only show if showGameInfo is true */}
     {showGameInfo && lastPlay && (() => {
