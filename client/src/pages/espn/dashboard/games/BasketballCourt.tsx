@@ -71,6 +71,9 @@ const derivePlayLabel = (typeText: string, play?: PlayNba | null): PlayLabel => 
 // Simplified animation config (single style)
 const defaultPlayConfig = { ball: 'animate-jumper', trail: 'animate-jumper-trail', color: '#00ffe7', icon: '🏀' };
 
+// Foul-specific config (matches NFL penalty animation)
+const foulPlayConfig = { ball: 'animate-foul', trail: 'animate-foul', color: '#FFFF00', icon: '🚩' };
+
 const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	homeTeam,
 	awayTeam,
@@ -127,7 +130,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		setCycle((c) => c + 1);
 	}, [lastPlay?.id, lastPlay?.text, typeText, possessionId]);
 
-	const config = defaultPlayConfig;
+	// Use foul config for personal fouls, default for everything else
+	const config = label === 'foul' ? foulPlayConfig : defaultPlayConfig;
 
 	// ESPN NBA court coordinates: X ranges from -250 to 250 (500 units), Y ranges from 0 to 470 (470 units)
 	// Court dimensions: 94 feet long × 50 feet wide
@@ -259,7 +263,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 			</div> {/* court-platform */}
 
 			{/* Ball animation and player headshots - positioned outside court-platform to avoid clipping and 3D transform */}
-			<div className="absolute inset-0 pointer-events-none z-[50] top-[300px]">
+			<div className="absolute inset-0 pointer-events-none z-[50] top-[160px]">
 				{/* Ball animation at shot location - Enhanced with shooting and scoring play detection */}
 				<div 
 					key={`ball-${cycle}`} 
@@ -294,6 +298,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 							src={primaryHeadshot}
 							alt={primaryAthlete.displayName || primaryAthlete.shortName || ''}
 							onError={(e) => (e.currentTarget.style.display = 'none')}
+							style={{ filter: label === 'foul' ? 'grayscale(100%)' : 'none' }}
 						/>
 		
 					</div>
@@ -317,6 +322,32 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 							onError={(e) => (e.currentTarget.style.display = 'none')}
 						/>
 					</div>
+				)}
+				
+				{/* Foul gesture emojis (like penalty refs in football) */}
+				{label === 'foul' && (
+					<>
+						<div
+							className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20 text-2xl"
+							style={{ 
+								left: `${Math.max(5, shotLocation.xPercent - 8)}%`,
+								top: `${shotLocation.yPercent}%`,
+								filter: `drop-shadow(0 0 10px ${config.color})`
+							}}
+						>
+							🙅🏻‍♂️
+						</div>
+						<div
+							className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20 text-2xl"
+							style={{ 
+								left: `${Math.min(95, shotLocation.xPercent + 8)}%`,
+								top: `${shotLocation.yPercent}%`,
+								filter: `drop-shadow(0 0 10px ${config.color})`
+							}}
+						>
+							🙅🏾‍♂️
+						</div>
+					</>
 				)}
 			</div>
 

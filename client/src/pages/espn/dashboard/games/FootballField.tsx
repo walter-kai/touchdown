@@ -1028,20 +1028,20 @@ const FootballField: React.FC<FootballFieldProps> = ({
           <div
             className="absolute z-10"
             style={{
-              left: `0%`,
-              top: '50%',
+              left: `-5px`,
+              top: '40%',
             }}
           >
-            <img src={getTeamLogo(leftTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
+            <img src={getTeamLogo(leftTeam?.team)} alt="" className="w-8 h-8 -rotate-90" />
           </div>
           <div
             className="absolute z-10"
             style={{
-              right: `0%`,
-              top: '50%',
+              right: `-5px`,
+              top: '40%',
             }}
           >
-            <img src={getTeamLogo(rightTeam?.team)} alt="" className="w-8 h-8 opacity-75" />
+            <img src={getTeamLogo(rightTeam?.team)} alt="" className="w-8 h-8 rotate-90" />
           </div>
         </div>
       </div>
@@ -1176,7 +1176,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   style={{
                     right: pointingRight ? '-2px' : 'auto',
                     left: pointingRight ? 'auto' : '-2px',
-                    top: '50%',
+                    top: '40%',
                     transform: `translate(0, -50%) rotate(${pointingRight ? 0 : 180}deg)`
                   }}
                 >
@@ -1201,7 +1201,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               className="absolute transform -translate-x-1/2 -translate-y-1/2 text-2xl z-20"
               style={{
                 left: `${arrowX(((playStartYard ?? 0) + (playEndYard ?? 0)) / 2)}%`,
-                top: '50%',
+                top: '40%',
                 filter: `drop-shadow(0 0 8px ${playViz.glowColor})`
               }}
             >
@@ -1217,7 +1217,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           className="absolute z-20"
           style={{ 
             left: '50%',
-            top: '50%',
+            top: '40%',
             transform: 'translate(-50%, -50%)'
           }}
         >
@@ -1238,7 +1238,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           className="absolute z-20"
           style={{ 
             left: '50%',
-            top: '50%',
+            top: '40%',
             transform: 'translate(-50%, -50%)'
           }}
         >
@@ -1265,7 +1265,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           className="absolute z-20"
           style={{ 
             left: '50%',
-            top: '50%',
+            top: '40%',
             transform: 'translate(-50%, -50%)'
           }}
         >
@@ -1286,7 +1286,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           className="absolute z-20 w-3/4 max-w-xl"
           style={{
             left: '50%',
-            top: '50%',
+            top: '40%',
             transform: 'translate(-50%, -50%)'
           }}
         >
@@ -1548,7 +1548,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute z-20"
                   style={{ 
                     left: `${passStartX}%`,
-                    top: '50%',
+                    top: '40%',
                     transform: 'translate(-50%, -50%)'
                   }}
                 >
@@ -1577,7 +1577,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute z-10"
                   style={{ 
                     left: `${qbSnapX}%`,
-                    top: '50%',
+                    top: '40%',
                     transform: 'translate(-50%, -50%)'
                   }}
                 >
@@ -1618,7 +1618,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     className="absolute z-10"
                     style={{ 
                       left: `${receiverStartX}%`,
-                      top: '50%',
+                      top: '40%',
                       transform: 'translate(-50%, -50%)'
                     }}
                   >
@@ -1708,7 +1708,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute z-20"
                   style={{
                     left: `${kickStartX}%`,
-                    top: '50%',
+                    top: '40%',
                     transform: 'translate(-50%, -50%)'
                   }}
                 >
@@ -1737,7 +1737,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${kickStartX}%`,
-                  top: '50%',
+                  top: '40%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -1781,7 +1781,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     className="absolute z-10"
                     style={{ 
                       left: `calc(${returnStartX}% - 10px)`,
-                      top: '50%',
+                      top: '40%',
                       transform: 'translate(-50%, -50%)'
                     }}
                   >
@@ -1866,7 +1866,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${baseStartX}%`,
-                  top: '50%',
+                  top: '40%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -1893,7 +1893,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
                   left: `${baseEndX}%`,
-                  top: '50%'
+                  top: '40%'
                 }}
               >
                 <div className="relative group">
@@ -1930,7 +1930,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
                   left: `${baseEndX}%`,
-                  top: '50%'
+                  top: '40%'
                 }}
               >
                 <div className="relative group">
@@ -1963,7 +1963,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 text-2xl"
                 style={{ 
                   left: `${baseEndX - 8}%`,
-                  top: '50%',
+                  top: '40%',
                   filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
                 }}
                 >
@@ -1973,7 +1973,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 text-2xl"
                 style={{ 
                   left: `${baseEndX + 8}%`,
-                  top: '50%',
+                  top: '40%',
                   filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
                 }}
                 >
@@ -2024,7 +2024,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute z-10"
                   style={{ 
                     left: `${baseStartX}%`,
-                    top: '50%',
+                    top: '40%',
                     transform: 'translate(-50%, -50%)'
                   }}
                 >
@@ -2075,7 +2075,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute z-20"
                   style={{ 
                     left: `${fumblePointX}%`,
-                    top: '50%',
+                    top: '40%',
                     transform: 'translate(-50%, -50%)'
                   }}
                 >
@@ -2105,7 +2105,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     className="absolute z-10"
                     style={{ 
                       left: `${recovererStartX}%`,
-                      top: '50%',
+                      top: '40%',
                       transform: 'translate(-50%, -50%)'
                     }}
                   >
@@ -2159,7 +2159,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-10"
                 style={{ 
                   left: `${passStartX}%`,
-                  top: '50%',
+                  top: '40%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -2188,7 +2188,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${passStartX}%`,
-                  top: '50%',
+                  top: '40%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -2216,7 +2216,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${fumblePointX}%`,
-                  top: '50%',
+                  top: '40%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -2246,7 +2246,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute z-10"
                   style={{ 
                     left: `${recovererStartX}%`,
-                    top: '50%',
+                    top: '40%',
                     transform: 'translate(-50%, -50%)'
                   }}
                 >
@@ -2303,7 +2303,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${baseStartX}%`,
-                  top: '50%',
+                  top: '40%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -2343,7 +2343,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-10"
                 style={{ 
                   left: `${baseEndX}%`,
-                  top: '50%',
+                  top: '40%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -2387,7 +2387,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
               style={{ 
                 left: `${baseEndX}%`,
-                top: '50%'
+                top: '40%'
               }}
             >
               <div className="relative group">
@@ -2439,12 +2439,12 @@ const FootballField: React.FC<FootballFieldProps> = ({
       <img 
         src="/assets/football_post.png" 
         alt="Goal Post" 
-        className="absolute pointer-events-none left-9 top-[85px] w-6 transform -translate-x-1/2"
+        className="absolute pointer-events-none left-8 top-[85px] w-6 transform -translate-x-1/2"
       />
       <img 
         src="/assets/football_post.png" 
         alt="Goal Post" 
-        className="absolute pointer-events-none right-4 top-[85px] w-6 transform -translate-x-1/2 scale-x-[-1]"
+        className="absolute pointer-events-none right-2 top-[85px] w-6 transform -translate-x-1/2 scale-x-[-1]"
 
       />
     </div>
