@@ -1103,15 +1103,18 @@ const FootballField: React.FC<FootballFieldProps> = ({
         );
       })()}
 
-      {/* Start position dot - positioned on a slightly scaled back plane */}
+    </div> {/* overlay - close before play animations */}
+    </div> {/* field container */}
+    </div> {/* court-platform - close to exclude animations from perspective */}
+
+    {/* Play animations (headshots, ball, arrows) - positioned outside court-platform to avoid 3D perspective */}
+    <div className="absolute inset-0 pointer-events-none z-[50]">
+      {/* Start position dot */}
       {playStartYard !== undefined && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
-        <div
-          className="football-arrow z-[1] pointer-events-none"
-          style={{ transform: `scale(${ARROW_PLANE_SCALE})`, transformOrigin: `50% ${arrowTopPercent}%` }}
-        >
+        <div className="absolute w-full h-full">
           <div
             className="absolute transform -translate-x-1/2 -translate-y-1/2"
-            style={{ left: `${arrowX(playStartYard)}%`, top: `${arrowTopPercent}%` }}
+            style={{ left: `${arrowX(playStartYard)}%`, top: '25%' }}
           >
             <div
               className="w-3 h-3 rounded-full border-2 border-white shadow-lg"
@@ -1123,17 +1126,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
       {/* Arrow showing play direction - arrowhead only */}
       {playStartYard !== undefined && playEndYard !== undefined && playStartYard !== playEndYard && (
-        <div
-          className="football-arrow pointer-events-none z-[1]"
-          style={{ transform: `scale(${ARROW_PLANE_SCALE})`, transformOrigin: `50% ${arrowTopPercent}%` }}
-        >
+        <div className="absolute w-full h-full">
           {/* Arc path for punts/kickoffs */}
           {playViz.animate === 'arc' && (
             <svg
               className="absolute left-0 top-0 w-full h-full"
             >
               <path
-                d={`M ${arrowX(playStartYard)}%,${arrowTopPercent}% Q ${arrowX(((playStartYard ?? 0) + (playEndYard ?? 0)) / 2)}%,13% ${arrowX(playEndYard)}%,${arrowTopPercent}%`}
+                d={`M ${arrowX(playStartYard)}%,50% Q ${arrowX(((playStartYard ?? 0) + (playEndYard ?? 0)) / 2)}%,13% ${arrowX(playEndYard)}%,50%`}
                 stroke={playViz.color}
                 strokeWidth={playViz.width}
                 fill="none"
@@ -1156,9 +1156,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute"
                 style={{
                   left: `${left}%`,
-                  top: `${arrowTopPercent}%`,
-                  width: `${width}%`,
-                  transform: 'translateY(-50%)'
+                  top: '25%',
+                  width: `${width}%`
                 }}
               >
                 <div
@@ -1435,14 +1434,14 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 </div>
               )}
               {/* Headshot with football starts at dot - scaled play plane */}
-              <div className="absolute inset-0 z-[5] pointer-events-none" style={{ transform: `scale(${PLAY_PLANE_SCALE})`, transformOrigin: `50% ${headshotTopPercent}%` }}>
+              <div className="absolute inset-0 z-[5] pointer-events-none" style={{ transform: 'none' }}>
                 <div
                   key={`rush-${getStartYard(lastPlay)}-${getEndYard(lastPlay)}-${isTouchdownPlay ? 'static' : loopCycle}`}
                   className="absolute z-10"
                   style={{ 
                     left: `${baseStartX}%`,
-                    top: `${headshotTopPercent}%`,
-                    transform: 'translate(-50%, -50%)'
+                    top: `17%`,
+                    transform: 'translate(-50%, 100%)'
                   }}
                 >
                   <div
@@ -1543,13 +1542,13 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 </div>
               )}
               {/* Scaled play plane for ball + QB + receiver */}
-              <div className="absolute inset-0 z-[5] pointer-events-none" style={{ transform: `scale(${PLAY_PLANE_SCALE})`, transformOrigin: `50% ${headshotTopPercent}%` }}>
+              <div className="absolute inset-0 z-[5] pointer-events-none" style={{ transform: 'none' }}>
                 {/* Football animation */}
                 <div
                   className="absolute z-20"
                   style={{ 
                     left: `${passStartX}%`,
-                    top: `${headshotTopPercent}%`,
+                    top: '50%',
                     transform: 'translate(-50%, -50%)'
                   }}
                 >
@@ -1578,7 +1577,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute z-10"
                   style={{ 
                     left: `${qbSnapX}%`,
-                    top: `${headshotTopPercent}%`,
+                    top: '50%',
                     transform: 'translate(-50%, -50%)'
                   }}
                 >
@@ -1619,7 +1618,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     className="absolute z-10"
                     style={{ 
                       left: `${receiverStartX}%`,
-                      top: `${headshotTopPercent}%`,
+                      top: '50%',
                       transform: 'translate(-50%, -50%)'
                     }}
                   >
@@ -1709,7 +1708,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute z-20"
                   style={{
                     left: `${kickStartX}%`,
-                    top: `${headshotTopPercent}%`,
+                    top: '50%',
                     transform: 'translate(-50%, -50%)'
                   }}
                 >
@@ -1738,7 +1737,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${kickStartX}%`,
-                  top: `${headshotTopPercent}%`,
+                  top: '50%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -1782,7 +1781,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     className="absolute z-10"
                     style={{ 
                       left: `calc(${returnStartX}% - 10px)`,
-                      top: `${headshotTopPercent}%`,
+                      top: '50%',
                       transform: 'translate(-50%, -50%)'
                     }}
                   >
@@ -1867,7 +1866,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${baseStartX}%`,
-                  top: `${headshotTopPercent}%`,
+                  top: '50%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -1894,7 +1893,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
                   left: `${baseEndX}%`,
-                  top: `${headshotTopPercent}%`
+                  top: '50%'
                 }}
               >
                 <div className="relative group">
@@ -1931,7 +1930,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
                 style={{ 
                   left: `${baseEndX}%`,
-                  top: `${headshotTopPercent}%`
+                  top: '50%'
                 }}
               >
                 <div className="relative group">
@@ -1964,7 +1963,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 text-2xl"
                 style={{ 
                   left: `${baseEndX - 8}%`,
-                  top: `${headshotTopPercent}%`,
+                  top: '50%',
                   filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
                 }}
                 >
@@ -1974,7 +1973,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 text-2xl"
                 style={{ 
                   left: `${baseEndX + 8}%`,
-                  top: `${headshotTopPercent}%`,
+                  top: '50%',
                   filter: `drop-shadow(0 0 10px ${playViz.glowColor})`
                 }}
                 >
@@ -2025,7 +2024,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute z-10"
                   style={{ 
                     left: `${baseStartX}%`,
-                    top: `${headshotTopPercent}%`,
+                    top: '50%',
                     transform: 'translate(-50%, -50%)'
                   }}
                 >
@@ -2076,7 +2075,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute z-20"
                   style={{ 
                     left: `${fumblePointX}%`,
-                    top: `${headshotTopPercent}%`,
+                    top: '50%',
                     transform: 'translate(-50%, -50%)'
                   }}
                 >
@@ -2106,7 +2105,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     className="absolute z-10"
                     style={{ 
                       left: `${recovererStartX}%`,
-                      top: `${headshotTopPercent}%`,
+                      top: '50%',
                       transform: 'translate(-50%, -50%)'
                     }}
                   >
@@ -2160,7 +2159,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-10"
                 style={{ 
                   left: `${passStartX}%`,
-                  top: `${headshotTopPercent}%`,
+                  top: '50%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -2189,7 +2188,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${passStartX}%`,
-                  top: `${headshotTopPercent}%`,
+                  top: '50%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -2217,7 +2216,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${fumblePointX}%`,
-                  top: `${headshotTopPercent}%`,
+                  top: '50%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -2247,7 +2246,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                   className="absolute z-10"
                   style={{ 
                     left: `${recovererStartX}%`,
-                    top: `${headshotTopPercent}%`,
+                    top: '50%',
                     transform: 'translate(-50%, -50%)'
                   }}
                 >
@@ -2304,7 +2303,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-20"
                 style={{ 
                   left: `${baseStartX}%`,
-                  top: `${headshotTopPercent}%`,
+                  top: '50%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -2344,7 +2343,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 className="absolute z-10"
                 style={{ 
                   left: `${baseEndX}%`,
-                  top: `${headshotTopPercent}%`,
+                  top: '50%',
                   transform: 'translate(-50%, -50%)'
                 }}
               >
@@ -2388,7 +2387,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
               className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
               style={{ 
                 left: `${baseEndX}%`,
-                top: `${headshotTopPercent}%`
+                top: '50%'
               }}
             >
               <div className="relative group">
@@ -2433,10 +2432,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
           </>
         );
       })()}
-
-    </div> {/* overlay */}
-    </div> {/* field container */}
-    </div> {/* court-platform */}
+    </div> {/* animations container */}
 
     {/* Goal posts - positioned completely outside court-platform to avoid 3D transform */}
     <div className="absolute inset-0 pointer-events-none z-[100]">
