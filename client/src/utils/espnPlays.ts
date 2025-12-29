@@ -166,8 +166,16 @@ export const normalizePlayFromItem = (
     yardage,
     start: normalizedStart,
     end: normalizedEnd,
-    athletesInvolved: normalizeParticipants(rawPlay, headshotLookup, getHeadshotUrl)
-  };
+    athletesInvolved: normalizeParticipants(rawPlay, headshotLookup, getHeadshotUrl),
+    // NBA-specific fields
+    coordinate: rawPlay?.coordinate,
+    period: rawPlay?.period,
+    shootingPlay: rawPlay?.shootingPlay,
+    scoringPlay: rawPlay?.scoringPlay,
+    pointsAttempted: rawPlay?.pointsAttempted,
+    possessionTeam: rawPlay?.possessionTeam,
+    participants: rawPlay?.participants
+  } as any;
 };
 
 export const fetchEspnPlays = async (
@@ -178,12 +186,6 @@ export const fetchEspnPlays = async (
   getHeadshotUrl?: (opts: { id?: string | number; headshot?: string | { href?: string } | null } | null | undefined) => string
 ): Promise<PlayNfl[]> => {
   const compId = competitionId || gameId;
-
-  // Do not hit plays API if game hasn't started (no pregame data there)
-  // Caller should gate on status.state === 'in' or status.type.completed
-  // but this defensive check prevents CSP/network noise when pregame
-  const now = Date.now();
-  // If caller can provide a known future start time, they should skip calling us until then.
 
   // Fetch plays from ESPN API
   const url = getPlaysUrl(league, gameId, compId);

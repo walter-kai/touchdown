@@ -1108,7 +1108,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
     </div> {/* court-platform - close to exclude animations from perspective */}
 
     {/* Play animations (headshots, ball, arrows) - positioned outside court-platform to avoid 3D perspective */}
-    <div className="absolute inset-0 pointer-events-none z-[50]">
+    <div className="absolute inset-0 pointer-events-none z-[150]">
       {/* Start position dot */}
       {playStartYard !== undefined && playViz.animate !== 'timeout' && playViz.animate !== 'two-minute-warning' && playViz.animate !== 'end-regulation' && (
         <div className="absolute w-full h-full">
@@ -1332,79 +1332,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
         const distancePx = Math.abs(signedDistancePx);
         const passDurationMs = Math.min(Math.max(distancePx * 5, 900), 4800); // clamp for fluid speed
         
-        // Render detailed diagnostics
-        const renderDiagnostics = () => {
-          if (!showGameInfo) return null;
-          
-          return (
-            <div className="bg-bg-darker/70 border border-neon-pink/20 rounded p-3 mb-4 text-xs font-mono">
-              <div className="text-neon-pink font-bold mb-2">🎯 Play Animation Diagnostics</div>
-              
-              {/* Raw play data */}
-              <div className="mb-3 pb-3 border-b border-neon-pink/10">
-                <div className="text-neon-cyan mb-1">Raw Play Yards:</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><span className="text-text-muted">Resolved Start:</span> <span className="text-neon-pink">{resolvedStartYard?.toFixed(1)}</span></div>
-                  <div><span className="text-text-muted">Resolved End:</span> <span className="text-neon-pink">{resolvedEndYard?.toFixed(1)}</span></div>
-                  <div><span className="text-text-muted">Pass Start:</span> <span className="text-neon-pink">{passStartYard?.toFixed(1)}</span></div>
-                  <div><span className="text-text-muted">Pass End:</span> <span className="text-neon-pink">{passEndYard?.toFixed(1)}</span></div>
-                </div>
-              </div>
-
-              {/* Line of scrimmage & first down */}
-              <div className="mb-3 pb-3 border-b border-neon-pink/10">
-                <div className="text-neon-cyan mb-1">Line of Scrimmage & First Down:</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><span className="text-text-muted">LOS Yard:</span> <span className="text-blue-400">{playStartYard?.toFixed(1)}</span></div>
-                  <div><span className="text-text-muted">LOS X:</span> <span className="text-blue-400">{arrowX(playStartYard)?.toFixed(2)}%</span></div>
-                  <div><span className="text-text-muted">1st Down Yard:</span> <span className="text-yellow-400">{(playStartYard !== undefined && situation?.downDistanceText ? clampYard(playStartYard + possessionDirection * (parseInt(situation.downDistanceText.match(/&\s*(\d+)/)?.[1] || '0') || 0)).toFixed(1) : 'N/A')}</span></div>
-                  <div><span className="text-text-muted">Arrow Top %:</span> <span className="text-text-muted">{arrowTopPercent}%</span></div>
-                </div>
-              </div>
-
-              {/* Headshot positions */}
-              <div className="mb-3 pb-3 border-b border-neon-pink/10">
-                <div className="text-neon-cyan mb-1">Headshot Positions (Player Locations):</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><span className="text-text-muted">Start X:</span> <span className="text-neon-cyan">{baseStartX?.toFixed(2)}%</span></div>
-                  <div><span className="text-text-muted">End X:</span> <span className="text-neon-cyan">{baseEndX?.toFixed(2)}%</span></div>
-                  <div><span className="text-text-muted">Headshot Top %:</span> <span className="text-neon-cyan">{headshotTopPercent}%</span></div>
-                  {playViz.animate === 'pass-complete' || playViz.animate === 'pass-incomplete' ? (
-                    <>
-                      <div><span className="text-text-muted">QB Start X:</span> <span className="text-yellow-300">{headshotX(Math.max(10, Math.min(110, passStartYard - possessionDirection * 3)))?.toFixed(2)}%</span></div>
-                      <div><span className="text-text-muted">Receiver Start X:</span> <span className="text-yellow-300">{headshotX(passStartYard + (Math.sign(distance) || 1) * 3)?.toFixed(2)}%</span></div>
-                    </>
-                  ) : null}
-                </div>
-              </div>
-
-              {/* Football trajectory */}
-              <div className="mb-3 pb-3 border-b border-neon-pink/10">
-                <div className="text-neon-cyan mb-1">Football Trajectory:</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><span className="text-text-muted">Start X:</span> <span className="text-green-400">{passStartX?.toFixed(2)}%</span></div>
-                  <div><span className="text-text-muted">End X:</span> <span className="text-green-400">{passEndX?.toFixed(2)}%</span></div>
-                  <div><span className="text-text-muted">Distance (%):</span> <span className="text-green-400">{distance?.toFixed(2)}%</span></div>
-                  <div><span className="text-text-muted">Distance (px):</span> <span className="text-green-400">{signedDistancePx?.toFixed(1)}px</span></div>
-                  <div><span className="text-text-muted">Duration:</span> <span className="text-green-400">{passDurationMs}ms</span></div>
-                  <div><span className="text-text-muted">Play Type:</span> <span className="text-green-400">{playViz.animate}</span></div>
-                </div>
-              </div>
-
-              {/* Athletes involved */}
-              <div>
-                <div className="text-neon-cyan mb-1">Athletes ({resolvedAthletes?.length ?? 0}):</div>
-                <div className="space-y-1">
-                  {resolvedAthletes?.slice(0, 3).map((athlete: any, idx: number) => (
-                    <div key={idx} className="text-text-muted text-[10px]">
-                      <span className="text-yellow-300">{athlete?.displayName}</span> - {athlete?.position} ({athlete?.team?.abbreviation})
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        };
         
         // Rush animation - headshot slides from dot with football (supports losses/backwards motion)
         if (playViz.animate === 'rush') {
@@ -1424,15 +1351,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
           
           return (
             <>
-              {showGameInfo && (
-                <div className="bg-bg-darker/70 border border-neon-pink/20 rounded p-3 mb-4 text-xs font-mono">
-                  <div className="text-neon-pink font-bold mb-2">🎯 Rush Play Diagnostics</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div><span className="text-text-muted">Distance Px:</span> <span className="text-green-400">{distanceWithOffset?.toFixed(1)}</span></div>
-                    <div><span className="text-text-muted">Has Gain:</span> <span className="text-yellow-300">{hasGain ? 'Yes' : 'No'}</span></div>
-                  </div>
-                </div>
-              )}
               {/* Headshot with football starts at dot - scaled play plane */}
               <div className="absolute inset-0 z-[5] pointer-events-none" style={{ transform: 'none' }}>
                 <div
@@ -1532,15 +1450,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
           
           return (
             <React.Fragment key={`pass-${playKey}-${isTouchdownPlay ? 'static' : loopCycle}`}>
-              {showGameInfo && (
-                <div className="bg-bg-darker/70 border border-neon-pink/20 rounded p-3 mb-4 text-xs font-mono">
-                  <div className="text-neon-pink font-bold mb-2">🎯 Pass Play Diagnostics</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div><span className="text-text-muted">Start X:</span> <span className="text-green-400">{passStartX?.toFixed(2)}%</span></div>
-                    <div><span className="text-text-muted">End X:</span> <span className="text-green-400">{passEndX?.toFixed(2)}%</span></div>
-                  </div>
-                </div>
-              )}
               {/* Scaled play plane for ball + QB + receiver */}
               <div className="absolute inset-0 z-[5] pointer-events-none" style={{ transform: 'none' }}>
                 {/* Football animation */}
@@ -2296,7 +2205,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
           return (
             <>
-              {renderDiagnostics()}
               {/* Rusher sliding in */}
               <div
                 key={`sack-rusher-${playKey}-${loopCycle}`}

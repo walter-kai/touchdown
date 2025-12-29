@@ -272,6 +272,58 @@
 	100% { transform: translate(var(--ex), var(--ey)) scale(1); opacity: 1; }
 }
 
+/* Jump shot animations - two-part: jump + release */
+@keyframes jump-shot-player {
+	0% { transform: translate(-20%, -20%) translateY(0) scale(1); }
+	25% { transform: translate(-20%, -20%) translateY(-20px) scale(1.05); }
+	30% { transform: translate(-20%, -20%) translateY(-20px) scale(1.05); }
+	100% { transform: translate(-20%, -20%) translateY(0) scale(1); }
+}
+
+@keyframes jump-shot-ball {
+	0% { 
+		transform: translate(0, 0) scale(0.96); 
+		opacity: 1; 
+	}
+	25% { 
+		transform: translate(0, -20px) scale(1); 
+		opacity: 1; 
+	}
+	30% { 
+		transform: translate(0, -20px) scale(1); 
+		opacity: 1; 
+	}
+	45% {
+		transform: translate(
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 200),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 200 - 65px)
+		) scale(1.05);
+		opacity: 1;
+	}
+	60% { 
+		transform: translate(
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100), 
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 - 45px)
+		) scale(.5); 
+		opacity: 1; 
+	}
+	100% { 
+		transform: translate(
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100), 
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100)
+		) scale(0.5); 
+		opacity: 1; 
+	}
+}
+
+.animate-jump-shot-player {
+	animation: jump-shot-player 2.8s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+}
+
+.animate-jump-shot-ball {
+	animation: jump-shot-ball 2.8s ease-in infinite;
+}
+
 @keyframes three-arc {
 	0% { transform: translate(var(--sx), var(--sy)) scale(0.94); opacity: 1; }
 	45% { transform: translate(var(--mx), calc(var(--my) - 6%)) scale(1.12); opacity: 1; }
@@ -485,7 +537,6 @@
 
 .play-ball-icon {
 	font-size: 26px;
-	filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 12px var(--play-color, #00FFE7));
 }
 
 /* Coordinate marker dot on court surface - matches football dot positioning */
@@ -525,44 +576,32 @@
 
 @keyframes free-throw-arc {
 	0% {
-		transform: translate(-50%, -50%) scale(1);
+		transform: translate(0, 0) scale(1);
 		opacity: 1;
 	}
-	30% {
-		transform: translate(
-			calc(-50% + (var(--basket-x) - 50%) * 0.5),
-			calc(-100% + (var(--basket-y) - 100%))
-		) scale(1.05);
+	20% {
+		transform: translate(0, -30px) scale(1.05);
 		opacity: 1;
 	}
-	45% {
+	50% {
 		transform: translate(
-			calc(
-				(var(--arc-direction, -1) * 120% + (var(--basket-x) + var(--arc-direction, -1) * 120%) * 0.25) * ((1 - var(--arc-direction, -1)) / 2) +
-				(var(--arc-direction, -1) * 20% + var(--basket-x)) * ((1 + var(--arc-direction, -1)) / 2)
-			),
-			calc(-100% + (var(--basket-y) - 200%))
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.5 / 100 * var(--basket-hit-adjust, 1.03)),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 * 0.5 / 100 * var(--basket-hit-adjust, 1.03) - 60px)
 		) scale(1.05);
 		opacity: 1;
 	}
 	80% {
 		transform: translate(
-			calc(
-				(var(--arc-direction, -1) * 110% + (var(--basket-x) + var(--arc-direction, -1) * 110%)) * ((1 - var(--arc-direction, -1)) / 2) +
-				(var(--arc-direction, -1) * 10% + var(--basket-x)) * ((1 + var(--arc-direction, -1)) / 2)
-			),
-			calc(-100% + (var(--basket-y) - 100%))
-		) scale(0.5);
-		opacity: 0.9;
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, .953)),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) - 30px)
+		) scale(0.4);
+		opacity: 0.8;
 	}
 	100% {
 		transform: translate(
-			calc(
-				(var(--arc-direction, -1) * 100% + (var(--basket-x) + var(--arc-direction, -1) * 100%)) * ((1 - var(--arc-direction, -1)) / 2) +
-				(var(--basket-x)) * ((1 + var(--arc-direction, -1)) / 2)
-			),
-			calc(-50% + (var(--basket-y) - 50%))
-		) scale(0.9);
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03)),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) - 10px)
+		) scale(0.48);
 		opacity: 0;
 	}
 }
@@ -571,77 +610,76 @@
 @keyframes miss-vibrate {
 	0% {
 		transform: translate(
-			calc(-50% + (var(--basket-x) - 50%)),
-			calc(-50% + (var(--basket-y) - 50%))
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03)),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03))
 		) scale(0.9);
 	}
 	10% {
 		transform: translate(
-			calc(-50% + (var(--basket-x) - 50%) + 5px),
-			calc(-50% + (var(--basket-y) - 50%) - 8px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) + 5px),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) - 8px)
 		) scale(1);
 	}
 	20% {
 		transform: translate(
-			calc(-50% + (var(--basket-x) - 50%) - 5px),
-			calc(-50% + (var(--basket-y) - 50%) + 3px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) - 5px),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + 3px)
 		) scale(0.95);
 	}
 	30% {
 		transform: translate(
-			calc(-50% + (var(--basket-x) - 50%) + 3px),
-			calc(-50% + (var(--basket-y) - 50%) - 3px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) + 3px),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) - 3px)
 		) scale(1.05);
 	}
 	40% {
 		transform: translate(
-			calc(-50% + (var(--basket-x) - 50%) - 3px),
-			calc(-50% + (var(--basket-y) - 50%) + 5px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) - 3px),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + 5px)
 		) scale(0.9);
 	}
 	50% {
 		transform: translate(
-			calc(-50% + (var(--basket-x) - 50%) + 2px),
-			calc(-50% + (var(--basket-y) - 50%) - 2px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) + 2px),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) - 2px)
 		) scale(1.02);
 	}
 	60% {
 		transform: translate(
-			calc(-50% + (var(--basket-x) - 50%) - 2px),
-			calc(-50% + (var(--basket-y) - 50%) + 2px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) - 2px),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + 2px)
 		) scale(0.92);
 	}
 	70% {
 		transform: translate(
-			calc(-50% + (var(--basket-x) - 50%) + 1px),
-			calc(-50% + (var(--basket-y) - 50%) + 10px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) + 1px),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + 10px)
 		) scale(0.85);
 	}
 	100% {
 		transform: translate(
-			calc(-50% + (var(--basket-x) - 50%)),
-			calc(-50% + (var(--basket-y) - 50%) + 20px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03)),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + 20px)
 		) scale(0.8);
 		opacity: 0.6;
 	}
 }
 
 /* Apply free throw animation: lift then arc */
-.play-ball-fixed.free-throw-animation {
-	animation: free-throw-arc 2s cubic-bezier(0.3, 0.01, 0.6, 1) forwards;
-	animation-iteration-count: infinite;
-}
+
 
 /* Apply miss animation after free throw */
-.play-ball-fixed.miss-animation {
+.play-ball-fixed.miss-animation,
+.miss-animation {
 	animation: free-throw-arc 2s cubic-bezier(0.25, 1.5, 0.75, 1) forwards,
 	           miss-vibrate 1.5s ease-out 2s forwards;
 	animation-iteration-count: infinite, infinite;
 }
 
 /* Made shot - hold at basket */
-.play-ball-fixed.scoring-animation.free-throw-animation {
-	animation: free-throw-arc 2s cubic-bezier(0.25, 1.5, 0.75, 1) forwards;
+.play-ball-fixed.scoring-animation.free-throw-animation,
+.scoring-animation.free-throw-animation {
+	animation: free-throw-arc 3s ease-in forwards;
 	animation-iteration-count: infinite;
 }
 
@@ -655,8 +693,7 @@
 	pointer-events: none;
 	z-index: 30;
 	transform: translate(-50%, -50%);
-	animation: none !important;
-	will-change: auto;
+	will-change: transform;
 }
 
 .athlete-headshot-fixed img {
