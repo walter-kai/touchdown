@@ -69,10 +69,10 @@ const derivePlayLabel = (typeText: string, play?: PlayNba | null): PlayLabel => 
 };
 
 // Simplified animation config (single style)
-const defaultPlayConfig = { ball: 'animate-jumper', trail: 'animate-jumper-trail', color: '#00ffe7' };
+const defaultPlayConfig = { ball: 'animate-jumper', trail: 'animate-jumper-trail', color: '#00ffe7', icon: '🏀' };
 
 // Foul-specific config (matches NFL penalty animation)
-const foulPlayConfig = { ball: 'animate-foul', trail: 'animate-foul', color: '#FFFF00' };
+const foulPlayConfig = { ball: 'animate-foul', trail: 'animate-foul', color: '#FFFF00', icon: '🚩' };
 
 // End of period/game config (adopting football's end-of-regulation styling)
 const endPeriodPlayConfig = { ball: 'animate-end-regulation', trail: 'animate-end-regulation', color: '#FF6B6B', glowColor: 'rgba(255, 107, 107, 0.8)' };
@@ -151,34 +151,69 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	// - If shootingPlay=true && scoringPlay=true: Ball animates from coordinate to basket (made shot)
 	// - If shootingPlay=true && scoringPlay=false: Ball animates but misses (miss animation)
 	// - If shootingPlay=false: Non-shooting play (no basket target, just position marker)
+
+	// Treat ESPN sentinel coords (±214748XXX) or missing values as invalid
+	const isValidCoordinate = (coord?: { x?: number; y?: number }) => {
+		if (!coord) return false;
+		const { x, y } = coord;
+		if (x === undefined || y === undefined) return false;
+		if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+		if (Math.abs(x) > 100000 || Math.abs(y) > 100000) return false;
+		return true;
+	};
 	
 	const courtWidthPx = courtRef.current?.offsetWidth || 1000;
 	const courtHeightPx = courtRef.current?.offsetHeight || (courtWidthPx * 0.5625); // 16:9 aspect ratio
 	
 	// Map ESPN coordinates to court percentages
 	const mapCoordinate = (coord?: { x?: number; y?: number }, playLabel?: PlayLabel, possessionIsHome?: boolean) => {
-		// Check for invalid/sentinel coordinates (ESPN uses large negative numbers like -214748340)
-		const isInvalidCoord = !coord || 
-			coord.x === undefined || 
-			coord.y === undefined || 
-			Math.abs(coord.x) > 100000 || 
-			Math.abs(coord.y) > 100000;
-		
-		if (isInvalidCoord) {
+		if (!isValidCoordinate(coord)) {
 			// For free throws, position at free throw line
 			if (playLabel === 'free-throw') {
-				// Free throw line is at 19 feet from baseline
-				// Baskets are on left (5%) and right (95%) sides
-				// For home team attacking right basket: X~85% (near right basket), Y=50% (center)
-				// For away team attacking left basket: X~15% (near left basket), Y=50% (center)
 				return {
 					xPercent: possessionIsHome ? 77 : 23,
-					yPercent: 50,
+					yPercent: possessionIsHome ? 35 : 65, // Near attacking basket
 					hasCoordinates: false,
 					isFreeThrow: true
 				};
 			}
-			// Default to center court if no coordinates
+			// For 3-pointers without coords, position at 3-point arc
+			if (playLabel === 'three') {
+				return {
+					xPercent: possessionIsHome ? 70 : 30,
+					yPercent: possessionIsHome ? 25 : 75, // Behind arc near attacking basket
+					hasCoordinates: false,
+					isFreeThrow: false
+				};
+			}
+			// For layups/dunks, position near basket
+			if (playLabel === 'layup' || playLabel === 'dunk' || playLabel === 'alley-oop' || playLabel === 'tip-in') {
+				return {
+					xPercent: possessionIsHome ? 82 : 18, // Near basket but not at edge
+					yPercent: possessionIsHome ? 18 : 82, // Close to attacking basket
+					hasCoordinates: false,
+					isFreeThrow: false
+				};
+			}
+			// For jump shots/hooks, position at mid-range
+			if (playLabel === 'jumper' || playLabel === 'hook') {
+				return {
+					xPercent: possessionIsHome ? 65 : 35,
+					yPercent: possessionIsHome ? 30 : 70, // Mid-range attacking side
+					hasCoordinates: false,
+					isFreeThrow: false
+				};
+			}
+			// For defensive plays (block, steal, rebound), position near defensive basket
+			if (playLabel === 'block' || playLabel === 'steal' || playLabel === 'rebound') {
+				return {
+					xPercent: possessionIsHome ? 20 : 80,
+					yPercent: possessionIsHome ? 75 : 25, // Near defensive basket
+					hasCoordinates: false,
+					isFreeThrow: false
+				};
+			}
+			// Default to mid-court top of key (not dead center)
 			return { xPercent: 50, yPercent: 50, hasCoordinates: false, isFreeThrow: false };
 		}
 		
@@ -201,7 +236,13 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		};
 	};
 
-	const shotLocation = mapCoordinate(lastPlay.coordinate, label, possessionIsHome);
+	const resolvedCoordinate = React.useMemo(() => {
+		if (isValidCoordinate((lastPlay as any)?.coordinate)) return (lastPlay as any).coordinate;
+		const fallback = playLog.find((p) => isValidCoordinate((p as any)?.coordinate));
+		return (fallback as any)?.coordinate;
+	}, [lastPlay, playLog]);
+
+	const shotLocation = mapCoordinate(resolvedCoordinate, label, possessionIsHome);
 	
 	// Calculate basket position for free throw animation
 	const basketPosition = {
@@ -307,40 +348,40 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 			}}>
 				{/* Ball animation at shot location - Enhanced with shooting and scoring play detection */}
 			{label !== 'end-period' && (
-				<div 
-					key={`ball-${cycle}`} 
-					className={`play-ball-fixed ${config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
-					style={{
-						left: `${shotLocation.xPercent}%`,
-						top: `${shotLocation.yPercent}%`,
-						['--play-color' as any]: config.color,
-						['--is-shooting' as any]: lastPlay.shootingPlay ? '1' : '0',
-						['--is-scoring' as any]: lastPlay.scoringPlay ? '1' : '0',
-						['--is-miss' as any]: isMiss ? '1' : '0',
-						['--basket-x' as any]: `${basketPosition.xPercent}%`,
-						['--basket-y' as any]: `${basketPosition.yPercent}%`,
-						['--lift-offset' as any]: '-60px',
-						['--arc-direction' as any]: possessionIsHome ? '1' : '-1',
-						opacity: shotLocation.hasCoordinates ? 1 : 0.5,
-					}}
-					data-shooting={lastPlay.shootingPlay}
-					data-scoring={lastPlay.scoringPlay}
-					data-free-throw={shotLocation.isFreeThrow}
-					data-miss={isMiss}
-				/>
-			)}
-
-			{/* Coordinate marker dot on the court surface */}
-			{label !== 'end-period' && (
-				<div
-					key={`coord-dot-${cycle}`}
-					className="coordinate-marker-dot"
-					style={{
-						left: `${shotLocation.xPercent}%`,
-						top: `${shotLocation.yPercent}%`,
-						['--marker-color' as any]: getAthleteTeamColor((primaryAthlete?.team as any)?.id) || teamColor,
-					}}
-				/>
+				<>
+					<div 
+						key={`ball-${cycle}`} 
+						className={`play-ball-fixed ${config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
+						style={{
+							left: `${shotLocation.xPercent}%`,
+							top: `${shotLocation.yPercent}%`,
+							['--play-color' as any]: config.color,
+							['--is-shooting' as any]: lastPlay.shootingPlay ? '1' : '0',
+							['--is-scoring' as any]: lastPlay.scoringPlay ? '1' : '0',
+							['--is-miss' as any]: isMiss ? '1' : '0',
+							['--basket-x' as any]: `${basketPosition.xPercent}%`,
+							['--basket-y' as any]: `${basketPosition.yPercent}%`,
+							['--lift-offset' as any]: '-60px',
+							['--arc-direction' as any]: possessionIsHome ? '1' : '-1',
+							opacity: shotLocation.hasCoordinates ? 1 : 0.5,
+						}}
+						data-shooting={lastPlay.shootingPlay}
+						data-scoring={lastPlay.scoringPlay}
+						data-free-throw={shotLocation.isFreeThrow}
+						data-miss={isMiss}
+					>
+						<span className="play-ball-icon">{config.icon}</span>
+					</div>
+					<div
+						key={`coord-dot-${cycle}`}
+						className="coordinate-marker-dot"
+						style={{
+							left: `${shotLocation.xPercent}%`,
+							top: `${shotLocation.yPercent}%`,
+							['--marker-color' as any]: getAthleteTeamColor((primaryAthlete?.team as any)?.id) || teamColor,
+						}}
+					/>
+				</>
 			)}
 			{/* Primary athlete headshot - hidden for end period */}
 			{label !== 'end-period' && primaryAthlete && primaryHeadshot && (

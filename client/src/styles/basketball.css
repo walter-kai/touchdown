@@ -431,7 +431,7 @@
 	font-family: 'Courier New', monospace;
 }
 
-/* Fixed position ball (using ESPN coordinates) */
+/* Fixed position ball (using ESPN coordinates) - matches football approach */
 .play-ball-fixed {
 	position: absolute;
 	width: 32px;
@@ -442,24 +442,25 @@
 	pointer-events: none;
 	z-index: 20;
 	transform: translate(-50%, -50%);
+	will-change: transform, opacity;
 }
 
 .play-ball-icon {
-	font-size: 24px;
-	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+	font-size: 26px;
+	filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 12px var(--play-color, #00FFE7));
 }
 
-/* Coordinate marker dot on court surface */
+/* Coordinate marker dot on court surface - matches football dot positioning */
 .coordinate-marker-dot {
 	position: absolute;
-	width: 16px;
-	height: 16px;
+	width: 14px;
+	height: 14px;
 	border-radius: 50%;
 	background: radial-gradient(circle at center, var(--marker-color, #00FFE7), transparent 70%);
 	border: 2px solid var(--marker-color, #00FFE7);
-	box-shadow: 0 0 20px var(--marker-color, #00FFE7),
-	            0 0 40px var(--marker-color, #00FFE7),
-	            inset 0 0 10px var(--marker-color, #00FFE7);
+	box-shadow: 0 0 16px var(--marker-color, #00FFE7),
+	            0 0 32px var(--marker-color, #00FFE7),
+	            inset 0 0 8px var(--marker-color, #00FFE7);
 	pointer-events: none;
 	z-index: 15;
 	transform: translate(-50%, -50%);
@@ -606,7 +607,7 @@
 	animation-iteration-count: infinite;
 }
 
-/* Fixed position athlete headshots */
+/* Fixed position athlete headshots - matches football approach */
 .athlete-headshot-fixed {
 	position: absolute;
 	display: flex;
@@ -616,14 +617,17 @@
 	pointer-events: none;
 	z-index: 30;
 	transform: translate(-50%, -50%);
-	animation: none;
+	animation: none !important;
+	will-change: auto;
 }
 
 .athlete-headshot-fixed img {
-	width: 60px;
-	height: 60px;
+	width: 64px;
+	height: 64px;
 	border-radius: 50%;
 	border: 3px solid var(--athlete-color, #00FFE7);
+	box-shadow: 0 0 20px var(--athlete-color, #00FFE7),
+	            0 4px 12px rgba(0, 0, 0, 0.6);
 	object-fit: cover;
 	background: rgba(0, 0, 0, 0.3);
 	transition: transform 0.3s ease;
@@ -633,33 +637,20 @@
 	transform: scale(1.1);
 }
 
+/* Remove athlete name labels to match football simplicity */
 .athlete-headshot-fixed .athlete-name {
-	font-size: 12px;
-	font-weight: 700;
-	color: white;
-	text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8),
-	             0 0 12px var(--athlete-color, #00FFE7);
-	white-space: nowrap;
-	background: rgba(0, 0, 0, 0.6);
-	padding: 4px 10px;
-	border-radius: 12px;
-	backdrop-filter: blur(4px);
+	display: none;
 }
 
 .athlete-headshot-fixed.secondary-athlete {
 	transform: translate(-50%, -50%);
-	opacity: 1;
+	opacity: 0.9;
 }
 
 .athlete-headshot-fixed.secondary-athlete img {
-	width: 50px;
-	height: 50px;
-	border-width: 2px;
-}
-
-.athlete-headshot-fixed.secondary-athlete .athlete-name {
-	font-size: 11px;
-	padding: 3px 8px;
+	width: 52px;
+	height: 52px;
+	border-width: 2.5px;
 }
 
 @keyframes jump {
