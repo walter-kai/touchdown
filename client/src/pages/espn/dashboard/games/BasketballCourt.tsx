@@ -59,7 +59,7 @@ const derivePlayLabel = (typeText: string, play?: PlayNba | null): PlayLabel => 
 	if (/foul/.test(typeText)) return 'foul';
 	if (/timeout|time out/.test(typeText)) return 'timeout';
 	if (/fast break|transition/.test(typeText)) return 'fast-break';
-	if (/end of|end period|end quarter/.test(typeText)) return 'end-period';
+	if (/end of|end period|end quarter|end game|end half/.test(typeText)) return 'end-period';
 	if (/start of|jump ball/.test(typeText)) return 'start-period';
 	const points = Number(play?.scoreValue || 0);
 	if (points >= 3) return 'three';
@@ -69,10 +69,13 @@ const derivePlayLabel = (typeText: string, play?: PlayNba | null): PlayLabel => 
 };
 
 // Simplified animation config (single style)
-const defaultPlayConfig = { ball: 'animate-jumper', trail: 'animate-jumper-trail', color: '#00ffe7', icon: '🏀' };
+const defaultPlayConfig = { ball: 'animate-jumper', trail: 'animate-jumper-trail', color: '#00ffe7' };
 
 // Foul-specific config (matches NFL penalty animation)
-const foulPlayConfig = { ball: 'animate-foul', trail: 'animate-foul', color: '#FFFF00', icon: '🚩' };
+const foulPlayConfig = { ball: 'animate-foul', trail: 'animate-foul', color: '#FFFF00' };
+
+// End of period/game config (adopting football's end-of-regulation styling)
+const endPeriodPlayConfig = { ball: 'animate-end-regulation', trail: 'animate-end-regulation', color: '#FF6B6B', glowColor: 'rgba(255, 107, 107, 0.8)' };
 
 const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	homeTeam,
@@ -133,8 +136,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		setCycle((c) => c + 1);
 	}, [lastPlay?.id, lastPlay?.text, typeText, possessionId]);
 
-	// Use foul config for personal fouls, default for everything else
-	const config = label === 'foul' ? foulPlayConfig : defaultPlayConfig;
+	// Use foul config for personal fouls, end period config for end periods, default for everything else
+	const config = label === 'foul' ? foulPlayConfig : label === 'end-period' ? endPeriodPlayConfig : defaultPlayConfig;
 
 	// ESPN NBA court coordinates: X ranges from -250 to 250 (500 units), Y ranges from 0 to 470 (470 units)
 	// Court dimensions: 94 feet long × 50 feet wide
@@ -303,6 +306,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				height: courtRef.current?.offsetHeight || 'auto'
 			}}>
 				{/* Ball animation at shot location - Enhanced with shooting and scoring play detection */}
+			{label !== 'end-period' && (
 				<div 
 					key={`ball-${cycle}`} 
 					className={`play-ball-fixed ${config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
@@ -323,11 +327,11 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					data-scoring={lastPlay.scoringPlay}
 					data-free-throw={shotLocation.isFreeThrow}
 					data-miss={isMiss}
-				>
-					<span className="play-ball-icon">{config.icon}</span>
-				</div>
+				/>
+			)}
 
-				{/* Coordinate marker dot on the court surface */}
+			{/* Coordinate marker dot on the court surface */}
+			{label !== 'end-period' && (
 				<div
 					key={`coord-dot-${cycle}`}
 					className="coordinate-marker-dot"
@@ -337,9 +341,9 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						['--marker-color' as any]: getAthleteTeamColor((primaryAthlete?.team as any)?.id) || teamColor,
 					}}
 				/>
-
-				{/* Primary athlete headshot */}
-				{primaryAthlete && primaryHeadshot && (
+			)}
+			{/* Primary athlete headshot - hidden for end period */}
+			{label !== 'end-period' && primaryAthlete && primaryHeadshot && (
 					<div
 						key={`primary-${cycle}`}
 						className={`athlete-headshot-fixed primary-athlete ${shotLocation.isFreeThrow ? 'free-throw-headshot' : ''}`}
@@ -360,8 +364,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					</div>
 				)}
 
-				{/* Secondary athlete headshot (assister) */}
-				{secondaryAthlete && secondaryHeadshot && (
+			{/* Secondary athlete headshot (assister) - hidden for end period */}
+			{label !== 'end-period' && secondaryAthlete && secondaryHeadshot && (
 					<div
 						key={`secondary-${cycle}`}
 						className="athlete-headshot-fixed secondary-athlete"
@@ -380,30 +384,34 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					</div>
 				)}
 				
-				{/* Foul gesture emojis (like penalty refs in football) */}
-				{label === 'foul' && (
-					<>
+				{/* End of period/game - show ad-style banner at center */}
+				{label === 'end-period' && (
+					<div
+						className="absolute z-20 w-3/4 max-w-xl"
+						style={{
+							left: '50%',
+							top: '40%',
+							transform: 'translate(-50%, -50%)'
+						}}
+					>
 						<div
-							className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20 text-2xl"
-							style={{ 
-								left: `${Math.max(5, shotLocation.xPercent - 8)}%`,
-								top: `${shotLocation.yPercent}%`,
-								filter: `drop-shadow(0 0 10px ${config.color})`
+							className="relative overflow-hidden rounded-xl shadow-2xl border-2"
+							style={{
+								background: 'linear-gradient(135deg, rgba(0,255,231,0.15), rgba(250,175,232,0.15))',
+								borderColor: `${config.color}70`,
+								boxShadow: `0 0 30px ${config.glowColor}`
 							}}
 						>
-							🙅🏻‍♂️
+							<div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.08)_8px,transparent_8px,transparent_16px)]" />
+							<div className="px-6 py-4 flex items-center justify-between gap-4">
+								<span className="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">Presented by</span>
+								<span className="text-2xl font-extrabold" style={{ color: config.color }}>
+									{lastPlay?.text || 'End of period'}
+								</span>
+								<span className="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">Touchdown Live</span>
+							</div>
 						</div>
-						<div
-							className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20 text-2xl"
-							style={{ 
-								left: `${Math.min(95, shotLocation.xPercent + 8)}%`,
-								top: `${shotLocation.yPercent}%`,
-								filter: `drop-shadow(0 0 10px ${config.color})`
-							}}
-						>
-							🙅🏾‍♂️
-						</div>
-					</>
+					</div>
 				)}
 			</div>
 
