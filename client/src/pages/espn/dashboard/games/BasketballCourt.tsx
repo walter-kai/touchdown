@@ -316,6 +316,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						['--basket-x' as any]: `${basketPosition.xPercent}%`,
 						['--basket-y' as any]: `${basketPosition.yPercent}%`,
 						['--lift-offset' as any]: '-60px',
+						['--arc-direction' as any]: possessionIsHome ? '1' : '-1',
 						opacity: shotLocation.hasCoordinates ? 1 : 0.5,
 					}}
 					data-shooting={lastPlay.shootingPlay}

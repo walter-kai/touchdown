@@ -485,7 +485,7 @@
 
 
 @keyframes free-throw-arc {
-		0% {
+	0% {
 		transform: translate(-50%, -50%) scale(1);
 		opacity: 1;
 	}
@@ -498,21 +498,30 @@
 	}
 	45% {
 		transform: translate(
-			calc(-120% + (var(--basket-x) - 120%) * 0.25),
+			calc(
+				(var(--arc-direction, -1) * 120% + (var(--basket-x) + var(--arc-direction, -1) * 120%) * 0.25) * ((1 - var(--arc-direction, -1)) / 2) +
+				(var(--arc-direction, -1) * 20% + var(--basket-x)) * ((1 + var(--arc-direction, -1)) / 2)
+			),
 			calc(-100% + (var(--basket-y) - 200%))
 		) scale(1.05);
 		opacity: 1;
 	}
 	80% {
 		transform: translate(
-			calc(-100% + (var(--basket-x) - 110%)),
+			calc(
+				(var(--arc-direction, -1) * 110% + (var(--basket-x) + var(--arc-direction, -1) * 110%)) * ((1 - var(--arc-direction, -1)) / 2) +
+				(var(--arc-direction, -1) * 10% + var(--basket-x)) * ((1 + var(--arc-direction, -1)) / 2)
+			),
 			calc(-100% + (var(--basket-y) - 100%))
 		) scale(0.5);
 		opacity: 0.9;
 	}
 	100% {
 		transform: translate(
-			calc(-100% + (var(--basket-x) - 100%)),
+			calc(
+				(var(--arc-direction, -1) * 100% + (var(--basket-x) + var(--arc-direction, -1) * 100%)) * ((1 - var(--arc-direction, -1)) / 2) +
+				(var(--basket-x)) * ((1 + var(--arc-direction, -1)) / 2)
+			),
 			calc(-50% + (var(--basket-y) - 50%))
 		) scale(0.9);
 		opacity: 0;
