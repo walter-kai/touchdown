@@ -436,35 +436,165 @@
 	position: absolute;
 	width: 32px;
 	height: 32px;
-	border-radius: 50%;
-	background: radial-gradient(circle at 35% 35%, var(--play-color, #00FFE7), rgba(0, 0, 0, 0.4));
-	box-shadow: 0 0 20px var(--play-color, #00FFE7),
-	            0 4px 12px rgba(0, 0, 0, 0.5);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	pointer-events: none;
 	z-index: 20;
 	transform: translate(-50%, -50%);
-	animation: ball-pulse 2s ease-in-out infinite;
 }
 
 .play-ball-icon {
-	font-size: 18px;
-	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+	font-size: 24px;
+	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
-@keyframes ball-pulse {
+/* Coordinate marker dot on court surface */
+.coordinate-marker-dot {
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: radial-gradient(circle at center, var(--marker-color, #00FFE7), transparent 70%);
+	border: 2px solid var(--marker-color, #00FFE7);
+	box-shadow: 0 0 20px var(--marker-color, #00FFE7),
+	            0 0 40px var(--marker-color, #00FFE7),
+	            inset 0 0 10px var(--marker-color, #00FFE7);
+	pointer-events: none;
+	z-index: 15;
+	transform: translate(-50%, -50%);
+	animation: marker-pulse 2s ease-in-out infinite;
+}
+
+@keyframes marker-pulse {
 	0%, 100% {
 		transform: translate(-50%, -50%) scale(1);
-		box-shadow: 0 0 20px var(--play-color, #00FFE7),
-		            0 4px 12px rgba(0, 0, 0, 0.5);
+		opacity: 0.8;
 	}
 	50% {
-		transform: translate(-50%, -50%) scale(1.15);
-		box-shadow: 0 0 30px var(--play-color, #00FFE7),
-		            0 6px 18px rgba(0, 0, 0, 0.6);
+		transform: translate(-50%, -50%) scale(1.2);
+		opacity: 1;
 	}
+}
+
+/* Free throw animation - lift then arc */
+@keyframes free-throw-lift-ball {
+	0% { transform: translate(-50%, -50%) scale(1); }
+	100% { transform: translate(-50%, calc(-50% + var(--lift-offset, -60px))) scale(1); }
+}
+
+
+@keyframes free-throw-arc {
+		0% {
+		transform: translate(-50%, -50%) scale(1);
+		opacity: 1;
+	}
+	30% {
+		transform: translate(
+			calc(-50% + (var(--basket-x) - 50%) * 0.5),
+			calc(-100% + (var(--basket-y) - 100%))
+		) scale(1.05);
+		opacity: 1;
+	}
+	45% {
+		transform: translate(
+			calc(-120% + (var(--basket-x) - 120%) * 0.25),
+			calc(-100% + (var(--basket-y) - 200%))
+		) scale(1.05);
+		opacity: 1;
+	}
+	80% {
+		transform: translate(
+			calc(-100% + (var(--basket-x) - 110%)),
+			calc(-100% + (var(--basket-y) - 100%))
+		) scale(0.5);
+		opacity: 0.9;
+	}
+	100% {
+		transform: translate(
+			calc(-100% + (var(--basket-x) - 100%)),
+			calc(-50% + (var(--basket-y) - 50%))
+		) scale(0.9);
+		opacity: 0;
+	}
+}
+
+/* Miss animation - vibrate/bounce when shot misses */
+@keyframes miss-vibrate {
+	0% {
+		transform: translate(
+			calc(-50% + (var(--basket-x) - 50%)),
+			calc(-50% + (var(--basket-y) - 50%))
+		) scale(0.9);
+	}
+	10% {
+		transform: translate(
+			calc(-50% + (var(--basket-x) - 50%) + 5px),
+			calc(-50% + (var(--basket-y) - 50%) - 8px)
+		) scale(1);
+	}
+	20% {
+		transform: translate(
+			calc(-50% + (var(--basket-x) - 50%) - 5px),
+			calc(-50% + (var(--basket-y) - 50%) + 3px)
+		) scale(0.95);
+	}
+	30% {
+		transform: translate(
+			calc(-50% + (var(--basket-x) - 50%) + 3px),
+			calc(-50% + (var(--basket-y) - 50%) - 3px)
+		) scale(1.05);
+	}
+	40% {
+		transform: translate(
+			calc(-50% + (var(--basket-x) - 50%) - 3px),
+			calc(-50% + (var(--basket-y) - 50%) + 5px)
+		) scale(0.9);
+	}
+	50% {
+		transform: translate(
+			calc(-50% + (var(--basket-x) - 50%) + 2px),
+			calc(-50% + (var(--basket-y) - 50%) - 2px)
+		) scale(1.02);
+	}
+	60% {
+		transform: translate(
+			calc(-50% + (var(--basket-x) - 50%) - 2px),
+			calc(-50% + (var(--basket-y) - 50%) + 2px)
+		) scale(0.92);
+	}
+	70% {
+		transform: translate(
+			calc(-50% + (var(--basket-x) - 50%) + 1px),
+			calc(-50% + (var(--basket-y) - 50%) + 10px)
+		) scale(0.85);
+	}
+	100% {
+		transform: translate(
+			calc(-50% + (var(--basket-x) - 50%)),
+			calc(-50% + (var(--basket-y) - 50%) + 20px)
+		) scale(0.8);
+		opacity: 0.6;
+	}
+}
+
+/* Apply free throw animation: lift then arc */
+.play-ball-fixed.free-throw-animation {
+	animation: free-throw-arc 2s cubic-bezier(0.3, 0.01, 0.6, 1) forwards;
+	animation-iteration-count: infinite;
+}
+
+/* Apply miss animation after free throw */
+.play-ball-fixed.miss-animation {
+	animation: free-throw-arc 2s cubic-bezier(0.25, 1.5, 0.75, 1) forwards,
+	           miss-vibrate 1.5s ease-out 2s forwards;
+	animation-iteration-count: infinite, infinite;
+}
+
+/* Made shot - hold at basket */
+.play-ball-fixed.scoring-animation.free-throw-animation {
+	animation: free-throw-arc 2s cubic-bezier(0.25, 1.5, 0.75, 1) forwards;
+	animation-iteration-count: infinite;
 }
 
 /* Fixed position athlete headshots */
@@ -476,8 +606,8 @@
 	gap: 6px;
 	pointer-events: none;
 	z-index: 30;
-	transform: translate(-50%, -120px);
-	animation: fade-in-slide-fixed 0.6s ease-out forwards;
+	transform: translate(-50%, -50%);
+	animation: none;
 }
 
 .athlete-headshot-fixed img {
@@ -510,8 +640,8 @@
 }
 
 .athlete-headshot-fixed.secondary-athlete {
-	transform: translate(-50%, -140px);
-	opacity: 0.9;
+	transform: translate(-50%, -50%);
+	opacity: 1;
 }
 
 .athlete-headshot-fixed.secondary-athlete img {
@@ -525,14 +655,18 @@
 	padding: 3px 8px;
 }
 
-@keyframes fade-in-slide-fixed {
-	from {
+@keyframes jump {
+	0% {
 		opacity: 0;
-		transform: translate(-50%, -80px);
+		transform: translate(-50%, -50px) scale(0.95);
 	}
-	to {
+	60% {
 		opacity: 1;
-		transform: translate(-50%, -120px);
+		transform: translate(-50%, -90px) scale(1.02);
+	}
+	100% {
+		opacity: 1;
+		transform: translate(-50%, -80px) scale(1);
 	}
 }
 
@@ -544,8 +678,9 @@
 	align-items: center;
 	gap: 6px;
 	pointer-events: none;
-	z-index: 30;
-	animation: fade-in-slide 0.6s ease-out forwards;
+	z-index: 100;
+	transform: translate(-50%, -50%);
+	animation: none;
 }
 
 .athlete-headshot img {
@@ -580,17 +715,18 @@
 .primary-athlete {
 	left: var(--sx);
 	top: var(--sy);
-	transform: translate(-50%, -140px);
+	/* transform: translate(-50%, -140px); */
 }
 
 .secondary-athlete {
 	left: var(--ex);
 	top: var(--ey);
-	transform: translate(-50%, -140px);
+	/* transform: translate(-50%, -140px); */
 
+	z-index: 1;
 }
 
-.secondary-athlete img {
+ .primary-athlete img {
 	width: 50px;
 	height: 50px;
 	border-width: 2px;
@@ -601,14 +737,4 @@
 	padding: 3px 8px;
 }
 
-@keyframes fade-in-slide {
-	from {
-		opacity: 0;
-		transform: translate(-50%, -80px);
-	}
-	to {
-		opacity: 1;
-		transform: translate(-50%, -120px);
-	}
-}
 

@@ -124,6 +124,9 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		? possessionId === homeTeamId ? 'home' : possessionId === awayTeamId ? 'away' : 'neutral'
 		: 'neutral';
 
+	// Determine possession before mapping coordinates (needed for free throw positioning)
+	const possessionIsHome = possessionId === homeTeamId;
+
 	const [cycle, setCycle] = React.useState(0);
 
 	React.useEffect(() => {
@@ -150,15 +153,35 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	const courtHeightPx = courtRef.current?.offsetHeight || (courtWidthPx * 0.5625); // 16:9 aspect ratio
 	
 	// Map ESPN coordinates to court percentages
-	const mapCoordinate = (coord?: { x?: number; y?: number }) => {
-		if (!coord || coord.x === undefined || coord.y === undefined) {
+	const mapCoordinate = (coord?: { x?: number; y?: number }, playLabel?: PlayLabel, possessionIsHome?: boolean) => {
+		// Check for invalid/sentinel coordinates (ESPN uses large negative numbers like -214748340)
+		const isInvalidCoord = !coord || 
+			coord.x === undefined || 
+			coord.y === undefined || 
+			Math.abs(coord.x) > 100000 || 
+			Math.abs(coord.y) > 100000;
+		
+		if (isInvalidCoord) {
+			// For free throws, position at free throw line
+			if (playLabel === 'free-throw') {
+				// Free throw line is at 19 feet from baseline
+				// Baskets are on left (5%) and right (95%) sides
+				// For home team attacking right basket: X~85% (near right basket), Y=50% (center)
+				// For away team attacking left basket: X~15% (near left basket), Y=50% (center)
+				return {
+					xPercent: possessionIsHome ? 77 : 23,
+					yPercent: 50,
+					hasCoordinates: false,
+					isFreeThrow: true
+				};
+			}
 			// Default to center court if no coordinates
-			return { xPercent: 50, yPercent: 50, hasCoordinates: false };
+			return { xPercent: 50, yPercent: 50, hasCoordinates: false, isFreeThrow: false };
 		}
 		
 		// ESPN court coordinates
-		const espnX = coord.x;
-		const espnY = coord.y;
+		const espnX = coord.x!;
+		const espnY = coord.y!;
 		
 		// Map X: -250 to 250 → 0% to 100% (left to right)
 		const xPercent = ((espnX + 250) / 500) * 100;
@@ -170,15 +193,25 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		return {
 			xPercent: Math.max(0, Math.min(100, xPercent)),
 			yPercent: Math.max(0, Math.min(100, yPercent)),
-			hasCoordinates: true
+			hasCoordinates: true,
+			isFreeThrow: playLabel === 'free-throw'
 		};
 	};
 
-	const shotLocation = mapCoordinate(lastPlay.coordinate);
+	const shotLocation = mapCoordinate(lastPlay.coordinate, label, possessionIsHome);
+	
+	// Calculate basket position for free throw animation
+	const basketPosition = {
+		// Home team attacks right basket, away team attacks left basket
+		xPercent: possessionIsHome ? 95 : 5,
+		yPercent: 50  // Baskets are centered vertically on the sides
+	};
+	
+	// Determine if this is a miss (shooting play but not scoring)
+	const isMiss = lastPlay.shootingPlay && !lastPlay.scoringPlay;
 	
 	// Determine shot side based on Y coordinate and possession
 	// Home team attacks towards Y=470 (bottom), away team attacks towards Y=0 (top)
-	const possessionIsHome = possessionId === homeTeamId;
 	const isHomeBasket = lastPlay.coordinate?.y ? lastPlay.coordinate.y > 235 : false; // Past half court
 	const isAwayBasket = lastPlay.coordinate?.y ? lastPlay.coordinate.y < 235 : false;
 	
@@ -262,31 +295,53 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				</div> {/* basketball-court */}
 			</div> {/* court-platform */}
 
-			{/* Ball animation and player headshots - positioned outside court-platform to avoid clipping and 3D transform */}
-			<div className="absolute inset-0 pointer-events-none z-[50] top-[160px]">
+			{/* Ball animation and player headshots - positioned to match court platform */}
+			<div className="absolute pointer-events-none z-[50]" style={{
+				left: '14px',
+				right: '14px',
+				top: '14px',
+				height: courtRef.current?.offsetHeight || 'auto'
+			}}>
 				{/* Ball animation at shot location - Enhanced with shooting and scoring play detection */}
 				<div 
 					key={`ball-${cycle}`} 
-					className={`play-ball-fixed ${config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
+					className={`play-ball-fixed ${config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
 					style={{
 						left: `${shotLocation.xPercent}%`,
 						top: `${shotLocation.yPercent}%`,
 						['--play-color' as any]: config.color,
 						['--is-shooting' as any]: lastPlay.shootingPlay ? '1' : '0',
 						['--is-scoring' as any]: lastPlay.scoringPlay ? '1' : '0',
+						['--is-miss' as any]: isMiss ? '1' : '0',
+						['--basket-x' as any]: `${basketPosition.xPercent}%`,
+						['--basket-y' as any]: `${basketPosition.yPercent}%`,
+						['--lift-offset' as any]: '-60px',
 						opacity: shotLocation.hasCoordinates ? 1 : 0.5,
 					}}
 					data-shooting={lastPlay.shootingPlay}
 					data-scoring={lastPlay.scoringPlay}
+					data-free-throw={shotLocation.isFreeThrow}
+					data-miss={isMiss}
 				>
 					<span className="play-ball-icon">{config.icon}</span>
 				</div>
+
+				{/* Coordinate marker dot on the court surface */}
+				<div
+					key={`coord-dot-${cycle}`}
+					className="coordinate-marker-dot"
+					style={{
+						left: `${shotLocation.xPercent}%`,
+						top: `${shotLocation.yPercent}%`,
+						['--marker-color' as any]: getAthleteTeamColor((primaryAthlete?.team as any)?.id) || teamColor,
+					}}
+				/>
 
 				{/* Primary athlete headshot */}
 				{primaryAthlete && primaryHeadshot && (
 					<div
 						key={`primary-${cycle}`}
-						className="athlete-headshot-fixed primary-athlete"
+						className={`athlete-headshot-fixed primary-athlete ${shotLocation.isFreeThrow ? 'free-throw-headshot' : ''}`}
 						style={{
 							left: `${shotLocation.xPercent}%`,
 							top: `${shotLocation.yPercent}%`,
@@ -351,17 +406,32 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				)}
 			</div>
 
-			{/* Basketball goal posts - positioned completely outside court-platform to avoid 3D transform */}
-			<div className="absolute inset-0 pointer-events-none z-[100]">
+			{/* Basketball goal posts - positioned to match court bounds */}
+			<div className="absolute pointer-events-none z-[100]" style={{
+				left: '5px',
+				right: '5px',
+				top: '-10px',
+				height: courtRef.current?.offsetHeight || 'auto'
+			}}>
 				<img 
 					src="/assets/basketbal_post.png" 
 					alt="Basketball Hoop" 
-					className="absolute pointer-events-none left-4 top-[355px] h-12 transform -translate-y-1/2"
+					className="absolute pointer-events-none h-12"
+					style={{
+						left: '3%',
+						top: '50%',
+						transform: 'translateY(-50%)'
+					}}
 				/>
 				<img 
 					src="/assets/basketbal_post.png" 
 					alt="Basketball Hoop" 
-					className="absolute pointer-events-none right-3 top-[357px] h-12 transform -translate-y-1/2 scale-x-[-1]"
+					className="absolute pointer-events-none h-12 scale-x-[-1]"
+					style={{
+						right: '3%',
+						top: '50%',
+						transform: 'translateY(-50%) scaleX(-1)'
+					}}
 				/>
 			</div>
 		</div>
