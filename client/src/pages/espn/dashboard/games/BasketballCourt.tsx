@@ -351,7 +351,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 							left: `${shotLocation.xPercent}%`,
 							top: `${shotLocation.yPercent}%`,
 							['--athlete-color' as any]: getAthleteTeamColor((primaryAthlete.team as any)?.id),
-							opacity: shotLocation.hasCoordinates ? 1 : 0.6,
+
 						}}
 					>
 						<img
@@ -373,7 +373,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 							left: `${Math.max(10, Math.min(90, shotLocation.xPercent + 8))}%`,
 							top: `${Math.max(10, Math.min(90, shotLocation.yPercent - 5))}%`,
 							['--athlete-color' as any]: getAthleteTeamColor((secondaryAthlete.team as any)?.id),
-							opacity: shotLocation.hasCoordinates ? 1 : 0.6,
+
 						}}
 					>
 						<img
