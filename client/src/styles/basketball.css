@@ -384,6 +384,44 @@
 .animate-turnover { animation: turnover-pop 2.4s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
 .animate-fast-break { animation: fast-break 1.8s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
 
+/* Substitution animations - using slide and fade patterns */
+@keyframes sub-slide-replace {
+	0% {
+		transform: translateX(0) translateY(-50%);
+		opacity: 0;
+	}
+	50% {
+		transform: translateY(-50%) scale(1.05);
+		opacity: 1;
+	}
+	80% {
+		transform: translateX(-110px) translateY(-50%);
+		opacity: 1;
+	}
+	100% {
+		transform: translateX(-110px) translateY(-50%);
+		opacity: 1;
+	}
+}
+
+@keyframes sub-fade-out {
+	0%, 40% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
+.animate-sub-slide-replace {
+	animation: sub-slide-replace 2.5s ease-out infinite;
+	z-index: 20 !important;
+}
+
+.animate-sub-fade-out {
+	animation: sub-fade-out 2.5s ease-out infinite;
+}
+
 .animate-foul { animation: foul-flag 2.2s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
 .animate-timeout { animation: timeout-pulse 2.6s ease-in-out infinite; }
 .animate-period { animation: period-breath 3s ease-in-out infinite; }

@@ -22,6 +22,7 @@ type PlayLabel =
 	| 'fast-break'
 	| 'end-period'
 	| 'start-period'
+	| 'substitution'
 	| 'other';
 
 interface BasketballCourtProps {
@@ -59,6 +60,7 @@ const derivePlayLabel = (typeText: string, play?: PlayNba | null): PlayLabel => 
 	if (/foul/.test(typeText)) return 'foul';
 	if (/timeout|time out/.test(typeText)) return 'timeout';
 	if (/fast break|transition/.test(typeText)) return 'fast-break';
+	if (/substitution|sub |enters/.test(typeText)) return 'substitution';
 	if (/end of|end period|end quarter|end game|end half/.test(typeText)) return 'end-period';
 	if (/start of|jump ball/.test(typeText)) return 'start-period';
 	const points = Number(play?.scoreValue || 0);
@@ -347,7 +349,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				height: courtRef.current?.offsetHeight || 'auto'
 			}}>
 				{/* Ball animation at shot location - Enhanced with shooting and scoring play detection */}
-			{label !== 'end-period' && (
+			{label !== 'end-period' && label !== 'substitution' && label !== 'timeout' && (
 				<>
 					<div 
 						key={`ball-${cycle}`} 
@@ -383,11 +385,11 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					/>
 				</>
 			)}
-			{/* Primary athlete headshot - hidden for end period */}
-			{label !== 'end-period' && primaryAthlete && primaryHeadshot && (
+			{/* Primary athlete headshot - hidden for end period and substitution */}
+			{label !== 'end-period' && label !== 'substitution' && primaryAthlete && primaryHeadshot && (
 					<div
 						key={`primary-${cycle}`}
-						className={`athlete-headshot-fixed primary-athlete ${shotLocation.isFreeThrow ? 'free-throw-headshot' : ''}`}
+						className={`athlete-headshot-fixed primary-athlete`}
 						style={{
 							left: `${shotLocation.xPercent}%`,
 							top: `${shotLocation.yPercent}%`,
@@ -405,8 +407,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					</div>
 				)}
 
-			{/* Secondary athlete headshot (assister) - hidden for end period */}
-			{label !== 'end-period' && secondaryAthlete && secondaryHeadshot && (
+			{/* Secondary athlete headshot (assister) - hidden for end period and substitution */}
+			{label !== 'end-period' && label !== 'substitution' && secondaryAthlete && secondaryHeadshot && (
 					<div
 						key={`secondary-${cycle}`}
 						className="athlete-headshot-fixed secondary-athlete"
@@ -454,6 +456,101 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						</div>
 					</div>
 				)}
+
+				{/* Substitution - show two headshots with replacement animation */}
+				{label === 'substitution' && (() => {
+					// Parse substitution text: "PlayerIn enters the game for PlayerOut"
+					const text = lastPlay?.text || '';
+					const match = text.match(/(.+?)\s+enters\s+(?:the\s+)?game\s+for\s+(.+)/i);
+					const playerInName = match?.[1]?.trim();
+					const playerOutName = match?.[2]?.trim();
+					
+					// Try to find athletes from participants or athletesInvolved
+					const allParticipants = athletes.length > 0 ? athletes : [];
+					const playerIn = allParticipants.find(a => 
+						a.displayName?.toLowerCase().includes(playerInName?.toLowerCase() || '') ||
+						a.shortName?.toLowerCase().includes(playerInName?.toLowerCase() || '')
+					) || allParticipants[0];
+					const playerOut = allParticipants.find(a => 
+						a.id !== playerIn?.id &&
+						(a.displayName?.toLowerCase().includes(playerOutName?.toLowerCase() || '') ||
+						a.shortName?.toLowerCase().includes(playerOutName?.toLowerCase() || ''))
+					) || allParticipants[1];
+					
+					const playerInHeadshot = playerIn ? getHeadshotUrl({ id: playerIn.id, headshot: playerIn.headshot }) : '';
+					const playerOutHeadshot = playerOut ? getHeadshotUrl({ id: playerOut.id, headshot: playerOut.headshot }) : '';
+					
+					return (
+						<div
+							key={`sub-${cycle}`}
+							className="absolute z-20"
+							style={{
+								left: '50%',
+								top: '45%',
+								transform: 'translate(-50%, -50%)'
+							}}
+						>
+							<div className="relative flex items-center justify-center" style={{ width: '240px', height: '100px' }}>
+								{/* Player leaving (left side - outgoing) */}
+								<div className="absolute left-8 top-1/2 transform -translate-y-1/2">
+									<div 
+										className="w-16 h-16 rounded-full flex items-center justify-center animate-sub-fade-out"
+										style={{
+											border: `3px solid ${teamColor}`,
+											boxShadow: `0 0 20px ${teamColor}`,
+											backgroundColor: 'rgba(0,0,0,0.3)'
+										}}
+									>
+										{playerOutHeadshot ? (
+											<img
+												src={playerOutHeadshot}
+												alt={playerOut?.displayName || 'Player Out'}
+												className="w-full h-full rounded-full object-cover"
+												onError={(e) => (e.currentTarget.style.display = 'none')}
+											/>
+										) : (
+											<div className="text-4xl">👤</div>
+										)}
+									</div>
+									<div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap text-xs font-bold text-white/60">
+										{playerOut?.shortName || playerOutName || 'OUT'}
+									</div>
+								</div>
+
+								{/* Dual arrow - centered */}
+								<div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-4xl animate-pulse" style={{ color: teamColor }}>
+									⇄
+								</div>
+
+								{/* Player entering (right side - incoming, will slide left) */}
+								<div className="absolute right-8 top-1/2 transform -translate-y-1/2 animate-sub-slide-replace">
+									<div 
+										className="w-16 h-16 rounded-full flex items-center justify-center"
+										style={{
+											border: `3px solid ${teamColor}`,
+											boxShadow: `0 0 20px ${teamColor}`,
+											backgroundColor: 'rgba(0,0,0,0.3)'
+										}}
+									>
+										{playerInHeadshot ? (
+											<img
+												src={playerInHeadshot}
+												alt={playerIn?.displayName || 'Player In'}
+												className="w-full h-full rounded-full object-cover"
+												onError={(e) => (e.currentTarget.style.display = 'none')}
+											/>
+										) : (
+											<div className="text-4xl">👤</div>
+										)}
+									</div>
+									<div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap text-xs font-bold" style={{ color: teamColor }}>
+										{playerIn?.shortName || playerInName || 'IN'}
+									</div>
+								</div>
+							</div>
+						</div>
+					);
+				})()}
 			</div>
 
 			{/* Basketball goal posts - positioned to match court bounds */}
