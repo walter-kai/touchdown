@@ -349,7 +349,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	// Ball offset: opposite side of headshot
 	// When attacking right, ball is on the right side of headshot
 	// When attacking left, ball is on the left side of headshot
-	const ballOffsetX = shotLocation.isFreeThrow ? 0 : (attackingRight ? 12 : -20);
+	const ballOffsetX = shotLocation.isFreeThrow ? (attackingRight ? 0 : -33) : (attackingRight ? 12 : -20);
 	const ballOffsetY = shotLocation.isFreeThrow ? -25 : -15;
 	// Reverse arc direction for behind-the-net shots so ball arcs backward toward hoop
 	const arcDirectionAdjustment = isBehindNetShot ? -1 : 1;

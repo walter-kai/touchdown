@@ -763,7 +763,7 @@
 	23% { 
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.002 / 100 * var(--basket-hit-adjust, 1.03)),
-			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.25 / 100 * var(--basket-hit-adjust, .73) - 30px)
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.75 / 100 * var(--basket-hit-adjust, .73) - 30px)
 		) scale(0.4);
 		opacity: 0.8;
 	}
