@@ -290,7 +290,7 @@
 		transform: translate(0, -30px) scale(1); 
 		opacity: 1; 
 	}
-	50% {
+	30% {
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 0.85) * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 * 0.5 / 100 * var(--basket-hit-adjust, 1.03) + var(--arc-peak-offset, -60px))
@@ -794,7 +794,7 @@
 /* Apply miss sequence: jump + arc + miss in complete unified loop */
 .play-ball-fixed.miss-animation,
 .miss-animation {
-	animation: jump-arc-miss-complete 4.3s ease-in infinite;
+	animation: jump-arc-miss-complete 2.5s ease-in infinite;
 }
 
 /* Made shot - hold at basket */
