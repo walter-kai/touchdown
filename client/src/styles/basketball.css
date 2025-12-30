@@ -751,22 +751,23 @@
 		transform: translate(0, -20px) scale(1); 
 		opacity: 1; 
 	}
-	/* Arc to basket: 30-67% */
+	/* Arc to basket:  */
 	12% {
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.5 / 100 * var(--basket-hit-adjust, 1.03)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 * 0.5 / 100 * var(--basket-hit-adjust, 1.03) - 60px)
 		) scale(1.05);
 		opacity: 1;
+	/* Bounce: 19-23% */
 	}
-	19% { 
+	23% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, .73)),
-			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) - 50px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.002 / 100 * var(--basket-hit-adjust, 1.03)),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.25 / 100 * var(--basket-hit-adjust, .73) - 30px)
 		) scale(0.4);
 		opacity: 0.8;
 	}
-	23% { 
+	33% { 
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, .73) + calc(var(--arc-direction, 1) * -8px)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) - 60px)

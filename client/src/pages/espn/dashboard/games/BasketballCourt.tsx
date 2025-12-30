@@ -219,15 +219,11 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 
 		// Free throws: always use hard-coded line positions so animations/headshots start from the same spot
 		if (playLabel === 'free-throw') {
-			const freeThrowFeet = { x: 25, y: offenseBasketY === 94 ? 69 : 21 }; // 15ft from attacking baseline toward active basket
-			const espnY = offenseBasketY === 94 ? 94 - freeThrowFeet.y : freeThrowFeet.y;
-			let xPercent = horizontalMin + (espnY / 94) * (horizontalMax - horizontalMin);
-			const yPercent = verticalMin + (freeThrowFeet.x / 50) * (verticalMax - verticalMin);
+			let xPercent = offenseBasketY === 94 ? 76 : 25; // attacking right vs attacking left
+			const yPercent = offenseBasketY === 94 ? 50 : 50; // center of court vertically
 
 			// Apply perspective scaling
-			const perspectiveScale = 0.7 + (yPercent - verticalMin) / (verticalMax - verticalMin) * 0.3;
-			const centerX = 50;
-			xPercent = centerX + (xPercent - centerX) * perspectiveScale;
+			
 
 			return {
 				xPercent,
@@ -347,10 +343,14 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 
 	// Keep the ball in front of the shooter regardless of attacking direction
 	const attackingRight = basketPosition.xPercent >= shotLocation.xPercent;
-	// Calculate headshot offset in pixels to maintain consistent visual distance
-	const headshotOffsetX = attackingRight ? -12 : -15;
-	const headshotOffsetY = -15;
-
+	// For free throws, position at the same location as the dot. For other plays, apply offset.
+	const headshotOffsetX = shotLocation.isFreeThrow ? 0 : (attackingRight ? -12 : -15);
+	const headshotOffsetY = shotLocation.isFreeThrow ? 0 : -15;	
+	// Ball offset: opposite side of headshot
+	// When attacking right, ball is on the right side of headshot
+	// When attacking left, ball is on the left side of headshot
+	const ballOffsetX = shotLocation.isFreeThrow ? 0 : (attackingRight ? 12 : -20);
+	const ballOffsetY = shotLocation.isFreeThrow ? -25 : -15;
 	// Reverse arc direction for behind-the-net shots so ball arcs backward toward hoop
 	const arcDirectionAdjustment = isBehindNetShot ? -1 : 1;
 	
@@ -510,8 +510,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						key={`ball-${cycle}`} 
 				className={`play-ball-fixed ${label === 'jumper' ? 'animate-jump-shot-ball' : shotLocation.isFreeThrow ? '' : config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
 						style={{
-							left: `${shotLocation.xPercent}%`,
-							top: `${shotLocation.yPercent}%`,
+							left: `calc(${shotLocation.xPercent}% + ${ballOffsetX}px)`,
+							top: `calc(${shotLocation.yPercent}% + ${ballOffsetY}px)`,
 							['--play-color' as any]: config.color,
 							['--is-shooting' as any]: lastPlay.shootingPlay ? '1' : '0',
 							['--is-scoring' as any]: lastPlay.scoringPlay ? '1' : '0',
