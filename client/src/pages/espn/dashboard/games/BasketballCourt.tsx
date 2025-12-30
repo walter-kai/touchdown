@@ -50,7 +50,7 @@ const derivePlayLabel = (typeText: string, play?: PlayNba | null): PlayLabel => 
 	if (/free throw/.test(typeText)) return 'free-throw';
 	if (/hook/.test(typeText)) return 'hook';
 	if (/alley|oop/.test(typeText)) return 'alley-oop';
-	if (/jumper|jump shot|fadeaway/.test(typeText)) return 'jumper';
+	if (/jumper|jump shot|fadeaway|pullup|pull up|pull-up|driving|stepback|step back|step-back/.test(typeText)) return 'jumper';
 	if (/tip|putback/.test(typeText)) return 'tip-in';
 	if (/block/.test(typeText)) return 'block';
 	if (/steal/.test(typeText)) return 'steal';
@@ -117,13 +117,9 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		(typeof lastPlay?.team === 'string' ? lastPlay?.team : undefined) || 
 		lastPlay?.possession;
 	
-	// Court orientation: Standard TV convention (Away left, Home right). Switch at halftime (Q3+).
-	const currentQuarter = (typeof lastPlay.quarter === 'number' ? lastPlay.quarter : undefined)
-		|| (typeof lastPlay.period === 'object' && lastPlay.period ? (lastPlay.period as any).number : undefined)
-		|| (typeof lastPlay.period === 'number' ? (lastPlay.period as number) : 1);
-	const shouldSwitch = (currentQuarter ?? 1) >= 3;
-	const computedLeft = shouldSwitch ? homeTeam : awayTeam;
-	const computedRight = shouldSwitch ? awayTeam : homeTeam;
+	// Court orientation: Standard TV convention (Away left, Home right) - consistent throughout
+	const computedLeft = awayTeam;
+	const computedRight = homeTeam;
 	const leftTeam = computedLeft;
 	const rightTeam = computedRight;
 	const leftTeamId = leftTeam?.id || leftTeam?.team?.id;
@@ -285,6 +281,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		// - Vertical position   ← ESPN X (0..50)
 		let xPercent = horizontalMin + (espnY / 94) * (horizontalMax - horizontalMin);
 		const yPercent = verticalMin + (espnX / 50) * (verticalMax - verticalMin);
+		console.log('Raw coords:', { espnX, espnYRaw, espnY, offenseBasketY, playLabel });
 
 		// Apply perspective scaling: as yPercent decreases (moves higher/back on trapezoid),
 		// compress the X coordinate toward center to match the narrowing effect
@@ -341,8 +338,21 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				yPercent: mappedBasket.yPercent
 		};
 
+	// Determine direction using pre-perspective horizontal positions to avoid flips from trapezoid scaling
+	const baseHorizontalPercent = (espnYValue: number, mirrorForRight: boolean) => {
+		const horizontalMin = 3;
+		const horizontalMax = 97;
+		const adjustedY = mirrorForRight ? 94 - espnYValue : espnYValue;
+		return horizontalMin + (adjustedY / 94) * (horizontalMax - horizontalMin);
+	};
+
+	const shotRawXPercent = isValidCoordinate(resolvedCoordinate)
+		? baseHorizontalPercent((resolvedCoordinate!.y as number), offenseBasketY === 94)
+		: shotLocation.xPercent;
+	const basketRawXPercent = baseHorizontalPercent(basketFeet.y, false); // hoops stay fixed to court sides
+
 	// Keep the ball in front of the shooter regardless of attacking direction
-	const attackingRight = basketPosition.xPercent >= shotLocation.xPercent;
+	const attackingRight = basketRawXPercent >= shotRawXPercent;
 	// For free throws, position at the same location as the dot. For other plays, apply offset.
 	const headshotOffsetX = shotLocation.isFreeThrow ? 0 : (attackingRight ? -12 : -15);
 	const headshotOffsetY = shotLocation.isFreeThrow ? 0 : -15;	
@@ -521,7 +531,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						['--shot-x' as any]: shotLocation.xPercent,
 						['--shot-y' as any]: shotLocation.yPercent,
 						['--lift-offset' as any]: '-60px',
-										['--arc-direction' as any]: ((basketPosition.xPercent >= shotLocation.xPercent ? 1 : -1) * arcDirectionAdjustment).toString(),
+						['--arc-direction' as any]: arcDirectionAdjustment.toString(),
 					['--arc-peak-offset' as any]: `${arcPeakOffsetPx}px`,
 					['--arc-mid-offset' as any]: `${arcMidOffsetPx}px`,
 					['--arc-end-offset' as any]: `${arcEndOffsetPx}px`,
