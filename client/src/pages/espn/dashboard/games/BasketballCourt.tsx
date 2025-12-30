@@ -205,7 +205,12 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		return { xPercent, yPercent };
 	};
 
-	const mapCoordinate = (coord?: { x?: number; y?: number }, playLabel?: PlayLabel, possessionIsHome?: boolean) => {
+	const mapCoordinate = (
+		coord?: { x?: number; y?: number },
+		playLabel?: PlayLabel,
+		possessionIsHome?: boolean,
+		adjustForOffense: boolean = true
+	) => {
 		// Free throws: always use hard-coded line positions so animations/headshots start from the same spot
 		if (playLabel === 'free-throw') {
 			const freeThrowFeet = { x: 25, y: offenseBasketY === 94 ? 69 : 21 }; // 15ft from attacking baseline toward active basket
@@ -261,7 +266,9 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		
 		// ESPN court coordinates in feet
 		const espnX = coord.x!; // 0-50 feet (court width)
-		const espnY = coord.y!; // 0-94 feet (court length)
+		// Mirror Y when the offense is attacking the right basket so distances map from that hoop, not the far baseline
+		const espnYRaw = coord.y!; // 0-94 feet (court length)
+		const espnY = adjustForOffense && offenseBasketY === 94 ? 94 - espnYRaw : espnYRaw;
 
 		// Court padding to align with hoop images at ~3% from edges
 		const horizontalMin = 3;   // left padding (%)
@@ -293,26 +300,57 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 
 	// Compute basket target from ESPN feet using current orientation
 	const basketFeet = { x: 25, y: offenseBasketY };
-	const mappedBasket = mapCoordinate(basketFeet, undefined, possessionIsHome);
-	
-	// Calculate basket position for animation targeting
-	// Baskets are positioned at left: 3% and right: 3% (which is 97% from left)
-	// These values match the actual hoop image positions in the DOM
-	const basketPosition = {
-		xPercent: mappedBasket.xPercent,
-		yPercent: mappedBasket.yPercent
-	};
-	
-	// Determine if this is a miss (shooting play but not scoring)
-	const isMiss = lastPlay.shootingPlay && !lastPlay.scoringPlay;
 
 	// Shot distance in feet using ESPN coordinates
 	const shotDistanceFeet = (() => {
 		if (!isValidCoordinate(resolvedCoordinate)) return undefined;
 		const dx = (resolvedCoordinate!.x as number) - basketFeet.x;
-		const dy = (resolvedCoordinate!.y as number) - basketFeet.y;
+		// Mirror Y when the offense attacks the right basket so distance is measured from the attacking hoop
+		const adjustedY = offenseBasketY === 94 ? 94 - (resolvedCoordinate!.y as number) : (resolvedCoordinate!.y as number);
+		const dy = adjustedY - basketFeet.y;
 		return Math.sqrt(dx * dx + dy * dy);
 	})();
+
+	// Detect behind-the-net shots (very close to baseline, ~5 feet or less from attack line)
+	const isBehindNetShot = shotDistanceFeet !== undefined && shotDistanceFeet < 5;
+	
+	const mappedBasket = mapCoordinate(basketFeet, undefined, possessionIsHome, false);
+	
+	// Calculate basket position for animation targeting
+	// For behind-the-net shots, center on the post image (middle of hoop visual)
+	// Otherwise use the hoop edge position
+	// Baskets are positioned at left: 3% and right: 3% (which is 97% from left)
+	const basketPosition = isBehindNetShot
+		? {
+				xPercent: mappedBasket.xPercent, // center of post
+				yPercent: 50, // middle of court vertically
+		}
+		: {
+				xPercent: mappedBasket.xPercent,
+				yPercent: mappedBasket.yPercent
+		};
+
+	// Keep the ball in front of the shooter regardless of attacking direction
+	const attackingRight = basketPosition.xPercent >= shotLocation.xPercent;
+	// Calculate headshot offset in pixels to maintain consistent visual distance
+	const headshotOffsetX = attackingRight ? -12 : -15;
+	const headshotOffsetY = -15;
+
+	// Reverse arc direction for behind-the-net shots so ball arcs backward toward hoop
+	const arcDirectionAdjustment = isBehindNetShot ? -1 : 1;
+	
+	// Determine if this is a miss (shooting play but not scoring)
+	const isMiss = lastPlay.shootingPlay && !lastPlay.scoringPlay;
+
+	// Boost arc height for close-range shots so the ball clearly climbs over the hoop
+	const shortDistanceBoost = (() => {
+		if (shotDistanceFeet === undefined) return 10;
+		const boost = 26 - shotDistanceFeet * 1.3; // taper to zero by ~20ft
+		return Math.max(0, boost);
+	})();
+	const arcPeakOffsetPx = -100 - shortDistanceBoost; // main apex
+	const arcMidOffsetPx = -30 - shortDistanceBoost * 0.6; // mid-flight lift
+	const arcEndOffsetPx = -10 - shortDistanceBoost * 0.3; // settle near rim
 	
 	// Determine shot side based on Y coordinate and possession
 	// Home team attacks towards Y=470 (bottom), away team attacks towards Y=0 (top)
@@ -457,8 +495,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						key={`ball-${cycle}`} 
 				className={`play-ball-fixed ${label === 'jumper' ? 'animate-jump-shot-ball' : shotLocation.isFreeThrow ? '' : config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
 						style={{
-							left: `calc(${shotLocation.xPercent}% - 16px)`,  // Offset left by headshot radius to center on dot
-							top: `calc(${shotLocation.yPercent}% - 16px)`,  // Offset upward by hea
+							left: `${shotLocation.xPercent}%`,
+							top: `${shotLocation.yPercent}%`,
 							['--play-color' as any]: config.color,
 							['--is-shooting' as any]: lastPlay.shootingPlay ? '1' : '0',
 							['--is-scoring' as any]: lastPlay.scoringPlay ? '1' : '0',
@@ -468,7 +506,10 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						['--shot-x' as any]: shotLocation.xPercent,
 						['--shot-y' as any]: shotLocation.yPercent,
 						['--lift-offset' as any]: '-60px',
-						['--arc-direction' as any]: basketPosition.xPercent >= shotLocation.xPercent ? '1' : '-1',
+										['--arc-direction' as any]: ((basketPosition.xPercent >= shotLocation.xPercent ? 1 : -1) * arcDirectionAdjustment).toString(),
+					['--arc-peak-offset' as any]: `${arcPeakOffsetPx}px`,
+					['--arc-mid-offset' as any]: `${arcMidOffsetPx}px`,
+					['--arc-end-offset' as any]: `${arcEndOffsetPx}px`,
 							opacity: shotLocation.hasCoordinates ? 1 : 0.5,
 						}}
 						data-shooting={lastPlay.shootingPlay}
@@ -495,8 +536,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					key={`primary-${cycle}`}
 					className={`athlete-headshot-fixed primary-athlete ${label === 'jumper' ? 'animate-jump-shot-player' : ''}`}
 					style={{
-						left: `calc(${shotLocation.xPercent}% - 0px)`,
-						top: `calc(${shotLocation.yPercent}% - 8px)`,
+						left: `calc(${shotLocation.xPercent}% + ${headshotOffsetX}px)`,
+						top: `calc(${shotLocation.yPercent}% + ${headshotOffsetY}px)`,
 						['--athlete-color' as any]: getAthleteTeamColor((primaryAthlete.team as any)?.id),
 					}}
 				>
@@ -509,16 +550,15 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				</div>
 			)}
 
-			{/* Secondary athlete headshot (assister) - hidden for end period and substitution */}
+			{/* Secondary athlete headshot (assister) - opposite side of key, same attacking zone */}
 			{label !== 'end-period' && label !== 'substitution' && secondaryAthlete && secondaryHeadshot && (
 					<div
 						key={`secondary-${cycle}`}
 						className="athlete-headshot-fixed secondary-athlete"
 						style={{
-							left: `${Math.max(10, Math.min(90, shotLocation.xPercent + 8))}%`,
-							top: `${Math.max(10, Math.min(90, shotLocation.yPercent - 5))}%`,
+							left: `${Math.max(15, Math.min(85, 100 - shotLocation.xPercent))}%`,
+							top: `${Math.max(15, Math.min(85, shotLocation.yPercent))}%`,
 							['--athlete-color' as any]: getAthleteTeamColor((secondaryAthlete.team as any)?.id),
-
 						}}
 					>
 						<img
