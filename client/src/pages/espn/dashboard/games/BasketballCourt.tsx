@@ -353,9 +353,9 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 
 	// Keep the ball in front of the shooter regardless of attacking direction
 	const attackingRight = basketRawXPercent >= shotRawXPercent;
-	// For free throws, position at the same location as the dot. For other plays, apply offset.
-	const headshotOffsetX = shotLocation.isFreeThrow ? 0 : (attackingRight ? -12 : -15);
-	const headshotOffsetY = shotLocation.isFreeThrow ? 0 : -15;	
+	// For free throws and fouls, position at the same location as the dot. For other plays, apply offset.
+	const headshotOffsetX = shotLocation.isFreeThrow ? 0 : (label === 'foul' || label === 'rebound') ? 5 : (attackingRight ? -12 : -15);
+	const headshotOffsetY = shotLocation.isFreeThrow ? 0 : (label === 'foul' || label === 'rebound') ? 5 : -15;
 	// Ball offset: opposite side of headshot
 	// When attacking right, ball is on the right side of headshot
 	// When attacking left, ball is on the left side of headshot
@@ -575,25 +575,32 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				</div>
 			)}
 
-			{/* Secondary athlete headshot (assister) - opposite side of key, same attacking zone */}
-			{label !== 'end-period' && label !== 'substitution' && secondaryAthlete && secondaryHeadshot && (
-					<div
-						key={`secondary-${cycle}`}
-						className="athlete-headshot-fixed secondary-athlete"
-						style={{
-							left: `${Math.max(15, Math.min(85, 100 - shotLocation.xPercent))}%`,
-							top: `${Math.max(15, Math.min(85, shotLocation.yPercent))}%`,
-							['--athlete-color' as any]: getAthleteTeamColor((secondaryAthlete.team as any)?.id),
-						}}
-					>
-						<img
-							src={secondaryHeadshot}
-							alt={secondaryAthlete.displayName || secondaryAthlete.shortName || ''}
-							onError={(e) => (e.currentTarget.style.display = 'none')}
-						/>
-					</div>
-				)}
-				
+		{/* Foul emojis on both sides */}
+		{label === 'foul' && (
+			<>
+				<div
+					className="absolute text-2xl pointer-events-none"
+					style={{
+						left: `calc(${shotLocation.xPercent}% - 45px)`,
+						top: `calc(${shotLocation.yPercent}% - 15px)`,
+						zIndex: 200
+					}}
+				>
+					🙅🏻‍♂️
+				</div>
+				<div
+					className="absolute text-2xl pointer-events-none z-200"
+					style={{
+						left: `calc(${shotLocation.xPercent}% + 15px)`,
+						top: `calc(${shotLocation.yPercent}% - 15px)`,
+						zIndex: 200
+					}}
+				>
+					🙅🏾‍♂️
+				</div>
+			</>
+		)}
+
 				{/* End of period/game - show ad-style banner at center */}
 				{label === 'end-period' && (
 					<div
