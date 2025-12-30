@@ -211,10 +211,24 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		possessionIsHome?: boolean,
 		adjustForOffense: boolean = true
 	) => {
+		// Court padding to align with hoop images at ~3% from edges
+		const horizontalMin = 3;   // left padding (%)
+		const horizontalMax = 97;  // right padding (%)
+		const verticalMin = 5;     // top padding (%)
+		const verticalMax = 95;    // bottom padding (%)
+
 		// Free throws: always use hard-coded line positions so animations/headshots start from the same spot
 		if (playLabel === 'free-throw') {
 			const freeThrowFeet = { x: 25, y: offenseBasketY === 94 ? 69 : 21 }; // 15ft from attacking baseline toward active basket
-			const { xPercent, yPercent } = mapFeetToPercent(freeThrowFeet);
+			const espnY = offenseBasketY === 94 ? 94 - freeThrowFeet.y : freeThrowFeet.y;
+			let xPercent = horizontalMin + (espnY / 94) * (horizontalMax - horizontalMin);
+			const yPercent = verticalMin + (freeThrowFeet.x / 50) * (verticalMax - verticalMin);
+
+			// Apply perspective scaling
+			const perspectiveScale = 0.7 + (yPercent - verticalMin) / (verticalMax - verticalMin) * 0.3;
+			const centerX = 50;
+			xPercent = centerX + (xPercent - centerX) * perspectiveScale;
+
 			return {
 				xPercent,
 				yPercent,
@@ -270,17 +284,18 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		const espnYRaw = coord.y!; // 0-94 feet (court length)
 		const espnY = adjustForOffense && offenseBasketY === 94 ? 94 - espnYRaw : espnYRaw;
 
-		// Court padding to align with hoop images at ~3% from edges
-		const horizontalMin = 3;   // left padding (%)
-		const horizontalMax = 97;  // right padding (%)
-		const verticalMin = 5;     // top padding (%)
-		const verticalMax = 95;    // bottom padding (%)
-
 		// Our visual has baskets on the SIDES, so map:
 		// - Horizontal position ← ESPN Y (0..94)
 		// - Vertical position   ← ESPN X (0..50)
-		const xPercent = horizontalMin + (espnY / 94) * (horizontalMax - horizontalMin);
+		let xPercent = horizontalMin + (espnY / 94) * (horizontalMax - horizontalMin);
 		const yPercent = verticalMin + (espnX / 50) * (verticalMax - verticalMin);
+
+		// Apply perspective scaling: as yPercent decreases (moves higher/back on trapezoid),
+		// compress the X coordinate toward center to match the narrowing effect
+		// Scale ranges from ~0.7 at top (yPercent=5) to 1.0 at bottom (yPercent=95)
+		const perspectiveScale = 0.7 + (yPercent - verticalMin) / (verticalMax - verticalMin) * 0.3;
+		const centerX = 50;
+		xPercent = centerX + (xPercent - centerX) * perspectiveScale;
 
 		return {
 			xPercent,

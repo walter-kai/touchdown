@@ -285,12 +285,9 @@
 		transform: translate(0, 0) scale(0.96); 
 		opacity: 1; 
 	}
-	25% { 
-		transform: translate(0, -20px) scale(1); 
-		opacity: 1; 
-	}
-	30% { 
-		transform: translate(0, -20px) scale(1); 
+
+	10% { 
+		transform: translate(0, -30px) scale(1); 
 		opacity: 1; 
 	}
 	50% {
@@ -317,11 +314,11 @@
 }
 
 .animate-jump-shot-player {
-	animation: jump-shot-player 4s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+	animation: jump-shot-player 2.5s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
 }
 
 .animate-jump-shot-ball {
-	animation: jump-shot-ball 2.8s ease-in infinite;
+	animation: jump-shot-ball 2.5s ease-in infinite;
 }
 
 @keyframes three-arc {
