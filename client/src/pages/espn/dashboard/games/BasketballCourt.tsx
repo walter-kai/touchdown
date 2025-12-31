@@ -75,6 +75,9 @@ const defaultPlayConfig = { ball: 'animate-jumper', trail: 'animate-jumper-trail
 // Foul-specific config (matches NFL penalty animation)
 const foulPlayConfig = { ball: 'animate-foul', trail: 'animate-foul', color: '#FFFF00', icon: '🚩' };
 
+// Rebound-specific config
+const reboundPlayConfig = { ball: 'animate-rebound-ball', trail: 'animate-rebound-ball', color: '#00ffe7', icon: '🏀' };
+
 // End of period/game config (adopting football's end-of-regulation styling)
 const endPeriodPlayConfig = { ball: 'animate-end-regulation', trail: 'animate-end-regulation', color: '#FF6B6B', glowColor: 'rgba(255, 107, 107, 0.8)' };
 
@@ -154,8 +157,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		} catch {}
 	}, [lastPlay?.id, lastPlay?.text, typeText, possessionId]);
 
-	// Use foul config for personal fouls, end period config for end periods, default for everything else
-	const config = label === 'foul' ? foulPlayConfig : label === 'end-period' ? endPeriodPlayConfig : defaultPlayConfig;
+	// Use foul config for personal fouls, rebound config for rebounds, end period config for end periods, default for everything else
+	const config = label === 'foul' ? foulPlayConfig : label === 'rebound' ? reboundPlayConfig : label === 'end-period' ? endPeriodPlayConfig : defaultPlayConfig;
 
 	// ESPN NBA court coordinates are in FEET:
 	// - X: 0-50 feet (court width, left to right)
@@ -354,8 +357,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	// Keep the ball in front of the shooter regardless of attacking direction
 	const attackingRight = basketRawXPercent >= shotRawXPercent;
 	// For free throws and fouls, position at the same location as the dot. For other plays, apply offset.
-	const headshotOffsetX = shotLocation.isFreeThrow ? 0 : (label === 'foul' || label === 'rebound') ? 5 : (attackingRight ? -12 : -15);
-	const headshotOffsetY = shotLocation.isFreeThrow ? 0 : (label === 'foul' || label === 'rebound') ? 5 : -15;
+	const headshotOffsetX = shotLocation.isFreeThrow ? 0 : label === 'foul' ? 5 : label === 'rebound' ? -25 : (attackingRight ? -12 : -15);
+	const headshotOffsetY = shotLocation.isFreeThrow ? 0 : label === 'foul' ? 5 : label === 'rebound' ? -25 : -15;
 	// Ball offset: opposite side of headshot
 	// When attacking right, ball is on the right side of headshot
 	// When attacking left, ball is on the left side of headshot
@@ -518,7 +521,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				<>
 					<div 
 						key={`ball-${cycle}`} 
-				className={`play-ball-fixed ${label === 'jumper' ? 'animate-jump-shot-ball' : shotLocation.isFreeThrow ? '' : config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
+				className={`play-ball-fixed ${label === 'jumper' ? 'animate-jump-shot-ball' : label === 'rebound' ? 'animate-rebound-ball' : shotLocation.isFreeThrow ? '' : config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
 						style={{
 							left: `calc(${shotLocation.xPercent}% + ${ballOffsetX}px)`,
 							top: `calc(${shotLocation.yPercent}% + ${ballOffsetY}px)`,
@@ -559,7 +562,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 			{label !== 'end-period' && label !== 'substitution' && primaryAthlete && primaryHeadshot && (
 				<div
 					key={`primary-${cycle}`}
-					className={`athlete-headshot-fixed primary-athlete ${label === 'jumper' ? 'animate-jump-shot-player' : ''}`}
+					className={`athlete-headshot-fixed primary-athlete ${label === 'jumper' ? 'animate-jump-shot-player' : ''} ${label === 'rebound' ? 'animate-rebound-catch' : ''}`}
 					style={{
 						left: `calc(${shotLocation.xPercent}% + ${headshotOffsetX}px)`,
 						top: `calc(${shotLocation.yPercent}% + ${headshotOffsetY}px)`,
