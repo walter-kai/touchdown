@@ -573,10 +573,10 @@
 		opacity: 1;
 	}
 	/* Arc away from basket toward rebounder (opposite direction) */
-	45% { 
+	55% { 
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--arc-direction, 1) * 0.6), 
-			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 * -0.4 / 100 - 80px)
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 * 0.8 / 100 - 80px)
 		) scale(0.8);
 		opacity: 0.9;
 	}

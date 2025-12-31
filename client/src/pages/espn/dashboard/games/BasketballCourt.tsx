@@ -562,22 +562,22 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					/>
 				</>
 			)}
-			{/* Primary athlete headshot - hidden for end period and substitution */}
-			{label !== 'end-period' && label !== 'substitution' && primaryAthlete && primaryHeadshot && (
+			{/* Primary athlete headshot - hidden for end period and substitution. Show team logo for team rebounds */}
+			{label !== 'end-period' && label !== 'substitution' && (primaryAthlete && primaryHeadshot || (label === 'rebound' && !primaryAthlete)) && (
 				<div
 					key={`primary-${cycle}`}
 					className={`athlete-headshot-fixed primary-athlete ${label === 'jumper' ? 'animate-jump-shot-player' : ''} ${label === 'layup' ? 'animate-layup' : ''} ${label === 'alley-oop' ? 'animate-alley-oop' : ''} ${label === 'rebound' ? 'animate-rebound-catch' : ''}`}
 					style={{
 						left: `calc(${shotLocation.xPercent}% + ${headshotOffsetX}px)`,
 						top: `calc(${shotLocation.yPercent}% + ${headshotOffsetY}px)`,
-						['--athlete-color' as any]: getAthleteTeamColor((primaryAthlete.team as any)?.id),
+						['--athlete-color' as any]: getAthleteTeamColor((primaryAthlete?.team as any)?.id),
 						['--shot-x' as any]: `${shotLocation.xPercent}%`,
 						['--shot-y' as any]: `${shotLocation.yPercent}%`,
 						['--arc-direction' as any]: arcDirectionAdjustment.toString(),
 					}}
 				>
 					<img
-						src={primaryHeadshot}
+						src={primaryHeadshot || (label === 'rebound' && !primaryAthlete ? (possessionIsHome ? homeTeam.logo : awayTeam.logo) : '')}
 						alt={primaryAthlete.displayName || primaryAthlete.shortName || ''}
 						onError={(e) => (e.currentTarget.style.display = 'none')}
 						style={{ filter: label === 'foul' ? 'grayscale(100%)' : 'none' }}
