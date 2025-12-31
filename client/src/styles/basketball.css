@@ -287,7 +287,7 @@
 		opacity: 0.8;
 	}
 	12% { 
-		transform: translate(calc(var(--arc-direction, 1) * -15px), -15px) scale(0.88);
+		transform: translate(calc(var(--arc-direction, 1) * -15px + var(--arc-direction, 1) * -15px), -15px) scale(0.88);
 		opacity: 0.85;
 	}
 
