@@ -524,7 +524,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				<>
 					<div 
 						key={`ball-${cycle}`} 
-				className={`play-ball-fixed ${label === 'jumper' ? 'animate-jump-shot-ball' : label === 'rebound' ? 'animate-rebound-ball' : shotLocation.isFreeThrow ? '' : config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
+				className={`play-ball-fixed ${label === 'jumper' ? 'animate-jump-shot-ball' : label === 'layup' ? 'animate-layup-ball' : label === 'alley-oop' ? 'animate-alley-oop-ball' : label === 'rebound' ? 'animate-rebound-ball' : shotLocation.isFreeThrow ? '' : config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
 						style={{
 							left: `calc(${shotLocation.xPercent}% + ${ballOffsetX}px)`,
 							top: `calc(${shotLocation.yPercent}% + ${ballOffsetY}px)`,
@@ -538,6 +538,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						['--shot-y' as any]: shotLocation.yPercent,
 						['--lift-offset' as any]: '-60px',
 						['--arc-direction' as any]: arcDirectionAdjustment.toString(),
+						['--ball-offset-x' as any]: `${ballOffsetX}px`,
 					['--arc-peak-offset' as any]: `${arcPeakOffsetPx}px`,
 					['--arc-mid-offset' as any]: `${arcMidOffsetPx}px`,
 					['--arc-end-offset' as any]: `${arcEndOffsetPx}px`,
@@ -565,11 +566,14 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 			{label !== 'end-period' && label !== 'substitution' && primaryAthlete && primaryHeadshot && (
 				<div
 					key={`primary-${cycle}`}
-					className={`athlete-headshot-fixed primary-athlete ${label === 'jumper' ? 'animate-jump-shot-player' : ''} ${label === 'rebound' ? 'animate-rebound-catch' : ''}`}
+					className={`athlete-headshot-fixed primary-athlete ${label === 'jumper' ? 'animate-jump-shot-player' : ''} ${label === 'layup' ? 'animate-layup' : ''} ${label === 'alley-oop' ? 'animate-alley-oop' : ''} ${label === 'rebound' ? 'animate-rebound-catch' : ''}`}
 					style={{
 						left: `calc(${shotLocation.xPercent}% + ${headshotOffsetX}px)`,
 						top: `calc(${shotLocation.yPercent}% + ${headshotOffsetY}px)`,
 						['--athlete-color' as any]: getAthleteTeamColor((primaryAthlete.team as any)?.id),
+						['--shot-x' as any]: `${shotLocation.xPercent}%`,
+						['--shot-y' as any]: `${shotLocation.yPercent}%`,
+						['--arc-direction' as any]: arcDirectionAdjustment.toString(),
 					}}
 				>
 					<img
