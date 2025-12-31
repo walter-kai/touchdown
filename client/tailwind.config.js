@@ -9,7 +9,7 @@ module.exports = {
       fontFamily: {
         lato: ['Lato'],
         savate: ['Savate'],
-        marck: ['Marck Script'],
+        audiowide: ['Audiowide'],
       },
       colors: {
         // Neon theme color presets using CSS variables - using hex values directly

@@ -23,6 +23,7 @@ type PlayLabel =
 	| 'end-period'
 	| 'start-period'
 	| 'substitution'
+	| 'shot-clock-turnover'
 	| 'other';
 
 interface BasketballCourtProps {
@@ -44,6 +45,7 @@ const resolvePlayType = (play?: PlayNba | null) => {
 };
 
 const derivePlayLabel = (typeText: string, play?: PlayNba | null): PlayLabel => {
+	if (/shot clock/.test(typeText)) return 'shot-clock-turnover';
 	if (/three|3pt|3-pt|3 point/.test(typeText)) return 'three';
 	if (/dunk/.test(typeText)) return 'dunk';
 	if (/layup|floater|finger roll/.test(typeText)) return 'layup';
@@ -412,13 +414,33 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		return [];
 	}, [lastPlay?.athletesInvolved, lastPlay?.participants, lastPlay?.team, playLog]);
 
+	// Check if this is a bad pass turnover
+	const isBadPass = label === 'turnover' && /bad pass/.test(typeText);
+	
 	const primaryAthlete = athletes.find(a => 
 		a.position?.toLowerCase().includes('shooter') || 
-		a.position?.toLowerCase().includes('rebounder')
+		a.position?.toLowerCase().includes('rebounder') ||
+		(isBadPass && a.position?.toLowerCase().includes('turnover'))
 	) || athletes[0];
-	const secondaryAthlete = athletes.find(a => a.position?.toLowerCase().includes('assist')) || athletes[1];
+	const secondaryAthlete = athletes.find(a => 
+		a.position?.toLowerCase().includes('assist') ||
+		(isBadPass && a !== primaryAthlete)
+	) || athletes[1];
 	const primaryHeadshot = primaryAthlete ? getHeadshotUrl({ id: primaryAthlete?.id, headshot: primaryAthlete?.headshot }) : '';
 	const secondaryHeadshot = secondaryAthlete ? getHeadshotUrl({ id: secondaryAthlete?.id, headshot: secondaryAthlete?.headshot }) : '';
+	
+	// Position passer for bad pass - opposite side from dot
+	const passerPosition = React.useMemo(() => {
+		if (!isBadPass) return shotLocation;
+		
+		// If dot is above center (yPercent < 50), place passer below center with offset
+		// If dot is below center, place passer above center with offset
+		const isAboveCenter = shotLocation.yPercent < 50;
+		const xPercent = shotLocation.xPercent > 50 ? 20 : 80; // Opposite horizontal side
+		const yPercent = isAboveCenter ? 70 : 30; // Opposite vertical side
+		
+		return { xPercent, yPercent, hasCoordinates: true, isFreeThrow: false };
+	}, [isBadPass, shotLocation]);
 
 	const teamColor = possessionIsHome ? '#FAAFE8' : '#00FFE7';
 	
@@ -520,14 +542,14 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				['--container-width' as any]: courtRef.current?.offsetWidth ? `${courtRef.current.offsetWidth - 28}px` : '100%'
 			}}>
 				{/* Ball animation at shot location - Enhanced with shooting and scoring play detection */}
-			{label !== 'end-period' && label !== 'substitution' && label !== 'timeout' && (
+			{label !== 'end-period' && label !== 'substitution' && label !== 'timeout' && label !== 'shot-clock-turnover' && (
 				<>
 					<div 
 						key={`ball-${cycle}`} 
-				className={`play-ball-fixed ${label === 'jumper' ? 'animate-jump-shot-ball' : label === 'layup' ? 'animate-layup-ball' : label === 'alley-oop' ? 'animate-alley-oop-ball' : label === 'rebound' ? 'animate-rebound-ball' : shotLocation.isFreeThrow ? '' : config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
+				className={`play-ball-fixed ${isBadPass ? 'animate-bad-pass-ball' : label === 'jumper' ? 'animate-jump-shot-ball' : label === 'layup' ? 'animate-layup-ball' : label === 'alley-oop' ? 'animate-alley-oop-ball' : label === 'rebound' ? 'animate-rebound-ball' : shotLocation.isFreeThrow ? '' : config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
 						style={{
-							left: `calc(${shotLocation.xPercent}% + ${ballOffsetX}px)`,
-							top: `calc(${shotLocation.yPercent}% + ${ballOffsetY}px)`,
+							left: isBadPass ? `${passerPosition.xPercent}%` : `calc(${shotLocation.xPercent}% + ${ballOffsetX}px)`,
+							top: isBadPass ? `${passerPosition.yPercent}%` : `calc(${shotLocation.yPercent}% + ${ballOffsetY}px)`,
 							['--play-color' as any]: config.color,
 							['--is-shooting' as any]: lastPlay.shootingPlay ? '1' : '0',
 							['--is-scoring' as any]: lastPlay.scoringPlay ? '1' : '0',
@@ -536,8 +558,12 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						['--basket-y' as any]: basketPosition.yPercent,
 						['--shot-x' as any]: shotLocation.xPercent,
 						['--shot-y' as any]: shotLocation.yPercent,
+						['--passer-x' as any]: passerPosition.xPercent,
+						['--passer-y' as any]: passerPosition.yPercent,
+						['--dot-x' as any]: shotLocation.xPercent,
+						['--dot-y' as any]: shotLocation.yPercent,
 						['--lift-offset' as any]: '-60px',
-						['--arc-direction' as any]: arcDirectionAdjustment.toString(),
+						['--arc-direction' as any]: isBadPass ? (shotLocation.xPercent > passerPosition.xPercent ? 1 : -1) : arcDirectionAdjustment.toString(),
 						['--ball-offset-x' as any]: `${ballOffsetX}px`,
 					['--arc-peak-offset' as any]: `${arcPeakOffsetPx}px`,
 					['--arc-mid-offset' as any]: `${arcMidOffsetPx}px`,
@@ -562,14 +588,29 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					/>
 				</>
 			)}
-			{/* Primary athlete headshot - hidden for end period and substitution. Show team logo for team rebounds */}
-			{label !== 'end-period' && label !== 'substitution' && (primaryAthlete && primaryHeadshot || (label === 'rebound' && !primaryAthlete)) && (
+			{/* Shot clock display for shot clock turnovers */}
+			{label === 'shot-clock-turnover' && (
+				<div
+					key={`shot-clock-${cycle}`}
+					className="absolute w-[45px] h-[45px] flex items-center justify-center flex-col pointer-events-none z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 animate-pulse shot-clock-display"
+					style={{
+						left: `${shotLocation.xPercent}%`,
+						top: `${shotLocation.yPercent}%`,
+						['--shot-clock-color' as any]: teamColor,
+					}}
+				>
+					
+					<span className="block leading-none text-[#FF3B30] font-bold text-base font-audiowide">00</span>
+				</div>
+			)}
+			{/* Primary athlete headshot - hidden for end period and substitution. Show team logo for team rebounds. For bad pass, show at passer position */}
+			{label !== 'end-period' && label !== 'substitution' && label !== 'shot-clock-turnover' && (primaryAthlete && primaryHeadshot || (label === 'rebound' && !primaryAthlete)) && (
 				<div
 					key={`primary-${cycle}`}
 					className={`athlete-headshot-fixed primary-athlete ${label === 'jumper' ? 'animate-jump-shot-player' : ''} ${label === 'layup' ? 'animate-layup' : ''} ${label === 'alley-oop' ? 'animate-alley-oop' : ''} ${label === 'rebound' ? 'animate-rebound-catch' : ''}`}
 					style={{
-						left: `calc(${shotLocation.xPercent}% + ${headshotOffsetX}px)`,
-						top: `calc(${shotLocation.yPercent}% + ${headshotOffsetY}px)`,
+						left: isBadPass ? `${passerPosition.xPercent}%` : `calc(${shotLocation.xPercent}% + ${headshotOffsetX}px)`,
+						top: isBadPass ? `${passerPosition.yPercent}%` : `calc(${shotLocation.yPercent}% + ${headshotOffsetY}px)`,
 						['--athlete-color' as any]: getAthleteTeamColor((primaryAthlete?.team as any)?.id),
 						['--shot-x' as any]: `${shotLocation.xPercent}%`,
 						['--shot-y' as any]: `${shotLocation.yPercent}%`,
@@ -581,6 +622,29 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						alt={primaryAthlete.displayName || primaryAthlete.shortName || ''}
 						onError={(e) => (e.currentTarget.style.display = 'none')}
 						style={{ filter: label === 'foul' ? 'grayscale(100%)' : 'none' }}
+					/>
+				</div>
+			)}
+			
+			{/* Secondary athlete headshot - for bad pass, show receiver starting near passer, runs to dot with jump/catch animation */}
+			{isBadPass && secondaryAthlete && secondaryHeadshot && (
+				<div
+					key={`secondary-${cycle}`}
+					className="athlete-headshot-fixed secondary-athlete animate-bad-pass-receiver"
+					style={{
+						left: `${shotLocation.xPercent}%`,
+						top: `${shotLocation.yPercent}%`,
+						['--athlete-color' as any]: getAthleteTeamColor((secondaryAthlete?.team as any)?.id),
+						['--passer-x' as any]: passerPosition.xPercent,
+						['--passer-y' as any]: passerPosition.yPercent,
+						['--dot-x' as any]: shotLocation.xPercent,
+						['--dot-y' as any]: shotLocation.yPercent,
+					}}
+				>
+					<img
+						src={secondaryHeadshot}
+						alt={secondaryAthlete.displayName || secondaryAthlete.shortName || ''}
+						onError={(e) => (e.currentTarget.style.display = 'none')}
 					/>
 				</div>
 			)}

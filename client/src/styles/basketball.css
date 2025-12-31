@@ -1,8 +1,6 @@
 /* Overall wrapper */
 .basketball-wrapper {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
+	/* Use Tailwind: flex flex-col gap-3 */
 }
 
 /* 3D platform container to mimic the football trapezoid platform */
@@ -47,8 +45,7 @@
 .paint,
 .three-arc,
 .hoop {
-	position: absolute;
-	pointer-events: none;
+	/* Use Tailwind: absolute pointer-events-none */
 }
 
 .court-lines {
@@ -166,8 +163,7 @@
 }
 
 .team-meta {
-	display: flex;
-	flex-direction: column;
+	/* Use Tailwind: flex flex-col leading-tight */
 	line-height: 1.1;
 }
 
@@ -252,8 +248,7 @@
 }
 
 .play-banner-meta {
-	display: flex;
-	gap: 10px;
+	/* Use Tailwind: flex gap-2.5 text-xs text-gray-400 */
 	font-size: 0.8rem;
 	color: #a0aec0;
 }
@@ -537,6 +532,84 @@
 	100% { transform: translate(var(--sx), calc(var(--sy) + 6%)) scale(0.85); opacity: 0.75; }
 }
 
+/* Bad pass ball animation - pass from first participant to dot with arc, then fall */
+@keyframes bad-pass-ball {
+	/* Pass phase: 0-50% - ball travels from passer toward dot with Y offset */
+	0% {
+		transform: translate(0, 0) scale(1);
+		opacity: 1;
+	}
+	40% {
+		transform: translate(
+			calc((var(--dot-x) - var(--passer-x)) * 0.8vw * var(--arc-direction, 1)),
+			calc((var(--dot-y) - var(--passer-y)) * 0.5vh)
+		) scale(1.05);
+		opacity: 1;
+	}
+
+	60% {
+		transform: translate(
+			calc((var(--dot-x) - var(--passer-x)) * 0.8vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * -0.25vh)
+		) scale(0.9);
+		opacity: 1;
+	}
+	100% {
+		transform: translate(
+			calc((var(--dot-x) - var(--passer-x)) * 0.8vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * -0.25vh)
+		) scale(0.9);
+		opacity: 1;
+	}
+}
+
+/* Bad pass receiver animation - run to dot, jump to catch at 50%, fall with ball */
+@keyframes bad-pass-receiver {
+	/* Running phase: 0-40% - run from start to dot position */
+	0% {
+		transform: translate(
+			calc((var(--passer-x) - var(--dot-x)) * 0.2vw),
+			calc((var(--passer-y) - var(--dot-y)) * 0.02vh)
+		);
+		opacity: 1;
+	}
+	20% {
+		transform: translate(
+			calc((var(--passer-x) - var(--dot-x)) * 0.1vw),
+			calc((var(--passer-y) - var(--dot-y)) * -0.1vh)
+		);
+		opacity: 1;
+	}
+	40% {
+		transform: translate(
+			calc((var(--passer-x) - var(--dot-x)) * 0.1vw),
+			calc((var(--passer-y) - var(--dot-y)) * -0.3vh)
+		);
+		opacity: 1;
+	}
+	/* Jump phase: 40-50% - jump up to catch */
+	50% {
+		transform: translate(
+			calc((var(--passer-x) - var(--dot-x)) * 0.1vw),
+			calc((var(--passer-y) - var(--dot-y)) * -0.1vh)
+		);		opacity: 1;
+	}
+	/* Fall phase: 50-100% - fall down with ball */
+	70% {
+		transform: translate(
+			calc((var(--passer-x) - var(--dot-x)) * 0.1vw),
+			calc((var(--passer-y) - var(--dot-y)) * -0.1vh)
+		);		opacity: 1;
+	}
+	100% {
+		transform: translate(
+			calc((var(--passer-x) - var(--dot-x)) * 0.1vw),
+			calc((var(--passer-y) - var(--dot-y)) * -0.1vh)
+		);		
+		opacity: 1;
+	}
+}
+
 @keyframes fast-break {
 	0% { transform: translate(var(--sx), var(--sy)); filter: drop-shadow(0 0 10px rgba(0, 255, 231, 0.6)); }
 	50% { transform: translate(var(--mx), var(--my)); filter: drop-shadow(0 0 20px rgba(0, 255, 231, 0.8)); }
@@ -643,6 +716,8 @@
 .animate-steal { animation: steal-dash 1.8s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
 .animate-block { animation: block-swat 2.1s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite; }
 .animate-turnover { animation: turnover-pop 2.4s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
+.animate-bad-pass-ball { animation: bad-pass-ball 3s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
+.animate-bad-pass-receiver { animation: bad-pass-receiver 3s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
 .animate-fast-break { animation: fast-break 1.8s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
 
 /* Substitution animations - using slide and fade patterns */
@@ -707,15 +782,11 @@
 }
 
 .diagnostic-grid {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
+	/* Use Tailwind: flex flex-col gap-1.5 */
 }
 
 .diagnostic-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
+	/* Use Tailwind: flex justify-between items-center text-xs */
 	font-size: 12px;
 }
 
@@ -761,7 +832,7 @@
 	            0 0 32px var(--marker-color, #00FFE7),
 	            inset 0 0 8px var(--marker-color, #00FFE7);
 	pointer-events: none;
-	z-index: 15;
+	z-index: 1;
 	transform: translate(-50%, -50%);
 	animation: marker-pulse 2s ease-in-out infinite;
 }
@@ -1045,7 +1116,7 @@
 
 /* Remove athlete name labels to match football simplicity */
 .athlete-headshot-fixed .athlete-name {
-	display: none;
+	/* Use Tailwind: hidden */
 }
 
 .athlete-headshot-fixed.secondary-athlete {
@@ -1075,6 +1146,16 @@
 		opacity: 1;
 		transform: translate(-50%, -80px) scale(1);
 	}
+}
+
+/* Shot clock display for shot clock turnovers - custom styles only */
+.shot-clock-display {
+	color: var(--shot-clock-color, #00FFE7);
+	background: radial-gradient(circle at 30% 30%, rgba(0, 255, 231, 0.15), rgba(0, 255, 231, 0.05));
+	border-color: var(--shot-clock-color, #00FFE7);
+	box-shadow: 
+		0 0 20px var(--shot-clock-color, #00FFE7),
+		0 0 40px rgba(0, 255, 231, 0.3) inset;
 }
 
 /* Legacy animated positioning (kept for fallback) */
@@ -1129,7 +1210,7 @@
 	left: var(--ex);
 	top: var(--ey);
 	/* transform: translate(-50%, -140px); */
-
+	/* Use Tailwind: z-10 */
 	z-index: 1;
 }
 
