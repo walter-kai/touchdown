@@ -412,7 +412,10 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		return [];
 	}, [lastPlay?.athletesInvolved, lastPlay?.participants, lastPlay?.team, playLog]);
 
-	const primaryAthlete = athletes.find(a => a.position?.toLowerCase().includes('shooter')) || athletes[0];
+	const primaryAthlete = athletes.find(a => 
+		a.position?.toLowerCase().includes('shooter') || 
+		a.position?.toLowerCase().includes('rebounder')
+	) || athletes[0];
 	const secondaryAthlete = athletes.find(a => a.position?.toLowerCase().includes('assist')) || athletes[1];
 	const primaryHeadshot = primaryAthlete ? getHeadshotUrl({ id: primaryAthlete?.id, headshot: primaryAthlete?.headshot }) : '';
 	const secondaryHeadshot = secondaryAthlete ? getHeadshotUrl({ id: secondaryAthlete?.id, headshot: secondaryAthlete?.headshot }) : '';
