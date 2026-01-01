@@ -355,21 +355,21 @@
 	}
 	40% {
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.97 / 100 * var(--basket-hit-adjust, 0.85) * var(--arc-direction, 1)), 
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.77 / 100 * var(--basket-hit-adjust, 0.85) * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 * 0.5 / 100 * var(--basket-hit-adjust, 1.03) + var(--arc-peak-offset, -60px))
 		) scale(1.05);
 		opacity: 1;
 	}
 	80% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.2 / 100 * var(--basket-hit-adjust, 1.03) * var(--arc-direction, 1)), 
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.82 / 100 * var(--basket-hit-adjust, 1.03) * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + var(--arc-mid-offset, -30px))
 		) scale(0.4);
 		opacity: 0.8;
 	}
 	100% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.2 / 100 * var(--basket-hit-adjust, 1) * var(--arc-direction, 1)), 
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.82 / 100 * var(--basket-hit-adjust, 1) * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + var(--arc-end-offset, -10px))
 		) scale(0.48); 
 		opacity: 0; 
@@ -964,29 +964,29 @@
 
 
 @keyframes free-throw-arc {
-	0% {
+	0%, 40% {
 		transform: translate(0, 0) scale(1);
 		opacity: 1;
 	}
-	20% {
+	50% {
 		transform: translate(0, -30px) scale(1.05);
 		opacity: 1;
 	}
-	50% {
+	60% {
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.5 / 100 * var(--basket-hit-adjust, 1.03)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 * 0.5 / 100 * var(--basket-hit-adjust, 1.03) - 60px)
 		) scale(1.05);
 		opacity: 1;
 	}
-	80% {
+	70% {
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, .953)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) - 30px)
 		) scale(0.4);
 		opacity: 0.8;
 	}
-	100% {
+	80%, 100% {
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) - 10px)
@@ -1145,22 +1145,22 @@
 	/* Arc to basket:  */
 	12% {
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.5 / 100 * var(--basket-hit-adjust, 1.03)),
-			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 * 0.5 / 100 * var(--basket-hit-adjust, 1.03) - 40px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.3 / 100 * var(--basket-hit-adjust, 1.03)),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.625 * 0.5 / 100 * var(--basket-hit-adjust, 1.03) - 40px)
 		) scale(1.05);
 		opacity: 1;
 	/* Bounce: 19-23% */
 	}
 	23% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, .73) + calc(var(--arc-direction, 1) * -10px)),
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.3 / 100 * var(--basket-hit-adjust, 1.03)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.75 / 100 * var(--basket-hit-adjust, .73) - 30px)
 		) scale(0.4);
 		opacity: 0.8;
 	}
 	33% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, .73) + calc(var(--arc-direction, 1) * -10px)),
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.3 / 100 * var(--basket-hit-adjust, 1.03)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) - 60px)
 		) scale(0.48); 
 		opacity: 1; 
@@ -1168,7 +1168,7 @@
 
 	50% {
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) + calc(var(--arc-direction, 1) * -10px)),
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.3 / 100 * var(--basket-hit-adjust, 1.03)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + 80px)
 		) scale(0.4) rotate(270deg);
 		opacity: 0.6;
@@ -1176,7 +1176,7 @@
 
 	100% {
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) + calc(var(--arc-direction, 1) * -10px)),
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.3 / 100 * var(--basket-hit-adjust, 1.03) + calc(var(--arc-direction, 1) * -10px)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + 140px)
 		) scale(0.2) rotate(405deg);
 		opacity: 0;

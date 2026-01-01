@@ -385,8 +385,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	const ballOffsetY = shotLocation.isFreeThrow ? -25 : -15;
 	// Reverse arc direction for behind-the-net shots so ball arcs backward toward hoop
 	// Arc direction for regular plays (layups, alley-oops, etc): based on attacking direction
-	// Same logic as bad passes: +1 for attacking right basket, -1 for attacking left basket
-	const arcDirectionAdjustment = offenseBasketY === 94 ? -1 : 1;
+	// Same logic as bad passes: +1 for attacking right of shooter, -1 for attacking left of shooter
+	const arcDirectionAdjustment = basketRawXPercent >= shotRawXPercent ? 1 : -1;
 	
 	// Determine if this is a miss (shooting play but not scoring)
 	const isMiss = lastPlay.shootingPlay && !lastPlay.scoringPlay;
