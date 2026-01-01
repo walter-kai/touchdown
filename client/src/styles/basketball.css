@@ -278,20 +278,20 @@
 @keyframes layup-flow {
 	/* Running phase: approach from distance away (0-60%) */
 	0% { 
-		transform: translate(calc(var(--arc-direction, 1) * -90px), 0) scale(0.85);
+		transform: translate(calc(var(--arc-direction, 1) * 90px), 0) scale(0.85);
 		opacity: 0.8;
 	}
 	12% { 
-		transform: translate(calc(var(--arc-direction, 1) * -15px + var(--arc-direction, 1) * -15px), -15px) scale(0.88);
+		transform: translate(calc(var(--arc-direction, 1) * 40px), -15px) scale(0.88);
 		opacity: 0.85;
 	}
 
 	35% {
-		transform: translate(calc(var(--arc-direction, 1) * -15px), -50px) scale(1.02);
+		transform: translate(calc(var(--arc-direction, 1) * 15px), -50px) scale(1.02);
 		opacity: 1;
 	}
 	100% {
-		transform: translate(calc(var(--arc-direction, 1) * -15px), -15px) scale(0.98);
+		transform: translate(calc(var(--arc-direction, 1) * 15px), -15px) scale(0.98);
 		opacity: 1;
 	}
 }
@@ -301,14 +301,14 @@
 	/* Running phase (0-60%): ball moves with headshot from distance */
 	0% {
 		transform: translate(
-			calc(var(--arc-direction, 1) * -90px), 
+			calc(var(--arc-direction, 1) * 90px), 
 			0
 		) scale(0.96);
 		opacity: 0.9;
 	}
 	12% {
 		transform: translate(
-			calc(var(--arc-direction, 1) * -15px), 
+			calc(var(--arc-direction, 1) * 25px), 
 			-8px
 		) scale(0.96);
 		opacity: 0.95;
@@ -316,27 +316,27 @@
 
 	/* Jump phase (60-85%): ball lifts during jump, stays with headshot */
 	35% {
-		transform: translate(calc(var(--arc-direction, 1) * -15px), -15px) scale(0.98);
+		transform: translate(calc(var(--arc-direction, 1) * 15px), -15px) scale(0.98);
 		opacity: 1;
 	}
 	40% {
-		transform: translate(calc(var(--arc-direction, 1) * -15px), -30px) scale(1);
+		transform: translate(calc(var(--arc-direction, 1) * 15px), -30px) scale(1);
 		opacity: 1;
 	}
 	/* Arc phase (85-100%): ball arcs to basket */
 	55% {
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.3 / 100 * var(--arc-direction, 1)), 
+			calc(-5px + (var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.5 / 100 * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 * 0.3 / 100 + var(--arc-peak-offset, -60px))
 		) scale(1.02);
 		opacity: 1;
 	}
-	100% {
+	80%, 100% {
 		transform: translate(
-			calc(-15px + (var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--arc-direction, 1)), 
+			calc(-12px + (var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.5 / 100 * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 + var(--arc-end-offset, -10px))
-		) scale(0.48);
-		opacity: 0;
+		) scale(0.28);
+		opacity: 0.5;
 	}
 }
 
@@ -359,14 +359,14 @@
 	}
 	80% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.2 / 100 * var(--basket-hit-adjust, 1.03) * var(--arc-direction, 1)), 
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.7 / 100 * var(--basket-hit-adjust, 1.03) * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + var(--arc-mid-offset, -30px))
 		) scale(0.4);
 		opacity: 0.8;
 	}
 	100% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.2 / 100 * var(--basket-hit-adjust, 1) * var(--arc-direction, 1)), 
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.7 / 100 * var(--basket-hit-adjust, 1) * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + var(--arc-end-offset, -10px))
 		) scale(0.48); 
 		opacity: 0; 
@@ -408,19 +408,19 @@
 @keyframes alley-oop {
 	/* Running phase: approach from distance away (0-60%) */
 	0% { 
-		transform: translate(calc(var(--arc-direction, 1) * -400px), 0) scale(0.85);
+		transform: translate(calc(var(--arc-direction, 1) * 400px), 0) scale(0.85);
 		opacity: 0.8;
 	}
 	15% { 
-		transform: translate(calc(var(--arc-direction, 1) * -300px), -5px) scale(0.88);
+		transform: translate(calc(var(--arc-direction, 1) * 300px), -5px) scale(0.88);
 		opacity: 0.85;
 	}
 	30% { 
-		transform: translate(calc(var(--arc-direction, 1) * -200px), -8px) scale(0.90);
+		transform: translate(calc(var(--arc-direction, 1) * 200px), -8px) scale(0.90);
 		opacity: 0.9;
 	}
 	45% { 
-		transform: translate(calc(var(--arc-direction, 1) * -100px), -8px) scale(0.92);
+		transform: translate(calc(var(--arc-direction, 1) * 100px), -8px) scale(0.92);
 		opacity: 0.95;
 	}
 	/* Jump phase: reach the basket (60-100%) */
@@ -447,28 +447,28 @@
 	/* Running phase (0-60%): ball moves with headshot from distance */
 	0% {
 		transform: translate(
-			calc(var(--arc-direction, 1) * -400px), 
+			calc(var(--arc-direction, 1) * 400px), 
 			0
 		) scale(0.96);
 		opacity: 0.9;
 	}
 	15% {
 		transform: translate(
-			calc(var(--arc-direction, 1) * -300px), 
+			calc(var(--arc-direction, 1) * 300px), 
 			-5px
 		) scale(0.96);
 		opacity: 0.9;
 	}
 	30% {
 		transform: translate(
-			calc(var(--arc-direction, 1) * -200px), 
+			calc(var(--arc-direction, 1) * 200px), 
 			-8px
 		) scale(0.96);
 		opacity: 0.95;
 	}
 	45% {
 		transform: translate(
-			calc(var(--arc-direction, 1) * -100px), 
+			calc(var(--arc-direction, 1) * 100px), 
 			-8px
 		) scale(0.96);
 		opacity: 0.95;
@@ -673,7 +673,7 @@
 	/* Hit backboard */
 	0% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.98 / 100 * var(--arc-direction, 1) + calc(var(--shot-y) * 0.09 * var(--container-width, 100vw) / 100 * var(--arc-direction, 1)) - 20px),
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.98 / 100 * var(--arc-direction, 1) + calc(var(--shot-y) * 0.004 * var(--container-width, 100vw) / 100 * var(--arc-direction, 1)) ),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.65 / 100 - 40px)
 		) scale(0.55) rotate(90deg);
 		opacity: 1;
@@ -681,7 +681,7 @@
 	/* Bounce back to rim */
 	5% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.86 / 100 * var(--arc-direction, 1) + calc(var(--shot-y) * 0.09 * var(--container-width, 100vw) / 100 * var(--arc-direction, 1)) - 28px),
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.86 / 100 * var(--arc-direction, 1) + calc(var(--shot-y) * 0.09 * var(--container-width, 100vw) / 100 * var(--arc-direction, 1))),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.625 / 100 - 30px)
 		) scale(0.5) rotate(135deg);
 		opacity: 1;
@@ -689,7 +689,7 @@
 	/* Final rim rattle */
 	7% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.82 / 100 * var(--arc-direction, 1) + calc(var(--shot-y) * 0.09 * var(--container-width, 100vw) / 100 * var(--arc-direction, 1)) - 30px),
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.82 / 100 * var(--arc-direction, 1) + calc(var(--shot-y) * 0.09 * var(--container-width, 100vw) / 100 * var(--arc-direction, 1))),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 - 42px)
 		) scale(0.48) rotate(180deg);
 		opacity: 1;
@@ -727,7 +727,7 @@
 	60%, 100% { 
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * -0.2 / 100 * var(--arc-direction, 1)), 
-			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * var(--shot-y) * 0.0035 / 100 -  var(--arc-direction, 1) * -20px)
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * var(--shot-y) * 0.003 / 100 -  var(--arc-direction, 1) * -20px)
 		) scale(0.8);
 		opacity: 0.9;
 	}
@@ -735,12 +735,12 @@
 
 @keyframes rebound-catch {
 	/* Wait for ball to bounce */
-	0%, 25% { 
+	0%, 15% { 
 		transform: translateY(0);
 		opacity: 1;
 	}
 	/* Jump up to catch */
-	40% { 
+	20% { 
 		transform: translateY(-45px);
 		opacity: 1;
 	}

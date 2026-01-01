@@ -56,9 +56,9 @@ const derivePlayLabel = (typeText: string, play?: PlayNba | null): PlayLabel => 
 	if (/dunk/.test(typeText)) return 'dunk';
 	if (/layup|floater|finger roll/.test(typeText)) return 'layup';
 	if (/free throw/.test(typeText)) return 'free-throw';
-	if (/hook/.test(typeText)) return 'hook';
 	if (/alley|oop/.test(typeText)) return 'alley-oop';
 	if (/jumper|jump shot|fadeaway|pullup|pull up|pull-up|driving|stepback|step back|step-back/.test(typeText)) return 'jumper';
+	if (/hook/.test(typeText)) return 'hook'; // Check hook after driving to catch "driving hook shot" as jumper
 	if (/tip|putback/.test(typeText)) return 'tip-in';
 	if (/block/.test(typeText)) return 'block';
 	if (/steal/.test(typeText)) return 'steal';
@@ -376,7 +376,9 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	const ballOffsetX = shotLocation.isFreeThrow ? (attackingRight ? 0 : -33) : (attackingRight ? 12 : -20);
 	const ballOffsetY = shotLocation.isFreeThrow ? -25 : -15;
 	// Reverse arc direction for behind-the-net shots so ball arcs backward toward hoop
-	const arcDirectionAdjustment = isBehindNetShot ? -1 : 1;
+	// Arc direction for regular plays (layups, alley-oops, etc): based on attacking direction
+	// Same logic as bad passes: +1 for attacking right basket, -1 for attacking left basket
+	const arcDirectionAdjustment = offenseBasketY === 94 ? -1 : 1;
 	
 	// Determine if this is a miss (shooting play but not scoring)
 	const isMiss = lastPlay.shootingPlay && !lastPlay.scoringPlay;
@@ -447,10 +449,11 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	// Calculate arc direction based on offensive direction and shot location
 	const shotLocationArcDirection = isBehindNetShot ? -1 : 1;
 	
-	// For bad passes, determine arc direction based on court location
-	// Arc direction should indicate the direction the pass travels across the court
-	// We use the shot location (turnover point) relative to the court center
-	const badPassArcDirection = shotLocation.xPercent > 50 ? 1 : -1;
+	// For bad passes, determine arc direction based on which basket the team is attacking
+	// offenseBasketY tells us which basket they're attacking (94 = right side, 6 = left side)
+	// Arc direction: attacking basket at Y=94 (right) = +1, attacking basket at Y=6 (left) = -1
+	// This is the same for both teams - it's based purely on attacking direction
+	const badPassArcDirection = offenseBasketY === 94 ? 1 : -1;
 	
 	// Position passer for bad pass - positioned away from dot based on arc direction
 	const passerPosition = React.useMemo(() => {
