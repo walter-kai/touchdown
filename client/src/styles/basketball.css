@@ -585,7 +585,7 @@
 	}
 	40% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * -0.1vw * var(--arc-direction, 1)),
+			calc((var(--passer-x) - var(--dot-x)) * 0.3vw * var(--arc-direction, 1)),
 			calc((var(--passer-y) - var(--dot-y)) * -0.12vh)
 		);
 		opacity: 1;
@@ -593,7 +593,7 @@
 	/* Jump phase: 40-50% - jump up to catch */
 	45% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * -0.1vw * var(--arc-direction, 1)),
+			calc((var(--passer-x) - var(--dot-x)) * 0.1vw * var(--arc-direction, 1)),
 			calc((var(--passer-y) - var(--dot-y)) * -0.1vh)
 		);		
 		opacity: 1;
@@ -608,7 +608,7 @@
 	}
 	75%, 100% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * -0.1vw * var(--arc-direction, 1)),
+			calc((var(--passer-x) - var(--dot-x)) * 0.1vw * var(--arc-direction, 1)),
 			calc((var(--passer-y) - var(--dot-y)) * -0.15vh)
 		);		
 		opacity: 1;
@@ -719,14 +719,14 @@
 	/* Ball settling toward rebounder's hands */
 	50% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * -0.5 / 100 * var(--arc-direction, 1)), 
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * -0.4 / 100 * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.25 / 100 - 40px)
 		) scale(0.8);
 		opacity: 1;
 	}
 	60%, 100% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * -0.5 / 100 * var(--arc-direction, 1)), 
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * -0.4 / 100 * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.25 / 100 -  var(--arc-direction, 1) * -20px)
 		) scale(0.8);
 		opacity: 0.9;

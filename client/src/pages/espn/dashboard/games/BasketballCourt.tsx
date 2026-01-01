@@ -784,8 +784,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					}}
 				>
 					<img
-						src={primaryHeadshot || (label === 'rebound' && !primaryAthlete ? (possessionIsHome ? homeTeam.logo : awayTeam.logo) : '')}
-						alt={primaryAthlete.displayName || primaryAthlete.shortName || ''}
+						src={primaryHeadshot || (label === 'rebound' && !primaryAthlete ? getTeamLogo(possessionIsHome ? homeTeam : awayTeam) : '')}
+						alt={primaryAthlete?.displayName || primaryAthlete?.shortName || (label === 'rebound' ? 'Team Rebound' : '')}
 						onError={(e) => (e.currentTarget.style.display = 'none')}
 						style={{ filter: label === 'foul' ? 'grayscale(100%)' : 'none' }}
 					/>
