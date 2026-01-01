@@ -46,7 +46,11 @@ const resolvePlayType = (play?: PlayNba | null) => {
 };
 
 const derivePlayLabel = (typeText: string, play?: PlayNba | null): PlayLabel => {
-	if (/out of bounds|out-of-bounds/.test(typeText)) return 'out-of-bounds';
+	if (/out of bounds|out-of-bounds/.test(typeText)) {
+		// "Out of Bounds - Bad Pass Turnover" should be treated as a turnover, not out-of-bounds
+		if (/bad pass/.test(typeText)) return 'turnover';
+		return 'out-of-bounds';
+	}
 	if (/shot clock/.test(typeText)) return 'shot-clock-turnover';
 	if (/three|3pt|3-pt|3 point/.test(typeText)) return 'three';
 	if (/dunk/.test(typeText)) return 'dunk';
@@ -84,6 +88,9 @@ const reboundPlayConfig = { ball: 'animate-rebound-ball', trail: 'animate-reboun
 
 // End of period/game config (adopting football's end-of-regulation styling)
 const endPeriodPlayConfig = { ball: 'animate-end-regulation', trail: 'animate-end-regulation', color: '#FF6B6B', glowColor: 'rgba(255, 107, 107, 0.8)' };
+
+// Timeout-specific config (spinning clock like football field)
+const timeoutPlayConfig = { ball: 'animate-timeout', trail: 'animate-timeout', color: '#FFD700', glowColor: 'rgba(255, 215, 0, 0.6)', icon: '🏀' };
 
 const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	homeTeam,
@@ -161,8 +168,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		} catch {}
 	}, [lastPlay?.id, lastPlay?.text, typeText, possessionId]);
 
-	// Use foul config for personal fouls, rebound config for rebounds, end period config for end periods, default for everything else
-	const config = label === 'foul' ? foulPlayConfig : label === 'rebound' ? reboundPlayConfig : label === 'end-period' ? endPeriodPlayConfig : defaultPlayConfig;
+	// Use foul config for personal fouls, rebound config for rebounds, end period config for end periods, timeout config for timeouts, default for everything else
+	const config = label === 'foul' ? foulPlayConfig : label === 'rebound' ? reboundPlayConfig : label === 'end-period' ? endPeriodPlayConfig : label === 'timeout' ? timeoutPlayConfig : defaultPlayConfig;
 
 	// ESPN NBA court coordinates are in FEET:
 	// - X: 0-50 feet (court width, left to right)
@@ -422,6 +429,9 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	// Check if this is an out of bounds play
 	const isOutOfBounds = label === 'out-of-bounds';
 	
+	// Check if this is an out of bounds bad pass (text contains "out of bounds" AND "bad pass")
+	const isOutOfBoundsBadPass = /out of bounds|out-of-bounds/.test(typeText) && /bad pass/.test(typeText);
+	
 	const primaryAthlete = athletes.find(a => 
 		a.position?.toLowerCase().includes('shooter') || 
 		a.position?.toLowerCase().includes('rebounder') ||
@@ -434,18 +444,26 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	const primaryHeadshot = primaryAthlete ? getHeadshotUrl({ id: primaryAthlete?.id, headshot: primaryAthlete?.headshot }) : '';
 	const secondaryHeadshot = secondaryAthlete ? getHeadshotUrl({ id: secondaryAthlete?.id, headshot: secondaryAthlete?.headshot }) : '';
 	
-	// Position passer for bad pass - opposite side from dot
+	// Calculate arc direction based on offensive direction and shot location
+	const shotLocationArcDirection = isBehindNetShot ? -1 : 1;
+	
+	// Position passer for bad pass - positioned away from dot based on arc direction
 	const passerPosition = React.useMemo(() => {
-		if (!isBadPass) return shotLocation;
+		if (!isBadPass && !isOutOfBoundsBadPass) return shotLocation;
 		
-		// If dot is above center (yPercent < 50), place passer below center with offset
-		// If dot is below center, place passer above center with offset
+		// Position passer a distance away from the dot, considering arc direction
+		// Arc direction determines if we go left (-1) or right (1)
+		const distanceOffset = 20; // percentage offset
+		const arcDir = shotLocationArcDirection;
+		
+		// Position passer horizontally opposite to arc direction
+		const xPercent = shotLocation.xPercent + (distanceOffset * arcDir);
+		// Position vertically away from center based on dot position
 		const isAboveCenter = shotLocation.yPercent < 50;
-		const xPercent = shotLocation.xPercent > 50 ? 20 : 80; // Opposite horizontal side
-		const yPercent = isAboveCenter ? 70 : 30; // Opposite vertical side
+		const yPercent = isAboveCenter ? 70 : 30;
 		
 		return { xPercent, yPercent, hasCoordinates: true, isFreeThrow: false };
-	}, [isBadPass, shotLocation]);
+	}, [isBadPass, isOutOfBoundsBadPass, shotLocation, shotLocationArcDirection]);
 	
 	// Position out of bounds - beyond the sideline or baseline
 	const outOfBoundsPosition = React.useMemo(() => {
@@ -685,10 +703,10 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				<>
 					<div 
 						key={`ball-${cycle}`} 
-				className={`play-ball-fixed ${isOutOfBounds ? 'animate-out-of-bounds-ball' : isBadPass ? 'animate-bad-pass-ball' : label === 'jumper' ? 'animate-jump-shot-ball' : label === 'layup' ? 'animate-layup-ball' : label === 'alley-oop' ? 'animate-alley-oop-ball' : label === 'rebound' ? 'animate-rebound-ball' : shotLocation.isFreeThrow ? '' : config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
+				className={`play-ball-fixed ${isOutOfBounds && !isOutOfBoundsBadPass ? 'animate-out-of-bounds-ball' : (isBadPass || isOutOfBoundsBadPass) ? 'animate-bad-pass-ball' : label === 'jumper' ? 'animate-jump-shot-ball' : label === 'layup' ? 'animate-layup-ball' : label === 'alley-oop' ? 'animate-alley-oop-ball' : label === 'rebound' ? 'animate-rebound-ball' : shotLocation.isFreeThrow ? '' : config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
 						style={{
-							left: isOutOfBounds ? `${shotLocation.xPercent}%` : isBadPass ? `${passerPosition.xPercent}%` : `calc(${shotLocation.xPercent}% + ${ballOffsetX}px)`,
-							top: isOutOfBounds ? `${shotLocation.yPercent}%` : isBadPass ? `${passerPosition.yPercent}%` : `calc(${shotLocation.yPercent}% + ${ballOffsetY}px)`,
+							left: (isOutOfBounds && !isOutOfBoundsBadPass) ? `${shotLocation.xPercent}%` : (isBadPass || isOutOfBoundsBadPass) ? `${passerPosition.xPercent}%` : `calc(${shotLocation.xPercent}% + ${ballOffsetX}px)`,
+							top: (isOutOfBounds && !isOutOfBoundsBadPass) ? `${shotLocation.yPercent}%` : (isBadPass || isOutOfBoundsBadPass) ? `${passerPosition.yPercent}%` : `calc(${shotLocation.yPercent}% + ${ballOffsetY}px)`,
 							['--play-color' as any]: config.color,
 							['--is-shooting' as any]: lastPlay.shootingPlay ? '1' : '0',
 							['--is-scoring' as any]: lastPlay.scoringPlay ? '1' : '0',
@@ -704,7 +722,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						['--oob-x' as any]: outOfBoundsPosition.xPercent,
 						['--oob-y' as any]: outOfBoundsPosition.yPercent,
 						['--lift-offset' as any]: '-60px',
-						['--arc-direction' as any]: isBadPass ? (shotLocation.xPercent > passerPosition.xPercent ? 1 : -1) : isOutOfBounds ? (outOfBoundsPosition.xPercent > shotLocation.xPercent ? 1 : -1) : arcDirectionAdjustment.toString(),
+						['--arc-direction' as any]: (isBadPass || isOutOfBoundsBadPass) ? (shotLocation.xPercent > passerPosition.xPercent ? 1 : -1) : isOutOfBounds ? (outOfBoundsPosition.xPercent > shotLocation.xPercent ? 1 : -1) : arcDirectionAdjustment.toString(),
 						['--ball-offset-x' as any]: `${ballOffsetX}px`,
 					['--arc-peak-offset' as any]: `${arcPeakOffsetPx}px`,
 					['--arc-mid-offset' as any]: `${arcMidOffsetPx}px`,
@@ -752,8 +770,8 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					key={`primary-${cycle}`}
 					className={`athlete-headshot-fixed primary-athlete ${label === 'jumper' ? 'animate-jump-shot-player' : ''} ${label === 'layup' ? 'animate-layup' : ''} ${label === 'alley-oop' ? 'animate-alley-oop' : ''} ${label === 'rebound' ? 'animate-rebound-catch' : ''}`}
 					style={{
-						left: isBadPass ? `${passerPosition.xPercent}%` : `calc(${shotLocation.xPercent}% + ${headshotOffsetX}px)`,
-						top: isBadPass ? `${passerPosition.yPercent}%` : `calc(${shotLocation.yPercent}% + ${headshotOffsetY}px)`,
+						left: (isBadPass || isOutOfBoundsBadPass) ? `${passerPosition.xPercent}%` : `calc(${shotLocation.xPercent}% + ${headshotOffsetX}px)`,
+						top: (isBadPass || isOutOfBoundsBadPass) ? `${passerPosition.yPercent}%` : `calc(${shotLocation.yPercent}% + ${headshotOffsetY}px)`,
 						['--athlete-color' as any]: getAthleteTeamColor((primaryAthlete?.team as any)?.id),
 						['--shot-x' as any]: `${shotLocation.xPercent}%`,
 						['--shot-y' as any]: `${shotLocation.yPercent}%`,
@@ -769,19 +787,20 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				</div>
 			)}
 			
-			{/* Secondary athlete headshot - for bad pass, show receiver starting near passer, runs to dot with jump/catch animation */}
-			{isBadPass && secondaryAthlete && secondaryHeadshot && (
-				<div
-					key={`secondary-${cycle}`}
-					className="athlete-headshot-fixed secondary-athlete animate-bad-pass-receiver"
-					style={{
-						left: `${shotLocation.xPercent}%`,
-						top: `${shotLocation.yPercent}%`,
-						['--athlete-color' as any]: getAthleteTeamColor((secondaryAthlete?.team as any)?.id),
-						['--passer-x' as any]: passerPosition.xPercent,
-						['--passer-y' as any]: passerPosition.yPercent,
-						['--dot-x' as any]: shotLocation.xPercent,
-						['--dot-y' as any]: shotLocation.yPercent,
+{/* Secondary athlete headshot - for bad pass, show receiver starting away from dot, runs to dot with jump/catch animation */}
+		{(isBadPass || isOutOfBoundsBadPass) && secondaryAthlete && secondaryHeadshot && (
+			<div
+				key={`secondary-${cycle}`}
+				className="athlete-headshot-fixed secondary-athlete animate-bad-pass-receiver"
+				style={{
+					left: `calc(${shotLocation.xPercent}% + ${(passerPosition.xPercent - shotLocation.xPercent) * 0.7}%)`,
+					top: `calc(${shotLocation.yPercent}% + ${(passerPosition.yPercent - shotLocation.yPercent) * 0.4}%)`,
+					['--athlete-color' as any]: getAthleteTeamColor((secondaryAthlete?.team as any)?.id),
+					['--passer-x' as any]: passerPosition.xPercent,
+					['--passer-y' as any]: passerPosition.yPercent,
+					['--dot-x' as any]: shotLocation.xPercent,
+					['--dot-y' as any]: shotLocation.yPercent,
+					['--arc-direction' as any]: shotLocationArcDirection.toString(),
 					}}
 				>
 					<img

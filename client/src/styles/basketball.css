@@ -352,21 +352,21 @@
 	}
 	40% {
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.67 / 100 * var(--basket-hit-adjust, 0.85) * var(--arc-direction, 1)), 
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.97 / 100 * var(--basket-hit-adjust, 0.85) * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 * 0.5 / 100 * var(--basket-hit-adjust, 1.03) + var(--arc-peak-offset, -60px))
 		) scale(1.05);
 		opacity: 1;
 	}
 	80% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.7 / 100 * var(--basket-hit-adjust, 1.03) * var(--arc-direction, 1)), 
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.2 / 100 * var(--basket-hit-adjust, 1.03) * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + var(--arc-mid-offset, -30px))
 		) scale(0.4);
 		opacity: 0.8;
 	}
 	100% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 0.87) * var(--arc-direction, 1)), 
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.2 / 100 * var(--basket-hit-adjust, 1) * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + var(--arc-end-offset, -10px))
 		) scale(0.48); 
 		opacity: 0; 
@@ -539,72 +539,62 @@
 		transform: translate(0, 0) scale(1);
 		opacity: 1;
 	}
-	40% {
-		transform: translate(
-			calc((var(--dot-x) - var(--passer-x)) * 0.8vw * var(--arc-direction, 1)),
-			calc((var(--dot-y) - var(--passer-y)) * 0.5vh)
-		) scale(1.05);
-		opacity: 1;
-	}
 
-	60% {
+
+	50%, 100% {
 		transform: translate(
-			calc((var(--dot-x) - var(--passer-x)) * 0.8vw * var(--arc-direction, 1)),
-			calc((var(--passer-y) - var(--dot-y)) * -0.25vh)
-		) scale(0.9);
-		opacity: 1;
-	}
-	100% {
-		transform: translate(
-			calc((var(--dot-x) - var(--passer-x)) * 0.8vw * var(--arc-direction, 1)),
-			calc((var(--passer-y) - var(--dot-y)) * -0.25vh)
+			calc((var(--dot-x) - var(--passer-x)) * -2.5vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * -0.75vh)
 		) scale(0.9);
 		opacity: 1;
 	}
 }
 
-/* Bad pass receiver animation - run to dot, jump to catch at 50%, fall with ball */
+/* Bad pass receiver animation - start away from dot, run to dot, jump to catch at 50%, fall with ball */
 @keyframes bad-pass-receiver {
-	/* Running phase: 0-40% - run from start to dot position */
+	/* Starting phase: 0% - positioned a distance away from dot */
 	0% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * 0.2vw),
-			calc((var(--passer-y) - var(--dot-y)) * 0.02vh)
+			calc((var(--passer-x) - var(--dot-x)) * 0.7vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * 0.1vh)
 		);
 		opacity: 1;
 	}
+	/* Running phase: 0-40% - run towards dot position */
 	20% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * 0.1vw),
-			calc((var(--passer-y) - var(--dot-y)) * -0.1vh)
+			calc((var(--passer-x) - var(--dot-x)) * 0.4vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * 0.07vh)
 		);
 		opacity: 1;
 	}
 	40% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * 0.1vw),
-			calc((var(--passer-y) - var(--dot-y)) * -0.3vh)
+			calc((var(--passer-x) - var(--dot-x)) * -0.9vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * 0.04vh)
 		);
 		opacity: 1;
 	}
 	/* Jump phase: 40-50% - jump up to catch */
 	50% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * 0.1vw),
-			calc((var(--passer-y) - var(--dot-y)) * -0.1vh)
-		);		opacity: 1;
+			calc((var(--passer-x) - var(--dot-x)) * -0.9vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * 0.2vh)
+		);		
+		opacity: 1;
 	}
 	/* Fall phase: 50-100% - fall down with ball */
 	70% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * 0.1vw),
-			calc((var(--passer-y) - var(--dot-y)) * -0.1vh)
-		);		opacity: 1;
+			calc((var(--passer-x) - var(--dot-x)) * -0.9vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * 0.04vh)
+		);		
+		opacity: 1;
 	}
 	100% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * 0.1vw),
-			calc((var(--passer-y) - var(--dot-y)) * -0.1vh)
+			calc((var(--passer-x) - var(--dot-x)) * -0.9vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * 0.04vh)
 		);		
 		opacity: 1;
 	}
@@ -668,16 +658,16 @@
 	/* Hit backboard */
 	0% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.7 / 100 * var(--arc-direction, 1) + calc(var(--shot-y) * 0.09 * var(--container-width, 100vw) / 100 * var(--arc-direction, 1)) - 20px),
-			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 - 40px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.98 / 100 * var(--arc-direction, 1) + calc(var(--shot-y) * 0.09 * var(--container-width, 100vw) / 100 * var(--arc-direction, 1)) - 20px),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.65 / 100 - 40px)
 		) scale(0.55) rotate(90deg);
 		opacity: 1;
 	}
 	/* Bounce back to rim */
 	5% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.78 / 100 * var(--arc-direction, 1) + calc(var(--shot-y) * 0.09 * var(--container-width, 100vw) / 100 * var(--arc-direction, 1)) - 28px),
-			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 - 30px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.86 / 100 * var(--arc-direction, 1) + calc(var(--shot-y) * 0.09 * var(--container-width, 100vw) / 100 * var(--arc-direction, 1)) - 28px),
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.625 / 100 - 30px)
 		) scale(0.5) rotate(135deg);
 		opacity: 1;
 	}
@@ -699,14 +689,14 @@
 	36% { 
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * -0.31 / 100 * var(--arc-direction, 1) + calc(var(--shot-y) * 0.09 * var(--container-width, 100vw) / 100 * var(--arc-direction, 1)) - 30px),
-			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * -0.36 / 100 - 42px)
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.25 / 100 - 40px)
 		) scale(0.8) rotate(225deg);
 		opacity: 1;
 	}
 	45% { 
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * -0.51 / 100 * var(--arc-direction, 1) + calc(var(--shot-y) * 0.09 * var(--container-width, 100vw) / 100 * var(--arc-direction, 1)) - 30px),
-			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * -0.2 / 100 - 42px)
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.25 / 100 - 40px)
 		) scale(0.8) rotate(225deg);
 		opacity: 1;
 	}
@@ -715,7 +705,7 @@
 	50% { 
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * -0.5 / 100 * var(--arc-direction, 1)), 
-			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.25 / 100 - 70px)
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.25 / 100 - 40px)
 		) scale(0.8);
 		opacity: 1;
 	}
