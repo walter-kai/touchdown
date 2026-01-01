@@ -726,8 +726,8 @@
 	}
 	60%, 100% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * -0.4 / 100 * var(--arc-direction, 1)), 
-			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.25 / 100 -  var(--arc-direction, 1) * -20px)
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * -0.2 / 100 * var(--arc-direction, 1)), 
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * var(--shot-y) * 0.0035 / 100 -  var(--arc-direction, 1) * -20px)
 		) scale(0.8);
 		opacity: 0.9;
 	}
