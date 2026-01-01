@@ -24,6 +24,7 @@ type PlayLabel =
 	| 'start-period'
 	| 'substitution'
 	| 'shot-clock-turnover'
+	| 'out-of-bounds'
 	| 'other';
 
 interface BasketballCourtProps {
@@ -45,6 +46,7 @@ const resolvePlayType = (play?: PlayNba | null) => {
 };
 
 const derivePlayLabel = (typeText: string, play?: PlayNba | null): PlayLabel => {
+	if (/out of bounds|out-of-bounds/.test(typeText)) return 'out-of-bounds';
 	if (/shot clock/.test(typeText)) return 'shot-clock-turnover';
 	if (/three|3pt|3-pt|3 point/.test(typeText)) return 'three';
 	if (/dunk/.test(typeText)) return 'dunk';
@@ -417,6 +419,9 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	// Check if this is a bad pass turnover
 	const isBadPass = label === 'turnover' && /bad pass/.test(typeText);
 	
+	// Check if this is an out of bounds play
+	const isOutOfBounds = label === 'out-of-bounds';
+	
 	const primaryAthlete = athletes.find(a => 
 		a.position?.toLowerCase().includes('shooter') || 
 		a.position?.toLowerCase().includes('rebounder') ||
@@ -441,6 +446,30 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		
 		return { xPercent, yPercent, hasCoordinates: true, isFreeThrow: false };
 	}, [isBadPass, shotLocation]);
+	
+	// Position out of bounds - beyond the sideline or baseline
+	const outOfBoundsPosition = React.useMemo(() => {
+		if (!isOutOfBounds) return shotLocation;
+		
+		// If shot is on left side, send out of bounds to the left beyond the court
+		// If shot is on right side, send out of bounds to the right beyond the court
+		// If shot is at top, send out of bounds upward beyond the court
+		// If shot is at bottom, send out of bounds downward beyond the court
+		const isLeft = shotLocation.xPercent < 30;
+		const isRight = shotLocation.xPercent > 70;
+		const isTop = shotLocation.yPercent < 30;
+		const isBottom = shotLocation.yPercent > 70;
+		
+		let xPercent = shotLocation.xPercent;
+		let yPercent = shotLocation.yPercent;
+		
+		if (isLeft) xPercent = -20; // Off the left sideline
+		else if (isRight) xPercent = 120; // Off the right sideline
+		else if (isTop) yPercent = -15; // Off the top baseline
+		else if (isBottom) yPercent = 115; // Off the bottom baseline
+		
+		return { xPercent, yPercent, hasCoordinates: true, isFreeThrow: false };
+	}, [isOutOfBounds, shotLocation]);
 
 	const teamColor = possessionIsHome ? '#FAAFE8' : '#00FFE7';
 	
@@ -477,15 +506,125 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		{/* Basketball Court Field Container with team logos integrated into perspective */}
 			<div className="court-platform relative">
 				<div ref={courtRef} className="basketball-court">
-					<div className="court-lines" />
-					<div className="half-line" />
-					<div className="center-circle" />
-					<div className="paint paint-left" />
-					<div className="paint paint-right" />
-					<div className="free-throw-circle free-throw-left" />
-					<div className="free-throw-circle free-throw-right" />
-					<div className="three-arc three-left" />
-					<div className="three-arc three-right" />
+					{/* Court outer boundary */}
+					<div 
+						className="absolute pointer-events-none"
+						style={{
+							inset: '5% 3%',
+							border: '2px solid rgba(255, 255, 255, 0.20)',
+							borderRadius: '0'
+						}}
+					/>
+					
+					{/* Half court line */}
+					<div 
+						className="absolute pointer-events-none"
+						style={{
+							left: '50%',
+							top: '6%',
+							bottom: '6%',
+							width: '2px',
+							background: 'rgba(255, 255, 255, 0.20)',
+							transform: 'translateX(-50%)'
+						}}
+					/>
+					
+					{/* Center circle */}
+					<div 
+						className="absolute pointer-events-none"
+						style={{
+							width: '12%',
+							height: '20%',
+							border: '2px solid rgba(255, 255, 255, 0.20)',
+							borderRadius: '50%',
+							left: '50%',
+							top: '50%',
+							transform: 'translate(-50%, -50%)',
+							boxShadow: '0 0 20px rgba(255, 255, 255, 0.08)'
+						}}
+					/>
+					
+					{/* Paint - Left */}
+					<div 
+						className="absolute pointer-events-none"
+						style={{
+							width: '20%',
+							height: '30%',
+							border: '2px solid rgba(255, 255, 255, 0.20)',
+							borderLeft: 'none',
+							background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0))',
+							left: '3%',
+							top: '37%'
+						}}
+					/>
+					
+					{/* Paint - Right */}
+					<div 
+						className="absolute pointer-events-none"
+						style={{
+							width: '20%',
+							height: '30%',
+							border: '2px solid rgba(255, 255, 255, 0.20)',
+							borderRight: 'none',
+							background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0))',
+							right: '3%',
+							top: '37%'
+						}}
+					/>
+					
+					{/* Free throw circle - Left */}
+					<div 
+						className="absolute pointer-events-none"
+						style={{
+							width: '12%',
+							height: '19%',
+							border: '2px solid rgba(255, 255, 255, 0.20)',
+							borderRadius: '50%',
+							left: '17%',
+							top: '40.5%'
+						}}
+					/>
+					
+					{/* Free throw circle - Right */}
+					<div 
+						className="absolute pointer-events-none"
+						style={{
+							width: '12%',
+							height: '19%',
+							border: '2px solid rgba(255, 255, 255, 0.20)',
+							borderRadius: '50%',
+							right: '17%',
+							top: '40.5%'
+						}}
+					/>
+					
+					{/* Three point arc - Left */}
+					<div 
+						className="absolute pointer-events-none"
+						style={{
+							width: '30%',
+							height: '77%',
+							border: '2px solid rgba(255, 255, 255, 0.20)',
+							borderRadius: '0 50% 50% 0',
+							borderLeft: 'none',
+							left: '3%',
+							top: '12%'
+						}}
+					/>
+					
+					{/* Three point arc - Right */}
+					<div 
+						className="absolute pointer-events-none"
+						style={{
+							width: '30%',
+							height: '77%',
+							border: '2px solid rgba(255, 255, 255, 0.20)',
+							borderRadius: '50% 0 0 50%',
+							borderRight: 'none',
+							right: '3%',
+							top: '12%'
+						}}
+					/>
 
 					{/* Team Logos integrated into court perspective - positioned at sidelines */}
 					{leftTeam && (
@@ -546,10 +685,10 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 				<>
 					<div 
 						key={`ball-${cycle}`} 
-				className={`play-ball-fixed ${isBadPass ? 'animate-bad-pass-ball' : label === 'jumper' ? 'animate-jump-shot-ball' : label === 'layup' ? 'animate-layup-ball' : label === 'alley-oop' ? 'animate-alley-oop-ball' : label === 'rebound' ? 'animate-rebound-ball' : shotLocation.isFreeThrow ? '' : config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
+				className={`play-ball-fixed ${isOutOfBounds ? 'animate-out-of-bounds-ball' : isBadPass ? 'animate-bad-pass-ball' : label === 'jumper' ? 'animate-jump-shot-ball' : label === 'layup' ? 'animate-layup-ball' : label === 'alley-oop' ? 'animate-alley-oop-ball' : label === 'rebound' ? 'animate-rebound-ball' : shotLocation.isFreeThrow ? '' : config.ball} ${lastPlay.shootingPlay ? 'shooting-animation' : ''} ${lastPlay.scoringPlay ? 'scoring-animation' : ''} ${shotLocation.isFreeThrow ? 'free-throw-animation' : ''} ${isMiss ? 'miss-animation' : ''} ${!shotLocation.hasCoordinates ? 'no-coordinates' : ''}`}
 						style={{
-							left: isBadPass ? `${passerPosition.xPercent}%` : `calc(${shotLocation.xPercent}% + ${ballOffsetX}px)`,
-							top: isBadPass ? `${passerPosition.yPercent}%` : `calc(${shotLocation.yPercent}% + ${ballOffsetY}px)`,
+							left: isOutOfBounds ? `${shotLocation.xPercent}%` : isBadPass ? `${passerPosition.xPercent}%` : `calc(${shotLocation.xPercent}% + ${ballOffsetX}px)`,
+							top: isOutOfBounds ? `${shotLocation.yPercent}%` : isBadPass ? `${passerPosition.yPercent}%` : `calc(${shotLocation.yPercent}% + ${ballOffsetY}px)`,
 							['--play-color' as any]: config.color,
 							['--is-shooting' as any]: lastPlay.shootingPlay ? '1' : '0',
 							['--is-scoring' as any]: lastPlay.scoringPlay ? '1' : '0',
@@ -562,8 +701,10 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						['--passer-y' as any]: passerPosition.yPercent,
 						['--dot-x' as any]: shotLocation.xPercent,
 						['--dot-y' as any]: shotLocation.yPercent,
+						['--oob-x' as any]: outOfBoundsPosition.xPercent,
+						['--oob-y' as any]: outOfBoundsPosition.yPercent,
 						['--lift-offset' as any]: '-60px',
-						['--arc-direction' as any]: isBadPass ? (shotLocation.xPercent > passerPosition.xPercent ? 1 : -1) : arcDirectionAdjustment.toString(),
+						['--arc-direction' as any]: isBadPass ? (shotLocation.xPercent > passerPosition.xPercent ? 1 : -1) : isOutOfBounds ? (outOfBoundsPosition.xPercent > shotLocation.xPercent ? 1 : -1) : arcDirectionAdjustment.toString(),
 						['--ball-offset-x' as any]: `${ballOffsetX}px`,
 					['--arc-peak-offset' as any]: `${arcPeakOffsetPx}px`,
 					['--arc-mid-offset' as any]: `${arcMidOffsetPx}px`,
@@ -577,15 +718,17 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 					>
 						<span className="play-ball-icon">{config.icon}</span>
 					</div>
-					<div
-						key={`coord-dot-${cycle}`}
-						className="coordinate-marker-dot"
-						style={{
-							left: `${shotLocation.xPercent}%`,
-							top: `${shotLocation.yPercent}%`,
-							['--marker-color' as any]: getAthleteTeamColor((primaryAthlete?.team as any)?.id) || teamColor,
-						}}
-					/>
+					{!isOutOfBounds && (
+						<div
+							key={`coord-dot-${cycle}`}
+							className="coordinate-marker-dot"
+							style={{
+								left: `${shotLocation.xPercent}%`,
+								top: `${shotLocation.yPercent}%`,
+								['--marker-color' as any]: getAthleteTeamColor((primaryAthlete?.team as any)?.id) || teamColor,
+							}}
+						/>
+					)}
 				</>
 			)}
 			{/* Shot clock display for shot clock turnovers */}
