@@ -1,6 +1,8 @@
 /* Overall wrapper */
 .basketball-wrapper {
-	/* Use Tailwind: flex flex-col gap-3 */
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
 }
 
 /* 3D platform container to mimic the football trapezoid platform */
@@ -45,7 +47,8 @@
 .paint,
 .three-arc,
 .hoop {
-	/* Use Tailwind: absolute pointer-events-none */
+	position: absolute;
+	pointer-events: none;
 }
 
 .court-lines {
@@ -359,14 +362,14 @@
 	}
 	80% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.7 / 100 * var(--basket-hit-adjust, 1.03) * var(--arc-direction, 1)), 
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.2 / 100 * var(--basket-hit-adjust, 1.03) * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + var(--arc-mid-offset, -30px))
 		) scale(0.4);
 		opacity: 0.8;
 	}
 	100% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.7 / 100 * var(--basket-hit-adjust, 1) * var(--arc-direction, 1)), 
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.2 / 100 * var(--basket-hit-adjust, 1) * var(--arc-direction, 1)), 
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + var(--arc-end-offset, -10px))
 		) scale(0.48); 
 		opacity: 0; 
@@ -836,6 +839,35 @@
 .animate-timeout { animation: timeout-pulse 2.6s ease-in-out infinite; }
 .animate-period { animation: period-breath 3s ease-in-out infinite; }
 
+/* Timeout spinning clock (match football timeout styling) */
+@keyframes clock-emoji-cycle {
+	0% { content: "🕛"; }
+	8.332% { content: "🕐"; }
+	16.664% { content: "🕑"; }
+	25% { content: "🕒"; }
+	33.332% { content: "🕓"; }
+	41.664% { content: "🕔"; }
+	50% { content: "🕕"; }
+	58.332% { content: "🕖"; }
+	66.664% { content: "🕗"; }
+	75% { content: "🕘"; }
+	83.332% { content: "🕙"; }
+	91.664% { content: "🕚"; }
+	100% { content: "🕛"; }
+}
+
+.animate-timeout-spin {
+	position: relative;
+	color: inherit;
+}
+
+.animate-timeout-spin::after {
+	content: "🕛";
+	display: inline-block;
+	animation: clock-emoji-cycle 6.2s steps(1, end) infinite;
+	filter: drop-shadow(0 0 20px rgba(255,255,255,0.35));
+}
+
 /* Court Diagnostics */
 .court-diagnostics {
 	background: rgba(0, 0, 0, 0.85);
@@ -856,7 +888,9 @@
 }
 
 .diagnostic-grid {
-	/* Use Tailwind: flex flex-col gap-1.5 */
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
 .diagnostic-row {
@@ -1112,21 +1146,21 @@
 	12% {
 		transform: translate(
 			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 0.5 / 100 * var(--basket-hit-adjust, 1.03)),
-			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 * 0.5 / 100 * var(--basket-hit-adjust, 1.03) - 60px)
+			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 * 0.5 / 100 * var(--basket-hit-adjust, 1.03) - 40px)
 		) scale(1.05);
 		opacity: 1;
 	/* Bounce: 19-23% */
 	}
 	23% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) * 1.002 / 100 * var(--basket-hit-adjust, 1.03)),
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, .73) + calc(var(--arc-direction, 1) * -10px)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.75 / 100 * var(--basket-hit-adjust, .73) - 30px)
 		) scale(0.4);
 		opacity: 0.8;
 	}
 	33% { 
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, .73) + calc(var(--arc-direction, 1) * -8px)),
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, .73) + calc(var(--arc-direction, 1) * -10px)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) - 60px)
 		) scale(0.48); 
 		opacity: 1; 
@@ -1134,7 +1168,7 @@
 
 	50% {
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) + calc(var(--arc-direction, 1) * -30px)),
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) + calc(var(--arc-direction, 1) * -10px)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + 80px)
 		) scale(0.4) rotate(270deg);
 		opacity: 0.6;
@@ -1142,7 +1176,7 @@
 
 	100% {
 		transform: translate(
-			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) + calc(var(--arc-direction, 1) * -32px)),
+			calc((var(--basket-x) - var(--shot-x)) * var(--container-width, 100vw) / 100 * var(--basket-hit-adjust, 1.03) + calc(var(--arc-direction, 1) * -10px)),
 			calc((var(--basket-y) - var(--shot-y)) * var(--container-width, 100vw) * 0.5625 / 100 * var(--basket-hit-adjust, 1.03) + 140px)
 		) scale(0.2) rotate(405deg);
 		opacity: 0;
@@ -1190,7 +1224,7 @@
 
 /* Remove athlete name labels to match football simplicity */
 .athlete-headshot-fixed .athlete-name {
-	/* Use Tailwind: hidden */
+	display: none;
 }
 
 .athlete-headshot-fixed.secondary-athlete {

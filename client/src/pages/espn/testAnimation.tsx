@@ -19,6 +19,8 @@ const TestAnimation: React.FC = () => {
   const league = urlLeague;
   
   // Test mode controls - league-aware default game IDs
+  const isNba = league === 'nba';
+  const isNfl = league === 'nfl';
   const defaultTestGameId = league === 'nba' ? '401810277' : '401772804';
   const [testGameId, setTestGameId] = useState<string>(defaultTestGameId);
   const [selectedPlayIndex, setSelectedPlayIndex] = useState<number>(0);
@@ -29,7 +31,7 @@ const TestAnimation: React.FC = () => {
 
   // Update testGameId when league changes
   useEffect(() => {
-    setTestGameId(league === 'nba' ? '401810277' : '401772804');
+    setTestGameId(isNba ? '401810277' : '401772804');
   }, [league]);
 
   // Fetch game data
@@ -105,14 +107,18 @@ const TestAnimation: React.FC = () => {
   const selectedPlay = playLog[selectedPlayIndex];
 
   // Build situation object for selected play
-  const situation = selectedPlay ? {
+  const selectedNbaPlay = isNba ? (selectedPlay as PlayNba | undefined) : undefined;
+  const selectedNflPlay = isNfl ? (selectedPlay as PlayNfl | undefined) : undefined;
+
+  // Build situation object for NFL plays only
+  const situation = isNfl && selectedNflPlay ? {
     downDistanceText: competition.situation?.downDistanceText,
-    possession: selectedPlay.possession || selectedPlay.team,
+    possession: selectedNflPlay.possession,
     awayTimeouts: competition.situation?.awayTimeouts,
     homeTimeouts: competition.situation?.homeTimeouts,
-    yardLine: selectedPlay.yardLine || selectedPlay.start?.yardLine || selectedPlay.end?.yardLine,
+    yardLine: selectedNflPlay.yardLine ?? selectedNflPlay.start?.yardLine ?? selectedNflPlay.end?.yardLine,
     lastPlay: {
-      possession: selectedPlay.possession || selectedPlay.team
+      possession: selectedNflPlay.possession
     }
   } : undefined;
 
@@ -169,19 +175,19 @@ const TestAnimation: React.FC = () => {
                 >
                   {playLog.map((play, index) => (
                     <option key={play.id || index} value={index}>
-                      Q{play.quarter} {play.clock} - {typeof play.type === 'string' ? play.type : (play.type as any)?.text || 'Play'} - {play.text.substring(0, 80)}
+                      Q{(play as any)?.quarter || (play as any)?.period?.number || '?'} {(typeof play.clock === 'string' ? play.clock : (play.clock as any)?.displayValue) || ''} - {typeof play.type === 'string' ? play.type : (play.type as any)?.text || 'Play'} - {(play.text ?? '').substring(0, 80)}
                     </option>
                   ))}
                 </select>
               </div>
               
               {/* Render Field or Court based on league */}
-              {league === 'nba' ? (
+              {isNba ? (
                 <BasketballCourt
                   homeTeam={homeTeam}
                   awayTeam={awayTeam}
-                  lastPlay={selectedPlay}
-                  playLog={playLog}
+                  lastPlay={selectedNbaPlay}
+                  playLog={playLog as PlayNba[]}
                   getTeamLogo={getTeamLogo}
                   showGameInfo={true}
                   // showDiagnostics={true}
@@ -190,20 +196,20 @@ const TestAnimation: React.FC = () => {
                 <FootballField
                   homeTeam={homeTeam}
                   awayTeam={awayTeam}
-                  leftTeamOverride={(selectedPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? homeTeam : awayTeam}
-                  rightTeamOverride={(selectedPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? awayTeam : homeTeam}
-                  lastPlay={selectedPlay ? {
-                    id: selectedPlay.id,
-                    text: selectedPlay.text,
-                    possession: selectedPlay.possession,
-                    start: selectedPlay.start,
-                    end: selectedPlay.end,
-                    type: typeof selectedPlay.type === 'string' ? { text: selectedPlay.type } : selectedPlay.type,
-                    team: selectedPlay.team ? { id: selectedPlay.team } : undefined,
-                    athletesInvolved: selectedPlay.athletesInvolved
+                  leftTeamOverride={(selectedNflPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? homeTeam : awayTeam}
+                  rightTeamOverride={(selectedNflPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? awayTeam : homeTeam}
+                  lastPlay={selectedNflPlay ? {
+                    id: selectedNflPlay.id,
+                    text: selectedNflPlay.text,
+                    possession: selectedNflPlay.possession,
+                    start: selectedNflPlay.start,
+                    end: selectedNflPlay.end,
+                    type: typeof selectedNflPlay.type === 'string' ? { text: selectedNflPlay.type } : selectedNflPlay.type,
+                    team: selectedNflPlay.team ? { id: selectedNflPlay.team } : undefined,
+                    athletesInvolved: selectedNflPlay.athletesInvolved
                   } : undefined}
                   situation={situation}
-                  playLog={playLog}
+                  playLog={playLog as PlayNfl[]}
                   getTeamLogo={getTeamLogo}
                   showGameInfo={true}
                 />
@@ -218,7 +224,7 @@ const TestAnimation: React.FC = () => {
             awayTeam={awayTeam}
             competition={competition}
             getTeamLogo={getTeamLogo}
-            playLog={playLog}
+            playLog={playLog as PlayNfl[]}
             summary={summary}
             gameId={testGameId}
           />

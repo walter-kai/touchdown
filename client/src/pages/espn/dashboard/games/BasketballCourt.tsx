@@ -27,6 +27,14 @@ type PlayLabel =
 	| 'out-of-bounds'
 	| 'other';
 
+type PlayConfig = {
+	ball: string;
+	trail: string;
+	color: string;
+	icon?: string;
+	glowColor?: string;
+};
+
 interface BasketballCourtProps {
 	homeTeam?: any;
 	awayTeam?: any;
@@ -78,19 +86,19 @@ const derivePlayLabel = (typeText: string, play?: PlayNba | null): PlayLabel => 
 };
 
 // Simplified animation config (single style)
-const defaultPlayConfig = { ball: 'animate-jumper', trail: 'animate-jumper-trail', color: '#00ffe7', icon: '🏀' };
+const defaultPlayConfig: PlayConfig = { ball: 'animate-jumper', trail: 'animate-jumper-trail', color: '#00ffe7', icon: '🏀' };
 
 // Foul-specific config (matches NFL penalty animation)
-const foulPlayConfig = { ball: 'animate-foul', trail: 'animate-foul', color: '#FFFF00', icon: '🚩' };
+const foulPlayConfig: PlayConfig = { ball: 'animate-foul', trail: 'animate-foul', color: '#FFFF00', icon: '🚩' };
 
 // Rebound-specific config
-const reboundPlayConfig = { ball: 'animate-rebound-ball', trail: 'animate-rebound-ball', color: '#00ffe7', icon: '🏀' };
+const reboundPlayConfig: PlayConfig = { ball: 'animate-rebound-ball', trail: 'animate-rebound-ball', color: '#00ffe7', icon: '🏀' };
 
 // End of period/game config (adopting football's end-of-regulation styling)
-const endPeriodPlayConfig = { ball: 'animate-end-regulation', trail: 'animate-end-regulation', color: '#FF6B6B', glowColor: 'rgba(255, 107, 107, 0.8)' };
+const endPeriodPlayConfig: PlayConfig = { ball: 'animate-end-regulation', trail: 'animate-end-regulation', color: '#FF6B6B', glowColor: 'rgba(255, 107, 107, 0.8)' };
 
 // Timeout-specific config (spinning clock like football field)
-const timeoutPlayConfig = { ball: 'animate-timeout', trail: 'animate-timeout', color: '#FFD700', glowColor: 'rgba(255, 215, 0, 0.6)', icon: '🏀' };
+const timeoutPlayConfig: PlayConfig = { ball: 'animate-timeout', trail: 'animate-timeout', color: '#FFD700', glowColor: 'rgba(255, 215, 0, 0.6)', icon: '🏀' };
 
 const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	homeTeam,
@@ -187,7 +195,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	// - If shootingPlay=false: Non-shooting play (no basket target, just position marker)
 
 	// Treat ESPN sentinel coords (±214748XXX) or missing values as invalid
-	const isValidCoordinate = (coord?: { x?: number; y?: number }) => {
+	const isValidCoordinate = (coord?: { x?: number; y?: number }): coord is { x: number; y: number } => {
 		if (!coord) return false;
 		const { x, y } = coord;
 		if (x === undefined || y === undefined) return false;
@@ -285,9 +293,9 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		}
 		
 		// ESPN court coordinates in feet
-		const espnX = coord.x!; // 0-50 feet (court width)
+		const espnX = coord.x; // 0-50 feet (court width)
 		// Mirror Y when the offense is attacking the right basket so distances map from that hoop, not the far baseline
-		const espnYRaw = coord.y!; // 0-94 feet (court length)
+		const espnYRaw = coord.y; // 0-94 feet (court length)
 		const espnY = adjustForOffense && offenseBasketY === 94 ? 94 - espnYRaw : espnYRaw;
 
 		// Our visual has baskets on the SIDES, so map:
@@ -308,7 +316,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 			xPercent,
 			yPercent,
 			hasCoordinates: true,
-			isFreeThrow: playLabel === 'free-throw'
+			isFreeThrow: false
 		};
 	};
 
@@ -756,6 +764,26 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						/>
 					)}
 				</>
+			)}
+			{label === 'timeout' && (
+				<div
+					key={`timeout-${cycle}`}
+					className="absolute z-20"
+					style={{
+						left: '50%',
+						top: '40%',
+						transform: 'translate(-50%, -50%)'
+					}}
+				>
+					<div
+						className="text-5xl animate-timeout-spin"
+						style={{
+							color: config.color,
+							filter: `drop-shadow(0 0 20px ${config.glowColor || 'rgba(255, 215, 0, 0.6)'})`
+						}}
+					>
+					</div>
+				</div>
 			)}
 			{/* Shot clock display for shot clock turnovers */}
 			{label === 'shot-clock-turnover' && (
