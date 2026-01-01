@@ -540,11 +540,26 @@
 		opacity: 1;
 	}
 
-
-	50%, 100% {
+	/* Mid phase: 50% - ball travels toward dot with arc motion perpendicular to arc-direction */
+	50% {
 		transform: translate(
-			calc((var(--dot-x) - var(--passer-x)) * -2.5vw * var(--arc-direction, 1)),
-			calc((var(--passer-y) - var(--dot-y)) * -0.75vh)
+			calc((var(--dot-x) - var(--passer-x)) * 0.6vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * -0.5vh)
+		) scale(1.05);
+		opacity: 1;
+	}
+
+	70% {
+		transform: translate(
+			calc((var(--dot-x) - var(--passer-x)) * 0.6vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * -0.25vh)
+		) scale(0.9);
+		opacity: 1;
+	}
+	80%, 100% {
+		transform: translate(
+			calc((var(--dot-x) - var(--passer-x)) * 0.6vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * -0.25vh)
 		) scale(0.9);
 		opacity: 1;
 	}
@@ -556,7 +571,7 @@
 	0% {
 		transform: translate(
 			calc((var(--passer-x) - var(--dot-x)) * 0.7vw * var(--arc-direction, 1)),
-			calc((var(--passer-y) - var(--dot-y)) * 0.1vh)
+			calc((var(--passer-y) - var(--dot-y)) * -0.2vh)
 		);
 		opacity: 1;
 	}
@@ -564,37 +579,37 @@
 	20% {
 		transform: translate(
 			calc((var(--passer-x) - var(--dot-x)) * 0.4vw * var(--arc-direction, 1)),
-			calc((var(--passer-y) - var(--dot-y)) * 0.07vh)
+			calc((var(--passer-y) - var(--dot-y)) * -0.17vh)
 		);
 		opacity: 1;
 	}
 	40% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * -0.9vw * var(--arc-direction, 1)),
-			calc((var(--passer-y) - var(--dot-y)) * 0.04vh)
+			calc((var(--passer-x) - var(--dot-x)) * -0.1vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * -0.12vh)
 		);
 		opacity: 1;
 	}
 	/* Jump phase: 40-50% - jump up to catch */
-	50% {
+	45% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * -0.9vw * var(--arc-direction, 1)),
-			calc((var(--passer-y) - var(--dot-y)) * 0.2vh)
+			calc((var(--passer-x) - var(--dot-x)) * -0.1vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * -0.1vh)
 		);		
 		opacity: 1;
 	}
 	/* Fall phase: 50-100% - fall down with ball */
-	70% {
+	50% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * -0.9vw * var(--arc-direction, 1)),
-			calc((var(--passer-y) - var(--dot-y)) * 0.04vh)
+			calc((var(--passer-x) - var(--dot-x)) * -0.1vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * -0.3vh)
 		);		
 		opacity: 1;
 	}
-	100% {
+	75%, 100% {
 		transform: translate(
-			calc((var(--passer-x) - var(--dot-x)) * -0.9vw * var(--arc-direction, 1)),
-			calc((var(--passer-y) - var(--dot-y)) * 0.04vh)
+			calc((var(--passer-x) - var(--dot-x)) * -0.1vw * var(--arc-direction, 1)),
+			calc((var(--passer-y) - var(--dot-y)) * -0.15vh)
 		);		
 		opacity: 1;
 	}

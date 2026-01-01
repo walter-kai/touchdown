@@ -447,6 +447,11 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	// Calculate arc direction based on offensive direction and shot location
 	const shotLocationArcDirection = isBehindNetShot ? -1 : 1;
 	
+	// For bad passes, determine arc direction based on court location
+	// Arc direction should indicate the direction the pass travels across the court
+	// We use the shot location (turnover point) relative to the court center
+	const badPassArcDirection = shotLocation.xPercent > 50 ? 1 : -1;
+	
 	// Position passer for bad pass - positioned away from dot based on arc direction
 	const passerPosition = React.useMemo(() => {
 		if (!isBadPass && !isOutOfBoundsBadPass) return shotLocation;
@@ -454,16 +459,16 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		// Position passer a distance away from the dot, considering arc direction
 		// Arc direction determines if we go left (-1) or right (1)
 		const distanceOffset = 20; // percentage offset
-		const arcDir = shotLocationArcDirection;
+		const arcDir = badPassArcDirection;
 		
-		// Position passer horizontally opposite to arc direction
-		const xPercent = shotLocation.xPercent + (distanceOffset * arcDir);
+		// Position passer horizontally away from the turnover point
+		const xPercent = shotLocation.xPercent - (distanceOffset * arcDir);
 		// Position vertically away from center based on dot position
 		const isAboveCenter = shotLocation.yPercent < 50;
 		const yPercent = isAboveCenter ? 70 : 30;
 		
 		return { xPercent, yPercent, hasCoordinates: true, isFreeThrow: false };
-	}, [isBadPass, isOutOfBoundsBadPass, shotLocation, shotLocationArcDirection]);
+	}, [isBadPass, isOutOfBoundsBadPass, shotLocation, badPassArcDirection]);
 	
 	// Position out of bounds - beyond the sideline or baseline
 	const outOfBoundsPosition = React.useMemo(() => {
@@ -722,7 +727,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						['--oob-x' as any]: outOfBoundsPosition.xPercent,
 						['--oob-y' as any]: outOfBoundsPosition.yPercent,
 						['--lift-offset' as any]: '-60px',
-						['--arc-direction' as any]: (isBadPass || isOutOfBoundsBadPass) ? (shotLocation.xPercent > passerPosition.xPercent ? 1 : -1) : isOutOfBounds ? (outOfBoundsPosition.xPercent > shotLocation.xPercent ? 1 : -1) : arcDirectionAdjustment.toString(),
+						['--arc-direction' as any]: (isBadPass || isOutOfBoundsBadPass) ? badPassArcDirection : isOutOfBounds ? (outOfBoundsPosition.xPercent > shotLocation.xPercent ? 1 : -1) : arcDirectionAdjustment.toString(),
 						['--ball-offset-x' as any]: `${ballOffsetX}px`,
 					['--arc-peak-offset' as any]: `${arcPeakOffsetPx}px`,
 					['--arc-mid-offset' as any]: `${arcMidOffsetPx}px`,
