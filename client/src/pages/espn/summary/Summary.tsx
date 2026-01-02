@@ -9,6 +9,7 @@ import ChoosePicks from '@/pages/espn/scoreboard/ChoosePicks';
 import TopPicks from '@/pages/espn/scoreboard/TopPicks';
 import FootballField from '@/pages/espn/dashboard/games/FootballField';
 import BasketballCourt from '@/pages/espn/dashboard/games/BasketballCourt';
+import TelegramChat from '@/components/TelegramChat';
 import { useAuth } from '@/providers/AuthContext';
 import type { Summary } from '@/types/espn/summary';
 import type { Event } from '@/types/espn/scoreboard';
@@ -20,8 +21,8 @@ import { getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
 interface SummaryViewProps {
   event: Event;
   summary: Summary | null;
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games' | 'chat';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games' | 'chat') => void;
   getTeamLogo: (team: any) => string;
   playLog: PlayNfl[];
   gameId: string;
@@ -235,8 +236,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   // Get tab index for carousel position
   const getTabIndex = (tab: string) => {
     const summaryTabs = isPreGame
-      ? ['info', 'pick']
-      : ['info', 'pick', 'player', 'plays'];
+      ? ['info', 'pick', 'chat']
+      : ['info', 'pick', 'player', 'plays', 'chat'];
     return summaryTabs.indexOf(tab);
   };
 
@@ -245,7 +246,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     if (carouselRef.current) {
       const index = getTabIndex(activeTab);
       if (index !== -1) {
-        const totalSlides = isPreGame ? 2 : 4;
+        const totalSlides = isPreGame ? 3 : 5;
         const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -261,10 +262,10 @@ const SummaryView: React.FC<SummaryViewProps> = ({
           <div
             ref={carouselRef}
             className="flex transition-transform duration-500 ease-in-out pb-16"
-            style={{ width: isPreGame ? '200%' : '400%' }}
+            style={{ width: isPreGame ? '300%' : '500%' }}
           >
             {/* Info Section */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: isPreGame ? '50%' : '25%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: isPreGame ? '33.33%' : '20%' }}>
               <Info
                 homeTeam={homeTeam}
                 awayTeam={awayTeam}
@@ -374,7 +375,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             </div>
 
             {/* Pick Section - Your Picks (moved to 2nd position) */}
-            <div className="w-full flex-shrink-0 overflow-hidden" style={{ width: isPreGame ? '50%' : '25%' }}>
+            <div className="w-full flex-shrink-0 overflow-hidden" style={{ width: isPreGame ? '33.33%' : '20%' }}>
               {!isAuthenticated ? (
                 // Login Prompt - Advertisement Style
                 <div className="h-[calc(100%-64px)] flex items-center justify-center px-6">
@@ -519,7 +520,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
             {/* Player Statistics Section */}
             {!isPreGame && (
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '25%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '20%' }}>
               {/* Divider */}
               <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
               <div className="mx-2">
@@ -554,12 +555,15 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                             <table className="w-full text-xs sm:text-sm">
                               <thead>
                                 <tr className="border-b border-neon-cyan/10">
-                                  <th className="text-left py-2 px-1 sm:px-2 text-text-muted font-semibold">Player</th>
-                                  {category.labels.map((label: any, labelIdx: number) => (
-                                    <th key={`label-${labelIdx}`} className="text-center py-2 px-1 sm:px-2 text-text-muted font-semibold whitespace-nowrap">
-                                      {label}
-                                    </th>
-                                  ))}
+                                  <th className="text-left py-2 px-2 sm:px-3 text-text-muted font-semibold">Player</th>
+                                  {category.labels.map((label: any, labelIdx: number) => {
+                                    const isWideColumn = label && (label.toUpperCase().includes('FG') || label.toUpperCase().includes('3PT') || label.toUpperCase().includes('FT'));
+                                    return (
+                                      <th key={`label-${labelIdx}`} className={`text-center py-2 ${isWideColumn ? 'px-4 sm:px-4' : 'px-2 sm:px-3'} text-text-muted font-semibold whitespace-nowrap`}>
+                                        {label}
+                                      </th>
+                                    );
+                                  })}
                                 </tr>
                               </thead>
                               <tbody>
@@ -569,8 +573,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                                     className="border-b border-neon-cyan/5 hover:bg-neon-cyan/5 transition-colors cursor-pointer"
                                     onClick={() => navigate(`/nfl/player/${athleteData.athlete.id}`)}
                                   >
-                                    <td className="py-2 px-1 sm:px-2">
-                                      <div className="flex items-center gap-1 sm:gap-2">
+                                    <td className="py-2 px-2 sm:px-3">
+                                      <div className="flex items-center gap-2 sm:gap-3">
                                         {(() => {
                                           const headshot = athleteData.athlete.headshot;
                                           const headshotUrl = typeof headshot === 'string' ? headshot : headshot?.href;
@@ -596,22 +600,30 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                                         </div>
                                       </div>
                                     </td>
-                                    {athleteData.stats.map((stat: any, statIdx: number) => (
-                                      <td key={`stat-${statIdx}`} className="text-center py-2 px-1 sm:px-2 text-text-light text-xs sm:text-sm">
-                                        {stat}
-                                      </td>
-                                    ))}
+                                    {athleteData.stats.map((stat: any, statIdx: number) => {
+                                      const label = category.labels[statIdx];
+                                      const isWideColumn = label && (label.toUpperCase().includes('FG') || label.toUpperCase().includes('3PT') || label.toUpperCase().includes('FT'));
+                                      return (
+                                        <td key={`stat-${statIdx}`} className={`text-center py-2 ${isWideColumn ? 'px-3 sm:px-4' : 'px-2 sm:px-3'} text-text-light text-xs sm:text-sm`}>
+                                          {stat}
+                                        </td>
+                                      );
+                                    })}
                                   </tr>
                                 ))}
                                 {/* Totals row */}
                                 {category.totals && category.totals.length > 0 && (
                                   <tr className="border-t-2 border-neon-cyan/20 font-bold bg-neon-cyan/5">
-                                    <td className="py-2 px-1 sm:px-2 text-neon-cyan text-xs sm:text-sm">Total</td>
-                                    {category.totals.map((total: any, totalIdx: number) => (
-                                      <td key={`total-${totalIdx}`} className="text-center py-2 px-1 sm:px-2 text-neon-cyan text-xs sm:text-sm">
-                                        {total}
-                                      </td>
-                                    ))}
+                                    <td className="py-2 px-2 sm:px-3 text-neon-cyan text-xs sm:text-sm">Total</td>
+                                    {category.totals.map((total: any, totalIdx: number) => {
+                                      const label = category.labels[totalIdx];
+                                      const isWideColumn = label && (label.toUpperCase().includes('FG') || label.toUpperCase().includes('3PT') || label.toUpperCase().includes('FT'));
+                                      return (
+                                        <td key={`total-${totalIdx}`} className={`text-center py-2 ${isWideColumn ? 'px-3 sm:px-4' : 'px-2 sm:px-3'} text-neon-cyan text-xs sm:text-sm`}>
+                                          {total}
+                                        </td>
+                                      );
+                                    })}
                                   </tr>
                                 )}
                               </tbody>
@@ -631,7 +643,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
             {/* Plays Section - Drive by Drive */}
             {!isPreGame && (
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '25%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '20%' }}>
               {/* Divider */}
               <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
               <div className="mx-2">
@@ -661,8 +673,12 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 </div>
               </div>
             </div>
-
             )}
+
+            {/* Chat Section */}
+            <div className="w-full flex-shrink-0 overflow-hidden" style={{ width: isPreGame ? '33.33%' : '20%' }}>
+              <TelegramChat gameId={gameId} />
+            </div>
           </div>
         </div>
       </div>

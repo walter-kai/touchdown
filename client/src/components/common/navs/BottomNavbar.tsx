@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall } from 'react-icons/fa';
+import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall, FaComments } from 'react-icons/fa';
 import { debugLog } from '@/utils/debugLog';
 import { useLeague } from '@/providers/LeagueContext';
 
 interface GameNavBarProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games') => void;
-  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games') => void; // Called when button is clicked
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games' | 'chat';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games' | 'chat') => void;
+  onTabClick?: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games' | 'chat') => void; // Called when button is clicked
   preset?: 'scoreboard' | 'summary' | 'team' | 'player' | 'dashboard'; // Determines which buttons to show
   gameStatus?: 'pre' | 'in' | 'post'; // Game status to conditionally show tabs
   isVisible?: boolean; // Controls visibility with slide animation
@@ -75,12 +75,13 @@ const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTab
     { id: 'news', label: 'News', icon: <FaNewspaper /> },
     { id: 'dashboard', label: 'Dash', icon: <FaChartBar /> },
     { id: 'games', label: 'Games', icon: <FaFootballBall /> },
+    { id: 'chat', label: 'Chat', icon: <FaComments /> },
   ];
 
   // Preset configurations
   const presetConfig = {
-    scoreboard: ['back', 'info', 'pick', 'odds', 'headtohead'],
-    summary: ['back', 'info', 'pick', 'player', 'plays'],
+    scoreboard: ['back', 'info', 'pick', 'odds', 'headtohead', 'chat'],
+    summary: ['back', 'info', 'pick', 'player', 'plays', 'chat'],
     team: ['back', 'info', 'schedule', 'news'],
     player: ['back', 'info', 'schedule', 'news'],
     dashboard: ['dashboard', 'games'],

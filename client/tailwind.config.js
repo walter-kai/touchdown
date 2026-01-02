@@ -14,12 +14,14 @@ module.exports = {
       colors: {
         // Neon theme color presets using CSS variables - using hex values directly
         'neon-cyan': '#00ffe7',
+        'neon-cyan-dark': '#00b3a1',
         'neon-pink': '#faafe8',
         'neon-pink-dark': '#ff005c',
         
         // Keep nested structure for prefixed usage
         neon: {
           cyan: '#00ffe7',
+          'cyan-dark': '#00d3c0',
           pink: '#faafe8',
           'pink-dark': '#ff005c',
         },

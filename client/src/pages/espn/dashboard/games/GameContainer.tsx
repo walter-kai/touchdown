@@ -19,8 +19,8 @@ import type { Summary } from '@/types/espn/summary';
 import { PlayNfl } from '@/types/espn/plays';
 
 interface GameContainerProps {
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games' | 'chat';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games' | 'chat') => void;
   onPresetChange: (preset: 'scoreboard' | 'summary') => void;
   onGameStatusChange?: (status: 'pre' | 'in' | 'post') => void;
   onRegisterTabClick?: (callback: (tab: string) => void) => void;

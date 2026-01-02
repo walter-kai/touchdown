@@ -7,13 +7,14 @@ import ProbChart from '@/components/espn/ProbabilityChart';
 import PointsChart from '@/components/espn/PointsChart';
 import PlayerPick from '@/pages/espn/scoreboard/PlayerPick';
 import Info from '@/pages/espn/scoreboard/Info';
+import TelegramChat from '@/components/TelegramChat';
 import type { Event } from '@/types/espn/scoreboard';
 import { PlayNfl } from '@/types/espn/plays';
 
 interface ScoreboardViewProps {
   event: Event;
-  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games';
-  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games') => void;
+  activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games' | 'chat';
+  onTabChange: (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'schedule' | 'news' | 'dashboard' | 'games' | 'chat') => void;
   getTeamLogo: (team: any) => string;
   playLog: PlayNfl[];
   lastUpdated: Date | null;
@@ -106,7 +107,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   }, [playLog, homeTeam?.id]);
 
   // Get tab index for carousel position
-  const scoreboardTabs = ['info', 'pick', 'odds', 'headtohead'] as const;
+  const scoreboardTabs = ['info', 'pick', 'odds', 'headtohead', 'chat'] as const;
   const totalSlides = scoreboardTabs.length;
   const slideWidth = `${100 / totalSlides}%`;
 
@@ -306,6 +307,11 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                   awayTeamName={awayTeam.team.displayName}
                 />
               )}
+            </div>
+
+            {/* Chat Section */}
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-4 pb-16 overflow-y-auto" style={{ width: slideWidth }}>
+              <TelegramChat gameId={event.id} />
             </div>
           </div>
         </div>

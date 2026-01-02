@@ -281,20 +281,20 @@
 @keyframes layup-flow {
 	/* Running phase: approach from distance away (0-60%) */
 	0% { 
-		transform: translate(calc(var(--arc-direction, 1) * 90px), 0) scale(0.85);
+		transform: translate(calc(var(--arc-direction, 1) * -90px), 0) scale(0.85);
 		opacity: 0.8;
 	}
 	12% { 
-		transform: translate(calc(var(--arc-direction, 1) * 40px), -15px) scale(0.88);
+		transform: translate(calc(var(--arc-direction, 1) * -40px), -15px) scale(0.88);
 		opacity: 0.85;
 	}
 
 	35% {
-		transform: translate(calc(var(--arc-direction, 1) * 15px), -50px) scale(1.02);
+		transform: translate(calc(var(--arc-direction, 1) * -15px), -50px) scale(1.02);
 		opacity: 1;
 	}
 	100% {
-		transform: translate(calc(var(--arc-direction, 1) * 15px), -15px) scale(0.98);
+		transform: translate(calc(var(--arc-direction, 1) * -15px), -15px) scale(0.98);
 		opacity: 1;
 	}
 }
@@ -304,14 +304,14 @@
 	/* Running phase (0-60%): ball moves with headshot from distance */
 	0% {
 		transform: translate(
-			calc(var(--arc-direction, 1) * 90px), 
+			calc(var(--arc-direction, 1) * -90px), 
 			0
 		) scale(0.96);
 		opacity: 0.9;
 	}
 	12% {
 		transform: translate(
-			calc(var(--arc-direction, 1) * 25px), 
+			calc(var(--arc-direction, 1) * -25px), 
 			-8px
 		) scale(0.96);
 		opacity: 0.95;
