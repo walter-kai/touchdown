@@ -66,6 +66,8 @@ interface GameData {
   totalUserScore: number;
   status?: 'pre' | 'in' | 'post';
   league?: 'nfl' | 'nba';
+  rank?: number | null;
+  totalUsersInGame?: number | null;
 }
 
 const Dashboard: React.FC = () => {
@@ -364,14 +366,77 @@ const Dashboard: React.FC = () => {
 
         // Sort by total score descending
         validGames.sort((a, b) => b.totalUserScore - a.totalUserScore);
+
+        // Fetch per-game rank without scanning the whole collection
+        const gamesWithRank = await Promise.all(validGames.map(async (game) => {
+          if (!game.league) return game;
+
+          const gameDataCacheKey = `gameData_${game.league}_${game.gameId}`;
+          
+          // Check localStorage cache first
+          const cachedGameData = localStorage.getItem(gameDataCacheKey);
+          if (cachedGameData) {
+            try {
+              const { data, timestamp } = JSON.parse(cachedGameData);
+              const cacheAge = Date.now() - timestamp;
+              const CACHE_DURATION = 1 * 60 * 1000; // 1 minute
+              
+              // Use cached data if less than 1 minute old
+              if (cacheAge < CACHE_DURATION) {
+                debugLog(`✅ Using cached gameData for ${game.gameId} (${Math.round(cacheAge / 1000)}s old)`);
+                const entries = data?.leaderboard?.entries || [];
+                const totalUsersInGame = data?.leaderboard?.totalUsers || (Array.isArray(entries) ? entries.length : null);
+                const userEntry = Array.isArray(entries)
+                  ? entries.find((entry: any) => entry.userId === user?.email || entry.userId === user?.uid)
+                  : null;
+
+                return {
+                  ...game,
+                  rank: userEntry?.rank ?? null,
+                  totalUsersInGame: totalUsersInGame ?? null,
+                };
+              } else {
+                debugLog(`Cache expired for gameData ${game.gameId}, fetching fresh data...`);
+                localStorage.removeItem(gameDataCacheKey);
+              }
+            } catch (error) {
+              console.error(`Error parsing cached gameData for ${game.gameId}:`, error);
+              localStorage.removeItem(gameDataCacheKey);
+            }
+          }
+
+          try {
+            const rankRes = await axios.get(`/api/game-data/${game.league}/${game.gameId}`);
+            const entries = rankRes.data?.leaderboard?.entries || [];
+            const totalUsersInGame = rankRes.data?.leaderboard?.totalUsers || (Array.isArray(entries) ? entries.length : null);
+            const userEntry = Array.isArray(entries)
+              ? entries.find((entry: any) => entry.userId === user?.email || entry.userId === user?.uid)
+              : null;
+
+            // Cache the gameData with timestamp
+            localStorage.setItem(gameDataCacheKey, JSON.stringify({
+              data: rankRes.data,
+              timestamp: Date.now()
+            }));
+
+            return {
+              ...game,
+              rank: userEntry?.rank ?? null,
+              totalUsersInGame: totalUsersInGame ?? null,
+            };
+          } catch (rankErr) {
+            console.error(`Error fetching rank for game ${game.gameId}:`, rankErr);
+            return game;
+          }
+        }));
         
         // Cache the processed results
         localStorage.setItem(cacheKey, JSON.stringify({
-          data: validGames,
+          data: gamesWithRank,
           timestamp: Date.now()
         }));
         
-        setGamesWithPicks(validGames);
+        setGamesWithPicks(gamesWithRank);
         setLoading(false);
       } catch (err: any) {
         console.error('Error fetching dashboard data:', err);
@@ -551,11 +616,8 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Games List */}
-      <div className="space-y-2 mb-16">
-        <h1 className="">
-          {/* <FaFootballBall className="text-neon-pink" /> */}
-          Your Games
-        </h1>
+      <div className="space-y-8 mb-16">
+        <h1 className="">Your Games</h1>
 
         {gamesWithPicks.length === 0 ? (
           <div className="text-center py-6 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg">
@@ -570,11 +632,43 @@ const Dashboard: React.FC = () => {
               Browse Games
             </button>
           </div>
-        ) : (
-          gamesWithPicks.map((game) => {
-            const isExpanded = expandedGames.has(game.gameId);
+        ) : (() => {
+          // Group games by date in descending order
+          const gamesByDate: Record<string, (typeof gamesWithPicks)> = {};
+          
+          gamesWithPicks.forEach(game => {
+            // Get the date from the picks
+            const pickDate = game.picks[0]?.timestamp ? new Date(game.picks[0].timestamp) : new Date();
+            const dateKey = pickDate.toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              month: 'long', 
+              day: 'numeric', 
+              year: 'numeric' 
+            });
             
-            return (
+            if (!gamesByDate[dateKey]) {
+              gamesByDate[dateKey] = [];
+            }
+            gamesByDate[dateKey].push(game);
+          });
+          
+          // Sort dates descending
+          const sortedDates = Object.keys(gamesByDate).sort((a, b) => {
+            const dateA = new Date(a).getTime();
+            const dateB = new Date(b).getTime();
+            return dateB - dateA;
+          });
+          
+          return (
+            <>
+              {sortedDates.map((dateKey) => (
+                <div key={dateKey}>
+                  <h2 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{dateKey}</h2>
+                  <div className="space-y-2">
+                    {gamesByDate[dateKey].map((game) => {
+                      const isExpanded = expandedGames.has(game.gameId);
+                      
+                      return (
           <div
             key={game.gameId}
             className="relative bg-bg-dark/50 border border-neon-cyan/20 rounded-lg overflow-hidden hover:border-neon-cyan/50 transition-all"
@@ -635,6 +729,15 @@ const Dashboard: React.FC = () => {
                     className="text-2xl font-bold text-neon-pink"
                   />
                   <p className="text-[10px] text-gray-400">pts</p>
+                  {typeof game.rank === 'number' && (
+                    <div className="flex items-center gap-1 ml-3 px-2 py-1 rounded-full bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan text-xs font-semibold">
+                      <FaMedal className="text-neon-cyan" />
+                      <span>#{game.rank}</span>
+                      {game.totalUsersInGame !== null && game.totalUsersInGame !== undefined && (
+                        <span className="text-[10px] text-gray-400">of {game.totalUsersInGame}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 {/* Expand/Collapse Button */}
@@ -727,20 +830,25 @@ const Dashboard: React.FC = () => {
                     </div>
                   )}
 
-                  {/* View Game Details Button */}
+                  {/* Edit Picks Button */}
                   <button
-                    onClick={() => navigate(`/${game.league || 'nfl'}/game/${game.gameId}`)}
-                    className="mt-4 w-full py-2 px-4 bg-neon-cyan/10 hover:bg-neon-cyan/20 border border-neon-cyan/30 rounded-lg text-neon-cyan font-semibold transition-all"
+                    onClick={() => navigate(`/${game.league || 'nfl'}/game/${game.gameId}`, { state: { tab: 'yourpicks' } })}
+                    className="btn-special mt-4 w-full"
                   >
-                    View Game Details →
+                    Edit Picks
                   </button>
                 </div>
               </div>
             )}
           </div>
-            );
-          })
-        )}
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </>
+          );
+        })()}
       </div>
     </div>
   );

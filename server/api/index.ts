@@ -6,6 +6,7 @@ import linkRoute from "./link/link.route";
 import userRoute from "./user/user.route";
 import picksRoute from "./picks/picks.route";
 import leaderboardRoute from "./leaderboard/leaderboard.route";
+import gameDataRoute from "./gameData/gameData.route";
 
 
 const router = express.Router();
@@ -35,6 +36,10 @@ const defaultRoutes: ReadonlyArray<RouteObj> = [
   {
     path: "/leaderboard",
     route: leaderboardRoute,
+  },
+  {
+    path: "/game-data",
+    route: gameDataRoute,
   },
 ];
 

@@ -10,3 +10,4 @@ yarn.lock
 /client/dist
 .DS_Store
 client/package-lock.json
+/server/scripts

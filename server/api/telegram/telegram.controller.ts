@@ -81,7 +81,7 @@ export const getChatIdController = async (req: Request, res: Response) => {
 
     // Construct the document ID (use : instead of / for document ID)
     const docId = `epsn:${league}:${gameId}`;
-    const docRef = admin.firestore().collection('gameChats').doc(docId);
+    const docRef = admin.firestore().collection('gameData').doc(docId);
 
     // Check if the document exists
     const docSnap = await docRef.get();
@@ -158,15 +158,12 @@ export const createTopicController = async (req: Request, res: Response) => {
 
     // Store the chatId in Firebase
     const docId = `epsn:${league}:${gameId}`;
-    const docRef = admin.firestore().collection('gameChats').doc(docId);
+    const docRef = admin.firestore().collection('gameData').doc(docId);
 
     const chatId = `${superGroupId}/${topicResult.topicId}`;
 
     await docRef.set({
       chatId,
-      gameId,
-      league,
-      topicId: topicResult.topicId,
       createdAt: admin.firestore.Timestamp.now()
     });
 
