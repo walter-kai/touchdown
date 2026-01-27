@@ -2,7 +2,8 @@ import admin from '../../utils/firebase';
 import logger from '../../utils/logger';
 
 type CreatePickArgs = {
-  userId: string;
+  userId: string; // email address
+  displayName: string;
   homeTeamId?: string;
   awayTeamId?: string;
   picksState?: {
@@ -32,21 +33,26 @@ type CreatePickArgs = {
 };
 
 /**
- * Create picks using USER-BASED structure for better query efficiency
+ * Create picks using SINGLE COLLECTION structure with composite doc IDs
  * 
  * NEW Structure:
- * gamePicks/{userId}
- *   - gameIds: [array of game IDs]
- *   - lastUpdated: timestamp
- *   - picks/{gameId} (subcollection)
- *       - picks: []
- *       - timestamp: last update
+ * picks/{gameId}:{displayName}
+ *   - email: string
+ *   - displayName: string
+ *   - gameId: string
+ *   - picks: PickSubmission[]
+ *   - timestamp: last update
+ *   - teamData: {league, team info}
+ * 
+ * users/{email}
+ *   - gameIds: [array of game IDs user has picks in]
+ *   - totalScore, gamesPlayed: leaderboard aggregates
+ *   - [other user data]
  * 
  * This allows:
- * 1. Single read to get all user's games: gamePicks/{userId}
- * 2. Single read to get user picks for a game: gamePicks/{userId}/picks/{gameId}
- * 3. No need to query multiple game documents
- * 4. MUCH faster for getAllUserPicksAcrossGames
+ * 1. Game leaderboard: picks.where('gameId', '==', gameId) (one query)
+ * 2. User history: picks.where('email', '==', email) (one query)
+ * 3. Single pick: picks.doc(`${gameId}:${displayName}`)
  */
 export async function createPick(args: CreatePickArgs) {
   const db = admin.firestore();
@@ -105,15 +111,18 @@ export async function createPick(args: CreatePickArgs) {
     );
   }
 
-  // NEW STRUCTURE: gamePicks/{userId}/picks/{gameId}
-  const userRef = db.collection('gamePicks').doc(args.userId);
-  const gamePickRef = userRef.collection('picks').doc(args.gameId);
+  // NEW STRUCTURE: picks/{gameId}:{displayName}
+  const docId = `${args.gameId}:${args.displayName}`;
+  const pickRef = db.collection('picks').doc(docId);
 
   // Update in a batch for atomicity
   const batch = db.batch();
 
-  // Prepare the document update - store teamData at document root level
+  // Prepare the document update with email, displayName and gameId fields
   const docUpdate: any = {
+    email: args.userId,
+    displayName: args.displayName,
+    gameId: args.gameId,
     picks: admin.firestore.FieldValue.arrayUnion(newPick),
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
   };
@@ -130,10 +139,11 @@ export async function createPick(args: CreatePickArgs) {
     };
   }
 
-  // Update the game picks subcollection
-  batch.set(gamePickRef, docUpdate, { merge: true });
+  // Update the picks document
+  batch.set(pickRef, docUpdate, { merge: true });
 
   // Update the user document with gameIds array (if not already present)
+  const userRef = db.collection('users').doc(args.userId);
   batch.set(userRef, {
     gameIds: admin.firestore.FieldValue.arrayUnion(args.gameId),
     lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
@@ -146,7 +156,8 @@ export async function createPick(args: CreatePickArgs) {
   return { 
     id: args.gameId,
     playersCount: players.length,
-    userId: args.userId
+    userId: args.userId,
+    displayName: args.displayName
   };
 }
 
@@ -154,18 +165,17 @@ export async function createPick(args: CreatePickArgs) {
  * Get all picks a user made for a specific game
  * Returns the user's pick array with all submissions
  */
-export async function getUserPicksForGame(userId: string, gameId: string) {
+export async function getUserPicksForGame(email: string, gameId: string, displayName: string) {
   const db = admin.firestore();
-  
-  const gamePickRef = db.collection('gamePicks').doc(userId).collection('picks').doc(gameId);
-  const gamePickDoc = await gamePickRef.get();
+  const docId = `${gameId}:${displayName}`;
+  const pickDoc = await db.collection('picks').doc(docId).get();
 
-  if (!gamePickDoc.exists) {
-    logger.info(`No picks found for user ${userId} in game ${gameId}`);
+  if (!pickDoc.exists) {
+    logger.info(`No picks found for user ${email} in game ${gameId}`);
     return null;
   }
 
-  const data = gamePickDoc.data();
+  const data = pickDoc.data();
   
   return {
     picks: (data?.picks || []).map((pick: any) => ({
@@ -179,22 +189,21 @@ export async function getUserPicksForGame(userId: string, gameId: string) {
 
 /**
  * Get all picks for a specific game (from all users)
- * Uses collection group query to find all picks for this game across all users
+ * Uses simple collection query to find all picks for this game
  */
 export async function getAllPicksForGame(gameId: string) {
   const db = admin.firestore();
   
-  // Use collection group query to find all picks for this game across all users
-  const picksQuery = db.collectionGroup('picks').where(admin.firestore.FieldPath.documentId(), '==', gameId);
+  // Query picks collection by gameId
+  const picksQuery = db.collection('picks').where('gameId', '==', gameId);
   const picksSnapshot = await picksQuery.get();
 
   const allPicks = picksSnapshot.docs.map(doc => {
     const data = doc.data();
-    // Extract userId from the document path: gamePicks/{userId}/picks/{gameId}
-    const userId = doc.ref.parent.parent?.id || 'unknown';
     
     return {
-      userId,
+      email: data?.email || 'unknown',
+      displayName: data?.displayName || 'Unknown',
       picks: (data?.picks || []).map((pick: any) => ({
         ...pick,
         timestamp: pick.timestamp?.toDate ? pick.timestamp.toDate().toISOString() : pick.timestamp
@@ -213,8 +222,8 @@ export async function getAllPicksForGame(gameId: string) {
  * Get the latest pick for a user in a specific game
  * Returns only the most recent pick submission
  */
-export async function getLatestUserPick(userId: string, gameId: string) {
-  const result = await getUserPicksForGame(userId, gameId);
+export async function getLatestUserPick(email: string, gameId: string, displayName: string) {
+  const result = await getUserPicksForGame(email, gameId, displayName);
   
   if (!result || !result.picks || result.picks.length === 0) {
     return null;
@@ -228,8 +237,8 @@ export async function getLatestUserPick(userId: string, gameId: string) {
  * Get pick history for a user in a specific game
  * Returns all picks ordered by timestamp
  */
-export async function getUserPickHistory(userId: string, gameId: string) {
-  const result = await getUserPicksForGame(userId, gameId);
+export async function getUserPickHistory(email: string, gameId: string, displayName: string) {
+  const result = await getUserPicksForGame(email, gameId, displayName);
   
   if (!result || !result.picks) {
     return [];
@@ -250,12 +259,12 @@ export async function getUserPickHistory(userId: string, gameId: string) {
  * 2. sessionScore - points the user got with the athlete since lock-in (time-filtered)
  * 3. userScore - total accumulated score that the athlete generated for the user (all sessions)
  */
-export async function calculateAthleteScores(userId: string, gameId: string, playLog: any[]) {
+export async function calculateAthleteScores(email: string, gameId: string, displayName: string, playLog: any[]) {
   try {
-    const result = await getUserPicksForGame(userId, gameId);
+    const result = await getUserPicksForGame(email, gameId, displayName);
 
     if (!result || !result.picks || result.picks.length === 0) {
-      logger.info(`No picks found for user ${userId} in game ${gameId}`);
+      logger.info(`No picks found for user ${email} in game ${gameId}`);
       return { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 };
     }
 
@@ -282,7 +291,7 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
         userScores[pid] = perPlayerScore;
       });
 
-      logger.info(`Using stored totals for user ${userId} in game ${gameId} (no play log). TotalScore=${totalScore}`);
+      logger.info(`Using stored totals for user ${email} in game ${gameId} (no play log). TotalScore=${totalScore}`);
       return {
         gameScores: {},
         sessionScores: { ...userScores },
@@ -440,7 +449,7 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
   // Calculate total user score
   const totalScore = Object.values(userScores).reduce((sum, score) => sum + score, 0);
 
-  logger.info(`Calculated scores for user ${userId} in game ${gameId}: ${Object.keys(gameScores).length} athletes, total score: ${totalScore}`);
+  logger.info(`Calculated scores for user ${email} in game ${gameId}: ${Object.keys(gameScores).length} athletes, total score: ${totalScore}`);
 
   return {
     gameScores,
@@ -449,7 +458,7 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
     totalScore
   };
   } catch (error) {
-    logger.error(`Error calculating athlete scores for user ${userId} in game ${gameId}: ${error}`);
+    logger.error(`Error calculating athlete scores for user ${email} in game ${gameId}: ${error}`);
     // Return empty scores on error rather than throwing
     return { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 };
   }
@@ -457,31 +466,20 @@ export async function calculateAthleteScores(userId: string, gameId: string, pla
 
 /**
  * Get all picks for a user across all games
- * MUCH MORE EFFICIENT with new structure - single read of user document + picks subcollection!
+ * Single query using email index
  */
-export async function getAllUserPicksAcrossGames(userId: string) {
+export async function getAllUserPicksAcrossGames(email: string) {
   const db = admin.firestore();
   
   try {
-    // Get the user document with gameIds
-    const userRef = db.collection('gamePicks').doc(userId);
-    const userDoc = await userRef.get();
+    // Query picks collection by email
+    const picksQuery = db.collection('picks').where('email', '==', email);
+    const picksSnapshot = await picksQuery.get();
     
-    if (!userDoc.exists) {
-      logger.info(`No picks found for user ${userId}`);
+    if (picksSnapshot.empty) {
+      logger.info(`No picks found for user ${email}`);
       return [];
     }
-    
-    const userData = userDoc.data();
-    const gameIds = userData?.gameIds || [];
-    
-    if (gameIds.length === 0) {
-      logger.info(`User ${userId} has no game picks`);
-      return [];
-    }
-    
-    // Get all picks subcollection documents
-    const picksSnapshot = await userRef.collection('picks').get();
     
     const allGamesData: Array<{
       gameId: string;
@@ -491,7 +489,7 @@ export async function getAllUserPicksAcrossGames(userId: string) {
     }> = picksSnapshot.docs.map(doc => {
       const data = doc.data();
       return {
-        gameId: doc.id,
+        gameId: data?.gameId || '',
         picks: (data?.picks || []).map((pick: any) => ({
           ...pick,
           timestamp: pick.timestamp?.toDate ? pick.timestamp.toDate().toISOString() : pick.timestamp
@@ -501,11 +499,11 @@ export async function getAllUserPicksAcrossGames(userId: string) {
       };
     });
     
-    logger.info(`Retrieved picks from ${allGamesData.length} games for user ${userId}`);
+    logger.info(`Retrieved picks from ${allGamesData.length} games for user ${email}`);
     
     return allGamesData;
   } catch (error) {
-    logger.error(`Error fetching all user picks for ${userId}: ${error}`);
+    logger.error(`Error fetching all user picks for ${email}: ${error}`);
     throw error;
   }
 }
@@ -515,47 +513,48 @@ export async function getAllUserPicksAcrossGames(userId: string) {
  * OPTIMIZED: Single query for all picks, then calculates scores in memory
  */
 export async function getAllUserPicksWithScores(
-  userId: string,
+  email: string,
+  displayName: string,
   getPlayByPlayFn: (gameId: string, meta?: any) => Promise<any>
 ) {
   const db = admin.firestore();
   
   try {
-    // Get all user picks in one efficient query
-    const userRef = db.collection('gamePicks').doc(userId);
-    const [userDoc, picksSnapshot] = await Promise.all([
-      userRef.get(),
-      userRef.collection('picks').get()
-    ]);
+    // Get the user document with gameIds
+    const userRef = db.collection('users').doc(email);
+    const userDoc = await userRef.get();
     
-    if (!userDoc.exists || picksSnapshot.empty) {
-      logger.info(`No picks found for user ${userId}`);
+    if (!userDoc.exists) {
+      logger.info(`No picks found for user ${email}`);
+      return [];
+    }
+    
+    const userData = userDoc.data();
+    const gameIds = userData?.gameIds || [];
+    
+    if (gameIds.length === 0) {
+      logger.info(`User ${email} has no game picks`);
       return [];
     }
 
     // Process all games in parallel
     const gamesWithScores = await Promise.all(
-      picksSnapshot.docs.map(async (doc) => {
-        const gameId = doc.id;
-        const data = doc.data();
-        const picks = data?.picks || [];
-        
-        if (picks.length === 0) {
-          return {
-            gameId,
-            picks: [],
-            lastUpdated: null,
-            totalPicks: 0,
-            scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 },
-            teamData: data?.teamData,
-            teamLogos: data?.teamLogos
-          };
-        }
-
+      gameIds.map(async (gameId: string) => {
         try {
-          // Fetch play-by-play data for score calculation
-          const playByPlayData = await getPlayByPlayFn(gameId, data);
+          // Get user's picks for this game
+          const docId = `${gameId}:${displayName}`;
+          const pickDoc = await db.collection('picks').doc(docId).get();
           
+          if (!pickDoc.exists) {
+            return null;
+          }
+          
+          const data = pickDoc.data();
+          const picks = data?.picks || [];
+
+          // Get play-by-play data for score calculation
+          const playByPlayData = await getPlayByPlayFn(gameId, data?.teamData);
+
           if (!playByPlayData || !playByPlayData.plays) {
             logger.warn(`No play-by-play data for game ${gameId}`);
             return {
@@ -572,7 +571,7 @@ export async function getAllUserPicksWithScores(
           }
 
           // Calculate scores using the same logic
-          const scores = await calculateAthleteScoresFromPicks(picks, playByPlayData.plays, userId, gameId);
+          const scores = await calculateAthleteScoresFromPicks(picks, playByPlayData.plays, email, gameId);
 
           return {
             gameId,
@@ -588,25 +587,25 @@ export async function getAllUserPicksWithScores(
         } catch (error) {
           logger.error(`Error calculating scores for game ${gameId}: ${error}`);
           return {
-            gameId,
-            picks: picks.map((pick: any) => ({
-              ...pick,
-              timestamp: pick.timestamp?.toDate ? pick.timestamp.toDate().toISOString() : pick.timestamp
-            })),
-            lastUpdated: data?.timestamp?.toDate ? data.timestamp.toDate().toISOString() : null,
-            totalPicks: picks.length,
+            gameId: gameId,
+            picks: [],
+            lastUpdated: null,
+            totalPicks: 0,
             scores: { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 },
-            teamData: data?.teamData
+            teamData: undefined
           };
         }
       })
     );
 
-    logger.info(`Retrieved picks with scores from ${gamesWithScores.length} games for user ${userId}`);
+    // Filter out null entries (games where user has no picks)
+    const filteredGames = gamesWithScores.filter(g => g !== null);
     
-    return gamesWithScores;
+    logger.info(`Retrieved picks with scores from ${filteredGames.length} games for user ${email}`);
+    
+    return filteredGames;
   } catch (error) {
-    logger.error(`Error fetching all user picks with scores for ${userId}: ${error}`);
+    logger.error(`Error fetching all user picks with scores for ${email}: ${error}`);
     throw error;
   }
 }
@@ -614,7 +613,7 @@ export async function getAllUserPicksWithScores(
 /**
  * Helper function to calculate scores from picks data (used by both endpoints)
  */
-async function calculateAthleteScoresFromPicks(picks: any[], playLog: any[], userId: string, gameId: string) {
+async function calculateAthleteScoresFromPicks(picks: any[], playLog: any[], email: string, gameId: string) {
   if (picks.length === 0) {
     return { gameScores: {}, sessionScores: {}, userScores: {}, totalScore: 0 };
   }
@@ -629,7 +628,7 @@ async function calculateAthleteScoresFromPicks(picks: any[], playLog: any[], use
       if (p?.id) userScores[p.id] = 0;
     });
 
-    logger.info(`No play log for game ${gameId}, using stored totalScore=${storedTotal} for user ${userId}`);
+    logger.info(`No play log for game ${gameId}, using stored totalScore=${storedTotal} for user ${email}`);
     return {
       gameScores: {},
       sessionScores: {},
@@ -753,7 +752,7 @@ async function calculateAthleteScoresFromPicks(picks: any[], playLog: any[], use
 
   const totalScore = Object.values(userScores).reduce((sum, score) => sum + score, 0);
 
-  logger.info(`Calculated scores for user ${userId} in game ${gameId}: ${Object.keys(gameScores).length} athletes, total score: ${totalScore}`);
+  logger.info(`Calculated scores for user ${email} in game ${gameId}: ${Object.keys(gameScores).length} athletes, total score: ${totalScore}`);
 
   return {
     gameScores,

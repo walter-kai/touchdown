@@ -172,6 +172,7 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
     const jwtPayload = {
       uid,
       email,
+      displayName: userData.displayName,
       googleId,
       authMethod: 'google',
       iat: Math.floor(Date.now() / 1000),
@@ -351,6 +352,7 @@ export async function testAutoLogin(): Promise<AuthResponse> {
   const jwtPayload = {
     uid,
     email,
+    displayName: userData.displayName,
     googleId,
     authMethod: 'google',
     iat: Math.floor(Date.now() / 1000),

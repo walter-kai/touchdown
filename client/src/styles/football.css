@@ -1,5 +1,11 @@
 
 
+/* Clock rotation animation for timeout displays */
+@keyframes clock-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Field container matches court geometry (aspect ratio + rounded edges) */
 .football-field {
   position: relative;
@@ -511,23 +517,20 @@
   100% { content: "🕛"; }
 }
 
-.animate-timeout-spin,
-.animate-two-minute-warning {
+.animate-timeout-spin::after {
   position: relative;
-  color: inherit;
-}
-
-.animate-timeout-spin::after,
-.animate-two-minute-warning::after {
   content: "🕛";
+  color: inherit;
   display: inline-block;
   animation: clock-emoji-cycle 6.2s steps(1, end) infinite;
-  filter: drop-shadow(0 0 20px rgba(255,255,255,0.35));
 }
 
-/* Slightly slower for two-minute warning to feel more deliberate */
 .animate-two-minute-warning::after {
-  animation-duration: 1.6s;
+  position: relative;
+  content: "🕛";
+  color: inherit;
+  display: inline-block;
+  animation: clock-emoji-cycle 5s steps(1, end) infinite;
 }
 
 /* Sack - Crash with shake/vibrate effect */

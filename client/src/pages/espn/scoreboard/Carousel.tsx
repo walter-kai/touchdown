@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaFootballBall, FaClock, FaPauseCircle, FaLock, FaCheckCircle, FaBolt, FaChartLine, FaUsers } from 'react-icons/fa';
 import { useAuth } from '@/providers/AuthContext';
+import { useLeague } from '@/providers/LeagueContext';
 import HeadToHead from '@/components/espn/HeadToHead';
 import ProbChart from '@/components/espn/ProbabilityChart';
 import PointsChart from '@/components/espn/PointsChart';
@@ -36,6 +37,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { isAuthenticated, triggerLoginModal } = useAuth();
+  const { league } = useLeague();
   const carouselRef = useRef<HTMLDivElement>(null);
   const playerPickRef = useRef<{ openRoster: () => void }>(null);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
@@ -311,7 +313,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 
             {/* Chat Section */}
             <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-4 pb-16 overflow-y-auto" style={{ width: slideWidth }}>
-              <TelegramChat gameId={event.id} />
+              <TelegramChat gameId={event.id} league={league} awayTeam={awayTeam} homeTeam={homeTeam} />
             </div>
           </div>
         </div>

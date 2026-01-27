@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaFootballBall } from 'react-icons/fa';
 import FootballField from '@/pages/espn/dashboard/games/FootballField';
@@ -86,6 +86,7 @@ const Info: React.FC<InfoProps> = ({
   const [currentPicks, setCurrentPicks] = useState<any[]>([]);
   const [picksScores, setPicksScores] = useState<Record<string, number>>({});
   const [hasFetchedUserScores, setHasFetchedUserScores] = useState(false);
+  const [scoreIncreasePlayerIds, setScoreIncreasePlayerIds] = useState<Set<string>>(new Set());
 
   // Load picks from localStorage - with reactive updates
   useEffect(() => {
@@ -154,6 +155,34 @@ const Info: React.FC<InfoProps> = ({
       window.removeEventListener('localStorageUpdate' as any, handleLocalUpdate);
     };
   }, [homeTeamId, awayTeamId, playLog]);
+
+  // Track score increases and show animation
+  const prevScoresRef = useRef<Record<string, number>>({});
+  
+  useEffect(() => {
+    const prevScores = prevScoresRef.current;
+    const newIncreases = new Set<string>();
+    
+    Object.entries(picksScores).forEach(([playerId, newScore]) => {
+      const prevScore = prevScores[playerId] ?? 0;
+      if (newScore > prevScore) {
+        newIncreases.add(playerId);
+      }
+    });
+    
+    if (newIncreases.size > 0) {
+      setScoreIncreasePlayerIds(newIncreases);
+      
+      // Clear animation after 2 seconds
+      const timer = setTimeout(() => {
+        setScoreIncreasePlayerIds(new Set());
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+    
+    prevScoresRef.current = picksScores;
+  }, [picksScores]);
 
   // Update picks display when playLog changes (already handled in useEffect above)
   // No need to fetch from backend - use session scores calculated from playLog
@@ -474,8 +503,8 @@ const Info: React.FC<InfoProps> = ({
                       </div>
                       {isNba ? (
                         <BasketballCourt
-                          homeTeam={homeTeam}
-                          awayTeam={awayTeam}
+                          homeTeam={homeTeam?.team || homeTeam}
+                          awayTeam={awayTeam?.team || awayTeam}
                           lastPlay={situation.lastPlay}
                           playLog={playLog}
                           getTeamLogo={getTeamLogo}
@@ -536,7 +565,27 @@ const Info: React.FC<InfoProps> = ({
                                   <span className="text-white text-[10px] font-bold mt-1 text-center truncate w-full">
                                     {player.shortName}
                                   </span>
-                                  <span className="text-neon-pink text-lg font-bold">{picksScores[player.id] || 0}</span>
+                                  <div className="relative">
+                                    <span className="text-neon-pink text-lg font-bold">{picksScores[player.id] || 0}</span>
+                                    {scoreIncreasePlayerIds.has(player.id) && (
+                                      <img
+                                        src="./assets/confetti.gif"
+                                        alt="Score increase"
+                                        className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-6 h-6 animate-bounce"
+                                        onError={(e) => {
+                                          // Fallback if GIF not found
+                                          const parent = e.currentTarget.parentElement;
+                                          if (parent) {
+                                            const emoji = document.createElement('div');
+                                            emoji.textContent = '✨';
+                                            emoji.className = 'absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-lg animate-bounce';
+                                            parent.appendChild(emoji);
+                                            e.currentTarget.style.display = 'none';
+                                          }
+                                        }}
+                                      />
+                                    )}
+                                  </div>
                                 </div>
                               );
                             })}

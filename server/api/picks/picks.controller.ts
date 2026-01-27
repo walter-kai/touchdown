@@ -15,8 +15,12 @@ export const postPick = catchAsync(async (req: Request, res: Response) => {
     throw new ApiError(400, 'Missing pick payload: provide `picksState` or `selection`');
   }
 
+  // Fall back to email-derived displayName if not in token
+  const displayName = user.displayName || user.email.split('@')[0];
+
   const result = await createPick({
     userId: user.email,
+    displayName,
     homeTeamId,
     awayTeamId,
     picksState,
@@ -40,7 +44,10 @@ export const getUserPicks = catchAsync(async (req: Request, res: Response) => {
     throw new ApiError(400, 'Missing gameId parameter');
   }
 
-  const picks = await getUserPicksForGame(user.email, gameId);
+  // Fall back to email-derived displayName if not in token
+  const displayName = user.displayName || user.email.split('@')[0];
+
+  const picks = await getUserPicksForGame(user.email, gameId, displayName);
 
   return res.status(200).json({ ok: true, picks });
 });
@@ -70,7 +77,10 @@ export const getLatestPick = catchAsync(async (req: Request, res: Response) => {
     throw new ApiError(400, 'Missing gameId parameter');
   }
 
-  const latestPick = await getLatestUserPick(user.email, gameId);
+  // Fall back to email-derived displayName if not in token
+  const displayName = user.displayName || user.email.split('@')[0];
+
+  const latestPick = await getLatestUserPick(user.email, gameId, displayName);
 
   return res.status(200).json({ ok: true, pick: latestPick });
 });
@@ -87,7 +97,10 @@ export const getPickHistory = catchAsync(async (req: Request, res: Response) => 
     throw new ApiError(400, 'Missing gameId parameter');
   }
 
-  const history = await getUserPickHistory(user.email, gameId);
+  // Fall back to email-derived displayName if not in token
+  const displayName = user.displayName || user.email.split('@')[0];
+
+  const history = await getUserPickHistory(user.email, gameId, displayName);
 
   return res.status(200).json({ ok: true, history, totalPicks: history.length });
 });
@@ -183,10 +196,13 @@ export const getAllUserPicksWithScoresController = catchAsync(async (req: Reques
     throw new ApiError(400, 'Missing user email from token');
   }
 
+  // Fall back to email-derived displayName if not in token
+  const displayName = user.displayName || user.email.split('@')[0];
+
   // No ESPN Summary calls; return picks with empty play logs (frontend will enhance if needed)
   const noopPlayFetcher = async () => ({ plays: [] });
 
-  const userPicksWithScores = await getAllUserPicksWithScores(user.email, noopPlayFetcher);
+  const userPicksWithScores = await getAllUserPicksWithScores(user.email, displayName, noopPlayFetcher);
 
   return res.status(200).json({ ok: true, games: userPicksWithScores });
 });

@@ -1,5 +1,29 @@
 // Picks API Types
 // Based on server/api/picks/picks.service.ts
+//
+// Database Structure (Single Collection):
+// picks/{gameId}:{userId}
+//   - userId: string
+//   - gameId: string
+//   - picks: PickSubmission[]
+//   - timestamp: Firestore server timestamp
+//   - teamData?: { league, team info }
+//   - teamLogos?: { awayLogo, homeLogo }
+//
+// users/{userId}
+//   - gameIds: string[] (array of game IDs user has picks in)
+//   - lastUpdated: Firestore server timestamp
+//   - totalScore, gamesPlayed: leaderboard aggregates (optional)
+//   - [other user data]
+//
+// Query Patterns:
+// 1. Game leaderboard: picks.where('gameId', '==', gameId) (one query)
+// 2. User history: picks.where('userId', '==', userId) (one query)
+// 3. Single pick: picks.doc(`${gameId}:${userId}`)
+//
+// Indexes Required:
+// - Single-field index on 'gameId'
+// - Single-field index on 'userId'
 
 export interface PlayerPick {
   id: string;

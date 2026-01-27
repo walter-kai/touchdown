@@ -5,6 +5,12 @@
 	gap: 12px;
 }
 
+/* Clock rotation animation for timeout displays */
+@keyframes clock-rotate {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+
 /* 3D platform container to mimic the football trapezoid platform */
 .court-platform {
 	position: relative;
@@ -856,19 +862,13 @@
 	100% { content: "🕛"; }
 }
 
-.animate-timeout-spin {
-	position: relative;
-	color: inherit;
-}
-
 .animate-timeout-spin::after {
+	position: relative;
 	content: "🕛";
+	color: inherit;
 	display: inline-block;
 	animation: clock-emoji-cycle 6.2s steps(1, end) infinite;
-	filter: drop-shadow(0 0 20px rgba(255,255,255,0.35));
 }
-
-/* Court Diagnostics */
 .court-diagnostics {
 	background: rgba(0, 0, 0, 0.85);
 	border: 1px solid rgba(0, 255, 231, 0.3);

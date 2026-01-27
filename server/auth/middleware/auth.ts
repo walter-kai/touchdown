@@ -9,6 +9,7 @@ export interface AuthenticatedRequest extends Request {
     walletAddress: string;
     authMethod: string;
     email?: string;
+    displayName?: string;
   };
 }
 
@@ -42,6 +43,7 @@ export const authenticateJWT = (req: AuthenticatedRequest, res: Response, next: 
       walletAddress: decoded.walletAddress,
       authMethod: decoded.authMethod,
       email: decoded.email,
+      displayName: decoded.displayName,
     };
 
     next();
@@ -81,6 +83,7 @@ export const optionalJWT = (req: AuthenticatedRequest, res: Response, next: Next
           walletAddress: decoded.walletAddress,
           authMethod: decoded.authMethod,
           email: decoded.email,
+          displayName: decoded.displayName,
         };
       }
     }

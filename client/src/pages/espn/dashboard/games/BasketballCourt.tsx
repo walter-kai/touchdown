@@ -779,10 +779,10 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 						className="text-5xl animate-timeout-spin"
 						style={{
 							color: config.color,
-							filter: `drop-shadow(0 0 20px ${config.glowColor || 'rgba(255, 215, 0, 0.6)'})`
+							filter: `drop-shadow(0 0 20px ${config.glowColor || 'rgba(255, 215, 0, 0.6)'})`,
+							display: 'inline-block'
 						}}
-					>
-					</div>
+					/>
 				</div>
 			)}
 			{/* Shot clock display for shot clock turnovers */}
@@ -957,9 +957,9 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 										) : (
 											<div className="text-4xl">👤</div>
 										)}
-									</div>
 									<div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap text-xs font-bold text-white/60">
 										{playerOut?.shortName || playerOutName || 'OUT'}
+									</div>
 									</div>
 								</div>
 

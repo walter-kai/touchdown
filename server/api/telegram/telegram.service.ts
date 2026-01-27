@@ -58,6 +58,38 @@ export const sendTelegramMessage = async (
   }
 };
 
+export const createTelegramTopic = async (
+  accessToken: string,
+  superGroupId: string | number,
+  topicName: string
+): Promise<{ success: boolean; topicId?: number; error?: string }> => {
+  try {
+    const bot = new Telegraf(accessToken);
+
+    // Create a new forum topic
+    const result = await bot.telegram.createForumTopic(superGroupId, topicName);
+
+    return {
+      success: true,
+      topicId: result.message_thread_id
+    };
+  } catch (error: any) {
+    console.error('Error creating Telegram topic:', error);
+    
+    let errorMessage = 'Unknown error occurred';
+    if (error.response?.data) {
+      errorMessage = error.response.data.description || errorMessage;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+};
+
 export const getTelegramGroupInfo = async (
   accessToken: string,
   chatId: string | number

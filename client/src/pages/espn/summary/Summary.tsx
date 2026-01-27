@@ -307,8 +307,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                     {/* Render Field or Court based on league */}
                     {urlLeague === 'nba' ? (
                       <BasketballCourt
-                        homeTeam={homeTeam}
-                        awayTeam={awayTeam}
+                        homeTeam={homeTeam?.team || homeTeam}
+                        awayTeam={awayTeam?.team || awayTeam}
                         lastPlay={effectivePlayLog[selectedPlayIndex]}
                         playLog={effectivePlayLog}
                         getTeamLogo={getTeamLogo}
@@ -677,7 +677,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
             {/* Chat Section */}
             <div className="w-full flex-shrink-0 overflow-hidden" style={{ width: isPreGame ? '33.33%' : '20%' }}>
-              <TelegramChat gameId={gameId} />
+              <TelegramChat gameId={gameId} league={urlLeague} awayTeam={awayTeam} homeTeam={homeTeam} />
             </div>
           </div>
         </div>
