@@ -13,6 +13,7 @@ import { PlayNfl, PlayNba, Play } from '@/types/espn/plays';
 
 const TestAnimation: React.FC = () => {
   const { showLoading, hideLoading } = useLoading();
+  const inputRef = React.useRef<HTMLInputElement>(null);
   
   // Derive league from URL path
   const urlLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
@@ -41,9 +42,26 @@ const TestAnimation: React.FC = () => {
         showLoading('Loading test game data...');
         setError(null);
 
-        // Fetch summary
-        const summaryResponse = await axios.get<Summary>(getSummaryUrl(league, testGameId));
-        const summaryData = summaryResponse.data;
+         let summaryData: Summary;
+
+         // If testGameId is "test", load from JSON file
+         if (testGameId === 'test') {
+           const jsonPath = league === 'nba' 
+             ? '/espn/nbascoreboard with dates.json'
+             : '/espn/nflscoreboard.json'; // Adjust path for NFL if needed
+         
+           const response = await fetch(jsonPath);
+           if (!response.ok) {
+             throw new Error(`Failed to load test data from ${jsonPath}`);
+           }
+           const jsonData = await response.json();
+           summaryData = jsonData;
+         } else {
+           // Fetch summary from API
+           const summaryResponse = await axios.get<Summary>(getSummaryUrl(league, testGameId));
+           summaryData = summaryResponse.data;
+         }
+
         setSummary(summaryData);
 
         // Extract event from summary header
@@ -131,20 +149,19 @@ const TestAnimation: React.FC = () => {
             <div className="flex-1">
               <label className="text-text-muted text-xs mb-1 block">Test Game ID ({league.toUpperCase()})</label>
               <input
+                ref={inputRef}
                 type="text"
-                value={testGameId}
-                onChange={(e) => setTestGameId(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    window.location.reload();
-                  }
-                }}
+                defaultValue={testGameId}
                 className="w-full bg-bg-darker text-white px-4 py-2 rounded border border-neon-cyan/30 focus:border-neon-cyan outline-none"
                 placeholder="Enter ESPN Game ID"
               />
             </div>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                if (inputRef.current?.value) {
+                  setTestGameId(inputRef.current.value);
+                }
+              }}
               className="px-6 py-2 bg-neon-cyan text-bg-darkest font-bold rounded hover:bg-neon-cyan/80 transition-colors mt-5"
             >
               Load Game
