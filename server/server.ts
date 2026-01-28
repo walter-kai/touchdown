@@ -128,7 +128,8 @@ app.get('*', async (req, res) => {
         }
       }
     } catch (error) {
-      logger.error('Error fetching game data for OG tags:', error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      logger.error(`Error fetching game data for OG tags: ${errorMsg}`);
       // Fall through to default behavior
     }
   }
