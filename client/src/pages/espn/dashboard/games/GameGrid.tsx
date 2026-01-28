@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaFootballBall, FaPlay, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import LoadingFootball from '../../../../components/common/LoadingFootball';
+import LoginHero from '../../../../components/LoginHero';
 import NewsTicker from '../../../../components/espn/NewsTicker';
 import WeekNav from '../../../../components/common/navs/WeekNav';
 import { useLeague } from '../../../../providers/LeagueContext';
@@ -192,8 +193,11 @@ const GameGrid: React.FC = () => {
   <>
   <div className="max-w-7xl mx-auto py-2">
 	
+    {/* Sign Up Banner - When Not Logged In */}
+    <LoginHero league={league} />
+
     {/* News Ticker - Moved to Top */}
-  <NewsTicker news={news} />
+  {/* <NewsTicker news={news} /> */}
   {/* Week Navigation - New Calendar Style */}
   <WeekNav 
     onDateSelect={handleDateSelect}
