@@ -12,6 +12,7 @@ import { debugLog } from '@/utils/debugLog';
 import { fetchEspnPlays } from '@/utils/espnPlays';
 import { getScoreboardUrl, getSummaryUrl } from '@/utils/espnApi';
 import { getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
+import { updateOpenGraphMeta } from '@/utils/metaTags';
 import { PlaysProvider } from '@/providers/PlaysContext';
 
 import type { Event, ScoreboardResponse } from '@/types/espn/scoreboard';
@@ -215,6 +216,11 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
       }
     }
   }, [event, onGameStatusChange]);
+
+  // Update Open Graph meta tags when event changes
+  useEffect(() => {
+    updateOpenGraphMeta(event, league);
+  }, [event, league]);
 
   // Shared helper to merge latest play from ESPN situation into playLog without duplicates
   const mergeLatestPlay = (currentEvent: Event | undefined, previousEvent: Event | null) => {
