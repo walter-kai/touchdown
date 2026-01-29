@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall, FaComments } from 'react-icons/fa';
 import { debugLog } from '@/utils/debugLog';
-import { useLeague } from '@/providers/LeagueContext';
+
 
 interface GameNavBarProps {
   activeTab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games' | 'chat';
@@ -15,7 +15,8 @@ interface GameNavBarProps {
 
 const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabClick, preset = 'scoreboard', gameStatus, isVisible = true }) => {
   const navigate = useNavigate();
-  const { league } = useLeague();
+  // Derive league from URL instead of context
+  const league = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
   const prevVisibleRef = useRef(isVisible);
   const shouldAnimateRef = useRef(false);
   const prevPresetRef = useRef(preset);

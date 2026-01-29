@@ -39,13 +39,12 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { isAuthenticated, triggerLoginModal } = useAuth();
-  // Derive league from URL to avoid context lag (prevents nfl headshots on NBA)
-  const { league: contextLeague } = useLeague();
+  // Derive league from URL
   const urlLeague = React.useMemo<'nfl' | 'nba'>(() => {
     if (window.location.pathname.startsWith('/nba')) return 'nba';
     if (window.location.pathname.startsWith('/nfl')) return 'nfl';
-    return contextLeague;
-  }, [contextLeague]);
+    return 'nfl';
+  }, []);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [timeUntilGame, setTimeUntilGame] = useState<string>('');
   const [gameCountdown, setGameCountdown] = useState<number>(0);

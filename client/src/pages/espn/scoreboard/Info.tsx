@@ -385,7 +385,7 @@ const Info: React.FC<InfoProps> = ({
                   }
                 : undefined;
 
-            if (!situation || !situation.lastPlay) return null;
+            if (!situation) return null;
 
             return (
               <div className="">

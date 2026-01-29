@@ -123,7 +123,18 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 	if (!homeTeam || !awayTeam) return null;
 
 	const lastPlay = lastPlayProp ?? playLog[0];
-	if (!lastPlay) return null;
+	
+	// Allow rendering without lastPlay - show empty court state
+	if (!lastPlay) {
+		return (
+			<div className="relative bg-gradient-to-b from-amber-900/30 to-amber-800/30 rounded-xl overflow-hidden h-[400px] my-4 flex items-center justify-center border border-neon-cyan/20">
+				<div className="text-center text-text-muted">
+					<div className="text-3xl mb-3 text-neon-cyan/50">🏀</div>
+					<p className="text-sm">Waiting for first play...</p>
+				</div>
+			</div>
+		);
+	}
 
 	const typeText = resolvePlayType(lastPlay);
 	const label = derivePlayLabel(typeText, lastPlay);

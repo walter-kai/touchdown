@@ -27,7 +27,7 @@ interface GameContainerProps {
   onRegisterTabClick?: (callback: (tab: string) => void) => void;
 }
 
-const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
+const GameDetail: React.FC<GameContainerProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
   const { gameId } = useParams<{ gameId: string }>();
   const { showLoading, hideLoading } = useLoading();
   const location = useLocation();
@@ -90,22 +90,31 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
     }
   }, [location.state, onTabChange]);
 
-  const refreshPlaysFromApi = useCallback(async () => {
+  const refreshGameAndPlays = useCallback(async () => {
     if (!gameId) return;
 
-    // Only fetch plays for in-progress or completed games
+    // Only fetch for in-progress or completed games
     const status = event?.status?.type?.state;
     if (status !== 'in' && status !== 'post') {
-      debugLog('⏸ Skipping plays refresh: game not started yet');
+      debugLog('⏸ Skipping refresh: game not started yet');
       return;
     }
 
-    const cacheKey = `playlog_${gameId}`;
     const actualGameId = gameId === 'test' ? testGameId : gameId;
-    const compId = event?.competitions?.[0]?.id || actualGameId;
+    const cacheKey = `playlog_${gameId}`;
 
     try {
       setIsRefreshing(true);
+      
+      // Refresh game data (scores, situation, etc.)
+      const { game, usedSummaryApi } = await getGameData(gameId);
+      if (game) {
+        setEvent(game);
+        mergeLatestPlay(game, event);
+      }
+      
+      // Refresh plays
+      const compId = game?.competitions?.[0]?.id || actualGameId;
       const latestPlays = await fetchEspnPlays(
         actualGameId,
         String(compId),
@@ -123,7 +132,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
       setPlayLog(latestPlays);
       setLastUpdated(new Date());
     } catch (err) {
-      console.error('Error refreshing plays from ESPN:', err);
+      console.error('Error refreshing game and plays from ESPN:', err);
     } finally {
       setIsRefreshing(false);
       setCountdown(30);
@@ -194,7 +203,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
           localStorage.setItem(cacheKey, JSON.stringify({
             plays: historicalPlays,
             timestamp: Date.now()
-          }));
+        }));
         } catch (storageErr) {
           // Quota exceeded - just skip caching
         }
@@ -423,8 +432,8 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          debugLog('⏰ Countdown reached 0, refreshing plays from ESPN API...');
-          refreshPlaysFromApi();
+          debugLog('⏰ Countdown reached 0, refreshing game data and plays from ESPN API...');
+          refreshGameAndPlays();
           return 30;
         }
         return prev - 1;
@@ -432,7 +441,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [gameId, refreshPlaysFromApi, isGameFinal]);
+  }, [gameId, refreshGameAndPlays, isGameFinal]);
 
   // When game ends, stop refreshing and switch to summary preset
   useEffect(() => {
@@ -446,7 +455,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
 
   const handleManualRefresh = () => {
     if (isGameFinal) return;
-    refreshPlaysFromApi();
+    refreshGameAndPlays();
     setCountdown(30);
   };
 
@@ -698,4 +707,4 @@ const GameContainer: React.FC<GameContainerProps> = ({ activeTab, onTabChange, o
   );
 };
 
-export default GameContainer;
+export default GameDetail;

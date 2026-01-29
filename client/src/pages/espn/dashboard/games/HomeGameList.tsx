@@ -24,9 +24,10 @@ interface ESPNData {
   };
 }
 
-const GameGrid: React.FC = () => {
+const HomepageGames: React.FC = () => {
   const navigate = useNavigate();
-  const { league } = useLeague();
+  // Derive league from URL instead of context
+  const league = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
   const [games, setGames] = useState<Event[]>([]);
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [byeTeams, setByeTeams] = useState<TeamOnBye[]>([]);
@@ -412,4 +413,4 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
   );
 };
 
-export default GameGrid;
+export default HomepageGames;

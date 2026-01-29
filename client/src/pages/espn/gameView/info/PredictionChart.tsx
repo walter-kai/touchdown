@@ -39,7 +39,8 @@ interface PredictionProps {
 }
 
 const PredictionChart: React.FC<PredictionProps> = ({ gameId, competitionId, homeTeamInfo, awayTeamInfo, getTeamLogo, homeTeam, awayTeam }) => {
-  const { league } = useLeague();
+  // Derive league from URL instead of context
+  const league = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
   const [data, setData] = useState<PredictionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

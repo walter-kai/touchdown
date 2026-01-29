@@ -5,10 +5,10 @@ import BottomNavbar from './components/common/navs/BottomNavbar';
 import LoginNav from './components/common/navs/LoginNav';
 
 import DashboardCarousel from './pages/espn/dashboard/Carousel';
-import UnifiedGameGrid from './pages/espn/dashboard/games/UnifiedGameGrid';
+import UnifiedGameGrid from './pages/espn/dashboard/games/GameGrid';
 import NFLTeamPage from './pages/espn/Team';
 import NFLPlayerPage from './pages/espn/Player';
-import GameContainer from './pages/espn/dashboard/games/GameContainer';
+import GameDetail from './pages/espn/dashboard/games/GameDetail';
 import TestAnimation from './pages/espn/testAnimation';
 
 import NotFound from './pages/NotFound';
@@ -188,10 +188,10 @@ const App: React.FC = () => {
                   <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
                   <Route path="/nfl/game/test" element={<TestAnimation />} />
                   <Route path="/nba/game/test" element={<TestAnimation />} />
-                  <Route path="/nfl/game/:gameId" element={<GameContainer activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
+                  <Route path="/nfl/game/:gameId" element={<GameDetail activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/team/:teamId" element={<NFLTeamPage activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays'} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nfl/player/:playerId" element={<NFLPlayerPage activeTab={gameTab as 'info' | 'schedule' | 'news'} onTabChange={(tab) => setGameTab(tab as any)} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
-                  <Route path="/nba/game/:gameId" element={<GameContainer activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
+                  <Route path="/nba/game/:gameId" element={<GameDetail activeTab={gameTab} onTabChange={setGameTab} onPresetChange={setNavPreset} onGameStatusChange={setGameStatus} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nba/team/:teamId" element={<NFLTeamPage activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays'} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nba/player/:playerId" element={<NFLPlayerPage activeTab={gameTab as 'info' | 'schedule' | 'news'} onTabChange={(tab) => setGameTab(tab as any)} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   

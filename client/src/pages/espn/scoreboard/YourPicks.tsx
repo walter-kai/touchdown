@@ -611,9 +611,17 @@ ref
             });
             
             sessionScores[player.id] = playerScore;
-            debugLog(`📊 ${player.shortName}: ${playerScore} plays after lock (${playsBeforeLock} before, ${totalPlaysForPlayer} total)`);
+            debugLog(`📊 ${player.shortName} (id: ${player.id}): ${playerScore} plays after lock (${playsBeforeLock} before, ${totalPlaysForPlayer} total)`);
             calculatedTotalScore += playerScore;
           });
+          
+          // Debug: Show sample athlete IDs from plays
+          if (playLog.length > 0) {
+            const samplePlay = playLog.find(p => p.athletesInvolved && p.athletesInvolved.length > 0);
+            if (samplePlay) {
+              debugLog(`🔍 Sample play athlete IDs:`, samplePlay.athletesInvolved.map((a: any) => a?.id));
+            }
+          }
           
           setCurrentSetScores(sessionScores);
           setTotalScore(calculatedTotalScore);

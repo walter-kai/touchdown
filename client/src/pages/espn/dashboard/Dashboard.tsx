@@ -73,7 +73,8 @@ interface GameData {
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { league } = useLeague();
+  // Derive league from URL instead of context
+  const league = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
   const [loading, setLoading] = useState(true);
   const [gamesWithPicks, setGamesWithPicks] = useState<GameData[]>([]);
   const [error, setError] = useState<string | null>(null);

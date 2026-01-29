@@ -66,7 +66,8 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { league } = useLeague();
+  // Derive league from URL instead of context
+  const league = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
   const [teamData, setTeamData] = useState<TeamApiResponse | null>(null);
   const [scheduleData, setScheduleData] = useState<ScheduleData | null>(null);
   const [news, setNews] = useState<NewsArticle[]>([]);

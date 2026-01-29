@@ -37,7 +37,8 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { isAuthenticated, triggerLoginModal } = useAuth();
-  const { league } = useLeague();
+  // Derive league from URL instead of context
+  const league = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
   const carouselRef = useRef<HTMLDivElement>(null);
   const playerPickRef = useRef<{ openRoster: () => void }>(null);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);

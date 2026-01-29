@@ -422,7 +422,21 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const clampYard = (yard: number) => Math.max(0, Math.min(120, yard));
   const fieldWidthPx = fieldRef.current?.offsetWidth || 1000;
   
-  if (!lastPlay) return null;
+  // Allow rendering without lastPlay - show empty field state
+  // if (!lastPlay) return null;
+  
+  // If no lastPlay, show placeholder field
+  if (!lastPlay) {
+    return (
+      <div ref={fieldRef} className="relative bg-gradient-to-b from-[#1a4d2e] to-[#2d5a3d] rounded-xl overflow-hidden h-[400px] my-4 flex items-center justify-center border border-neon-cyan/20">
+        <div className="text-center text-text-muted">
+          <FaFootballBall className="mx-auto text-3xl mb-3 text-neon-cyan/50" />
+          <p className="text-sm">Waiting for first play...</p>
+        </div>
+      </div>
+    );
+  }
+  
   // Determine initial orientation using the coin toss (receiver starts on the left driving left-to-right)
   const matchTeamFromText = (text?: string) => {
     const upper = (text || '').toUpperCase();
