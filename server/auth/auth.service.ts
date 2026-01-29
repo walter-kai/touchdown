@@ -5,12 +5,25 @@ import ApiError from '../utils/api-error';
 import logger from '../utils/logger';
 import { User, ProviderData } from '../../types/User';
 
-// Initialize Google OAuth client
-const googleClient = new OAuth2Client(
-  process.env.GOOGLE_OAUTH_CLIENT_ID,
-  process.env.GOOGLE_OAUTH_SECRET,
-  `${process.env.HOST_URL}/auth/google/callback`
-);
+// Lazy-load Google OAuth client to ensure env vars are loaded
+let googleClient: OAuth2Client | null = null;
+
+function getGoogleClient(): OAuth2Client {
+  if (!googleClient) {
+    if (!process.env.GOOGLE_OAUTH_CLIENT_ID || !process.env.GOOGLE_OAUTH_SECRET || !process.env.HOST_URL) {
+      throw new Error('Missing required Google OAuth environment variables: GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_SECRET, HOST_URL');
+    }
+    
+    googleClient = new OAuth2Client(
+      process.env.GOOGLE_OAUTH_CLIENT_ID,
+      process.env.GOOGLE_OAUTH_SECRET,
+      `${process.env.HOST_URL}/auth/google/callback`
+    );
+    
+    logger.info('Google OAuth Client initialized - callback: ' + process.env.HOST_URL + '/auth/google/callback');
+  }
+  return googleClient;
+}
 
 export interface AuthResponse {
   accessToken: string;
@@ -30,7 +43,7 @@ export async function authenticateWithGoogle(authRequest: GoogleAuthRequest): Pr
 
   try {
     // Verify Google ID token
-    const ticket = await googleClient.verifyIdToken({
+    const ticket = await getGoogleClient().verifyIdToken({
       idToken,
       audience: process.env.GOOGLE_OAUTH_CLIENT_ID,
     });
@@ -216,7 +229,7 @@ export function getGoogleAuthUrl(): string {
     'https://www.googleapis.com/auth/userinfo.profile',
   ];
 
-  return googleClient.generateAuthUrl({
+  return getGoogleClient().generateAuthUrl({
     access_type: 'offline',
     scope: scopes,
     prompt: 'consent',
@@ -228,7 +241,7 @@ export function getGoogleAuthUrl(): string {
  */
 export async function handleGoogleCallback(code: string): Promise<AuthResponse> {
   try {
-    const { tokens } = await googleClient.getToken(code);
+    const { tokens } = await getGoogleClient().getToken(code);
     
     if (!tokens.id_token) {
       throw new ApiError(400, 'No ID token received from Google');

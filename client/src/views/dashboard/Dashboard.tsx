@@ -628,7 +628,7 @@ const Dashboard: React.FC = () => {
             <h2 className="text-2xl font-bold mb-2">No Picks Yet</h2>
             <p className="text-gray-400 mb-6">Start making picks to see your dashboard!</p>
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/games')}
               className="btn-purple"
             >
               <FaGamepad className="inline mr-2" />

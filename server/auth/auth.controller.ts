@@ -33,8 +33,71 @@ export const authenticateGoogle = catchAsync(async (req: Request, res: Response,
  */
 export const initiateGoogleLogin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   logger.info('=== INITIATE GOOGLE LOGIN ===');
+  
+  // Validate required environment variables
+  if (!process.env.GOOGLE_OAUTH_CLIENT_ID || !process.env.GOOGLE_OAUTH_SECRET || !process.env.HOST_URL) {
+    logger.error('Missing Google OAuth credentials - clientId: ' + !!process.env.GOOGLE_OAUTH_CLIENT_ID + ', secret: ' + !!process.env.GOOGLE_OAUTH_SECRET + ', hostUrl: ' + !!process.env.HOST_URL);
+    
+    // Send error page instead of throwing
+    return res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>OAuth Configuration Error</title>
+          <style>
+            body { font-family: Arial; background: #000; color: #fff; padding: 40px; text-align: center; }
+            .error { background: #1a1a1a; padding: 30px; border-radius: 8px; max-width: 600px; margin: 0 auto; border: 1px solid #ff4444; }
+            h1 { color: #ff4444; }
+            p { color: #ccc; }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h1>⚠️ OAuth Configuration Error</h1>
+            <p>Google OAuth is not properly configured.</p>
+            <p>Please check that these environment variables are set:</p>
+            <ul style="text-align: left;">
+              <li>GOOGLE_OAUTH_CLIENT_ID</li>
+              <li>GOOGLE_OAUTH_SECRET</li>
+              <li>HOST_URL</li>
+            </ul>
+            <p style="margin-top: 30px;">You can close this window.</p>
+          </div>
+        </body>
+      </html>
+    `);
+  }
+  
   const authUrl = getGoogleAuthUrl();
-  logger.info({ authUrl }, 'Auth URL generated');
+  
+  if (!authUrl || typeof authUrl !== 'string' || !authUrl.startsWith('https://accounts.google.com')) {
+    logger.error({ authUrl }, 'Invalid auth URL generated');
+    
+    return res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>OAuth URL Generation Error</title>
+          <style>
+            body { font-family: Arial; background: #000; color: #fff; padding: 40px; text-align: center; }
+            .error { background: #1a1a1a; padding: 30px; border-radius: 8px; max-width: 600px; margin: 0 auto; border: 1px solid #ff4444; }
+            h1 { color: #ff4444; }
+            p { color: #ccc; }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h1>⚠️ OAuth URL Generation Failed</h1>
+            <p>Failed to generate valid Google OAuth URL.</p>
+            <p>Please check server logs for more details.</p>
+            <p style="margin-top: 30px;">You can close this window.</p>
+          </div>
+        </body>
+      </html>
+    `);
+  }
+  
+  logger.info({ authUrl }, 'Auth URL generated, redirecting to Google');
   logger.info('============================');
   res.redirect(authUrl);
   return res as any;

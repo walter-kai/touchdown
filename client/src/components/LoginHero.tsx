@@ -47,8 +47,13 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
     const popupLeft = window.screenX + (window.outerWidth - popupWidth) / 2;
     const popupTop = window.screenY + (window.outerHeight - popupHeight) / 2;
 
+    // Point to backend server (usually port 3001 in dev)
+    const authUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? 'http://localhost:3001/auth/google/login'
+      : '/auth/google/login';
+
     window.open(
-      '/auth/google/login',
+      authUrl,
       'Google Login',
       `width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop}`
     );
@@ -61,69 +66,13 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-neon-pink/5 via-transparent to-neon-cyan/5 animate-pulse"></div>
 
         <div className="relative py-2 md:py-12">
-          {/* Mobile Layout: Stacked with Images First */}
-          <div className="md:hidden flex flex-col items-center gap-2">
-            {/* Diagonal Stripe Images - At Top on Mobile */}
-            {!loading && images.length > 0 && (
-              <div className="w-full flex justify-center">
-                <div 
-                  className="relative h-32"
-                  style={{
-                    clipPath: "polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)",
-                    width: `${(images.length - 1) * 50 + 100}px`,
-                    maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)",
-                    WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-                  }}
-                >
-                  {images.map((image, idx) => (
-                    <div
-                      key={idx}
-                      className="absolute h-full"
-                      style={{
-                        left: `${idx * 50}px`,
-                        width: '100px',
-                        clipPath: "polygon(50% 0, 100% 0, 85% 100%, 0 100%)",
-                      }}
-                    >
-                      <img
-                        src={image.url}
-                        alt={`Article ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Title */}
-            <h2 className="text-2xl sm:text-3xl font-bold text-center bg-gradient-to-r from-neon-pink via-neon-cyan to-neon-pink bg-clip-text text-transparent">
-              Games are live!
-            </h2>
-
-            {/* Caption */}
-            <p className="text-sm sm:text-base text-text-light leading-relaxed text-center">
-              Use your strategy as coach to swap players in real-time, build streaks, and prove you're the ultimate manager.
-            </p>
-
-            {/* Sign Up Button */}
-            <button
-              onClick={handleGoogleLogin}
-              className="flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-white hover:bg-gray-50 rounded-lg font-bold text-gray-700 border border-gray-300 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-sm sm:text-base shadow-md"
-            >
-              <FaGoogle className="text-xl" />
-              Sign in with Google
-            </button>
-          </div>
-
-          {/* Desktop Layout: One Row Flex */}
-          <div className="hidden md:flex items-center justify-between gap-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
             {/* Left: Title and Caption */}
-            <div className="flex-1 flex flex-col gap-4">
-              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-neon-pink via-neon-cyan to-neon-pink bg-clip-text text-transparent">
+            <div className="flex-1 flex flex-col gap-4 text-center md:text-left order-2 md:order-1">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-neon-pink via-neon-cyan to-neon-pink bg-clip-text text-transparent">
                 Games are live!
               </h2>
-              <p className="text-base text-text-light leading-relaxed">
+              <p className="text-sm sm:text-base text-text-light leading-relaxed">
                 Use your strategy as coach to swap players in real-time, build streaks, and prove you're the ultimate manager.
               </p>
             </div>
@@ -131,11 +80,11 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
             {/* Center: Diagonal Stripe Images */}
             {!loading && images.length > 0 && (
               <div 
-                className="relative flex-shrink-0 h-40"
+                className="relative flex-shrink-0 h-32 md:h-40 order-1 md:order-2"
                 style={{
                   clipPath: "polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)",
-                  width: `${(images.length - 1) * 60 + 120}px`,
-                  maskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                  width: `${(images.length - 1) * 50 + 100}px`,
+                  maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)",
                   WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
                 }}
               >
@@ -144,9 +93,9 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
                     key={idx}
                     className="absolute h-full"
                     style={{
-                      left: `${idx * 60}px`,
-                      width: '120px',
-                      clipPath: "polygon(15% 0, 100% 0, 85% 100%, 0 100%)",
+                      left: `${idx * 50}px`,
+                      width: '100px',
+                      clipPath: "polygon(50% 0, 100% 0, 85% 100%, 0 100%)",
                     }}
                   >
                     <img
@@ -162,7 +111,7 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
             {/* Right: Sign Up Button */}
             <button
               onClick={handleGoogleLogin}
-              className="flex items-center justify-center gap-3 flex-shrink-0 px-8 py-4 bg-white hover:bg-gray-50 rounded-lg font-bold text-gray-700 border border-gray-300 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-base h-fit shadow-md"
+              className="flex items-center justify-center gap-3 flex-shrink-0 px-6 sm:px-8 py-3 sm:py-4 md:px-8 md:py-4 bg-white hover:bg-gray-50 rounded-lg font-bold text-gray-700 border border-gray-300 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-sm sm:text-base md:text-base h-fit shadow-md order-3 md:order-3 md:h-fit"
             >
               <FaGoogle className="text-xl" />
               Sign in with Google
