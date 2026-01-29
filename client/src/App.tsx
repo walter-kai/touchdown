@@ -1,24 +1,23 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
-import BottomNavbar from './components/common/navs/BottomNavbar';
-import LoginNav from './components/common/navs/LoginNav';
+import BottomNavbar from './components/navs/BottomNavbar';
+import LoginNav from './components/navs/LoginNav';
 
-import DashboardCarousel from './pages/espn/dashboard/Carousel';
-import UnifiedGameGrid from './pages/espn/dashboard/games/GameGrid';
-import NFLTeamPage from './pages/espn/Team';
-import NFLPlayerPage from './pages/espn/Player';
-import GameDetail from './pages/espn/dashboard/games/GameDetail';
-import TestAnimation from './pages/espn/testAnimation';
+import DashboardCarousel from './views/dashboard/Carousel';
+import UnifiedGameGrid from './views/dashboard/GameGrid';
+import NFLTeamPage from './views/espn/Team';
+import NFLPlayerPage from './views/espn/Player';
+import GameDetail from './views/GameDetail';
+import TestAnimation from './views/espn/testAnimation';
 
-import NotFound from './pages/NotFound';
-import UserInfo from './pages/UserInfo';
+import NotFound from './views/NotFound';
+import UserInfo from './views/UserInfo';
 
 
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useAuth } from './providers/AuthContext';
 import { PicksProvider } from './providers/PicksContext';
-import LoginModal from './components/common/LoginModal';
 import DisplayNameChecker from './components/DisplayNameChecker';
 
 // Google OAuth callback handler (in-tab redirect)
@@ -89,7 +88,7 @@ const App: React.FC = () => {
   const onlineMenuRef = React.useRef<HTMLDivElement>(null);
   const toggleButtonRef = React.useRef<HTMLButtonElement>(null);
   const onlineToggleButtonRef = React.useRef<HTMLButtonElement>(null);
-  const { showLoginModal, closeLoginModal, user } = useAuth();
+  const { user } = useAuth();
   const nodeRef = useRef<HTMLDivElement>(null);
   
   // State for game page navigation
@@ -224,9 +223,6 @@ const App: React.FC = () => {
           gameStatus={isGamePage ? gameStatus : undefined}
           isVisible={isGamePage || isTeamPage || isPlayerPage || (isDashboardOrGames && !!user)}
         />
-        
-        {/* Always render LoginModal globally, not conditionally */}
-        <LoginModal isOpen={showLoginModal} onClose={closeLoginModal} />
         
       </div>
     </div>

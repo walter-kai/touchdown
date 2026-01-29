@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../providers/AuthContext';
-import DisplayNameModal from '../components/common/DisplayNameModal';
+import DisplayNameModal from './modals/DisplayNameModal';
 import axios from 'axios';
 import { jwtStorage } from '../utils/jwtStorage';
 import { userStorage } from '../utils/userStorage';

@@ -2,7 +2,6 @@ import type { Event } from '@/types/espn/scoreboard';
 
 export const updateOpenGraphMeta = (event: Event | null, league: string) => {
   if (!event) {
-    // Remove OG tags if no event
     removeOpenGraphMeta();
     return;
   }

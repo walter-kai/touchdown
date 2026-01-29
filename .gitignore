@@ -11,3 +11,5 @@ yarn.lock
 .DS_Store
 client/package-lock.json
 /server/scripts
+/client/.next
+*.local
