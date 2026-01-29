@@ -10,6 +10,9 @@ import '../src/styles/football.css';
 export const metadata: Metadata = {
   title: 'Touchdown',
   description: 'Fantasy sports picks and predictions',
+  icons: {
+    icon: '/logos/Drive-logo.png',
+  },
   openGraph: {
     title: 'Touchdown',
     description: 'Fantasy sports picks and predictions',
