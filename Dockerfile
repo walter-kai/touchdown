@@ -1,27 +1,22 @@
-# Stage 0: Build the client (React app)
+# Stage 0: Build the Next.js client
 FROM node:20-alpine AS client-build
 
 WORKDIR /app
 
-# Install Python and build tools needed for native modules
-RUN apk add --no-cache python3 make g++
+# Install dependencies for native modules
+RUN apk add --no-cache python3 make g++ libc6-compat
 
 # Copy types first (shared dependency)
 COPY ./types ./types
 
 # Copy client dependencies and install
 COPY ./client/package*.json ./client/
-RUN cd client && npm install --legacy-peer-deps
+RUN cd client && npm install
 
 # Copy client source code
 COPY ./client ./client
 
-# Pass environment variables for the client build
-# Set the specific hostname for the production environment
-ARG VITE_SERVER_HOSTNAME
-ENV VITE_SERVER_HOSTNAME=${VITE_SERVER_HOSTNAME:-https://dexter-city-128290252214.us-central1.run.app}
-
-# Build the React app
+# Build the Next.js app (creates .next folder and standalone output)
 RUN cd client && npm run build
 
 # Stage 1: Build the server (Node/Express with TypeScript)
@@ -38,7 +33,7 @@ COPY ./types ./types
 # Copy root dependencies and install
 COPY ./package*.json ./
 COPY ./tsconfig.json ./tsconfig.json
-RUN npm install --include=dev --legacy-peer-deps
+RUN npm install --include=dev
 
 # Copy server source code
 COPY ./server ./server
@@ -46,31 +41,34 @@ COPY ./server ./server
 # Build server TypeScript
 RUN npm run build
 
-# Stage 2: Final stage with Nginx
-FROM nginx:stable-alpine
+# Stage 2: Final production stage
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Copy React build files to Nginx HTML directory
-COPY --from=client-build /app/client/dist /usr/share/nginx/html
+# Install netcat for health checks
+RUN apk add --no-cache netcat-openbsd
+
+# Copy Next.js standalone build
+COPY --from=client-build /app/client/.next/standalone ./client
+COPY --from=client-build /app/client/.next/static ./client/.next/static
+COPY --from=client-build /app/client/public ./client/public
 
 # Copy server build files and shared types
 COPY --from=server-build /app/dist ./dist
 COPY --from=server-build /app/types ./types
 
-# Copy Nginx configuration
-COPY ./nginx.conf /etc/nginx/nginx.conf
-
-# Install production dependencies for the server and netcat for health checks
+# Copy server production dependencies
 COPY ./package*.json ./
-RUN apk add --no-cache nodejs npm netcat-openbsd && npm install --only=production
+RUN npm install --only=production
 
 # Set environment variables for production
-ENV BACKEND_PORT=3001
 ENV NODE_ENV=production
+ENV BACKEND_PORT=3001
+ENV PORT=3000
 
-# Expose ports for Nginx and backend server
-EXPOSE 3001 443
+# Expose ports for Next.js and backend server
+EXPOSE 3000 3001
 
-# Start backend server and wait for it to be ready before starting nginx
-CMD ["sh", "-c", "npm run start & echo 'Waiting for backend on port 3001...' && while ! nc -z 127.0.0.1 3001; do sleep 1; done && echo 'Backend ready, starting nginx...' && nginx -g 'daemon off;'"]
+# Start both backend server and Next.js
+CMD ["sh", "-c", "npm run start & echo 'Waiting for backend on port 3001...' && while ! nc -z 127.0.0.1 3001; do sleep 1; done && echo 'Backend ready, starting Next.js...' && cd client && node server.js"]

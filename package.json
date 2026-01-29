@@ -8,7 +8,7 @@
     "kill": "killall node; killall npm; killall nodemon; killall -9 node 2>/dev/null || true",
     "dev-server": "nodemon",
     "dev-server-ts": "node --inspect=9229 --enable-source-maps --require ts-node/register --require source-map-support/register server/server.ts",
-    "dev-client": "cd client && npm start",
+    "dev-client": "cd client && npm run dev",
     "build": "tsc",
     "start": "node --enable-source-maps dist/server/server.js",
     "clean": "rimraf dist",
