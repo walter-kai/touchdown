@@ -44,8 +44,10 @@ export const updateOpenGraphMeta = (event: Event | null, league: string) => {
     }
   }
 
-  // Build title
-  const title = `${away.team.displayName} vs ${home.team.displayName} - Live Fantasy Picks on Touchdown`;
+  // Build title with date
+  const gameDate = new Date(event.date);
+  const dateStr = gameDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const title = `Pick Now: ${away.team.displayName} vs ${home.team.displayName}, ${dateStr}`;
 
   // Build description
   const description = `Watch ${away.team.displayName} face off against ${home.team.displayName} (starts in ${timeUntilText}). Play fantasy sports with real-time updates and manage your picks on Touchdown. Join your friends in the ultimate sports experience!`;
