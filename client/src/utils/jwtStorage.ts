@@ -7,6 +7,7 @@ const JWT_EXPIRY_KEY = 'dexter_token_expiry';
 export const jwtStorage = {
   // Store JWT token
   setToken: (token: string, expiresIn: number) => {
+    if (typeof window === 'undefined') return;
     const expiryTime = Date.now() + (expiresIn * 1000);
     localStorage.setItem(JWT_STORAGE_KEY, token);
     localStorage.setItem(JWT_EXPIRY_KEY, expiryTime.toString());
@@ -14,6 +15,7 @@ export const jwtStorage = {
 
   // Get JWT token
   getToken: (): string | null => {
+    if (typeof window === 'undefined') return null;
     const token = localStorage.getItem(JWT_STORAGE_KEY);
     const expiry = localStorage.getItem(JWT_EXPIRY_KEY);
     
@@ -32,12 +34,14 @@ export const jwtStorage = {
 
   // Clear JWT token
   clearToken: () => {
+    if (typeof window === 'undefined') return;
     localStorage.removeItem(JWT_STORAGE_KEY);
     localStorage.removeItem(JWT_EXPIRY_KEY);
   },
 
   // Force clear all authentication data
   forceLogout: () => {
+    if (typeof window === 'undefined') return;
     localStorage.removeItem(JWT_STORAGE_KEY);
     localStorage.removeItem(JWT_EXPIRY_KEY);
     debugLog('JWT tokens cleared during force logout');

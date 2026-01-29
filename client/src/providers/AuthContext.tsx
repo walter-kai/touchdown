@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 import { jwtStorage } from '../utils/jwtStorage';
 import { userStorage } from '../utils/userStorage';
 import { debugLog } from '@/utils/debugLog';
@@ -47,8 +47,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [hasEmoji, setHasEmoji] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const location = useLocation();
-  const currentRoute = location.pathname;
+  const pathname = usePathname();
+  const currentRoute = pathname;
 
   // Wrapper to detect emojis when setting user
   const setUser = (userData: User | null) => {

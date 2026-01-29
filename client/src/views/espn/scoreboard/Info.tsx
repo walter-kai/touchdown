@@ -715,7 +715,7 @@ const Info: React.FC<InfoProps> = ({
                                     <span className="text-neon-pink text-lg font-bold">{picksScores[player.id] || 0}</span>
                                     {scoreIncreasePlayerIds.has(player.id) && (
                                       <img
-                                        src="./assets/confetti.gif"
+                                        src="/assets/confetti.gif"
                                         alt="Score increase"
                                         className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-6 h-6 animate-bounce"
                                         onError={(e) => {

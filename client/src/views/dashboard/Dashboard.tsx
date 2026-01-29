@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad, FaChevronDown, FaChevronUp, FaUser, FaMedal } from 'react-icons/fa';
 import { jwtStorage } from '../../utils/jwtStorage';
@@ -71,7 +70,7 @@ interface GameData {
 }
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { user } = useAuth();
   // Derive league from URL instead of context
   const league = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
@@ -626,7 +625,7 @@ const Dashboard: React.FC = () => {
             <h2 className="text-2xl font-bold mb-2">No Picks Yet</h2>
             <p className="text-gray-400 mb-6">Start making picks to see your dashboard!</p>
             <button
-              onClick={() => navigate('/nfl/games')}
+              onClick={() => router.push('/')}
               className="btn-purple"
             >
               <FaGamepad className="inline mr-2" />
@@ -682,7 +681,7 @@ const Dashboard: React.FC = () => {
             />
             {/* Game Header - Mobile Optimized */}
             <button
-              onClick={() => navigate(`/${game.league || 'nfl'}/game/${game.gameId}`)}
+              onClick={() => router.push(`/${game.league || 'nfl'}/game/${game.gameId}`)}
               className="w-full p-2 hover:bg-neon-cyan/5 transition-all text-left"
             >
               <div className="flex items-center gap-3">
@@ -833,7 +832,7 @@ const Dashboard: React.FC = () => {
 
                   {/* Edit Picks Button */}
                   <button
-                    onClick={() => navigate(`/${game.league || 'nfl'}/game/${game.gameId}`, { state: { tab: 'yourpicks' } })}
+                    onClick={() => router.push(`/${game.league || 'nfl'}/game/${game.gameId}`)}
                     className="btn-special mt-4 w-full"
                   >
                     Edit Picks

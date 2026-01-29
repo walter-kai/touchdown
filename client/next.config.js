@@ -26,6 +26,11 @@ const nextConfig = {
       ],
     };
   },
+  onDemandEntries: {
+    // Keep error pages in-memory instead of trying to prerender
+    maxInactiveAge: 60000,
+    pagesBufferLength: 50,
+  },
 };
 
 module.exports = nextConfig;

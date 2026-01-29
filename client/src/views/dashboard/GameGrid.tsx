@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { FaFootballBall, FaPlay } from "react-icons/fa";
 import LoadingFootball from '../../components/loading/LoadingFootball';
 import LoginHero from '../../components/LoginHero';
@@ -33,7 +33,7 @@ interface GameWithLeague extends Event {
 }
 
 const UnifiedGameGrid: React.FC = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [games, setGames] = useState<GameWithLeague[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -176,18 +176,18 @@ const UnifiedGameGrid: React.FC = () => {
     return { liveGames: live, completedGames: completed, upcomingGames: upcoming };
   }, [games]);
 
-  const renderGamesForDate = (gamesByLeague: Record<'nfl' | 'nba', Array<GameWithLeague & { timeKey: string }>>) => {
+  const renderGamesForDate = useCallback((gamesByLeague: Record<'nfl' | 'nba', Array<GameWithLeague & { timeKey: string }>>) => {
     // Combine NFL and NBA games, with NFL first
     const allGamesForDate = [...gamesByLeague.nfl, ...gamesByLeague.nba];
     
     return (
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
         {allGamesForDate.map((game) => (
-          <GameGridCard key={game.id} game={game} navigate={navigate} />
+          <GameGridCard key={game.id} game={game} onNavigate={(path: string) => router.push(path)} />
         ))}
       </div>
     );
-  };
+  }, [router]);
 
   return (
   <>
@@ -279,10 +279,10 @@ const UnifiedGameGrid: React.FC = () => {
 // Game Grid Card Component
 interface GameGridCardProps {
   game: GameWithLeague & { timeKey?: string };
-  navigate: (path: string) => void;
+  onNavigate: (path: string) => void;
 }
 
-const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
+const GameGridCard: React.FC<GameGridCardProps> = ({ game, onNavigate }) => {
   const competition = game.competitions[0];
   const awayTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'away');
   const homeTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'home');
@@ -299,7 +299,7 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, navigate }) => {
 
   return (
     <button
-      onClick={() => navigate(`/${game.leagueType}/game/${game.id}`)}
+      onClick={() => onNavigate(`/${game.leagueType}/game/${game.id}`)}
       className="relative rounded-md border border-neon-pink/20  bg-bg-dark/50 hover:bg-bg-dark/70 p-3 px-4 transition-all duration-200 text-left w-full"
     >
       {/* League Logo + Time Header */}

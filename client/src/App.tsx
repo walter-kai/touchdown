@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 import BottomNavbar from './components/navs/BottomNavbar';
-import LoginNav from './components/navs/LoginNav';
+import LoginNav from './components/navs/LoginNavNext';
 
 import DashboardCarousel from './views/dashboard/Carousel';
 import UnifiedGameGrid from './views/dashboard/GameGrid';
@@ -114,11 +114,9 @@ const App: React.FC = () => {
   // Check if we're on Dashboard or GamesList pages
   const isDashboardOrGames = location.pathname === '/' || 
                              location.pathname === '/nfl' || 
-                             location.pathname === '/nfl/dashboard' || 
-                             location.pathname === '/nfl/games' ||
+                             location.pathname === '/nfl/dashboard' ||
                              location.pathname === '/nba' || 
-                             location.pathname === '/nba/dashboard' || 
-                             location.pathname === '/nba/games';
+                             location.pathname === '/nba/dashboard';
 
   // Reset scroll position on route change (except for hash navigation)
   useEffect(() => {
@@ -140,11 +138,9 @@ const App: React.FC = () => {
     // Group dashboard/games routes under same key to prevent transition animation
     if (location.pathname === '/' || 
         location.pathname === '/nfl' || 
-        location.pathname === '/nfl/dashboard' || 
-        location.pathname === '/nfl/games' ||
+        location.pathname === '/nfl/dashboard' ||
         location.pathname === '/nba' || 
-        location.pathname === '/nba/dashboard' || 
-        location.pathname === '/nba/games') {
+        location.pathname === '/nba/dashboard') {
       return 'dashboard-carousel';
     }
     return location.pathname;
@@ -182,9 +178,7 @@ const App: React.FC = () => {
                   <Route path="/nfl" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nfl')} /> : <UnifiedGameGrid />} />
                   <Route path="/nba" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nba')} /> : <UnifiedGameGrid />} />
                   <Route path="/nfl/dashboard" element={<DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nfl/dashboard')} />} />
-                  <Route path="/nfl/games" element={<DashboardCarousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nfl/dashboard')} />} />
                   <Route path="/nba/dashboard" element={<DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nba/dashboard')} />} />
-                  <Route path="/nba/games" element={<DashboardCarousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nba/dashboard')} />} />
                   <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
                   <Route path="/nfl/game/test" element={<TestAnimation />} />
                   <Route path="/nba/game/test" element={<TestAnimation />} />

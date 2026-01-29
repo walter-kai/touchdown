@@ -1,9 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import GoogleLoginButton from '../common/GoogleLoginButton';
 
-const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
-	const navigate = useNavigate();
+const LoginNavNext = React.forwardRef<HTMLElement>((props, ref) => {
+	const router = useRouter();
 
 	return (
 		<header ref={ref} className="fixed top-0 z-50 w-full bg-bg-dark/60 backdrop-blur-md border-b border-neon-cyan/30">
@@ -11,7 +11,7 @@ const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
 				<div className="h-14 flex items-center justify-between">
 					{/* Left: Drive Logo */}
 					<button
-						onClick={() => navigate('/')}
+						onClick={() => router.push('/')}
 						className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
 					>
 						<img
@@ -35,5 +35,6 @@ const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
 	);
 });
 
-export default LoginNav;
+LoginNavNext.displayName = 'LoginNavNext';
 
+export default LoginNavNext;

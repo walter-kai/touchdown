@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 
 export type LeagueType = 'nfl' | 'nba';
 
@@ -48,36 +48,43 @@ interface LeagueContextType {
 const LeagueContext = createContext<LeagueContextType | undefined>(undefined);
 
 export const LeagueProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const location = useLocation();
+  const pathname = usePathname();
   
   const [league, setLeagueState] = useState<LeagueType>(() => {
     // Check URL first for league context
-    const path = window.location.pathname;
-    if (path.startsWith('/nba')) return 'nba';
-    if (path.startsWith('/nfl')) return 'nfl';
+    if (pathname.startsWith('/nba')) return 'nba';
+    if (pathname.startsWith('/nfl')) return 'nfl';
     
     // Otherwise load from localStorage or default to NFL
-    const saved = localStorage.getItem('selectedLeague');
-    return (saved === 'nba' ? 'nba' : 'nfl') as LeagueType;
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('selectedLeague');
+      return (saved === 'nba' ? 'nba' : 'nfl') as LeagueType;
+    }
+    return 'nfl';
   });
 
   // Update league based on URL changes
   useEffect(() => {
-    const path = location.pathname;
-    if (path.startsWith('/nba')) {
+    if (pathname.startsWith('/nba')) {
       setLeagueState('nba');
-      localStorage.setItem('selectedLeague', 'nba');
-    } else if (path.startsWith('/nfl')) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('selectedLeague', 'nba');
+      }
+    } else if (pathname.startsWith('/nfl')) {
       setLeagueState('nfl');
-      localStorage.setItem('selectedLeague', 'nfl');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('selectedLeague', 'nfl');
+      }
     }
-  }, [location.pathname]);
+  }, [pathname]);
 
   const leagueConfig = leagueConfigs[league];
 
   const setLeague = (newLeague: LeagueType) => {
     setLeagueState(newLeague);
-    localStorage.setItem('selectedLeague', newLeague);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selectedLeague', newLeague);
+    }
   };
 
   const getApiPath = (endpoint: string) => {

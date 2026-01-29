@@ -1,71 +1,62 @@
-import { Metadata } from 'next';
+'use client';
 
-interface Props {
-  params: {
-    gameId: string;
-  };
+import { AuthProvider } from '../../../../src/providers/AuthContext';
+import { LeagueProvider } from '../../../../src/providers/LeagueContext';
+import { LoadingProvider } from '../../../../src/providers/LoadingContext';
+import { PicksProvider } from '../../../../src/providers/PicksContext';
+import LoginNavNext from '../../../../src/components/navs/LoginNavNext';
+import BottomNavbarNext from '../../../../src/components/navs/BottomNavbarNext';
+import GameDetail from '../../../../src/views/GameDetail';
+import { useState, useRef } from 'react';
+
+function NBAGameContent() {
+  const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games' | 'chat'>('info');
+  const [navPreset, setNavPreset] = useState<'scoreboard' | 'summary' | 'team' | 'player' | 'dashboard'>('scoreboard');
+  const [gameStatus, setGameStatus] = useState<'pre' | 'in' | 'post'>();
+  const tabClickCallbackRef = useRef<((tab: string) => void) | null>(null);
+
+  return (
+    <>
+      <LoginNavNext />
+      <div className="flex-1 relative mx-0 pt-14">
+        <GameDetail 
+          activeTab={gameTab}
+          onTabChange={setGameTab}
+          onPresetChange={setNavPreset}
+          onGameStatusChange={setGameStatus}
+          onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback}
+        />
+      </div>
+      <BottomNavbarNext
+        activeTab={gameTab}
+        onTabChange={setGameTab}
+        onTabClick={(tab) => {
+          if (tabClickCallbackRef.current) {
+            tabClickCallbackRef.current(tab);
+          }
+        }}
+        preset={navPreset}
+        gameStatus={gameStatus}
+        isVisible={true}
+      />
+    </>
+  );
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { gameId } = params;
-  
-  try {
-    // Fetch game data from ESPN API
-    const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`;
-    const response = await fetch(summaryUrl);
-    const data = await response.json();
-    
-    const header = data?.header;
-    const competition = header?.competitions?.[0];
-    const homeTeam = competition?.competitors?.find((c: any) => c.homeAway === 'home');
-    const awayTeam = competition?.competitors?.find((c: any) => c.homeAway === 'away');
-    
-    const title = `Pick Now: ${awayTeam?.team?.displayName || 'Away'} vs ${homeTeam?.team?.displayName || 'Home'}`;
-    const gameDate = new Date(competition?.date || Date.now()).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-    
-    const description = `Make your picks for ${awayTeam?.team?.displayName} vs ${homeTeam?.team?.displayName} - ${gameDate}`;
-    
-    return {
-      title,
-      description,
-      openGraph: {
-        title,
-        description,
-        type: 'website',
-        url: `https://touchdown-882290629693.us-central1.run.app/nba/game/${gameId}`,
-        images: [
-          {
-            url: homeTeam?.team?.logo || 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg',
-            width: 1200,
-            height: 630,
-            alt: title,
-          },
-        ],
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title,
-        description,
-        images: [homeTeam?.team?.logo || 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg'],
-      },
-    };
-  } catch (error) {
-    // Fallback metadata
-    return {
-      title: 'Touchdown - NBA Game',
-      description: 'View game details and make your picks',
-    };
-  }
-}
+export const dynamic = 'force-dynamic';
 
-export default async function NBAGamePage({ params }: Props) {
-  // Render the React Router app which will handle this route
-  const { default: Home } = await import('../../../page');
-  return <Home />;
+export default function NBAGamePage() {
+  return (
+    <AuthProvider>
+      <LoadingProvider>
+        <LeagueProvider>
+          <PicksProvider>
+            <div className="min-h-screen overflow-x-hidden relative bg-black/90 bg-blend-overlay">
+              <NBAGameContent />
+            </div>
+          </PicksProvider>
+        </LeagueProvider>
+      </LoadingProvider>
+    </AuthProvider>
+  );
 }
