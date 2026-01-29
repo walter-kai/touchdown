@@ -5,7 +5,7 @@ import BottomNavbar from './components/common/navs/BottomNavbar';
 import LoginNav from './components/common/navs/LoginNav';
 
 import DashboardCarousel from './pages/espn/dashboard/Carousel';
-import GameGrid from './pages/espn/dashboard/games/GameGrid';
+import UnifiedGameGrid from './pages/espn/dashboard/games/UnifiedGameGrid';
 import NFLTeamPage from './pages/espn/Team';
 import NFLPlayerPage from './pages/espn/Player';
 import GameContainer from './pages/espn/dashboard/games/GameContainer';
@@ -92,14 +92,14 @@ const App: React.FC = () => {
   const nodeRef = useRef<HTMLDivElement>(null);
   
   // State for game page navigation
-  const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games'>('info');
+  const [gameTab, setGameTab] = useState<'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games' | 'chat'>('info');
   const [navPreset, setNavPreset] = useState<'scoreboard' | 'summary'>('scoreboard');
   const [gameStatus, setGameStatus] = useState<'pre' | 'in' | 'post' | undefined>(undefined);
   
   // Ref to communicate button clicks to NFLGame
   const tabClickCallbackRef = useRef<((tab: string) => void) | null>(null);
   
-  const handleTabClick = (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games') => {
+  const handleTabClick = (tab: 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays' | 'odds' | 'pick' | 'yourpicks' | 'dashboard' | 'games' | 'chat') => {
     if (tabClickCallbackRef.current) {
       tabClickCallbackRef.current(tab);
     }
@@ -177,13 +177,14 @@ const App: React.FC = () => {
               */}
               <div ref={nodeRef} >
                 <Routes location={location}>
-                  <Route path="/" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/')} /> : <GameGrid />} />
-                  <Route path="/nfl" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/nfl')} /> : <GameGrid />} />
-                  <Route path="/nba" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nba/games' : '/nba')} /> : <GameGrid />} />
-                  <Route path="/nfl/dashboard" element={<DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/nfl/dashboard')} />} />
-                  <Route path="/nfl/games" element={<DashboardCarousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/nfl/games' : '/nfl/dashboard')} />} />
-                  <Route path="/nba/dashboard" element={<DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/nba/games' : '/nba/dashboard')} />} />
-                  <Route path="/nba/games" element={<DashboardCarousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/nba/games' : '/nba/dashboard')} />} />
+                  <Route path="/" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/')} /> : <UnifiedGameGrid />} />
+                  <Route path="/games" element={user ? <DashboardCarousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/')} /> : <UnifiedGameGrid />} />
+                  <Route path="/nfl" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nfl')} /> : <UnifiedGameGrid />} />
+                  <Route path="/nba" element={user ? <DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nba')} /> : <UnifiedGameGrid />} />
+                  <Route path="/nfl/dashboard" element={<DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nfl/dashboard')} />} />
+                  <Route path="/nfl/games" element={<DashboardCarousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nfl/dashboard')} />} />
+                  <Route path="/nba/dashboard" element={<DashboardCarousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nba/dashboard')} />} />
+                  <Route path="/nba/games" element={<DashboardCarousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nba/dashboard')} />} />
                   <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
                   <Route path="/nfl/game/test" element={<TestAnimation />} />
                   <Route path="/nba/game/test" element={<TestAnimation />} />
@@ -212,7 +213,7 @@ const App: React.FC = () => {
               const isNBA = location.pathname.startsWith('/nba');
               const league = isNBA ? 'nba' : 'nfl';
               navigate(tab === 'games' ? `/${league}/games` : `/${league}/dashboard`);
-            } else {
+            } else if (tab !== 'chat') {
               setGameTab(tab);
             }
           }}

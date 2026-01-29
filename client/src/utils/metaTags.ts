@@ -45,10 +45,10 @@ export const updateOpenGraphMeta = (event: Event | null, league: string) => {
   }
 
   // Build title
-  const title = `${away.team.abbreviation} vs ${home.team.abbreviation} - Starts in ${timeUntilText} | Touchdown`;
+  const title = `${away.team.displayName} vs ${home.team.displayName} - Live Fantasy Picks on Touchdown`;
 
   // Build description
-  const description = `${away.team.displayName} vs ${home.team.displayName}. Join now and manage your fantasy picks!`;
+  const description = `Watch ${away.team.displayName} face off against ${home.team.displayName} (starts in ${timeUntilText}). Play fantasy sports with real-time updates and manage your picks on Touchdown. Join your friends in the ultimate sports experience!`;
 
   // Use team logo or a generic image
   const image = home.team.logo || `https://a.espncdn.com/media/motion/2024/1009/dm_240924_nfl_logo.png`;

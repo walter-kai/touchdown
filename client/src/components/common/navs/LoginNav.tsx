@@ -1,91 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import GoogleLoginButton from '../GoogleLoginButton';
-import { useLeague, LeagueType } from '../../../providers/LeagueContext';
-import { FaChevronDown, FaFootballBall, FaBasketballBall } from 'react-icons/fa';
 
 const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
 	const navigate = useNavigate();
-	const { league, leagueConfig, setLeague } = useLeague();
-	const [dropdownOpen, setDropdownOpen] = useState(false);
-	const dropdownRef = useRef<HTMLDivElement>(null);
-
-	const leagues: { id: LeagueType; name: string; icon: React.ReactNode }[] = [
-		{ id: 'nfl', name: 'NFL Drive', icon: <img src="/logos/logo-nfl.svg" alt="NFL" className="h-6 w-6" /> },
-		{ id: 'nba', name: 'NBA Drive', icon: <img src="/logos/logo-nba.svg" alt="NBA" className="h-6 w-6" /> },
-	];
-
-	const handleLeagueChange = (newLeague: LeagueType) => {
-		setLeague(newLeague);
-		setDropdownOpen(false);
-		// Force a full page reload to ensure all components reinitialize with new league
-		// Navigate to the games grid for the selected league
-		window.location.href = `/${newLeague}/games`;
-	};
-
-	// Close dropdown when clicking outside
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-				setDropdownOpen(false);
-			}
-		};
-
-		if (dropdownOpen) {
-			document.addEventListener('mousedown', handleClickOutside);
-		}
-
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside);
-		};
-	}, [dropdownOpen]);
 
 	return (
 		<header ref={ref} className="fixed top-0 z-50 w-full bg-bg-dark/60 backdrop-blur-md border-b border-neon-cyan/30">
 			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 				<div className="h-14 flex items-center justify-between">
-					{/* Left: Combined Drive Logo + League Dropdown */}
-					<div className="relative" ref={dropdownRef}>
-						{/* Drive Logo + Name Button (opens dropdown) */}
-						<button
-							onClick={() => setDropdownOpen(!dropdownOpen)}
-							className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-						>
-							<img
-								src="/logos/Drive-logo.png"
-								alt="Drive"
-								className="h-8 w-8 rounded-sm"
-							/>
-							<div className="flex items-center gap-2 leading-tight">
-								<span className="text-text-light font-semibold tracking-wide">{leagueConfig.displayName}</span>
-								<span className="ml-1 text-xs text-neon-cyan">v0.8</span>
-								{league === 'nfl' ? (
-									<img src="/logos/logo-nfl.svg" alt="Football" className="h-7 w-5 ml-2" />
-								) : (
-									<img src="/logos/logo-nba.svg" alt="Basketball" className="h-7 w-5 ml-2" />
-								)}
-								<FaChevronDown className={`text-xs text-text-muted transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-							</div>
-						</button>
-
-						{/* Dropdown Menu */}
-						{dropdownOpen && (
-							<div className="absolute top-full left-0 mt-2 w-40 bg-bg-darker border border-neon-cyan/30 rounded-lg shadow-xl overflow-hidden z-50">
-								{leagues.map((l) => (
-									<button
-										key={l.id}
-										onClick={() => handleLeagueChange(l.id)}
-										className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-bg-dark transition-colors ${
-											league === l.id ? 'bg-neon-cyan/20 border-l-2 border-neon-cyan' : ''
-										}`}
-									>
-										{l.icon}
-										<span className={`font-medium ${league === l.id ? 'text-neon-cyan' : 'text-text-light'}`}>{l.name}</span>
-									</button>
-								))}
-							</div>
-						)}
-					</div>
+					{/* Left: Drive Logo */}
+					<button
+						onClick={() => navigate('/')}
+						className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+					>
+						<img
+							src="/logos/Drive-logo.png"
+							alt="Drive"
+							className="h-8 w-8 rounded-sm"
+						/>
+						<div className="flex items-center gap-2 leading-tight">
+							<span className="text-text-light font-semibold tracking-wide">Touchdown</span>
+							<span className="ml-1 text-xs text-neon-cyan">v0.8</span>
+						</div>
+					</button>
 
 					{/* Right: Auth / Google login */}
 					<div className="flex items-center gap-3">

@@ -100,9 +100,9 @@ app.get('*', async (req, res) => {
             }
           }
 
-          const title = `${away.team.abbreviation} vs ${home.team.abbreviation} - ${timeUntilText}`;
-          const description = `${away.team.displayName} vs ${home.team.displayName}. Join now and manage your fantasy picks!`;
-          const image = home.team.logo || `https://a.espncdn.com/media/motion/2024/1009/nfl_logo.png`;
+          const title = `${away.team.displayName} vs ${home.team.displayName} - Live Fantasy Picks on Touchdown`;
+          const description = `Watch ${away.team.displayName} face off against ${home.team.displayName} (starts in ${timeUntilText}). Play fantasy sports with real-time updates and manage your picks on Touchdown. Join your friends in the ultimate sports experience!`;
+          const image = `${process.env.HOST_URL || 'https://touchdown-882290629693.us-central1.run.app'}/logos/opengraph.jpg`;
           const url = `${process.env.HOST_URL || 'https://touchdown-882290629693.us-central1.run.app'}${req.path}`;
           
           // Read index.html and inject OG tags
