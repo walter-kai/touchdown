@@ -1,13 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { FaFootballBall, FaClock, FaPauseCircle, FaLock, FaCheckCircle, FaBolt, FaChartLine, FaUsers } from 'react-icons/fa';
 import { useAuth } from '@/providers/AuthContext';
 import { useLeague } from '@/providers/LeagueContext';
 import HeadToHead from '@/components/espn/HeadToHead';
 import ProbChart from '@/components/espn/ProbabilityChart';
 import PointsChart from '@/components/espn/PointsChart';
-import PlayerPick from '@/pages/espn/scoreboard/PlayerPick';
-import Info from '@/pages/espn/scoreboard/Info';
+import PlayerPick from '@/views/espn/scoreboard/PlayerPick';
+import Info from '@/views/espn/scoreboard/Info';
 import TelegramChat from '@/components/TelegramChat';
 import type { Event } from '@/types/espn/scoreboard';
 import { PlayNfl } from '@/types/espn/plays';
@@ -37,8 +37,9 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
 }) => {
   const router = useRouter();
   const { isAuthenticated, triggerLoginModal } = useAuth();
+  const pathname = usePathname();
   // Derive league from URL instead of context
-  const league = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
+  const league = pathname.startsWith('/nba') ? 'nba' : 'nfl';
   const carouselRef = useRef<HTMLDivElement>(null);
   const playerPickRef = useRef<{ openRoster: () => void }>(null);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);

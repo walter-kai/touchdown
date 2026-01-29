@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { FaFootballBall } from "react-icons/fa";
 import axios from "axios";
 import type { LeaderCategory } from "@/types/espn/scoreboard";
@@ -19,7 +19,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
   homeTeamName,
   awayTeamName,
 }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { league, getHeadshotUrl } = useLeague();
   const fetchedKeyRef = useRef<string | null>(null);
   const [homeTeamLeaders, setHomeTeamLeaders] = useState<LeaderCategory[]>([]);
@@ -134,7 +134,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                           src={headshotUrl}
                           alt={awayTopLeader.athlete.displayName}
                           className="w-10 h-10 rounded-full object-cover border-2 border-neon-pink/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
-                          onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
+                          onClick={() => router.push(`/nfl/player/${awayTopLeader.athlete.id}`)}
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = 'none';
                             const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -146,7 +146,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                       <div 
                         className="w-10 h-10 rounded-full bg-bg-darker border-2 border-neon-pink/50 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
                         style={{ display: getHeadshotUrl({ id: awayTopLeader.athlete.id, headshot: awayTopLeader.athlete.headshot }) ? 'none' : 'flex' }}
-                        onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
+                        onClick={() => router.push(`/nfl/player/${awayTopLeader.athlete.id}`)}
                       >
                         <FaFootballBall className="text-neon-pink text-xs" />
                       </div>
@@ -154,7 +154,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                       <div className="min-w-0 flex-1">
                         <div 
                           className="font-bold text-sm text-white cursor-pointer hover:text-neon-pink transition-colors truncate text-right"
-                          onClick={() => navigate(`/nfl/player/${awayTopLeader.athlete.id}`)}
+                          onClick={() => router.push(`/nfl/player/${awayTopLeader.athlete.id}`)}
                         >
                           {awayTopLeader.athlete.displayName}
                         </div>
@@ -183,7 +183,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                   <div className="min-w-0 flex-1">
                     <div 
                       className="font-bold text-sm text-white cursor-pointer hover:text-neon-cyan transition-colors truncate text-left"
-                      onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
+                      onClick={() => router.push(`/nfl/player/${homeTopLeader.athlete.id}`)}
                     >
                       {homeTopLeader.athlete.displayName}
                     </div>
@@ -198,7 +198,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                         src={headshotUrl}
                         alt={homeTopLeader.athlete.displayName}
                         className="w-10 h-10 rounded-full object-cover border-2 border-neon-cyan/50 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
-                        onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
+                        onClick={() => router.push(`/nfl/player/${homeTopLeader.athlete.id}`)}
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                           const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -210,7 +210,7 @@ const HeadToHead: React.FC<HeadToHeadProps> = ({
                   <div 
                     className="w-10 h-10 rounded-full bg-bg-darker border-2 border-neon-cyan/50 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
                     style={{ display: getHeadshotUrl({ id: homeTopLeader.athlete.id, headshot: homeTopLeader.athlete.headshot }) ? 'none' : 'flex' }}
-                    onClick={() => navigate(`/nfl/player/${homeTopLeader.athlete.id}`)}
+                    onClick={() => router.push(`/nfl/player/${homeTopLeader.athlete.id}`)}
                   >
                     <FaFootballBall className="text-neon-cyan text-xs" />
                   </div>
