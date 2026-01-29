@@ -618,7 +618,7 @@ ref
           // Debug: Show sample athlete IDs from plays
           if (playLog.length > 0) {
             const samplePlay = playLog.find(p => p.athletesInvolved && p.athletesInvolved.length > 0);
-            if (samplePlay) {
+            if (samplePlay && samplePlay.athletesInvolved) {
               debugLog(`🔍 Sample play athlete IDs:`, samplePlay.athletesInvolved.map((a: any) => a?.id));
             }
           }
@@ -1116,7 +1116,7 @@ ref
                             TOTAL
                           </div>
                           <div className="text-[10px] text-neon-cyan font-bold text-center" style={{ width: '50px' }}>
-                            MY SCORE
+                            MY PICKS
                           </div>
                         </>
                       ) : (

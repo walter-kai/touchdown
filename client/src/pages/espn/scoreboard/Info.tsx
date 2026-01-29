@@ -90,73 +90,116 @@ const Info: React.FC<InfoProps> = ({
   const [gameLeaderboard, setGameLeaderboard] = useState<any>(null);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
 
-  // Load picks from localStorage - with reactive updates
+  // Load picks from Firebase/API and localStorage
   useEffect(() => {
-    if (!homeTeamId || !awayTeamId) return;
+    if (!gameId || !user) return;
     
-    const loadPicks = () => {
-      const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
-      if (savedState) {
-        try {
-          const parsed = JSON.parse(savedState);
-          if (parsed.players && parsed.players.length > 0) {
-            setCurrentPicks(parsed.players);
-            
-            // Calculate MY SCORE (session score - only plays after lock time)
-            const pickLockTime = parsed.lockedAt;
-            const lockTimeMs = typeof pickLockTime === 'number' ? pickLockTime : new Date(pickLockTime).getTime();
-            
-            const scores: Record<string, number> = {};
-            parsed.players.forEach((player: any) => {
-              scores[player.id] = 0;
-              playLog.forEach(play => {
-                if (play.athletesInvolved?.some((a: any) => a?.id === player.id)) {
-                  const playTimeMs = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
-                  if (playTimeMs >= lockTimeMs) {
-                    scores[player.id]++;
-                  }
-                }
-              });
-            });
-            setPicksScores(scores);
-          } else {
-            setCurrentPicks([]);
-            setPicksScores({});
-          }
-        } catch (e) {
-          console.error('Error loading picks:', e);
+    const loadPicks = async () => {
+      try {
+        // Try to fetch from Firebase via API
+        const token = localStorage.getItem('dexter_access_token');
+        if (!token) {
+          console.log('No auth token found, skipping API fetch');
+          throw new Error('No token');
         }
-      } else {
-        setCurrentPicks([]);
-        setPicksScores({});
+        
+        const response = await fetch(`/api/picks/game/${gameId}/user`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          // API returns { ok: true, picks: { picks: [...], lastUpdated, totalPicks } }
+          if (data.picks && data.picks.picks && data.picks.picks.length > 0) {
+            // Use the latest pick submission
+            const latestPick = data.picks.picks[0];
+            const players = latestPick.players || [];
+            
+            if (players.length > 0) {
+              setCurrentPicks(players);
+              
+              // Calculate MY SCORE (session score - only plays after lock time)
+              const pickLockTime = latestPick.timestamp;
+              const lockTimeMs = typeof pickLockTime === 'string' ? new Date(pickLockTime).getTime() : pickLockTime;
+              
+              const scores: Record<string, number> = {};
+              players.forEach((player: any) => {
+                scores[player.id] = 0;
+                playLog.forEach(play => {
+                  if (play.athletesInvolved?.some((a: any) => a?.id === player.id)) {
+                    const playTimeMs = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
+                    if (playTimeMs >= lockTimeMs) {
+                      scores[player.id]++;
+                    }
+                  }
+                });
+              });
+              setPicksScores(scores);
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching picks from API:', e);
       }
+      
+      // Fallback to localStorage if API fails
+      if (homeTeamId && awayTeamId) {
+        const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+        if (savedState) {
+          try {
+            const parsed = JSON.parse(savedState);
+            if (parsed.players && parsed.players.length > 0) {
+              setCurrentPicks(parsed.players);
+              
+              // Calculate MY SCORE (session score - only plays after lock time)
+              const pickLockTime = parsed.lockedAt;
+              const lockTimeMs = typeof pickLockTime === 'number' ? pickLockTime : new Date(pickLockTime).getTime();
+              
+              const scores: Record<string, number> = {};
+              parsed.players.forEach((player: any) => {
+                scores[player.id] = 0;
+                playLog.forEach(play => {
+                  if (play.athletesInvolved?.some((a: any) => a?.id === player.id)) {
+                    const playTimeMs = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
+                    if (playTimeMs >= lockTimeMs) {
+                      scores[player.id]++;
+                    }
+                  }
+                });
+              });
+              setPicksScores(scores);
+              return;
+            }
+          } catch (e) {
+            console.error('Error loading picks from localStorage:', e);
+          }
+        }
+      }
+      
+      // No picks found
+      setCurrentPicks([]);
+      setPicksScores({});
     };
     
     // Load immediately
     loadPicks();
     
-    // Listen for storage events (updates from other tabs/components)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === `playerPick_${homeTeamId}_${awayTeamId}`) {
-        loadPicks();
-      }
-    };
-    
-    // Listen for custom event from same tab
+    // Listen for custom event from same tab when picks are saved
     const handleLocalUpdate = (e: CustomEvent) => {
       if (e.detail.key === `playerPick_${homeTeamId}_${awayTeamId}`) {
         loadPicks();
       }
     };
     
-    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('localStorageUpdate' as any, handleLocalUpdate);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('localStorageUpdate' as any, handleLocalUpdate);
     };
-  }, [homeTeamId, awayTeamId, playLog]);
+  }, [gameId, user, playLog, homeTeamId, awayTeamId]);
 
   // Track score increases and show animation
   const prevScoresRef = useRef<Record<string, number>>({});
@@ -622,22 +665,29 @@ const Info: React.FC<InfoProps> = ({
 
                     {/* Current Picks Display - Only show if user is logged in */}
                     {user && currentPicks.length > 0 && (
-                      <button
+                      <div className="space-y-2">
+                        <button
+                                onClick={onOpenPicks}
+                                className="w-full bg-neon-pink/20 hover:bg-neon-pink/30 border border-neon-pink/50 rounded-lg px-4 py-3 text-neon-pink font-bold text-sm transition-all"
+                              >
+                          <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-neon-pink/30">
+                            <span className="text-neon-pink text-xs font-bold">MY SCORE</span>
+                            <button
                               onClick={onOpenPicks}
-                              className="bg-neon-pink/20 hover:bg-neon-pink/30 border border-neon-pink/50 rounded-lg px-4 py-2 text-neon-pink font-bold text-sm transition-all whitespace-nowrap"
+                              className="btn-teal px-3 py-1 text-xs h-auto"
                             >
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-neon-pink text-xs font-bold">MY SCORE</span>
-                          <span className="text-text-muted text-[10px]">
-                            Session: {Object.values(picksScores).reduce((sum, score) => sum + score, 0)} pts
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex gap-2 overflow-x-auto pb-1 flex-1">
-                            {currentPicks.map((player) => {
+                              Pick!
+                            </button>
+                            <span className="text-text-muted text-[10px]">
+                              Session: {Object.values(picksScores).reduce((sum, score) => sum + score, 0)} pts
+                            </span>
+                          </div>
+                          <div className="flex flex-col w-full">
+                            <div className="flex gap-1 flex-nowrap w-full overflow-hidden">
+                              {currentPicks.map((player) => {
                               const headshotUrl = getHeadshotUrl({ id: player.id, headshot: player.headshot }, urlLeague);
                               return (
-                                <div key={player.id} className="flex flex-col items-center min-w-[60px]">
+                                <div key={player.id} className="flex flex-col items-center flex-1 min-w-0">
                                   {headshotUrl ? (
                                     <img
                                       src={headshotUrl}
@@ -687,7 +737,8 @@ const Info: React.FC<InfoProps> = ({
                             })}
                           </div>
                         </div>
-                      </button>
+                        </button>
+                      </div>
                     )}
 
                     {/* Play Log */}
