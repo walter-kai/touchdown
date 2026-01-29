@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaFootballBall } from 'react-icons/fa';
+import { FaFootballBall, FaTrophy } from 'react-icons/fa';
 import FootballField from '@/pages/espn/dashboard/games/FootballField';
 import BasketballCourt from '@/pages/espn/dashboard/games/BasketballCourt';
 import type { PlayNfl } from '@/types/espn/plays';
@@ -87,6 +87,8 @@ const Info: React.FC<InfoProps> = ({
   const [picksScores, setPicksScores] = useState<Record<string, number>>({});
   const [hasFetchedUserScores, setHasFetchedUserScores] = useState(false);
   const [scoreIncreasePlayerIds, setScoreIncreasePlayerIds] = useState<Set<string>>(new Set());
+  const [gameLeaderboard, setGameLeaderboard] = useState<any>(null);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
 
   // Load picks from localStorage - with reactive updates
   useEffect(() => {
@@ -183,6 +185,47 @@ const Info: React.FC<InfoProps> = ({
     
     prevScoresRef.current = picksScores;
   }, [picksScores]);
+
+  // Fetch game leaderboard
+  useEffect(() => {
+    const fetchGameLeaderboard = async () => {
+      if (!gameId) {
+        console.log('[Leaderboard] No gameId provided');
+        return;
+      }
+      try {
+        setLeaderboardLoading(true);
+        // Determine league from URL
+        const pathLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
+        const endpoint = `/api/game-data/${pathLeague}/${gameId}`;
+        console.log('[Leaderboard] Fetching from', endpoint);
+        const response = await fetch(endpoint);
+        console.log('[Leaderboard] Response status:', response.status);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[Leaderboard] Data received:', data);
+          // Game data structure: { ok: true, docId, leaderboard: { entries: [...], totalUsers, lastCalculated }, ... }
+          if (data.ok && data.leaderboard && data.leaderboard.entries) {
+            console.log('[Leaderboard] Setting leaderboard with', data.leaderboard.entries.length, 'entries');
+            setGameLeaderboard({
+              ok: true,
+              leaderboard: data.leaderboard.entries,
+              totalUsers: data.leaderboard.totalUsers
+            });
+          } else {
+            console.log('[Leaderboard] No leaderboard data in response:', data);
+          }
+        } else {
+          console.warn('[Leaderboard] Response not ok, status:', response.status);
+        }
+      } catch (err) {
+        console.warn('[Leaderboard] Failed to fetch game leaderboard:', err);
+      } finally {
+        setLeaderboardLoading(false);
+      }
+    };
+    fetchGameLeaderboard();
+  }, [gameId]);
 
   // Update picks display when playLog changes (already handled in useEffect above)
   // No need to fetch from backend - use session scores calculated from playLog
@@ -391,6 +434,59 @@ const Info: React.FC<InfoProps> = ({
               <div className="">
                 <div className="pt-2 ">
                   <div className='mx-2'>
+                    {/* Game Leaderboard Section - Above Current Run */}
+                    {gameLeaderboard && gameLeaderboard.leaderboard && gameLeaderboard.leaderboard.length > 0 && (
+                      <div className="mb-2 bg-bg-dark/50 border border-neon-cyan/20 rounded-lg p-4">
+                        <h3 className="text-neon-cyan font-bold text-sm mb-4 flex items-center gap-2">
+                          <FaTrophy className="text-yellow-400" />
+                          Leaderboard ({gameLeaderboard.totalUsers || 0})
+                        </h3>
+                        <div className="space-y-0">
+                          {gameLeaderboard.leaderboard.slice(0, 5).map((entry: any, idx: number) => (
+                            <div key={`${entry.userId}-${idx}`}>
+                              <button
+                                onClick={() => navigate(`/user/${entry.userId}`)}
+                                className="w-full flex items-center justify-between px-2 py-1 hover:bg-neon-cyan/5 transition-colors text-left group"
+                              >
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                  {/* Rank Badge */}
+                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                                    idx === 0 ? 'bg-yellow-500/30 text-yellow-400 border border-yellow-500' :
+                                    idx === 1 ? 'bg-gray-400/30 text-gray-300 border border-gray-500' :
+                                    idx === 2 ? 'bg-orange-700/30 text-orange-400 border border-orange-600' :
+                                    'bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/30'
+                                  }`}>
+                                    {idx + 1}
+                                  </div>
+                                  
+                                  {/* User Info */}
+                                  <div className="flex-1 min-w-0">
+                                    {entry.photoUrl && (
+                                      <img
+                                        src={entry.photoUrl}
+                                        alt={entry.displayName}
+                                        className="w-8 h-8 rounded-full inline-block mr-2 border border-neon-cyan/30"
+                                      />
+                                    )}
+                                    <span className="text-text-light font-semibold text-sm truncate group-hover:text-neon-cyan transition-colors">{entry.displayName}</span>
+                                  </div>
+                                </div>
+                                
+                                {/* Score */}
+                                <div className="text-right ml-2 flex-shrink-0">
+                                  <p className="text-neon-pink font-bold text-base">{entry.totalScore}</p>
+                                  <p className="text-text-muted text-xs">pts</p>
+                                </div>
+                              </button>
+                              {idx < gameLeaderboard.leaderboard.slice(0, 5).length - 1 && (
+                                <div className="border-t border-neon-cyan/10"></div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Down & Distance and Possession - Above Field */}
                     <div className={`grid ${isNba ? 'grid-cols-2' : 'grid-cols-2'} gap-2 mb-2`}>
                       {/* Run Tracker (NBA) or Down & Distance (NFL) */}

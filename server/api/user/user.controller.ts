@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { getUserProfile, updateUserProfile, checkUsernameAvailability, setDisplayName } from './user.service';
+import { getUserProfile, updateUserProfile, checkUsernameAvailability, setDisplayName, getUserStats } from './user.service';
 import catchAsync from '../../utils/catch-async';
 import ApiError from '../../utils/api-error';
 
@@ -87,5 +87,24 @@ export const updateDisplayName = catchAsync(async (req: Request, res: Response, 
   return res.status(200).json({
     success: true,
     user
+  });
+});
+
+/**
+ * GET /user/:userId
+ * Get user's profile and stats
+ */
+export const getStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { userId } = req.params;
+
+  if (!userId || typeof userId !== 'string') {
+    throw new ApiError(400, 'User ID is required');
+  }
+
+  const stats = await getUserStats(userId);
+
+  return res.status(200).json({
+    ok: true,
+    user: stats
   });
 });

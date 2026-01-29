@@ -12,6 +12,7 @@ import GameDetail from './pages/espn/dashboard/games/GameDetail';
 import TestAnimation from './pages/espn/testAnimation';
 
 import NotFound from './pages/NotFound';
+import UserInfo from './pages/UserInfo';
 
 
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
@@ -195,6 +196,7 @@ const App: React.FC = () => {
                   <Route path="/nba/team/:teamId" element={<NFLTeamPage activeTab={gameTab as 'info' | 'team' | 'player' | 'headtohead' | 'prediction' | 'schedule' | 'news' | 'plays'} onTabChange={setGameTab} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   <Route path="/nba/player/:playerId" element={<NFLPlayerPage activeTab={gameTab as 'info' | 'schedule' | 'news'} onTabChange={(tab) => setGameTab(tab as any)} onRegisterTabClick={(callback) => tabClickCallbackRef.current = callback} />} />
                   
+                  <Route path="/user/:userId" element={<UserInfo />} />
                   
                   <Route path="*" element={<NotFound />} />
                 </Routes>

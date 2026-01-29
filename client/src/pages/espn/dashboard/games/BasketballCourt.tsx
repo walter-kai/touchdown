@@ -314,7 +314,7 @@ const BasketballCourt: React.FC<BasketballCourtProps> = ({
 		// - Vertical position   ← ESPN X (0..50)
 		let xPercent = horizontalMin + (espnY / 94) * (horizontalMax - horizontalMin);
 		const yPercent = verticalMin + (espnX / 50) * (verticalMax - verticalMin);
-		console.log('Raw coords:', { espnX, espnYRaw, espnY, offenseBasketY, playLabel });
+		// console.log('Raw coords:', { espnX, espnYRaw, espnY, offenseBasketY, playLabel });
 
 		// Apply perspective scaling: as yPercent decreases (moves higher/back on trapezoid),
 		// compress the X coordinate toward center to match the narrowing effect

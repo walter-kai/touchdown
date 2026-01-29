@@ -1,5 +1,5 @@
 import express from 'express';
-import { getProfile, updateProfile, checkUsername, updateDisplayName } from './user.controller';
+import { getProfile, updateProfile, checkUsername, updateDisplayName, getStats } from './user.controller';
 import { authenticate } from '../../auth/middleware/auth';
 
 const router = express.Router();
@@ -27,6 +27,12 @@ router.put('/display-name', authenticate, updateDisplayName);
  * Check if username is available
  */
 router.get('/checkName', checkUsername);
+
+/**
+ * GET /user/:userId
+ * Get user's profile and stats (public endpoint)
+ */
+router.get('/:userId', getStats);
 
 // Remove legacy picks subroutes; picks now lives under /api/picks
 

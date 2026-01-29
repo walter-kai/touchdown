@@ -190,3 +190,69 @@ export async function setDisplayName(email: string, displayName: string): Promis
     throw new ApiError(500, 'Failed to set display name');
   }
 }
+
+/**
+ * Get user's stats (for profile page)
+ */
+export async function getUserStats(userId: string): Promise<any> {
+  try {
+    // Get user profile
+    const user = await getUserProfile(userId);
+
+    // Query all picks for this user
+    const picksSnapshot = await admin.firestore()
+      .collection('picks')
+      .where('userId', '==', userId)
+      .get();
+
+    let totalScore = 0;
+    const gamesPlayed = picksSnapshot.docs.length;
+    let bestGame = 0;
+    const recentGames: any[] = [];
+
+    // Calculate stats from picks
+    for (const doc of picksSnapshot.docs) {
+      const data = doc.data();
+      const gameId = data.gameId;
+      const score = data.totalScore || 0;
+      
+      totalScore += score;
+      if (score > bestGame) {
+        bestGame = score;
+      }
+
+      // Add to recent games (first 5)
+      if (recentGames.length < 5) {
+        recentGames.push({
+          gameId,
+          gameName: data.teamData?.awayTeam?.displayName && data.teamData?.homeTeam?.displayName 
+            ? `${data.teamData.awayTeam.displayName} @ ${data.teamData.homeTeam.displayName}`
+            : gameId,
+          score,
+          date: data.timestamp?.toDate?.() || new Date(),
+        });
+      }
+    }
+
+    // Sort recent games by date descending
+    recentGames.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return {
+      displayName: user.displayName,
+      photoUrl: user.photoUrl,
+      totalScore,
+      gamesPlayed,
+      bestGame,
+      averageScore: gamesPlayed > 0 ? Math.round(totalScore / gamesPlayed) : 0,
+      recentGames: recentGames.slice(0, 5),
+    };
+  } catch (error) {
+    logger.error(error, 'Error fetching user stats:');
+    
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    
+    throw new ApiError(500, 'Failed to fetch user stats');
+  }
+}

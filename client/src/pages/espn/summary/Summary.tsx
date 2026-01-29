@@ -264,7 +264,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             style={{ width: isPreGame ? '300%' : '500%' }}
           >
             {/* Info Section */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: isPreGame ? '33.33%' : '20%' }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-4 overflow-y-auto" style={{ width: isPreGame ? '33.33%' : '20%' }}>
               <Info
                 homeTeam={homeTeam}
                 awayTeam={awayTeam}

@@ -60,21 +60,38 @@ const UnifiedGameGrid: React.FC = () => {
 
       console.log('Fetching games for:', { date });
       
-      // Determine dates parameter
+      // Determine dates parameter - if no date provided, fetch current week
       let datesParam: string | undefined;
       if (date) {
         datesParam = date;
+      } else {
+        // Default: fetch this week and next week
+        const today = new Date();
+        const startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 7); // Include last week
+        const endDate = new Date(today);
+        endDate.setDate(endDate.getDate() + 14); // Include next 2 weeks
+        
+        const formatDate = (d: Date) => {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${year}${month}${day}`;
+        };
+        
+        datesParam = `${formatDate(startDate)}-${formatDate(endDate)}`;
+        console.log('Default date range:', datesParam);
       }
       
       // Fetch both NFL and NBA games
       const nflUrl = getScoreboardUrl('nfl', {
         dates: datesParam,
-        limit: datesParam ? 100 : 50
+        limit: 100
       });
       
       const nbaUrl = getScoreboardUrl('nba', {
         dates: datesParam,
-        limit: datesParam ? 100 : 50
+        limit: 100
       });
 
       console.log('Fetching NFL URL:', nflUrl);
