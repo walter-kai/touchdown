@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: 'Touchdown',
   description: 'Fantasy sports picks and predictions',
   icons: {
-    icon: '/logos/Drive-logo.png',
+    icon: 'https://touchdown-882290629693.us-central1.run.app/logos/Drive-logo.png',
   },
   openGraph: {
     title: 'Touchdown',

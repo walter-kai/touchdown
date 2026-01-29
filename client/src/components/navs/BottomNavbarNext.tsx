@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { FaArrowLeft, FaChartBar, FaTrophy, FaExchangeAlt, FaChartLine, FaPercentage, FaInfoCircle, FaCalendar, FaNewspaper, FaFootballBall, FaComments } from 'react-icons/fa';
