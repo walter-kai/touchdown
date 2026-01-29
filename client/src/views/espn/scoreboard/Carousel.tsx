@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { FaFootballBall, FaClock, FaPauseCircle, FaLock, FaCheckCircle, FaBolt, FaChartLine, FaUsers } from 'react-icons/fa';
 import { useAuth } from '@/providers/AuthContext';
 import { useLeague } from '@/providers/LeagueContext';
@@ -35,7 +35,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   isRefreshing,
   onManualRefresh
 }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { isAuthenticated, triggerLoginModal } = useAuth();
   // Derive league from URL instead of context
   const league = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';

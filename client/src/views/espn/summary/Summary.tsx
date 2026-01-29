@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { FaTrophy, FaChartBar, FaFootballBall, FaPauseCircle, FaClock, FaLock, FaCheckCircle, FaBolt, FaChartLine, FaUsers } from 'react-icons/fa';
 import PredictionChart from '@/components/espn/PredictionChart';
 import PlayLog from '@/components/espn/PlayLog';
@@ -37,7 +37,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   playLog,
   gameId
 }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { isAuthenticated, triggerLoginModal } = useAuth();
   // Derive league from URL
   const urlLeague = React.useMemo<'nfl' | 'nba'>(() => {
@@ -570,7 +570,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                                   <tr
                                     key={`${athleteData.athlete.id}-${athleteIdx}`}
                                     className="border-b border-neon-cyan/5 hover:bg-neon-cyan/5 transition-colors cursor-pointer"
-                                    onClick={() => navigate(`/nfl/player/${athleteData.athlete.id}`)}
+                                    onClick={() => router.push(`/nfl/player/${athleteData.athlete.id}`)}
                                   >
                                     <td className="py-2 px-2 sm:px-3">
                                       <div className="flex items-center gap-2 sm:gap-3">

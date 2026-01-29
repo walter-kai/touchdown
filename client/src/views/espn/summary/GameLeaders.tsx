@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { FaFootballBall } from 'react-icons/fa';
 import { GiPodium } from "react-icons/gi";
 import type { Summary } from '@/types/espn/summary';
@@ -11,7 +11,7 @@ interface HeadToHeadProps {
 }
 
 const GameLeaders: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamId }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   if (!summary?.leaders || summary.leaders.length === 0) {
     return null;
@@ -52,7 +52,7 @@ const GameLeaders: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamI
                 {/* Away Leader */}
                 <div
                   className="flex flex-col items-center cursor-pointer hover:bg-neon-cyan/5 p-1 rounded transition-colors"
-                  onClick={() => navigate(`/nfl/player/${awayLeader.athlete.id}`)}
+                  onClick={() => router.push(`/nfl/player/${awayLeader.athlete.id}`)}
                 >
                   {(() => {
                     const headshot = awayLeader.athlete.headshot;
@@ -85,7 +85,7 @@ const GameLeaders: React.FC<HeadToHeadProps> = ({ summary, homeTeamId, awayTeamI
                 {/* Home Leader */}
                 <div
                   className="flex flex-col items-center cursor-pointer hover:bg-neon-pink/5 p-1 rounded transition-colors"
-                  onClick={() => navigate(`/nfl/player/${homeLeader.athlete.id}`)}
+                  onClick={() => router.push(`/nfl/player/${homeLeader.athlete.id}`)}
                 >
                   {(() => {
                     const headshot = homeLeader.athlete.headshot;

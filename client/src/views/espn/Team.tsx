@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { FaFootballBall, FaHome, FaRoad, FaTrophy, FaUsers, FaChartLine, FaCalendar, FaMapMarkerAlt, FaStar, FaClipboardList, FaNewspaper } from "react-icons/fa";
 import axios from "axios";
 import type { TeamApiResponse, TeamRecord, NextEvent, Competitor } from "@/types/espn/team";
@@ -64,10 +64,10 @@ interface NFLTeamProps {
 
 const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTabClick }) => {
   const { teamId } = useParams<{ teamId: string }>();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+    const pathname = usePathname();
   // Derive league from URL instead of context
-  const league = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
+    const league = pathname.startsWith('/nba') ? 'nba' : 'nfl';
   const [teamData, setTeamData] = useState<TeamApiResponse | null>(null);
   const [scheduleData, setScheduleData] = useState<ScheduleData | null>(null);
   const [news, setNews] = useState<NewsArticle[]>([]);
@@ -82,8 +82,8 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
   const newsRef = useRef<HTMLDivElement>(null);
   const isProgrammaticScrollRef = useRef(false);
 
-  // Get leaders from navigation state
-  const passedLeaders = (location.state as any)?.leaders as LeaderCategory[] | undefined;
+  // Leaders are no longer passed via navigation state in Next.js
+  const passedLeaders = undefined;
 
   // Reset state when league changes to prevent using old team IDs with new league
   useEffect(() => {
@@ -228,7 +228,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
           <p className="text-red-400 font-bold mb-2 text-lg">Error loading team data</p>
           <p className="text-text-light mb-4">{error || 'Team not found'}</p>
           <button
-            onClick={() => navigate('/nfl')}
+            onClick={() => router.push('/nfl')}
             className="px-6 py-2 bg-neon-cyan/20 border border-neon-cyan/30 rounded-lg text-neon-cyan hover:bg-neon-cyan/30 transition-colors"
           >
             Back to Scoreboard
@@ -602,7 +602,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                           src={topLeader.athlete.headshot.href}
                           alt={topLeader.athlete.displayName}
                           className="w-16 h-16 rounded-full object-cover border-2 border-neon-pink/30 flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
-                          onClick={() => navigate(`/nfl/player/${topLeader.athlete.id}`)}
+                          onClick={() => router.push(`/nfl/player/${topLeader.athlete.id}`)}
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = 'none';
                             const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
@@ -613,14 +613,14 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                       <div 
                         className="w-16 h-16 rounded-full bg-bg-darker border-2 border-neon-pink/30 flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
                         style={{ display: topLeader.athlete.headshot ? 'none' : 'flex' }}
-                        onClick={() => navigate(`/nfl/player/${topLeader.athlete.id}`)}
+                        onClick={() => router.push(`/nfl/player/${topLeader.athlete.id}`)}
                       >
                         <FaFootballBall className="text-neon-pink text-2xl" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div 
                           className="text-lg font-bold text-white truncate cursor-pointer hover:text-neon-cyan transition-colors"
-                          onClick={() => navigate(`/nfl/player/${topLeader.athlete.id}`)}
+                          onClick={() => router.push(`/nfl/player/${topLeader.athlete.id}`)}
                         >
                           {topLeader.athlete.displayName}
                         </div>
@@ -722,7 +722,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                           : 'from-red-500/10 to-red-500/5 border-red-500/40 hover:border-red-500/60 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]'
                         : 'from-bg-darker/80 to-bg-dark/60 border-neon-pink/30 hover:border-neon-pink/50 hover:shadow-[0_0_20px_rgba(250,175,232,0.2)]'
                     }`}
-                    onClick={() => navigate(`/nfl/game/${event.id}`)}
+                    onClick={() => router.push(`/nfl/game/${event.id}`)}
                   >
                     <div className="flex items-center justify-between gap-4">
                       {/* Week & Date Info - Left */}

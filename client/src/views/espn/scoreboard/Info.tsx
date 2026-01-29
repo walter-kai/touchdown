@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { FaFootballBall, FaTrophy } from 'react-icons/fa';
 import FootballField from '@/views/dashboard/games/FootballField';
 import BasketballCourt from '@/views/dashboard/games/BasketballCourt';
@@ -73,7 +73,7 @@ const Info: React.FC<InfoProps> = ({
   awayTeamId,
   onOpenPicks,
 }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { user } = useAuth();
   const { homeScore: contextHomeScore, awayScore: contextAwayScore } = usePlays();
   const currentHomeScore = contextHomeScore ?? (homeTeam?.score !== undefined ? Number(homeTeam.score) : 0);
@@ -397,7 +397,7 @@ const Info: React.FC<InfoProps> = ({
           <div className="flex items-stretch justify-between">
             {/* Away Team */}
             <button
-          onClick={() => awayTeam?.id && navigate(`/nfl/team/${awayTeam.id}`)}
+          onClick={() => awayTeam?.id && router.push(`/nfl/team/${awayTeam.id}`)}
           className="flex flex-col items-center hover:bg-neon-cyan/10 active:bg-neon-cyan/20 rounded-lg py-3 transition-all group cursor-pointer flex-1 focus:outline-none"
             >
           <div className="w-20 h-20 md:w-20 md:h-20 mb-2 flex items-center justify-center">
@@ -428,7 +428,7 @@ const Info: React.FC<InfoProps> = ({
 
             {/* Home Team */}
             <button
-          onClick={() => homeTeam?.id && navigate(`/nfl/team/${homeTeam.id}`)}
+          onClick={() => homeTeam?.id && router.push(`/nfl/team/${homeTeam.id}`)}
           className="flex flex-col items-center hover:bg-neon-cyan/10 active:bg-neon-cyan/20 rounded-lg py-3 transition-all group cursor-pointer flex-1 focus:outline-none"
             >
           <div className="w-20 h-20 md:w-20 md:h-20 mb-2 flex items-center justify-center">
@@ -488,7 +488,7 @@ const Info: React.FC<InfoProps> = ({
                           {gameLeaderboard.leaderboard.slice(0, 5).map((entry: any, idx: number) => (
                             <div key={`${entry.userId}-${idx}`}>
                               <button
-                                onClick={() => navigate(`/user/${entry.userId}`)}
+                                onClick={() => router.push(`/user/${entry.userId}`)}
                                 className="w-full flex items-center justify-between px-2 py-1 hover:bg-neon-cyan/5 transition-colors text-left group"
                               >
                                 <div className="flex items-center gap-3 flex-1 min-w-0">

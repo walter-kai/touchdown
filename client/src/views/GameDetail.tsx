@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { FaFootballBall } from 'react-icons/fa';
 import axios from 'axios';
 import ScoreboardView from '@/views/espn/scoreboard/Carousel';
@@ -30,12 +31,9 @@ interface GameDetailProps {
 const GameDetail: React.FC<GameDetailProps> = ({ activeTab, onTabChange, onPresetChange, onGameStatusChange, onRegisterTabClick }) => {
   const { gameId } = useParams<{ gameId: string }>();
   const { showLoading, hideLoading } = useLoading();
-  const location = useLocation();
-  useLeague();
+  const pathname = usePathname();
+  const { league } = useLeague();
   
-  // Derive league from URL path as primary source to avoid race conditions
-  const urlLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
-  const league = urlLeague; // Use URL-derived league to ensure accuracy
   
   const [event, setEvent] = useState<Event | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -82,13 +80,6 @@ const GameDetail: React.FC<GameDetailProps> = ({ activeTab, onTabChange, onPrese
     setPlayLog([]);
   }, [gameId]);
 
-  // Check for tab state and switch tabs if passed via navigation state
-  useEffect(() => {
-    const state = location.state as { tab?: string } | null;
-    if (state?.tab === 'yourpicks') {
-      onTabChange('yourpicks' as any);
-    }
-  }, [location.state, onTabChange]);
 
   const refreshGameAndPlays = useCallback(async () => {
     if (!gameId) return;

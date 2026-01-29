@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useRouter } from 'next/navigation';
 import { FaFootballBall, FaArrowLeft, FaCalendar, FaChartLine, FaTrophy, FaNewspaper, FaInfoCircle } from 'react-icons/fa';
 import axios from 'axios';
 import type { AthleteOverview, AthleteBio } from '@/types/espn/athlete';
@@ -15,7 +15,7 @@ interface NFLPlayerProps {
 
 const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, onRegisterTabClick }) => {
   const { playerId } = useParams<{ playerId: string }>();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { league, getHeadshotFromIdOrUrl } = useLeague();
   
   const [overview, setOverview] = useState<AthleteOverview | null>(null);
@@ -170,7 +170,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
           <p className="text-red-400 font-bold mb-2 text-lg">Error loading player data</p>
           <p className="text-text-light mb-4">{error || 'Player not found'}</p>
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => router.back()}
             className="px-6 py-2 bg-neon-cyan/20 border border-neon-cyan/30 rounded-lg text-neon-cyan hover:bg-neon-cyan/30 transition-colors"
           >
             Go Back
@@ -406,7 +406,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
                       return (
                         <button 
                           key={eventIdx} 
-                          onClick={() => navigate(`/nfl/game/${event.eventId}`)}
+                          onClick={() => router.push(`/nfl/game/${event.eventId}`)}
                           className="w-full mb-4 hover:bg-neon-cyan/10 rounded-lg p-3 transition-all cursor-pointer"
                         >
                           {/* Game matchup as header */}
@@ -460,7 +460,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
             {overview.nextGame.league.events.map((game, idx) => (
               <button 
                 key={idx} 
-                onClick={() => navigate(`/nfl/game/${game.id}`)}
+                onClick={() => router.push(`/nfl/game/${game.id}`)}
                 className="w-full bg-bg-darker/50 p-6 rounded-lg hover:bg-neon-cyan/10 transition-all cursor-pointer"
               >
                 <div className="text-center mb-4">
