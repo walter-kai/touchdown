@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
 import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad, FaChevronDown, FaChevronUp, FaUser, FaMedal } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
 import { jwtStorage } from '../../utils/jwtStorage';
 import LoadingFootball from '../../components/loading/LoadingFootball';
 import { CountUpScore } from '../../components/common/CountUpScore';
