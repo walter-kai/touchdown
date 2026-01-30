@@ -4,6 +4,13 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // Proxy /auth/* requests to Express backend (except callback which Next handles)
+  if (pathname.startsWith('/auth/') && pathname !== '/auth/google/callback') {
+    const backendPort = process.env.BACKEND_PORT || '3001';
+    const backendUrl = `http://localhost:${backendPort}${pathname}${request.nextUrl.search}`;
+    return NextResponse.rewrite(new URL(backendUrl));
+  }
+  
   // Define valid route patterns
   const validRoutes = [
     '/',
