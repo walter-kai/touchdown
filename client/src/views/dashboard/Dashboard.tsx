@@ -679,6 +679,20 @@ const Dashboard: React.FC = () => {
                   {game.awayTeam && game.homeTeam && (
                     <button
                       onClick={() => router.push(`/${game.league || 'nfl'}/game/${game.gameId}`)}
+                                        style={{
+                    background: isExpanded 
+                      ? 'linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.25), rgba(var(--blue-light-rgb), 0.25), rgba(var(--purple-dark-rgb), 0.3))' 
+                      : 'linear-gradient(135deg, rgba(var(--blue-light-rgb), 0.15), rgba(var(--neon-cyan-rgb), 0.15), rgba(var(--purple-dark-rgb), 0.2))',
+                    boxShadow: isExpanded 
+                      ? '0 0 25px rgba(var(--neon-cyan-rgb), 0.5), inset 0 0 20px rgba(var(--blue-light-rgb), 0.2)' 
+                      : '0 0 15px rgba(var(--blue-base-rgb), 0.3), inset 0 0 15px rgba(var(--neon-cyan-rgb), 0.1)',
+                    border: '2px solid',
+                    borderImage: isExpanded 
+                      ? 'linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.9), rgba(var(--blue-light-rgb), 0.9)) 1' 
+                      : 'linear-gradient(135deg, rgba(var(--blue-light-rgb), 0.6), rgba(var(--neon-cyan-rgb), 0.6)) 1',
+                    transform: isExpanded ? 'scale(0.95)' : 'scale(1)',
+                    transition: 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+                  }}
                       className="btn-standard flex items-center gap-1.5 px-2 py-1.5 flex-shrink-0 min-w-0"
                     >
                       <img 

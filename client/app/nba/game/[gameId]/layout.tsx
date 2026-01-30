@@ -105,21 +105,19 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
   }
 
   const image = 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg';
-  const metaTitle = 'Touchdown - Manage your players, rack up points!';
-  const metaDescription = 'Manage your players, rack up points! Fantasy sports picks and predictions for NFL, NBA and more';
 
   return {
-    title: metaTitle,
-    description: metaDescription,
+    title,
+    description,
     openGraph: {
-      title: metaTitle,
-      description: metaDescription,
+      title,
+      description,
       images: [
         {
           url: image,
           width: 1600,
           height: 630,
-          alt: 'Touchdown - Manage your players, rack up points!',
+          alt: title,
         },
       ],
       type: 'website',
@@ -127,8 +125,8 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
     },
     twitter: {
       card: 'summary_large_image',
-      title: metaTitle,
-      description: metaDescription,
+      title,
+      description,
       images: [image],
     },
     other: {
