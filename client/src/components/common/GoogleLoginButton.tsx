@@ -57,7 +57,7 @@ const GoogleLoginButton: React.FC = () => {
       const popupLeft = window.screenX + (window.outerWidth - popupWidth) / 2;
       const popupTop = window.screenY + (window.outerHeight - popupHeight) / 2;
 
-      // Point to backend server (usually port 3001 in dev)
+      // Point to backend server
       const authUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
         ? 'http://localhost:3001/auth/google/login'
         : '/auth/google/login';

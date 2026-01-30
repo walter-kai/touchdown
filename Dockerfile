@@ -41,13 +41,16 @@ COPY ./server ./server
 # Build server TypeScript
 RUN npm run build
 
-# Stage 2: Final production stage
-FROM node:20-alpine AS runner
+# Stage 2: Final production stage with nginx
+FROM nginx:alpine AS runner
 
 WORKDIR /app
 
-# Install netcat for health checks
-RUN apk add --no-cache netcat-openbsd
+# Install node and dependencies for running both servers
+RUN apk add --no-cache nodejs npm netcat-openbsd
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy Next.js standalone build
 COPY --from=client-build /app/client/.next/standalone ./client
@@ -67,8 +70,8 @@ ENV NODE_ENV=production
 ENV BACKEND_PORT=3001
 ENV PORT=3000
 
-# Expose ports for Next.js and backend server
-EXPOSE 3000 3001
+# Expose nginx port
+EXPOSE 443
 
-# Start both backend server and Next.js
-CMD ["sh", "-c", "npm run start & echo 'Waiting for backend on port 3001...' && while ! nc -z 127.0.0.1 3001; do sleep 1; done && echo 'Backend ready, starting Next.js...' && cd client && node server.js"]
+# Start script that runs backend, Next.js, and nginx
+CMD ["sh", "-c", "node dist/server/server.js & cd client && node server.js & nginx -g 'daemon off;'"]
