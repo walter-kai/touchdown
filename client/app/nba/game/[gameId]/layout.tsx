@@ -94,20 +94,22 @@ export async function generateMetadata({ params }: { params: { gameId: string } 
     description = `${away.team.displayName} face off against ${home.team.displayName} ${timeUntilText}. Make your picks and join the action on Touchdown!`;
   }
 
-  const image = home.team.logo || 'https://a.espncdn.com/media/motion/2024/1009/dm_240924_nba_logo.png';
+  const image = 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg';
+  const metaTitle = 'Touchdown - Manage your players, rack up points!';
+  const metaDescription = 'Manage your players, rack up points! Fantasy sports picks and predictions for NFL, NBA and more';
 
   return {
-    title,
-    description,
+    title: metaTitle,
+    description: metaDescription,
     openGraph: {
-      title,
-      description,
+      title: metaTitle,
+      description: metaDescription,
       images: [
         {
           url: image,
-          width: 1200,
+          width: 1600,
           height: 630,
-          alt: `${away.team.displayName} vs ${home.team.displayName}`,
+          alt: 'Touchdown - Manage your players, rack up points!',
         },
       ],
       type: 'website',
@@ -115,9 +117,12 @@ export async function generateMetadata({ params }: { params: { gameId: string } 
     },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description,
+      title: metaTitle,
+      description: metaDescription,
       images: [image],
+    },
+    other: {
+      'og:logo': 'https://touchdown-882290629693.us-central1.run.app/logos/Drive-logo.png',
     },
   };
 }

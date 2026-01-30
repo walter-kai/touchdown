@@ -10,8 +10,12 @@ import '../src/styles/football.css';
 export const metadata: Metadata = {
   title: 'Touchdown - Manage your players, rack up points!',
   description: 'Manage your players, rack up points! Fantasy sports picks and predictions for NFL, NBA and more',
+  metadataBase: new URL('https://touchdown-882290629693.us-central1.run.app'),
   icons: {
     icon: 'https://touchdown-882290629693.us-central1.run.app/logos/Drive-logo.png',
+  },
+  other: {
+    'og:logo': 'https://touchdown-882290629693.us-central1.run.app/logos/Drive-logo.png',
   },
   openGraph: {
     title: 'Touchdown - Manage your players, rack up points!',
@@ -21,7 +25,7 @@ export const metadata: Metadata = {
     images: [
       {
         url: 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg',
-        width: 1200,
+        width: 1600,
         height: 630,
         alt: 'Touchdown - Fantasy Sports',
       },
