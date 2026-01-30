@@ -326,7 +326,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
                         {player.isCurrentPick && isGameInSession && (
                           <div className="absolute inset-0 rounded-full bg-neon-cyan blur-md opacity-50 animate-pulse"></div>
                         )}
-                        {player.headshot ? (
+                        {player.headshot && player.headshot.trim() ? (
                           <img
                             src={player.headshot}
                             alt={player.displayName}
@@ -346,7 +346,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
                             relative w-14 h-14 rounded-full border-2 bg-bg-darker items-center justify-center
                             ${player.isCurrentPick && isGameInSession ? 'border-neon-cyan' : 'border-neon-cyan/30'}
                           `}
-                          style={{ display: player.headshot ? 'none' : 'flex' }}
+                          style={{ display: (player.headshot && player.headshot.trim()) ? 'none' : 'flex' }}
                         >
                           <span className="text-xs font-bold text-neon-cyan">{player.shortName?.substring(0, 2) || 'P'}</span>
                         </div>
@@ -366,11 +366,13 @@ const TopPicks: React.FC<TopPicksProps> = ({
                           {player.position} • #{player.jersey}
                         </span>
                         <div className="flex items-center gap-1">
-                          <img
-                            src={getTeamLogo(team)}
-                            alt=""
-                            className="w-3 h-3"
-                          />
+                          {getTeamLogo(team) && getTeamLogo(team).trim() && (
+                            <img
+                              src={getTeamLogo(team)}
+                              alt=""
+                              className="w-3 h-3"
+                            />
+                          )}
                           <span className={`text-[10px] ${player.isCurrentPick && isGameInSession ? 'text-neon-cyan/80' : 'text-text-muted'}`}>
                             {team?.team?.abbreviation}
                           </span>

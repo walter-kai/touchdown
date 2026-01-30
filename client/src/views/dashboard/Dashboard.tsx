@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
-import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad, FaChevronDown, FaChevronUp, FaUser, FaMedal } from 'react-icons/fa';
+import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad, FaChevronDown, FaChevronUp, FaUser, FaMedal, FaClipboardCheck } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { jwtStorage } from '../../utils/jwtStorage';
 import LoadingFootball from '../../components/loading/LoadingFootball';
@@ -80,7 +80,7 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [gamesWithPicks, setGamesWithPicks] = useState<GameData[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
+  const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
@@ -122,6 +122,29 @@ const Dashboard: React.FC = () => {
     }
 
     return parts.length > 0 ? parts : text;
+  };
+
+  const getOrdinalParts = (rank: number) => {
+    const mod100 = rank % 100;
+    let suffix = 'th';
+
+    if (mod100 < 11 || mod100 > 13) {
+      switch (rank % 10) {
+        case 1:
+          suffix = 'st';
+          break;
+        case 2:
+          suffix = 'nd';
+          break;
+        case 3:
+          suffix = 'rd';
+          break;
+        default:
+          suffix = 'th';
+      }
+    }
+
+    return { number: rank, suffix };
   };
   useEffect(() => {
     // Reset avatar error when the source changes
@@ -427,8 +450,11 @@ const Dashboard: React.FC = () => {
               rank: userEntry?.rank ?? null,
               totalUsersInGame: totalUsersInGame ?? null,
             };
-          } catch (rankErr) {
-            console.error(`Error fetching rank for game ${game.gameId}:`, rankErr);
+          } catch (rankErr: any) {
+            // 404 is expected for games with no picks yet - don't log as error
+            if (rankErr?.response?.status !== 404) {
+              console.error(`Error fetching rank for game ${game.gameId}:`, rankErr);
+            }
             return game;
           }
         }));
@@ -467,18 +493,10 @@ const Dashboard: React.FC = () => {
     return { totalGames, totalScore, totalPlayers };
   }, [gamesWithPicks]);
 
-  // Toggle game expansion
+  // Toggle game expansion - only one at a time
   const toggleGameExpansion = (gameId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpandedGames(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(gameId)) {
-        newSet.delete(gameId);
-      } else {
-        newSet.add(gameId);
-      }
-      return newSet;
-    });
+    setExpandedGameId(prev => (prev === gameId ? null : gameId));
   };
 
   if (loading) {
@@ -496,9 +514,9 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto mt-2 px-2">
+    <div className="max-w-7xl mx-auto mt-2">
       {/* Welcome Section */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-6 px-2">
         {/* Dancing gif with profile picture as head */}
         <div className="relative flex-shrink-0">
           <img
@@ -534,7 +552,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6 px-2">
         <div className="bg-bg-dark/30 border border-neon-cyan/20 rounded-lg px-6 py-2 text-center relative overflow-hidden flex flex-col">
           <FaGamepad className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-neon-cyan/10" />
           <h3 className="mb-2 relative z-10">Games Played</h3>
@@ -562,7 +580,7 @@ const Dashboard: React.FC = () => {
 
       {/* Leaderboard */}
       {!leaderboardLoading && leaderboard.length > 0 && (
-        <div className="mb-6 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg p-4">
+        <div className="mb-6 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg p-4 max-w-md mx-2">
           <h3 className="flex items-center gap-2 mb-3 text-neon-cyan">
             <FaMedal className="text-neon-pink" />
             Top 10 Leaderboard
@@ -619,11 +637,11 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Games List */}
-      <div className="space-y-8 mb-16">
-        <h1 className="">Your Games</h1>
+      <div className="space-y-4 mb-16 ">
+        <h1 className="mx-2">Game History</h1>
 
         {gamesWithPicks.length === 0 ? (
-          <div className="text-center py-6 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg">
+          <div className="text-center py-6 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg px-6 mx-2">
             <FaFootballBall className="text-6xl text-neon-pink mx-auto my-4 animate-bounce" />
             <h2 className="text-2xl font-bold mb-2">No Picks Yet</h2>
             <p className="text-gray-400 mb-6">Start making picks to see your dashboard!</p>
@@ -666,106 +684,149 @@ const Dashboard: React.FC = () => {
             <>
               {sortedDates.map((dateKey) => (
                 <div key={dateKey}>
-                  <h2 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{dateKey}</h2>
-                  <div className="space-y-2">
+                  <h2 className="text-lg font-semibold text-neon-cyan mx-2 text-left">{dateKey}</h2>
+                  <div className="">
                     {gamesByDate[dateKey].map((game) => {
-                      const isExpanded = expandedGames.has(game.gameId);
+                      const isExpanded = expandedGameId === game.gameId;
                       
                       return (
           <div
             key={game.gameId}
-            className="relative bg-bg-dark/50 border border-neon-cyan/20 rounded-lg overflow-hidden hover:border-neon-cyan/50 transition-all"
+            className="relative overflow-hidden hover:border-neon-cyan/50 transition-all border border-white/10"
+            style={{ 
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)'
+            }}
           >
-            {/* League Badge - anchored to card */}
-            <img
-              src={game.league === 'nfl' ? '/logos/logo-nfl.svg' : '/logos/logo-nba.svg'}
-              alt={game.league?.toUpperCase()}
-              className="absolute top-0 left-0 w-7 h-7 p-1 bg-bg-dark/40 rounded-md border border-neon-cyan/30"
-            />
-            {/* Game Header - Mobile Optimized */}
-            <button
-              onClick={() => router.push(`/${game.league || 'nfl'}/game/${game.gameId}`)}
-              className="w-full p-2 hover:bg-neon-cyan/5 transition-all text-left"
-            >
-              <div className="flex items-center gap-3">
-                {/* Team Logos with abbreviations below */}
-                {game.awayTeam && game.homeTeam && (
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="flex flex-col items-center gap-1">
+            {/* Game Header - Redesigned */}
+            <div className="w-full px-3 py-2 relative bg-gradient-to-r from-white/[0.02] to-white/[0.01]">
+              <div className="flex items-center justify-between gap-4">
+                {/* Left Group: League Logo + Team Button */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* League Logo */}
+                  <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                    <img
+                      src={game.league === 'nfl' ? '/logos/logo-nfl.svg' : '/logos/logo-nba.svg'}
+                      alt={game.league?.toUpperCase()}
+                      className="w-5 h-7"
+                    />
+                  </div>
+                  
+                  {/* Team Logos Pill Button */}
+                  {game.awayTeam && game.homeTeam && (
+                    <button
+                      onClick={() => router.push(`/${game.league || 'nfl'}/game/${game.gameId}`)}
+                      className="btn-standard flex items-center gap-1.5 px-2 py-1.5 flex-shrink-0 min-w-0"
+                    >
                       <img 
                         src={game.awayTeam.team.logo} 
                         alt={game.awayTeam.team.abbreviation}
-                        className="w-12 h-12"
+                        className="w-8 h-8 flex-shrink-0"
                       />
-                      <span className="text-[10px] font-semibold text-gray-400">
-                        {game.awayTeam.team.abbreviation}
-                      </span>
-                    </div>
-                    <span className="text-base font-bold text-gray-400">@</span>
-                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs font-bold text-gray-400 flex-shrink-0">@</span>
                       <img 
                         src={game.homeTeam.team.logo} 
                         alt={game.homeTeam.team.abbreviation}
-                        className="w-12 h-12"
+                        className="w-8 h-8 flex-shrink-0"
                       />
-                      <span className="text-[10px] font-semibold text-gray-400">
-                        {game.homeTeam.team.abbreviation}
+                    </button>
+                  )}
+                </div>
+                
+                {/* Center: Rank + Score in a centered div */}
+                <div className="flex items-center justify-center gap-4 flex-1">
+                  {/* Rank */}
+                  {typeof game.rank === 'number' && game.totalUsersInGame && (
+                    <div className="flex flex-col items-end w-full">
+                      <span className="text-xl font-bold text-neon-pink leading-tight">
+                        {(() => {
+                          const { number, suffix } = getOrdinalParts(game.rank ?? 0);
+                          return (
+                            <>
+                              {number}
+                              <sup className="text-[10px] align-super ml-0.5">{suffix}</sup>
+                            </>
+                          );
+                        })()}
                       </span>
+                      <span className="text-[8px] text-gray-400">of {game.totalUsersInGame}</span>
                     </div>
+                  )}
+                  {/* Score */}
+                  <div
+                    className={`flex flex-col w-full ${
+                      typeof game.rank === 'number' && game.totalUsersInGame
+                        ? 'items-start'
+                        : 'items-center'
+                    }`}
+                  >
+                    <CountUpScore 
+                      value={game.totalUserScore} 
+                      className="text-xl font-bold text-neon-pink leading-tight"
+                    />
+                    <span className="text-[8px] text-gray-400">pts</span>
                   </div>
-                )}
-                
-                {/* Picks and Players info */}
-                <div className="text-xs text-gray-400 flex-shrink-0 ml-2">
-                  <div>{game.picks.length} pick{game.picks.length !== 1 ? 's' : ''}</div>
-                  <div>{Array.from(new Set(game.picks.flatMap(pick => pick.players.map(p => p.id)))).length} players</div>
                 </div>
                 
-                {/* Spacer */}
-                <div className="flex-1"></div>
-                
-                {/* Score Display */}
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <FaTrophy className="text-neon-pink text-lg" />
-                  <CountUpScore 
-                    value={game.totalUserScore} 
-                    className="text-2xl font-bold text-neon-pink"
-                  />
-                  <p className="text-[10px] text-gray-400">pts</p>
-                  {typeof game.rank === 'number' && (
-                    <div className="flex items-center gap-1 ml-3 px-2 py-1 rounded-full bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan text-xs font-semibold">
-                      <FaMedal className="text-neon-cyan" />
-                      <span>#{game.rank}</span>
-                      {game.totalUsersInGame !== null && game.totalUsersInGame !== undefined && (
-                        <span className="text-[10px] text-gray-400">of {game.totalUsersInGame}</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Expand/Collapse Button */}
-                <div
+                {/* Right: Show Picks Button */}
+                <button
                   onClick={(e) => {
-                    e.stopPropagation();
-                    toggleGameExpansion(game.gameId, e);
+                  e.stopPropagation();
+                  toggleGameExpansion(game.gameId, e);
                   }}
-                  className="p-2 hover:bg-neon-cyan/10 rounded transition-all flex-shrink-0 cursor-pointer"
-                  role="button"
-                  aria-label="Toggle game details"
+                  className="btn-purple rounded flex items-center h-12 gap-2 px-4 py-1.5 text-sm flex-shrink-0 whitespace-nowrap relative overflow-hidden group"
+                  style={{
+                    background: isExpanded 
+                      ? 'linear-gradient(135deg, rgba(var(--neon-pink-rgb), 0.25), rgba(var(--purple-light-rgb), 0.25), rgba(var(--purple-dark-rgb), 0.3))' 
+                      : 'linear-gradient(135deg, rgba(var(--purple-light-rgb), 0.15), rgba(var(--neon-pink-rgb), 0.15), rgba(var(--purple-dark-rgb), 0.2))',
+                    boxShadow: isExpanded 
+                      ? '0 0 25px rgba(var(--neon-pink-rgb), 0.5), inset 0 0 20px rgba(var(--purple-light-rgb), 0.2)' 
+                      : '0 0 15px rgba(var(--purple-base-rgb), 0.3), inset 0 0 15px rgba(var(--neon-pink-rgb), 0.1)',
+                    border: '2px solid',
+                    borderImage: isExpanded 
+                      ? 'linear-gradient(135deg, rgba(var(--neon-pink-rgb), 0.9), rgba(var(--purple-light-rgb), 0.9)) 1' 
+                      : 'linear-gradient(135deg, rgba(var(--purple-light-rgb), 0.6), rgba(var(--neon-pink-rgb), 0.6)) 1',
+                    transform: isExpanded ? 'scale(0.95)' : 'scale(1)',
+                    transition: 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+                  }}
                 >
-                  {isExpanded ? (
-                    <FaChevronUp className="text-neon-cyan text-lg" />
-                  ) : (
-                    <FaChevronDown className="text-neon-cyan text-lg" />
-                  )}
-                </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                  <span className="font-bold relative z-10">Show picks</span>
+                </button>
               </div>
-            </button>
+            </div>
 
             {/* Expanded Players Section */}
             {isExpanded && (
-              <div className="border-t border-neon-cyan/20 bg-bg-darker/30">
+              <div className="border-t border-neon-cyan/20 bg-gradient-to-b from-white/[0.02] to-white/[0.005]">
                 <div className="p-4">
+                  {/* Stats Header */}
+                  <div className="flex items-center gap-0 mb-4">
+                    <div className="flex-1 group relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-orange-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      <div className="relative px-5 py-4">
+                        <div className="flex items-end justify-between">
+                          <div className="flex items-baseline gap-3 ">
+                            <span className="text-5xl font-black text-orange-base">{game.picks.length}</span>
+                            <sup className="text-xs uppercase font-bold text-orange-warning tracking-wider">Picks</sup>
+                          </div>
+                          <FaClipboardCheck className="text-orange-base text-3xl opacity-90" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex-1 group relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      <div className="relative px-5 py-4">
+                        <div className="flex items-end justify-between">
+                          <div className="flex items-baseline gap-3">
+                            <span className="text-5xl font-black text-blue-500">{Array.from(new Set(game.picks.flatMap(pick => pick.players.map(p => p.id)))).length}</span>
+                            <sup className="text-xs uppercase font-bold text-blue-400 tracking-wider b-12">Players</sup>
+                          </div>
+                          <FaUser className="text-blue-500 text-3xl opacity-90" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <h4 className="text-sm font-semibold mb-3 flex items-center gap-2 text-gray-400 uppercase tracking-wide">
                     <FaChartBar className="text-neon-cyan" />
                     Your Players

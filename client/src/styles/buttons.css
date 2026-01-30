@@ -1,182 +1,242 @@
 .btn-standard {
-  background-color: rgba(var(--neon-cyan-rgb), 0.1);
+  background: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.15), rgba(var(--accent-teal-rgb), 0.15), rgba(var(--neon-cyan-rgb), 0.2));
   color: var(--neon-cyan);
-  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
-  border-color: rgba(var(--neon-cyan-rgb), 0.4);
-  box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.3);
+  @apply text-center font-bold rounded px-6 py-3 border-2 relative overflow-hidden;
+  border-color: rgba(var(--neon-cyan-rgb), 0.6);
+  box-shadow: 0 0 15px rgba(var(--neon-cyan-rgb), 0.3), inset 0 0 15px rgba(var(--accent-teal-rgb), 0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .btn-standard:hover {
-  background-color: rgba(var(--neon-cyan-rgb), 0.2);
+  background: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.25), rgba(var(--accent-teal-rgb), 0.25), rgba(var(--neon-cyan-rgb), 0.3));
   border-color: var(--neon-cyan);
-  box-shadow: 0 0 20px var(--neon-cyan);
+  border-image: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.9), rgba(var(--accent-teal-rgb), 0.9)) 1;
+  box-shadow: 0 0 25px rgba(var(--neon-cyan-rgb), 0.5), inset 0 0 20px rgba(var(--accent-teal-rgb), 0.2);
+  transform: scale(1.02);
 }
 .btn-standard:disabled {
   @apply opacity-30 cursor-not-allowed;
-  background-color: rgba(var(--neon-cyan-rgb), 0.1);
+  background: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.1), rgba(var(--accent-teal-rgb), 0.1), rgba(var(--neon-cyan-rgb), 0.15));
   border-color: rgba(var(--neon-cyan-rgb), 0.4);
-  box-shadow: 0 0 8px rgba(var(--neon-cyan-rgb), 0.3);
+  box-shadow: none;
 }
 
 .btn-teal {
-  background: linear-gradient(to bottom right, rgba(var(--neon-cyan-rgb), 0.1), rgba(var(--accent-teal-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--purple-light-rgb), 0.15), rgba(var(--neon-pink-rgb), 0.15), rgba(var(--purple-dark-rgb), 0.2));
   color: var(--neon-cyan);
-  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
-  border-color: rgba(var(--neon-cyan-rgb), 0.4);
-  box-shadow: 0 0 8px var(--neon-cyan);
+  @apply text-center font-bold rounded px-6 py-3 border-2 relative overflow-hidden;
+  border-color: rgba(var(--purple-light-rgb), 0.6);
+  border-image: linear-gradient(135deg, rgba(var(--purple-light-rgb), 0.6), rgba(var(--neon-pink-rgb), 0.6)) 1;
+  box-shadow: 0 0 15px rgba(var(--purple-base-rgb), 0.3), inset 0 0 15px rgba(var(--neon-pink-rgb), 0.1);
+  transform: scale(1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.btn-teal.expanded {
+  background: linear-gradient(135deg, rgba(var(--neon-pink-rgb), 0.25), rgba(var(--purple-light-rgb), 0.25), rgba(var(--purple-dark-rgb), 0.3));
+  border-image: linear-gradient(135deg, rgba(var(--neon-pink-rgb), 0.9), rgba(var(--purple-light-rgb), 0.9)) 1;
+  box-shadow: 0 0 25px rgba(var(--neon-pink-rgb), 0.5), inset 0 0 20px rgba(var(--purple-light-rgb), 0.2);
+  transform: scale(0.95);
 }
 .btn-teal:hover {
-  background: linear-gradient(to bottom right, rgba(var(--neon-cyan-rgb), 0.2), rgba(var(--accent-teal-rgb), 0.2));
-  border-color: var(--neon-cyan);
-  box-shadow: 0 0 20px var(--neon-cyan);
+  background: linear-gradient(135deg, rgba(var(--neon-pink-rgb), 0.25), rgba(var(--purple-light-rgb), 0.25), rgba(var(--purple-dark-rgb), 0.3));
+  border-color: var(--accent-teal);
+  border-image: linear-gradient(135deg, rgba(var(--neon-pink-rgb), 0.9), rgba(var(--purple-light-rgb), 0.9)) 1;
+  box-shadow: 0 0 25px rgba(var(--neon-pink-rgb), 0.5), inset 0 0 20px rgba(var(--purple-light-rgb), 0.2);
+  transform: scale(0.95);
 }
 .btn-teal:disabled {
   @apply opacity-30 cursor-not-allowed;
-  background: linear-gradient(to bottom right, rgba(var(--neon-cyan-rgb), 0.2), rgba(var(--accent-teal-rgb), 0.2));
-  border-color: rgba(var(--neon-cyan-rgb), 0.4);
-  box-shadow: 0 0 8px var(--neon-cyan);
+  background: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.1), rgba(var(--accent-teal-rgb), 0.15), rgba(var(--accent-teal-rgb), 0.2));
+  border-color: rgba(var(--accent-teal-rgb), 0.4);
+  box-shadow: none;
 }
 
 .btn-pink {
-  background: linear-gradient(to bottom right, rgba(var(--neon-pink-rgb), 0.1), rgba(var(--pink-darker-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--neon-pink-rgb), 0.15), rgba(var(--pink-darker-rgb), 0.2), rgba(var(--neon-pink-rgb), 0.25));
   color: var(--neon-pink);
-  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
-  border-color: rgba(var(--neon-pink-rgb), 0.4);
-  box-shadow: 0 0 8px var(--neon-pink);
+  @apply text-center font-bold rounded px-6 py-3 border-2 relative overflow-hidden;
+  border-color: rgba(var(--neon-pink-rgb), 0.6);
+  box-shadow: 0 0 15px rgba(var(--neon-pink-rgb), 0.3), inset 0 0 15px rgba(var(--pink-darker-rgb), 0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .btn-pink:hover {
-  background: linear-gradient(to bottom right, rgba(var(--neon-pink-rgb), 0.2), rgba(var(--pink-darker-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--neon-pink-rgb), 0.25), rgba(var(--pink-darker-rgb), 0.3), rgba(var(--neon-pink-rgb), 0.35));
   border-color: var(--neon-pink);
-  box-shadow: 0 0 20px var(--neon-pink);
+  border-image: linear-gradient(135deg, rgba(var(--neon-pink-rgb), 0.9), rgba(var(--pink-darker-rgb), 0.9)) 1;
+  box-shadow: 0 0 25px rgba(var(--neon-pink-rgb), 0.5), inset 0 0 20px rgba(var(--pink-darker-rgb), 0.2);
+  transform: scale(1.02);
 }
 .btn-pink:disabled {
   @apply opacity-30 cursor-not-allowed;
-  background: linear-gradient(to bottom right, rgba(var(--neon-pink-rgb), 0.2), rgba(var(--pink-darker-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--neon-pink-rgb), 0.1), rgba(var(--pink-darker-rgb), 0.15), rgba(var(--neon-pink-rgb), 0.2));
   border-color: rgba(var(--neon-pink-rgb), 0.4);
-  box-shadow: 0 0 8px var(--neon-pink);
+  box-shadow: none;
 }
 
 .btn-purple {
-  background: linear-gradient(to bottom right, rgba(var(--purple-light-rgb), 0.1), rgba(var(--purple-dark-rgb), 0.2));
-  @apply text-center text-white font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
-  border-color: rgba(var(--purple-base-rgb), 0.4);
-  box-shadow: 0 0 8px var(--purple-base);
+  background: linear-gradient(135deg, rgba(var(--purple-light-rgb), 0.15), rgba(var(--neon-pink-rgb), 0.15), rgba(var(--purple-dark-rgb), 0.2));
+  @apply text-center text-white font-bold rounded px-6 py-3 border-2 relative overflow-hidden;
+  border-color: rgba(var(--purple-base-rgb), 0.6);
+  box-shadow: 0 0 15px rgba(var(--purple-base-rgb), 0.3), inset 0 0 15px rgba(var(--neon-pink-rgb), 0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .btn-purple:hover {
-  background: linear-gradient(to bottom right, rgba(var(--purple-light-rgb), 0.2), rgba(var(--purple-dark-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--purple-light-rgb), 0.25), rgba(var(--neon-pink-rgb), 0.25), rgba(var(--purple-dark-rgb), 0.3));
   border-color: var(--purple-base);
-  box-shadow: 0 0 20px var(--purple-base);
+  border-image: linear-gradient(135deg, rgba(var(--neon-pink-rgb), 0.9), rgba(var(--purple-light-rgb), 0.9)) 1;
+  box-shadow: 0 0 25px rgba(var(--purple-base-rgb), 0.5), inset 0 0 20px rgba(var(--neon-pink-rgb), 0.2);
+  transform: scale(1.02);
 }
 .btn-purple:disabled {
   @apply opacity-30 cursor-not-allowed;
-  background: linear-gradient(to bottom right, rgba(var(--purple-light-rgb), 0.2), rgba(var(--purple-dark-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--purple-light-rgb), 0.1), rgba(var(--neon-pink-rgb), 0.1), rgba(var(--purple-dark-rgb), 0.15));
   border-color: rgba(var(--purple-base-rgb), 0.4);
-  box-shadow: 0 0 8px var(--purple-base);
+  box-shadow: none;
 }
 
 .btn-red {
-  background: linear-gradient(to bottom right, rgba(var(--neon-pink-dark-rgb), 0.1), rgba(var(--red-darker-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--neon-pink-dark-rgb), 0.15), rgba(var(--red-darker-rgb), 0.2), rgba(var(--neon-pink-dark-rgb), 0.25));
   color: var(--neon-pink-dark);
-  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
-  border-color: rgba(var(--neon-pink-dark-rgb), 0.4);
-  box-shadow: 0 0 8px var(--neon-pink-dark);
+  @apply text-center font-bold rounded px-6 py-3 border-2 relative overflow-hidden;
+  border-color: rgba(var(--neon-pink-dark-rgb), 0.6);
+  box-shadow: 0 0 15px rgba(var(--neon-pink-dark-rgb), 0.3), inset 0 0 15px rgba(var(--red-darker-rgb), 0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .btn-red:hover {
-  background: linear-gradient(to bottom right, rgba(var(--neon-pink-dark-rgb), 0.2), rgba(var(--red-darker-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--neon-pink-dark-rgb), 0.25), rgba(var(--red-darker-rgb), 0.3), rgba(var(--neon-pink-dark-rgb), 0.35));
   border-color: var(--neon-pink-dark);
-  box-shadow: 0 0 20px var(--neon-pink-dark);
+  border-image: linear-gradient(135deg, rgba(var(--neon-pink-dark-rgb), 0.9), rgba(var(--red-darker-rgb), 0.9)) 1;
+  box-shadow: 0 0 25px rgba(var(--neon-pink-dark-rgb), 0.5), inset 0 0 20px rgba(var(--red-darker-rgb), 0.2);
+  transform: scale(1.02);
 }
 .btn-red:disabled {
   @apply opacity-30 cursor-not-allowed;
-  background: linear-gradient(to bottom right, rgba(var(--neon-pink-dark-rgb), 0.2), rgba(var(--red-darker-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--neon-pink-dark-rgb), 0.1), rgba(var(--red-darker-rgb), 0.15), rgba(var(--neon-pink-dark-rgb), 0.2));
   border-color: rgba(var(--neon-pink-dark-rgb), 0.4);
-  box-shadow: 0 0 8px var(--neon-pink-dark);
+  box-shadow: none;
 }
 
 .btn-green {
-  background: linear-gradient(to bottom right, rgba(var(--green-light-rgb), 0.1), rgba(var(--green-dark-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--green-light-rgb), 0.15), rgba(var(--green-dark-rgb), 0.2), rgba(var(--green-light-rgb), 0.25));
   color: var(--green-light);
-  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
-  border-color: rgba(var(--green-light-rgb), 0.4);
-  box-shadow: 0 0 8px var(--green-light);
+  @apply text-center font-bold rounded px-6 py-3 border-2 relative overflow-hidden;
+  border-color: rgba(var(--green-light-rgb), 0.6);
+  box-shadow: 0 0 15px rgba(var(--green-light-rgb), 0.3), inset 0 0 15px rgba(var(--green-dark-rgb), 0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .btn-green:hover {
-  background: linear-gradient(to bottom right, rgba(var(--green-light-rgb), 0.2), rgba(var(--green-dark-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--green-light-rgb), 0.25), rgba(var(--green-dark-rgb), 0.3), rgba(var(--green-light-rgb), 0.35));
   border-color: var(--green-light);
-  box-shadow: 0 0 20px var(--green-light);
+  border-image: linear-gradient(135deg, rgba(var(--green-light-rgb), 0.9), rgba(var(--green-dark-rgb), 0.9)) 1;
+  box-shadow: 0 0 25px rgba(var(--green-light-rgb), 0.5), inset 0 0 20px rgba(var(--green-dark-rgb), 0.2);
+  transform: scale(1.02);
 }
 .btn-green:disabled {
   @apply opacity-30 cursor-not-allowed;
-  background: linear-gradient(to bottom right, rgba(var(--green-light-rgb), 0.2), rgba(var(--green-dark-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--green-light-rgb), 0.1), rgba(var(--green-dark-rgb), 0.15), rgba(var(--green-light-rgb), 0.2));
   border-color: rgba(var(--green-light-rgb), 0.4);
-  box-shadow: 0 0 8px var(--green-light);
+  box-shadow: none;
 }
 
 .btn-blue {
-  background: linear-gradient(to bottom right, rgba(var(--blue-light-rgb), 0.1), rgba(var(--blue-dark-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--blue-light-rgb), 0.15), rgba(var(--blue-dark-rgb), 0.2), rgba(var(--blue-light-rgb), 0.25));
   color: var(--blue-light);
-  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
-  border-color: rgba(var(--blue-light-rgb), 0.4);
-  box-shadow: 0 0 8px var(--blue-light);
+  @apply text-center font-bold rounded px-6 py-3 border-2 relative overflow-hidden;
+  border-color: rgba(var(--blue-light-rgb), 0.6);
+  box-shadow: 0 0 15px rgba(var(--blue-light-rgb), 0.4), inset 0 0 15px rgba(var(--blue-dark-rgb), 0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .btn-blue:hover {
-  background: linear-gradient(to bottom right, rgba(var(--blue-light-rgb), 0.2), rgba(var(--blue-dark-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--blue-light-rgb), 0.25), rgba(var(--blue-dark-rgb), 0.3), rgba(var(--blue-light-rgb), 0.35));
   border-color: var(--blue-light);
-  box-shadow: 0 0 20px var(--blue-light);
+  border-image: linear-gradient(135deg, rgba(var(--blue-light-rgb), 0.9), rgba(var(--blue-dark-rgb), 0.9)) 1;
+  box-shadow: 0 0 30px rgba(var(--blue-light-rgb), 0.6), inset 0 0 20px rgba(var(--blue-dark-rgb), 0.2);
+  transform: scale(1.02);
 }
 .btn-blue:disabled {
   @apply opacity-30 cursor-not-allowed;
-  background: linear-gradient(to bottom right, rgba(var(--blue-light-rgb), 0.2), rgba(var(--blue-dark-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--blue-light-rgb), 0.1), rgba(var(--blue-dark-rgb), 0.15), rgba(var(--blue-light-rgb), 0.2));
   border-color: rgba(var(--blue-light-rgb), 0.4);
-  box-shadow: 0 0 8px var(--blue-light);
+  box-shadow: none;
+}
+
+.btn-orange {
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.15), rgba(255, 140, 0, 0.2), rgba(255, 165, 0, 0.25));
+  color: rgb(255, 165, 0);
+  @apply text-center font-bold rounded px-6 py-3 border-2 relative overflow-hidden;
+  border-color: rgba(255, 165, 0, 0.6);
+  box-shadow: 0 0 15px rgba(255, 165, 0, 0.3), inset 0 0 15px rgba(255, 140, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.btn-orange:hover {
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.25), rgba(255, 140, 0, 0.3), rgba(255, 165, 0, 0.35));
+  border-color: rgb(255, 165, 0);
+  border-image: linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 140, 0, 0.9)) 1;
+  box-shadow: 0 0 25px rgba(255, 165, 0, 0.5), inset 0 0 20px rgba(255, 140, 0, 0.2);
+  transform: scale(1.02);
+}
+.btn-orange:disabled {
+  @apply opacity-30 cursor-not-allowed;
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.1), rgba(255, 140, 0, 0.15), rgba(255, 165, 0, 0.2));
+  border-color: rgba(255, 165, 0, 0.4);
+  box-shadow: none;
 }
 
 .btn-transparent {
-  background-color: transparent;
+  background: transparent;
   color: var(--neon-cyan);
-  @apply text-center font-bold rounded-lg px-6 py-3 transition duration-200 border-2;
-  border-color: rgba(var(--neon-cyan-rgb), 0.4);
-  box-shadow: 0 0 8px var(--neon-cyan);
+  @apply text-center font-bold rounded px-6 py-3 border-2 relative overflow-hidden;
+  border-color: rgba(var(--neon-cyan-rgb), 0.6);
+  box-shadow: 0 0 10px rgba(var(--neon-cyan-rgb), 0.2);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .btn-transparent:hover {
-  background-color: rgba(var(--neon-cyan-rgb), 0.1);
+  background: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.15), rgba(var(--neon-cyan-rgb), 0.1));
   border-color: var(--neon-cyan);
-  box-shadow: 0 0 20px var(--neon-cyan);
+  border-image: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.9), rgba(var(--neon-cyan-rgb), 0.9)) 1;
+  box-shadow: 0 0 20px rgba(var(--neon-cyan-rgb), 0.4);
+  transform: scale(1.02);
 }
 .btn-transparent:disabled {
   @apply opacity-30 cursor-not-allowed;
-  background-color: transparent;
+  background: transparent;
   border-color: rgba(var(--neon-cyan-rgb), 0.4);
-  box-shadow: 0 0 8px var(--neon-cyan);
+  box-shadow: none;
 }
 
 .btn-nav {
   background-color: transparent;
   color: rgba(var(--neon-pink-rgb), 0.8);
-  @apply text-center font-bold py-2 px-4 transition duration-200 tracking-widest;
+  @apply text-center font-bold py-2 px-4 tracking-widest;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .btn-nav:hover {
   background-color: rgba(var(--neon-cyan-rgb), 0.2);
   color: var(--bg-dark);
+  transform: scale(1.02);
 }
 
 /* HUD-style button */
 .btn-hud {
-  background-color: rgba(var(--neon-cyan-rgb), 0.2);
+  background: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.2), rgba(var(--neon-cyan-rgb), 0.25));
   color: var(--neon-cyan);
-  @apply flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold uppercase text-sm transition-all border-2;
-  border-color: rgba(var(--neon-cyan-rgb), 0.4);
-  box-shadow: 0 0 8px var(--neon-cyan);
+  @apply flex items-center justify-center gap-2 px-4 py-2 rounded font-bold uppercase text-sm border-2 relative overflow-hidden;
+  border-color: rgba(var(--neon-cyan-rgb), 0.6);
+  box-shadow: 0 0 12px rgba(var(--neon-cyan-rgb), 0.3), inset 0 0 12px rgba(var(--neon-cyan-rgb), 0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .btn-hud:hover {
-  background-color: rgba(var(--neon-cyan-rgb), 0.2);
+  background: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.3), rgba(var(--neon-cyan-rgb), 0.35));
   border-color: var(--neon-cyan);
-  box-shadow: 0 0 20px var(--neon-cyan);
+  border-image: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.9), rgba(var(--neon-cyan-rgb), 0.9)) 1;
+  box-shadow: 0 0 20px rgba(var(--neon-cyan-rgb), 0.5), inset 0 0 15px rgba(var(--neon-cyan-rgb), 0.2);
+  transform: scale(1.02);
 }
 
 /* Link-style button */
 .btn-link {
   color: var(--neon-cyan);
-  @apply text-xs underline cursor-pointer font-medium transition-colors duration-200;
+  @apply text-xs underline cursor-pointer font-medium;
+  transition: color 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .btn-link:hover {
   color: var(--neon-pink-dark);
@@ -184,17 +244,20 @@
 }
 
 .btn-special {
-  background: linear-gradient(to bottom right, rgba(var(--neon-cyan-rgb), 0.2), rgba(var(--purple-base-rgb), 0.2));
-  @apply text-center text-white font-bold rounded-2xl px-10 py-4 text-xl border-2 transition-all duration-200;
-  border-color: rgba(var(--neon-cyan-rgb), 0.4);
-  box-shadow: 0 0 24px rgba(var(--neon-cyan-rgb), 0.4);
+  background: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.25), rgba(var(--purple-base-rgb), 0.25), rgba(var(--neon-pink-rgb), 0.2));
+  @apply text-center text-white font-bold rounded-lg px-10 py-4 text-xl border-2 relative overflow-hidden;
+  border-color: rgba(var(--neon-cyan-rgb), 0.7);
+  box-shadow: 0 0 20px rgba(var(--neon-cyan-rgb), 0.4), 0 0 20px rgba(var(--purple-base-rgb), 0.4), inset 0 0 20px rgba(var(--neon-pink-rgb), 0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .btn-special:hover {
-  background: linear-gradient(to bottom right, rgba(var(--neon-cyan-rgb), 0.2), rgba(var(--purple-base-rgb), 0.2));
+  background: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.35), rgba(var(--purple-base-rgb), 0.35), rgba(var(--neon-pink-rgb), 0.3));
   border-color: var(--neon-cyan);
-  box-shadow: 0 0 32px var(--neon-cyan);
+  border-image: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.9), rgba(var(--purple-base-rgb), 0.9), rgba(var(--neon-pink-rgb), 0.9)) 1;
+  box-shadow: 0 0 30px rgba(var(--neon-cyan-rgb), 0.6), 0 0 30px rgba(var(--purple-base-rgb), 0.6), inset 0 0 25px rgba(var(--neon-pink-rgb), 0.2);
+  transform: scale(1.03);
 }
 .btn-special:active {
-  background: linear-gradient(to bottom right, rgba(var(--neon-cyan-rgb), 0.25), rgba(var(--purple-base-rgb), 0.25));
-  box-shadow: 0 0 40px var(--neon-cyan);
+  background: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.3), rgba(var(--purple-base-rgb), 0.3), rgba(var(--neon-pink-rgb), 0.25));
+  transform: scale(0.98);
 }
