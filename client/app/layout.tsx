@@ -8,14 +8,14 @@ import '../src/styles/basketball.css';
 import '../src/styles/football.css';
 
 export const metadata: Metadata = {
-  title: 'Touchdown - Fantasy Sports Picks & Predictions',
-  description: 'Fantasy sports picks and predictions for NFL, NBA and more',
+  title: 'Touchdown - Manage your players, rack up points!',
+  description: 'Manage your players, rack up points! Fantasy sports picks and predictions for NFL, NBA and more',
   icons: {
     icon: 'https://touchdown-882290629693.us-central1.run.app/logos/Drive-logo.png',
   },
   openGraph: {
-    title: 'Touchdown - Fantasy Sports Picks & Predictions',
-    description: 'Fantasy sports picks and predictions for NFL, NBA and more',
+    title: 'Touchdown - Manage your players, rack up points!',
+    description: 'Manage your players, rack up points! Fantasy sports picks and predictions for NFL, NBA and more',
     type: 'website',
     url: 'https://touchdown-882290629693.us-central1.run.app',
     images: [
@@ -29,8 +29,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Touchdown - Fantasy Sports Picks & Predictions',
-    description: 'Fantasy sports picks and predictions for NFL, NBA and more',
+    title: 'Touchdown - Manage your players, rack up points!',
+    description: 'Manage your players, rack up points! Fantasy sports picks and predictions for NFL, NBA and more',
     images: ['https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg'],
   },
 };
