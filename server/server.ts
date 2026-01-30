@@ -14,8 +14,8 @@ import routes from './api';
 import authRoute from './auth/auth.route';
 import logger from './utils/logger';
 
-// Validate required environment variable (Cloud Run uses PORT, local uses BACKEND_PORT)
-const port = process.env.PORT || process.env.BACKEND_PORT || '3001';
+// Backend API port (Next.js handles public PORT)
+const port = process.env.BACKEND_PORT || '3001';
 
 const app = express();
 

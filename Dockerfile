@@ -69,5 +69,5 @@ ENV NODE_ENV=production
 # Cloud Run uses PORT env var (443)
 EXPOSE 443
 
-# Start Express server (serves both API and static Next.js)
-CMD ["node", "/app/dist/server/server.js"]
+# Start Express API and Next.js server (Next listens on $PORT)
+CMD ["sh", "-c", "node /app/dist/server/server.js & node /app/client/server.js"]
