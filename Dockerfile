@@ -65,6 +65,10 @@ COPY --from=server-build /app/types ./types
 COPY ./package*.json ./
 RUN npm install --only=production
 
+# Copy startup script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Set environment variables for production
 ENV NODE_ENV=production
 ENV BACKEND_PORT=3001
@@ -73,5 +77,5 @@ ENV PORT=3000
 # Expose nginx port
 EXPOSE 443
 
-# Start script that runs backend, Next.js, and nginx
-CMD ["sh", "-c", "node dist/server/server.js & cd client && node server.js & nginx -g 'daemon off;'"]
+# Start all services
+CMD ["/app/start.sh"]
