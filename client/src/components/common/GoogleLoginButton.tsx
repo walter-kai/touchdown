@@ -79,8 +79,6 @@ const GoogleLoginButton: React.FC = () => {
           debugLog('[AUTH] Popup window closed by user');
           clearInterval(popupCheckInterval);
           setIsLoading(false);
-          setError('Login cancelled.');
-          setShowTooltip(true);
           cleanupListeners();
         }
       }, 500);

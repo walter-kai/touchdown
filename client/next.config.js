@@ -25,6 +25,12 @@ const nextConfig = {
             ? `http://localhost:${process.env.BACKEND_PORT || 3001}/api/:path*`
             : 'http://localhost:3001/api/:path*',
         },
+        {
+          source: '/auth/:path*',
+          destination: process.env.NODE_ENV === 'production'
+            ? `http://localhost:${process.env.BACKEND_PORT || 3001}/auth/:path*`
+            : 'http://localhost:3001/auth/:path*',
+        },
       ],
     };
   },
