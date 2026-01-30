@@ -14,9 +14,9 @@ import routes from './api';
 import authRoute from './auth/auth.route';
 import logger from './utils/logger';
 
-// Validate required environment variable
-if (!process.env.BACKEND_PORT) {
-  logger.error('FATAL: BACKEND_PORT environment variable is not set');
+// Validate required environment variable (Cloud Run uses PORT)
+if (!process.env.PORT && !process.env.BACKEND_PORT) {
+  logger.error('FATAL: PORT/BACKEND_PORT environment variable is not set');
   process.exit(1);
 }
 

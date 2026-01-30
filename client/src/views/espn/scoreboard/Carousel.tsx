@@ -197,7 +197,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             style={{ width: `${totalSlides * 100}%` }}
           >
             {/* Info Section - Game Overview */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-4 pb-16 overflow-y-auto" style={{ width: slideWidth }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-4 pb-16 overflow-y-auto hide-scrollbar" style={{ width: slideWidth }}>
               <Info
                 homeTeam={homeTeam}
                 awayTeam={awayTeam}
@@ -243,7 +243,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Pick Section - Your Picks */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: slideWidth }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto hide-scrollbar" style={{ width: slideWidth }}>
               {homeTeam?.id && awayTeam?.id && (
                 <PlayerPick
                   ref={playerPickRef}
@@ -274,7 +274,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Odds Section */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto" style={{ width: slideWidth }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 overflow-y-auto hide-scrollbar" style={{ width: slideWidth }}>
               {/* Divider */}
               <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
               <div className="mx-2">
@@ -304,7 +304,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Head to Head Section */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto" style={{ width: slideWidth }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto hide-scrollbar" style={{ width: slideWidth }}>
               {homeTeam && awayTeam && (
                 <HeadToHead
                   homeTeamId={homeTeam.id}
@@ -316,7 +316,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
 
             {/* Chat Section */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-4 pb-16 overflow-y-auto" style={{ width: slideWidth }}>
+            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-4 pb-16 overflow-y-auto hide-scrollbar" style={{ width: slideWidth }}>
               <TelegramChat gameId={event.id} league={league} awayTeam={awayTeam} homeTeam={homeTeam} />
             </div>
           </div>

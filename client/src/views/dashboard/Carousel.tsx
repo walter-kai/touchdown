@@ -28,12 +28,12 @@ const DashboardCarousel: React.FC<DashboardCarouselProps> = ({ activeTab, onTabC
         style={{ width: '200%' }}
       >
         {/* Dashboard Section */}
-        <div className="w-full flex-shrink-0 h-full overflow-y-auto" style={{ width: '50%' }}>
+        <div className="w-full flex-shrink-0 h-full overflow-y-auto hide-scrollbar" style={{ width: '50%' }}>
           <Dashboard />
         </div>
 
         {/* Games List Section */}
-        <div className="w-full flex-shrink-0 h-full overflow-y-auto" style={{ width: '50%' }}>
+        <div className="w-full flex-shrink-0 h-full overflow-y-auto hide-scrollbar" style={{ width: '50%' }}>
           <GamesList />
         </div>
       </div>

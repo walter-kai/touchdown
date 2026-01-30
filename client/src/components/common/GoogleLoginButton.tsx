@@ -73,6 +73,18 @@ const GoogleLoginButton: React.FC = () => {
         throw new Error('Popup blocked. Please allow popups for this site.');
       }
 
+      // Listen for popup closing
+      const popupCheckInterval = setInterval(() => {
+        if (popup.closed) {
+          debugLog('[AUTH] Popup window closed by user');
+          clearInterval(popupCheckInterval);
+          setIsLoading(false);
+          setError('Login cancelled.');
+          setShowTooltip(true);
+          cleanupListeners();
+        }
+      }, 500);
+
       // Method 1: Listen for postMessage from the popup (sent by auth callback)
       const messageHandler = (event: MessageEvent) => {
         // Verify origin if needed (for security in production)
@@ -80,6 +92,7 @@ const GoogleLoginButton: React.FC = () => {
 
         if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
           debugLog('[AUTH] Received postMessage:', event.data);
+          clearInterval(popupCheckInterval);
           cleanupListeners();
           
           const { token, user } = event.data;
