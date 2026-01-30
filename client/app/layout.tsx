@@ -17,6 +17,15 @@ export const metadata: Metadata = {
     title: 'Touchdown',
     description: 'Fantasy sports picks and predictions',
     type: 'website',
+    url: 'https://touchdown-882290629693.us-central1.run.app',
+    images: [
+      {
+        url: 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Touchdown - Fantasy Sports',
+      },
+    ],
   },
 };
 
