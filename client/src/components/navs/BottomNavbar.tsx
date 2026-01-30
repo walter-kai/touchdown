@@ -35,10 +35,12 @@ const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTab
 
   // Track preset changes and trigger button animations
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    
     if (prevPresetRef.current !== preset) {
       // Get current and previous button IDs
-      const prevButtons = new Set(presetConfig[prevPresetRef.current]);
-      const currentButtons = new Set(presetConfig[preset]);
+      const prevButtons = new Set(presetConfig[prevPresetRef.current] || []);
+      const currentButtons = new Set(presetConfig[preset] || []);
       
       // Find new buttons that need to animate in
       const newButtons = new Set<string>();
@@ -52,18 +54,23 @@ const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTab
       
       // Clear animation state after animation completes
       if (newButtons.size > 0) {
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
           setAnimatingButtons(new Set());
         }, 300);
       }
       
       prevPresetRef.current = preset;
     }
+    
+    // Cleanup timeout on unmount or when effect reruns
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [preset]);
 
   // All available navigation items
   const allNavItems = [
-    { id: 'back', label: 'Back to Games', icon: <FaArrowLeft />, action: () => navigate('/') },
+    { id: 'back', label: 'Games', icon: <FaArrowLeft />, action: () => navigate(`/${league}/games`) },
     { id: 'info', label: 'Info', icon: <FaInfoCircle /> },
     { id: 'player', label: 'Players', icon: <FaTrophy /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },

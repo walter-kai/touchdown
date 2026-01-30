@@ -2,14 +2,14 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import GoogleLoginButton from '../common/GoogleLoginButton';
+import GoogleLoginButton from './GoogleLoginButton';
 
 const LoginNavNext = React.forwardRef<HTMLElement>((props, ref) => {
 	const router = useRouter();
 
 	return (
 		<header ref={ref} className="fixed top-0 z-50 w-full bg-bg-dark/60 backdrop-blur-md border-b border-neon-cyan/30">
-			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
 				<div className="h-14 flex items-center justify-between">
 					{/* Left: Drive Logo */}
 					<button

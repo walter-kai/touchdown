@@ -188,34 +188,45 @@ const GoogleLoginButton: React.FC = () => {
     const profilePicture = user.photoUrl || user.googlePicture || user.providerData?.googlePicture;
     
     return (
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative overflow-visible" ref={dropdownRef}>
         {/* User Profile Picture Button */}
         <button
           onClick={() => setShowDropdown(!showDropdown)}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
           {profilePicture && !imageError ? (
-            <img 
-              src={profilePicture} 
-              alt={user.displayName || user.username || 'User'} 
-              className="w-9 h-9 rounded-full border-2 border-neon-cyan/50 hover:border-neon-cyan transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)] object-cover"
-              onError={(e) => {
-                console.error('Failed to load profile picture:', profilePicture);
-                setImageError(true);
-              }}
-              referrerPolicy="no-referrer"
-            />
+                    <div className="pt-14">
+                      {/* Dancing gif with profile picture as head */}
+                      <div className="relative flex-shrink-0">
+                        <img
+                          src="/assets/football_dance.gif"
+                          alt="Dancing"
+                          className="w-10 h-24 object-contain"
+                        />
+                        {profilePicture ? (
+                          <img
+                            src={profilePicture}
+                            alt={user?.displayName || 'User'}
+                            className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full border-2 border-neon-cyan shadow-lg object-cover bg-bg-dark/50"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full border-2 border-neon-cyan shadow-lg bg-bg-dark flex items-center justify-center">
+                            <FaUser className="text-neon-cyan text-sm" />
+                          </div>
+                        )}
+                      </div>
+            </div>
           ) : (
             <div className="w-9 h-9 rounded-full border-2 border-neon-cyan/50 hover:border-neon-cyan transition-colors shadow-[0_0_8px_rgba(0,255,231,0.3)] bg-bg-dark flex items-center justify-center">
               <FaUser className="text-neon-cyan text-sm" />
             </div>
           )}
-          <FaChevronDown className={`text-neon-cyan text-xs transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} />
         </button>
 
         {/* Dropdown Menu - Opens inward from the right */}
         {showDropdown && (
-          <div className="absolute right-0 top-full mt-2 min-w-64 bg-bg-dark border border-neon-cyan/30 rounded-lg shadow-[0_0_20px_rgba(0,255,231,0.2)] overflow-hidden z-50 animate-fade-in">
+          <div className="absolute -right-2 top-full -mt-12 min-w-64 bg-bg-dark border border-neon-cyan/30 rounded-lg shadow-[0_0_20px_rgba(0,255,231,0.2)] overflow-hidden z-50 animate-fade-in">
             {/* User Info Section */}
             <div className="p-4 border-b border-neon-cyan/20 bg-gradient-to-r from-neon-cyan/5 to-transparent">
               <div className="flex items-center gap-3">

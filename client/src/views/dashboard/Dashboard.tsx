@@ -515,44 +515,8 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto mt-2">
-      {/* Welcome Section */}
-      <div className="flex items-center gap-6 px-2">
-        {/* Dancing gif with profile picture as head */}
-        <div className="relative flex-shrink-0">
-          <img
-            src="/assets/football_dance.gif"
-            alt="Dancing"
-            className="w-24 h-24 object-contain mt-4"
-          />
-          {profilePicture && !avatarError ? (
-            <img
-              src={profilePicture}
-              alt={user?.displayName || 'User'}
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full border-2 border-neon-cyan shadow-lg object-cover bg-bg-dark/50"
-              onError={() => setAvatarError(true)}
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full border-2 border-neon-cyan shadow-lg bg-bg-dark flex items-center justify-center">
-              <FaUser className="text-neon-cyan text-sm" />
-            </div>
-          )}
-        </div>
-        
-        {/* Welcome text */}
-        <div className="flex-1">
-          <h3 className="mb-0 text-left">
-            Welcome back
-          </h3>
-          <h1>
-            {renderTextWithEmojis(user?.displayName || 'Player')}!
-          </h1>
-          <p className="text-gray-400 text-sm sm:text-base mt-2">Here's your fantasy picks overview</p>
-        </div>
-      </div>
-
       {/* Stats Overview */}
-      <div className="grid grid-cols-3 gap-4 mb-6 px-2">
+      <div className="grid grid-cols-3 gap-2 mb-2 px-2">
         <div className="bg-bg-dark/30 border border-neon-cyan/20 rounded-lg px-6 py-2 text-center relative overflow-hidden flex flex-col">
           <FaGamepad className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-neon-cyan/10" />
           <h3 className="mb-2 relative z-10">Games Played</h3>
@@ -580,7 +544,7 @@ const Dashboard: React.FC = () => {
 
       {/* Leaderboard */}
       {!leaderboardLoading && leaderboard.length > 0 && (
-        <div className="mb-6 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg p-4 max-w-md mx-2">
+        <div className="mb-2 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg p-4 max-w-md mx-2">
           <h3 className="flex items-center gap-2 mb-3 text-neon-cyan">
             <FaMedal className="text-neon-pink" />
             Top 10 Leaderboard
@@ -790,7 +754,7 @@ const Dashboard: React.FC = () => {
                   }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                  <span className="font-bold relative z-10">Show picks</span>
+                    <span className="font-bold relative z-10 bg-gradient-to-r from-white via-gray-300 to-white bg-clip-text text-transparent">Show picks</span>
                 </button>
               </div>
             </div>

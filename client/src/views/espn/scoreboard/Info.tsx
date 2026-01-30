@@ -91,6 +91,7 @@ const Info: React.FC<InfoProps> = ({
   const [scoreIncreasePlayerIds, setScoreIncreasePlayerIds] = useState<Set<string>>(new Set());
   const [gameLeaderboard, setGameLeaderboard] = useState<any>(null);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [gameDataNotFound, setGameDataNotFound] = useState(false);
 
   // Load picks from Firebase/API and localStorage
   useEffect(() => {
@@ -240,13 +241,18 @@ const Info: React.FC<InfoProps> = ({
       }
       try {
         setLeaderboardLoading(true);
+        setGameDataNotFound(false);
         // Determine league from URL
         const pathLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
         const endpoint = `/api/game-data/${pathLeague}/${gameId}`;
         console.log('[Leaderboard] Fetching from', endpoint);
         const response = await fetch(endpoint);
         console.log('[Leaderboard] Response status:', response.status);
-        if (response.ok) {
+        if (response.status === 404) {
+          console.log('[Leaderboard] Game data not found (404)');
+          setGameDataNotFound(true);
+          setGameLeaderboard(null);
+        } else if (response.ok) {
           const data = await response.json();
           console.log('[Leaderboard] Data received:', data);
           // Game data structure: { ok: true, docId, leaderboard: { entries: [...], totalUsers, lastCalculated }, ... }
@@ -257,6 +263,7 @@ const Info: React.FC<InfoProps> = ({
               leaderboard: data.leaderboard.entries,
               totalUsers: data.leaderboard.totalUsers
             });
+            setGameDataNotFound(false);
           } else {
             console.log('[Leaderboard] No leaderboard data in response:', data);
           }
@@ -829,6 +836,16 @@ const Info: React.FC<InfoProps> = ({
       <div className=" ">
         {/* Divider */}
         <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
+        
+        {/* Game Data Not Found Message */}
+        {gameDataNotFound && (
+          <div className="mx-2 mb-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+            <p className="text-yellow-400 text-sm text-center">
+              ⚠️ Game leaderboard data is not available yet. Check back later!
+            </p>
+          </div>
+        )}
+        
         <div className="mx-2">
           <div className="flex items-center pb-3">
             <h1>Game Prediction</h1>
