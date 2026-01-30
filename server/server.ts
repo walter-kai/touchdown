@@ -14,14 +14,10 @@ import routes from './api';
 import authRoute from './auth/auth.route';
 import logger from './utils/logger';
 
-// Validate required environment variable (Cloud Run uses PORT)
-if (!process.env.PORT && !process.env.BACKEND_PORT) {
-  logger.error('FATAL: PORT/BACKEND_PORT environment variable is not set');
-  process.exit(1);
-}
+// Validate required environment variable (Cloud Run uses PORT, local uses BACKEND_PORT)
+const port = process.env.PORT || process.env.BACKEND_PORT || '3001';
 
 const app = express();
-const port = process.env.BACKEND_PORT;
 
 // Middleware
 app.use(morgan('combined')); // Logs HTTP requests
@@ -44,8 +40,11 @@ app.use('/api/*', (req: Request, res: Response) => {
   res.status(404).json({ error: "API route not found" });
 });
 
-// Serve React application static files
-app.use(express.static(path.join(__dirname, '../client/dist')));
+// Serve Next.js static files (public directory)
+app.use(express.static(path.join(__dirname, '../client/public')));
+
+// Serve Next.js .next static files
+app.use('/_next', express.static(path.join(__dirname, '../client/.next/static')));
 
 // Catch-all for React Router - MUST be last
 app.get('*', async (req, res) => {

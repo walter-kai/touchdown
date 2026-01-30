@@ -17,6 +17,10 @@ RUN cd client && npm install
 COPY ./client ./client
 
 # Build the Next.js app (creates .next folder and standalone output)
+ARG NEXT_PUBLIC_API_URL=https://touchdown-882290629693.us-central1.run.app
+ARG NEXT_PUBLIC_BASE_URL=https://touchdown-882290629693.us-central1.run.app
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
 RUN cd client && npm run build
 
 # Stage 1: Build the server (Node/Express with TypeScript)
@@ -41,16 +45,10 @@ COPY ./server ./server
 # Build server TypeScript
 RUN npm run build
 
-# Stage 2: Final production stage with nginx
-FROM nginx:alpine AS runner
+# Stage 2: Final production stage
+FROM node:20-alpine AS runner
 
 WORKDIR /app
-
-# Install node and dependencies for running both servers
-RUN apk add --no-cache nodejs npm netcat-openbsd
-
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy Next.js standalone build
 COPY --from=client-build /app/client/.next/standalone ./client
@@ -65,17 +63,11 @@ COPY --from=server-build /app/types ./types
 COPY ./package*.json ./
 RUN npm install --only=production
 
-# Copy startup script
-COPY start.sh /app/start.sh
-RUN chmod +x /app/start.sh
-
 # Set environment variables for production
 ENV NODE_ENV=production
-ENV BACKEND_PORT=3001
-ENV PORT=3000
 
-# Expose nginx port
-EXPOSE 443
+# Cloud Run assigns PORT automatically
+EXPOSE 8080
 
-# Start all services
-CMD ["/app/start.sh"]
+# Start Express server (serves both API and static Next.js)
+CMD ["node", "/app/dist/server/server.js"]
