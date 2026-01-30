@@ -1,23 +1,29 @@
 #!/bin/sh
 set -e
 
-echo "Starting Express backend on port 3001..."
-node /app/dist/server/server.js &
-EXPRESS_PID=$!
+cd /app
 
-echo "Waiting for Express to start..."
-sleep 2
+echo "Starting Express backend on port 3001..."
+node /app/dist/server/server.js > /tmp/express.log 2>&1 &
+EXPRESS_PID=$!
+echo "Express PID: $EXPRESS_PID"
+
+echo "Waiting 3 seconds for Express to start..."
+sleep 3
 
 echo "Starting Next.js on port 3000..."
 cd /app/client
-node server.js &
+node server.js > /tmp/nextjs.log 2>&1 &
 NEXTJS_PID=$!
+echo "Next.js PID: $NEXTJS_PID"
 
-echo "Waiting for Next.js to start..."
-sleep 2
+echo "Waiting 3 seconds for Next.js to start..."
+sleep 3
 
 echo "Starting nginx..."
+cd /app
 nginx -g 'daemon off;'
 
-# Keep the script running
-wait $EXPRESS_PID $NEXTJS_PID
+# Cleanup on exit
+trap "kill $EXPRESS_PID $NEXTJS_PID" EXIT
+
