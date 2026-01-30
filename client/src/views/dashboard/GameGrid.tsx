@@ -195,28 +195,28 @@ const UnifiedGameGrid: React.FC = () => {
   <>
   <div className="max-w-7xl mx-auto py-2">
 	
-    {/* Sign Up Banner - When Not Logged In */}
-    <LoginHero league="nfl" />
-
-    {/* Week Navigation */}
-    <WeekNav 
-      onDateSelect={handleDateSelect}
-      selectedDate={selectedDate || undefined}
-    />
-
     {/* Loading State */}
-    {initialLoading && games.length === 0 && <LoadingFootball message="Loading all games..." />}
+    {initialLoading ? (
+      <LoadingFootball message="Loading all games..." />
+    ) : (
+      <>
+        {/* Sign Up Banner - When Not Logged In */}
+        <LoginHero league="nfl" />
 
-    {/* Error State */}
-    {error && (
-      <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 sm:p-5 md:p-6 text-center">
-        <p className="text-red-400 font-bold mb-2 text-sm sm:text-base">Error loading data</p>
-        <p className="text-text-light text-xs sm:text-sm">{error}</p>
-      </div>
-    )}
+        {/* Week Navigation */}
+        <WeekNav 
+          onDateSelect={handleDateSelect}
+          selectedDate={selectedDate || undefined}
+        />
 
-    {/* Games Grid */}
-    {!initialLoading && games.length > 0 && (
+        {error ? (
+          /* Error State */
+          <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 sm:p-5 md:p-6 text-center">
+            <p className="text-red-400 font-bold mb-2 text-sm sm:text-base">Error loading data</p>
+            <p className="text-text-light text-xs sm:text-sm">{error}</p>
+          </div>
+        ) : games.length > 0 ? (
+      /* Games Grid */
       <div className="space-y-8 mb-16">
         {/* Live Games */}
         {liveGames.length > 0 && (
@@ -263,14 +263,14 @@ const UnifiedGameGrid: React.FC = () => {
           </div>
         )}
       </div>
-    )}
-
-    {/* No Games */}
-    {!initialLoading && games.length === 0 && !error && (
+    ) : (
+      /* No Games */
       <div className="text-center py-12 sm:py-16 md:py-20">
         <FaFootballBall className="text-4xl sm:text-5xl md:text-6xl text-neon-pink mx-auto mb-3 sm:mb-4" />
         <p className="text-text-light text-base sm:text-lg md:text-xl">No games scheduled at this time</p>
       </div>
+    )}
+      </>
     )}
 
   </div>

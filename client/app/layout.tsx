@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ReactNode } from 'react';
+import { ClientProviders } from '../src/providers/ClientProviders';
 import '../src/styles/styles.css';
 import '../src/styles/animations.css';
 import '../src/styles/buttons.css';
@@ -60,7 +61,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Sansation:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap" rel="stylesheet" />
       </head>
       <body>
-        {children}
+        <ClientProviders>
+          {children}
+        </ClientProviders>
       </body>
     </html>
   );

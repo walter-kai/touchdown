@@ -17,7 +17,7 @@ const LoadingFootball: React.FC<LoadingFootballProps> = ({ message = 'Loading...
   }, []);
 
   return (
-    <div className="w-full h-screen flex flex-col items-center justify-center bg-bg-darker relative overflow-hidden">
+    <div className="w-full h-screen flex flex-col items-center justify-center bg-black relative overflow-hidden">
       <div 
         className="absolute inset-0 bg-bg-dark transition-opacity opacity-0 duration-500"
         style={{ opacity: visible ? 1 : 0 }}

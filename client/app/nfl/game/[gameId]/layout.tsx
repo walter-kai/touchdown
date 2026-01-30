@@ -3,7 +3,6 @@ import { Metadata } from 'next';
 // Fetch game data server-side to generate metadata
 async function getGameData(gameId: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     const response = await fetch(
       `https://site.api.espn.com/apis/site/v2/sports/football/nfl/events/${gameId}`,
       { next: { revalidate: 60 } } // Cache for 60 seconds
@@ -13,15 +12,25 @@ async function getGameData(gameId: string) {
       return null;
     }
     
-    return response.json();
+    const text = await response.text();
+    if (!text) {
+      return null;
+    }
+    
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      return null;
+    }
   } catch (error) {
     console.error('Failed to fetch game data for metadata:', error);
     return null;
   }
 }
 
-export async function generateMetadata({ params }: { params: { gameId: string } }): Promise<Metadata> {
-  const event = await getGameData(params.gameId);
+export async function generateMetadata({ params }: { params: Promise<{ gameId: string }> }): Promise<Metadata> {
+  const { gameId } = await params;
+  const event = await getGameData(gameId);
 
   if (!event) {
     return {
@@ -114,7 +123,7 @@ export async function generateMetadata({ params }: { params: { gameId: string } 
         },
       ],
       type: 'website',
-      url: `https://touchdown-882290629693.us-central1.run.app/nfl/game/${params.gameId}`,
+      url: `https://touchdown-882290629693.us-central1.run.app/nfl/game/${gameId}`,
     },
     twitter: {
       card: 'summary_large_image',
