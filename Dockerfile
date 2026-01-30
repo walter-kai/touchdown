@@ -66,8 +66,8 @@ RUN npm install --only=production
 # Set environment variables for production
 ENV NODE_ENV=production
 
-# Cloud Run assigns PORT automatically
-EXPOSE 8080
+# Cloud Run uses PORT env var (443)
+EXPOSE 443
 
 # Start Express server (serves both API and static Next.js)
 CMD ["node", "/app/dist/server/server.js"]
