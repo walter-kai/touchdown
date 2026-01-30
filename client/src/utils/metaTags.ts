@@ -1,6 +1,11 @@
 import type { Event } from '@/types/espn/scoreboard';
 
 export const updateOpenGraphMeta = (event: Event | null, league: string) => {
+  // Safety check - ensure we're in browser environment
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return;
+  }
+
   if (!event) {
     removeOpenGraphMeta();
     return;
@@ -15,41 +20,58 @@ export const updateOpenGraphMeta = (event: Event | null, league: string) => {
 
   if (!away || !home) return;
 
+  // Get scores
+  const awayScore = away.score !== undefined ? Number(away.score) : 0;
+  const homeScore = home.score !== undefined ? Number(home.score) : 0;
+
   // Calculate time until game starts
   const now = new Date();
   const gameTime = new Date(event.date);
   const diff = gameTime.getTime() - now.getTime();
+  const gameDate = new Date(event.date);
+  const dateStr = gameDate.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric',
+    year: 'numeric'
+  });
   
   let timeUntilText = '';
-  if (diff > 0) {
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  let title = '';
+  let description = '';
+  const status = competition.status?.type?.state;
 
-    if (days > 0) {
-      timeUntilText = `${days}d ${hours}h`;
-    } else if (hours > 0) {
-      timeUntilText = `${hours}h ${minutes}m`;
-    } else {
-      timeUntilText = `${minutes}m`;
-    }
+  if (status === 'post') {
+    // Game finished - show final score
+    timeUntilText = 'FINAL';
+    title = `${away.team.displayName} ${awayScore} - ${homeScore} ${home.team.displayName} | ${timeUntilText} | ${dateStr}`;
+    description = `Final Score: ${away.team.displayName} ${awayScore}, ${home.team.displayName} ${homeScore}. View full game stats, highlights, and analysis on Touchdown.`;
+  } else if (status === 'in') {
+    // Game in progress - show live score
+    timeUntilText = 'LIVE';
+    const period = competition.status?.period || 1;
+    const clock = competition.status?.displayClock || '';
+    title = `${away.team.displayName} ${awayScore} - ${homeScore} ${home.team.displayName} | ${timeUntilText} Q${period} ${clock} | ${dateStr}`;
+    description = `Live now! ${away.team.displayName} ${awayScore}, ${home.team.displayName} ${homeScore}. Follow the action in real-time on Touchdown.`;
   } else {
-    // Game is live or finished
-    const status = competition.status?.type?.state;
-    if (status === 'in') {
-      timeUntilText = 'LIVE';
-    } else if (status === 'post') {
-      timeUntilText = 'FINAL';
+    // Game hasn't started - show countdown
+    if (diff > 0) {
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      if (days > 0) {
+        timeUntilText = `Starts in ${days}d ${hours}h`;
+      } else if (hours > 0) {
+        timeUntilText = `Starts in ${hours}h ${minutes}m`;
+      } else {
+        timeUntilText = `Starts in ${minutes}m`;
+      }
+    } else {
+      timeUntilText = 'Starting Soon';
     }
+    title = `${away.team.displayName} vs ${home.team.displayName} | ${timeUntilText} | ${dateStr}`;
+    description = `${away.team.displayName} face off against ${home.team.displayName} ${timeUntilText}. Make your picks and join the action on Touchdown!`;
   }
-
-  // Build title with date
-  const gameDate = new Date(event.date);
-  const dateStr = gameDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  const title = `Pick Now: ${away.team.displayName} vs ${home.team.displayName}, ${dateStr}`;
-
-  // Build description
-  const description = `Watch ${away.team.displayName} face off against ${home.team.displayName} (starts in ${timeUntilText}). Play fantasy sports with real-time updates and manage your picks on Touchdown. Join your friends in the ultimate sports experience!`;
 
   // Use team logo or a generic image
   const image = home.team.logo || `https://a.espncdn.com/media/motion/2024/1009/dm_240924_nfl_logo.png`;
@@ -70,36 +92,65 @@ export const updateOpenGraphMeta = (event: Event | null, league: string) => {
 };
 
 const updateMetaTag = (property: string, content: string) => {
-  const selector = property.startsWith('twitter:') 
-    ? `meta[name="${property}"]`
-    : `meta[property="${property}"]`;
-
-  let tag = document.querySelector(selector) as HTMLMetaElement;
-
-  if (!tag) {
-    tag = document.createElement('meta');
-    if (property.startsWith('twitter:')) {
-      tag.setAttribute('name', property);
-    } else {
-      tag.setAttribute('property', property);
-    }
-    document.head.appendChild(tag);
+  // Safety check - ensure document and head exist
+  if (typeof document === 'undefined' || !document.head) {
+    return;
   }
 
-  tag.content = content;
+  try {
+    const selector = property.startsWith('twitter:') 
+      ? `meta[name="${property}"]`
+      : `meta[property="${property}"]`;
+
+    let tag = document.querySelector(selector) as HTMLMetaElement;
+
+    if (!tag) {
+      // Double check head still exists before creating new element
+      if (!document.head) return;
+      
+      tag = document.createElement('meta');
+      if (property.startsWith('twitter:')) {
+        tag.setAttribute('name', property);
+      } else {
+        tag.setAttribute('property', property);
+      }
+      
+      // Triple check before appending - prevent null parent errors
+      if (document.head && document.head.parentNode) {
+        document.head.appendChild(tag);
+      } else {
+        return; // Abort if head is being removed
+      }
+    }
+
+    // Only update content if tag still exists and has a parent
+    if (tag && tag.parentNode) {
+      tag.content = content;
+    }
+  } catch (error) {
+    // Silently fail to prevent breaking the app
+    console.warn(`Failed to update meta tag ${property}:`, error);
+  }
 };
 
 const removeOpenGraphMeta = () => {
-  const ogProperties = ['og:title', 'og:description', 'og:image', 'og:url', 'og:type'];
-  const twitterProperties = ['twitter:card', 'twitter:title', 'twitter:description', 'twitter:image'];
+  // Instead of removing, update to default values to avoid removeChild errors
+  if (typeof document === 'undefined') {
+    return;
+  }
 
-  [...ogProperties, ...twitterProperties].forEach((prop) => {
-    const selector = prop.startsWith('twitter:')
-      ? `meta[name="${prop}"]`
-      : `meta[property="${prop}"]`;
-    const tag = document.querySelector(selector);
-    if (tag) {
-      tag.remove();
-    }
-  });
+  try {
+    // Update to default values instead of removing
+    updateMetaTag('og:title', 'Touchdown - Live Sports Picks');
+    updateMetaTag('og:description', 'Make your picks and compete with friends in real-time sports action');
+    updateMetaTag('og:image', 'https://a.espncdn.com/media/motion/2024/1009/dm_240924_nfl_logo.png');
+    updateMetaTag('og:url', window.location.href);
+    updateMetaTag('og:type', 'website');
+    updateMetaTag('twitter:card', 'summary_large_image');
+    updateMetaTag('twitter:title', 'Touchdown - Live Sports Picks');
+    updateMetaTag('twitter:description', 'Make your picks and compete with friends in real-time sports action');
+    updateMetaTag('twitter:image', 'https://a.espncdn.com/media/motion/2024/1009/dm_240924_nfl_logo.png');
+  } catch (error) {
+    // Silently ignore errors
+  }
 };
