@@ -23,10 +23,8 @@ const BottomNavbarNext: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, o
   const allNavItems = [
     { id: 'back', label: 'Back to Games', icon: <FaArrowLeft />, action: () => router.push('/') },
     { id: 'info', label: 'Info', icon: <FaInfoCircle /> },
-    { id: 'player', label: 'Players', icon: <FaTrophy /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
     { id: 'headtohead', label: 'Head to Head', icon: <FaExchangeAlt /> },
-    { id: 'plays', label: 'Plays', icon: <FaFootballBall /> },
     { id: 'pick', label: 'Pick', icon: <FaTrophy /> },
     { id: 'odds', label: 'Odds', icon: <FaChartLine /> },
     { id: 'prediction', label: 'Predictions', icon: <FaPercentage /> },
@@ -40,19 +38,15 @@ const BottomNavbarNext: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, o
   // Preset configurations
   const presetConfig = {
     scoreboard: ['back', 'info', 'pick', 'odds', 'headtohead', 'chat'],
-    summary: ['back', 'info', 'pick', 'player', 'plays', 'chat'],
+    summary: ['back', 'info', 'pick', 'chat'],
     team: ['back', 'info', 'schedule', 'news'],
     player: ['back', 'info', 'schedule', 'news'],
     dashboard: ['dashboard', 'games'],
   };
 
-  const isUpcomingGame = gameStatus === 'pre';
-  const tabsToHide = isUpcomingGame ? ['player', 'plays'] : [];
-  
-  debugLog('MainNavBar - gameStatus:', gameStatus, 'preset:', preset, 'isUpcomingGame:', isUpcomingGame, 'tabsToHide:', tabsToHide);
+  debugLog('MainNavBar - gameStatus:', gameStatus, 'preset:', preset);
 
   const navItems = presetConfig[preset]
-    .filter(id => !tabsToHide.includes(id))
     .map(id => allNavItems.find(item => item.id === id))
     .filter((item): item is NonNullable<typeof item> => item !== undefined);
 

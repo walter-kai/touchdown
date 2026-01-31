@@ -750,6 +750,28 @@ const Info: React.FC<InfoProps> = ({
                       </div>
                     )}
 
+                    {/* No Picks Prompt - Show if user is logged in but has no picks */}
+                    {user && currentPicks.length === 0 && (
+                      <div className="space-y-2">
+                        <div className="w-full bg-gradient-to-r from-neon-cyan/10 via-bg-darkest to-neon-pink/10 border border-neon-cyan/30 rounded-lg px-4 py-4 shadow-[0_0_16px_rgba(0,255,231,0.15)]">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="text-white font-bold text-base mb-1">Make Your Picks</div>
+                              <div className="text-text-muted text-xs">
+                                Select 5 players and earn points based on their in-game actions
+                              </div>
+                            </div>
+                            <button
+                              onClick={onOpenPicks}
+                              className="btn-pink px-4 py-2 text-sm font-bold whitespace-nowrap"
+                            >
+                              Choose Picks
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Play Log */}
                     <div className="mt-2">
                       <PlayLog

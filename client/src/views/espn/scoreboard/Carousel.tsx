@@ -209,7 +209,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                 homeTeamId={homeTeam?.id}
                 awayTeamId={awayTeam?.id}
                 onOpenPicks={() => {
-                  onTabChange('yourpicks');
+                  onTabChange('pick');
                   // Wait for tab change animation, then open roster
                   setTimeout(() => {
                     playerPickRef.current?.openRoster();

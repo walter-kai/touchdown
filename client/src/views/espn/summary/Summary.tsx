@@ -276,6 +276,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 playLog={effectivePlayLog}
                 summary={summary}
                 gameId={gameId}
+                onOpenPicks={() => onTabChange('pick')}
               />
               
               {/* Field/Court Visualization with Play Selector */}

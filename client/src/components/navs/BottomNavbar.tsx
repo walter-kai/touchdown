@@ -72,10 +72,8 @@ const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTab
   const allNavItems = [
     { id: 'back', label: 'Games', icon: <FaArrowLeft />, action: () => navigate(`/${league}/games`) },
     { id: 'info', label: 'Info', icon: <FaInfoCircle /> },
-    { id: 'player', label: 'Players', icon: <FaTrophy /> },
     { id: 'team', label: 'Team Stats', icon: <FaChartBar /> },
     { id: 'headtohead', label: 'Head to Head', icon: <FaExchangeAlt /> },
-    { id: 'plays', label: 'Plays', icon: <FaFootballBall /> },
     { id: 'pick', label: 'Pick', icon: <FaTrophy /> },
     { id: 'odds', label: 'Odds', icon: <FaChartLine /> },
     { id: 'prediction', label: 'Predictions', icon: <FaPercentage /> },
@@ -89,21 +87,16 @@ const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTab
   // Preset configurations
   const presetConfig = {
     scoreboard: ['back', 'info', 'pick', 'odds', 'headtohead', 'chat'],
-    summary: ['back', 'info', 'pick', 'player', 'plays', 'chat'],
+    summary: ['back', 'info', 'pick', 'chat'],
     team: ['back', 'info', 'schedule', 'news'],
     player: ['back', 'info', 'schedule', 'news'],
     dashboard: ['dashboard', 'games'],
   };
 
-  // For upcoming games, hide 'player' and 'plays' tabs but keep 'pick' visible
-  const isUpcomingGame = gameStatus === 'pre';
-  const tabsToHide = isUpcomingGame ? ['player', 'plays'] : [];
-  
-  debugLog('MainNavBar - gameStatus:', gameStatus, 'preset:', preset, 'isUpcomingGame:', isUpcomingGame, 'tabsToHide:', tabsToHide);
+  debugLog('MainNavBar - gameStatus:', gameStatus, 'preset:', preset);
 
   // Filter nav items based on preset and maintain the order from presetConfig
   const navItems = presetConfig[preset]
-    .filter(id => !tabsToHide.includes(id))
     .map(id => allNavItems.find(item => item.id === id))
     .filter((item): item is NonNullable<typeof item> => item !== undefined);
 

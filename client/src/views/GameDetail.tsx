@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 import { FaFootballBall } from 'react-icons/fa';
@@ -223,6 +223,9 @@ const GameDetail: React.FC<GameDetailProps> = ({ activeTab, onTabChange, onPrese
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId, testGameId, playsLoaded, event, league]); // Added event to dependencies
 
+  // Track previous game state to detect transitions
+  const prevGameStateRef = useRef<string | null>(null);
+
   // Notify parent of game status changes and auto-switch to scoreboard when game starts
   useEffect(() => {
     if (event && onGameStatusChange) {
@@ -231,11 +234,13 @@ const GameDetail: React.FC<GameDetailProps> = ({ activeTab, onTabChange, onPrese
         debugLog('Game status being sent to parent:', gameState);
         onGameStatusChange(gameState as 'pre' | 'in' | 'post');
         
-        // Auto-switch to scoreboard/court view when game starts
-        if (gameState === 'in') {
-          debugLog('🏟️ Game is live! Switching to scoreboard view...');
+        // Auto-switch to scoreboard/court view ONLY when game transitions from pre to in (not on every refresh)
+        if (gameState === 'in' && prevGameStateRef.current === 'pre') {
+          debugLog('🏟️ Game just started! Switching to scoreboard view...');
           onTabChange('info');
         }
+        
+        prevGameStateRef.current = gameState;
       }
     }
   }, [event, onGameStatusChange, onTabChange]);

@@ -129,7 +129,10 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
 
   return (
     <div
-      ref={(node) => drag(drop(node))}
+      ref={(node) => {
+        drag(node);
+        drop(node);
+      }}
       className={`relative overflow-hidden bg-bg-dark/90 rounded-lg p-3 border border-neon-pink/30 flex items-center gap-3 h-[72px] transition-all duration-1000 ${
         isDragging ? 'opacity-100' : isAnimating ? '' : 'hover:border-neon-pink'
       }`}
@@ -209,7 +212,9 @@ const EmptySlot: React.FC<EmptySlotProps> = ({ index, movePlayer, isActive, onSl
 
   return (
     <div
-      ref={drop}
+      ref={(node) => {
+        if (node) drop(node);
+      }}
       onClick={() => onSlotClick(index)}
       className={`bg-bg-dark/50 rounded-lg p-3 border border-dashed flex items-center gap-3 h-[72px] transition-all duration-200 cursor-pointer ${
         isActive
@@ -459,11 +464,14 @@ ref
               setShowStats(true);
               
               // Calculate remaining cooldown time from backend timestamp
-              let lockedAt = null;
+              let lockedAt: number | null = null;
               if (latestPick.timestamp) {
                 lockedAt = latestPick.timestamp._seconds 
                   ? latestPick.timestamp._seconds * 1000 
                   : new Date(latestPick.timestamp).getTime();
+              }
+              
+              if (lockedAt !== null) {
                 const elapsed = Date.now() - lockedAt;
                 const cooldownDuration = 120 * 1000; // 2 minutes in ms
                 const remaining = cooldownDuration - elapsed;
