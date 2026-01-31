@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = false;
 
 // Fetch game data server-side to generate metadata
 async function getGameData(gameId: string) {
@@ -44,17 +44,45 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
   const event = await getGameData(gameId);
 
   if (!event) {
+    const image = 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg';
     return {
       title: 'Game | Touchdown',
       description: 'Watch the game on Touchdown - Live sports picks and analysis',
+      openGraph: {
+        title: 'Game | Touchdown',
+        description: 'Watch the game on Touchdown - Live sports picks and analysis',
+        images: [{ url: image, width: 1600, height: 630, alt: 'Touchdown Game' }],
+        type: 'website',
+        url: `https://touchdown-882290629693.us-central1.run.app/nba/game/${gameId}`,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: 'Game | Touchdown',
+        description: 'Watch the game on Touchdown - Live sports picks and analysis',
+        images: [image],
+      },
     };
   }
 
   const competition = event.competitions?.[0];
   if (!competition) {
+    const image = 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg';
     return {
       title: 'Game | Touchdown',
       description: 'Watch the game on Touchdown - Live sports picks and analysis',
+      openGraph: {
+        title: 'Game | Touchdown',
+        description: 'Watch the game on Touchdown - Live sports picks and analysis',
+        images: [{ url: image, width: 1600, height: 630, alt: 'Touchdown Game' }],
+        type: 'website',
+        url: `https://touchdown-882290629693.us-central1.run.app/nba/game/${gameId}`,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: 'Game | Touchdown',
+        description: 'Watch the game on Touchdown - Live sports picks and analysis',
+        images: [image],
+      },
     };
   }
 
@@ -63,9 +91,23 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
   const home = competitors.find((c: any) => c.homeAway === 'home');
 
   if (!away || !home) {
+    const image = 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg';
     return {
       title: 'Game | Touchdown',
       description: 'Watch the game on Touchdown - Live sports picks and analysis',
+      openGraph: {
+        title: 'Game | Touchdown',
+        description: 'Watch the game on Touchdown - Live sports picks and analysis',
+        images: [{ url: image, width: 1600, height: 630, alt: 'Touchdown Game' }],
+        type: 'website',
+        url: `https://touchdown-882290629693.us-central1.run.app/nba/game/${gameId}`,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: 'Game | Touchdown',
+        description: 'Watch the game on Touchdown - Live sports picks and analysis',
+        images: [image],
+      },
     };
   }
 
