@@ -304,14 +304,14 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
     return { liveGames: live, completedGames: completed, upcomingGames: upcoming };
   }, [games]);
 
-  const renderGamesForDate = useCallback((gamesByLeague: Record<'nfl' | 'nba', Array<GameWithLeague & { timeKey: string }>>) => {
+  const renderGamesForDate = useCallback((gamesByLeague: Record<'nfl' | 'nba', Array<GameWithLeague & { timeKey: string }>>, baseDelay: number = 500) => {
     // Combine NFL and NBA games, with NFL first
     const allGamesForDate = [...gamesByLeague.nfl, ...gamesByLeague.nba];
     
     return (
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 px-2">
-        {allGamesForDate.map((game) => (
-          <GameGridCard key={game.id} game={game} onNavigate={(path: string) => router.push(path)} />
+        {allGamesForDate.map((game, cardIdx) => (
+          <GameGridCard key={game.id} game={game} onNavigate={(path: string) => router.push(path)} cardDelay={baseDelay + cardIdx * 60} />
         ))}
       </div>
     );
@@ -319,39 +319,40 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
 
   return (
   <>
-  <div className="max-w-7xl mx-auto py-2">
-	
-    {/* Sign Up Banner - When Not Logged In */}
-    <LoginHero league="nfl" />
+  {isLoading && games.length === 0 ? (
+    /* Loading State - Full Page */
+    <LoadingFootball message="Loading games..." />
+  ) : (
+    <div className="max-w-7xl mx-auto py-2">
+      
+      {/* Sign Up Banner - When Not Logged In */}
+      <LoginHero league="nfl" />
 
-        {/* Week Navigation */}
-        <WeekNav 
-          onDateSelect={handleDateSelect}
-          selectedDate={selectedDate || undefined}
-        />
+      {/* Week Navigation */}
+      <WeekNav 
+        onDateSelect={handleDateSelect}
+        selectedDate={selectedDate || undefined}
+      />
 
-        {error ? (
-          /* Error State */
-          <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 sm:p-5 md:p-6 text-center">
-            <p className="text-red-400 font-bold mb-2 text-sm sm:text-base">Error loading data</p>
-            <p className="text-text-light text-xs sm:text-sm">{error}</p>
-          </div>
-        ) : isLoading && games.length === 0 ? (
-          /* Loading State */
-          <LoadingFootball message="Loading games..." />
-        ) : games.length > 0 ? (
-      /* Games Grid */
-      <div className="space-y-8 mb-16">
+      {error ? (
+        /* Error State */
+        <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 sm:p-5 md:p-6 text-center">
+          <p className="text-red-400 font-bold mb-2 text-sm sm:text-base">Error loading data</p>
+          <p className="text-text-light text-xs sm:text-sm">{error}</p>
+        </div>
+      ) : games.length > 0 ? (
+        /* Games Grid */
+        <div className="space-y-8 mb-16">
         {/* Live Games */}
         {liveGames.length > 0 && (
-          <div>
-            <h1 className="flex items-center gap-2 mx-2 mb-4">
+          <div className="animate-fade-in-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
+            <h1 className="flex items-center gap-2 mx-2 mb-4 animate-slide-in-left" style={{ animationDelay: '450ms', animationFillMode: 'both' }}>
               Live Now ({liveGames.length})
             </h1>
             {Object.entries(groupGamesByDateAndLeague(liveGames)).map(([date, gamesByLeague]) => (
               <div key={date} className="mb-6">
                 <h2 className="mx-2 mb-3 text-left">{date}</h2>
-                {renderGamesForDate(gamesByLeague)}
+                {renderGamesForDate(gamesByLeague, 500)}
               </div>
             ))}
           </div>
@@ -359,14 +360,14 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
 
         {/* Upcoming Games */}
         {upcomingGames.length > 0 && (
-          <div>
-            <h2 className="flex items-center gap-2 mx-2 mb-4">
+          <div className="animate-fade-in-up" style={{ animationDelay: '600ms', animationFillMode: 'both' }}>
+            <h2 className="flex items-center gap-2 mx-2 mb-4 animate-slide-in-left" style={{ animationDelay: '650ms', animationFillMode: 'both' }}>
               Upcoming ({upcomingGames.length})
             </h2>
             {Object.entries(groupGamesByDateAndLeague(upcomingGames)).map(([date, gamesByLeague]) => (
               <div key={date} className="mb-6">
                 <h3 className="mx-2 mb-3 text-left">{date}</h3>
-                {renderGamesForDate(gamesByLeague)}
+                {renderGamesForDate(gamesByLeague, 700)}
               </div>
             ))}
           </div>
@@ -374,14 +375,14 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
         
         {/* Completed Games */}
         {completedGames.length > 0 && (
-          <div>
-            <h1 className="flex items-center gap-2 mx-2 mb-4">
+          <div className="animate-fade-in-up" style={{ animationDelay: '800ms', animationFillMode: 'both' }}>
+            <h1 className="flex items-center gap-2 mx-2 mb-4 animate-slide-in-left" style={{ animationDelay: '850ms', animationFillMode: 'both' }}>
               Final ({completedGames.length})
             </h1>
             {Object.entries(groupGamesByDateAndLeague(completedGames)).map(([date, gamesByLeague]) => (
               <div key={date} className="mb-6">
                 <h2 className="mx-2 mb-3 text-left">{date}</h2>
-                {renderGamesForDate(gamesByLeague)}
+                {renderGamesForDate(gamesByLeague, 900)}
               </div>
             ))}
           </div>
@@ -389,7 +390,8 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
       </div>
     ) : null}
 
-  </div>
+    </div>
+  )}
   </>
   );
 };
@@ -398,9 +400,10 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
 interface GameGridCardProps {
   game: GameWithLeague & { timeKey?: string };
   onNavigate: (path: string) => void;
+  cardDelay?: number;
 }
 
-const GameGridCard: React.FC<GameGridCardProps> = ({ game, onNavigate }) => {
+const GameGridCard: React.FC<GameGridCardProps> = ({ game, onNavigate, cardDelay = 500 }) => {
   const competition = game.competitions[0];
   const awayTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'away');
   const homeTeam = competition.competitors.find((c: Competitor) => c.homeAway === 'home');
@@ -418,7 +421,8 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, onNavigate }) => {
   return (
     <button
       onClick={() => onNavigate(`/${game.leagueType}/game/${game.id}`)}
-      className="relative rounded-md border border-neon-pink/20  bg-bg-dark/50 hover:bg-bg-dark/70 p-3 px-4 transition-all duration-200 text-left w-full"
+      className="relative rounded-md border border-neon-pink/20  bg-bg-dark/50 hover:bg-bg-dark/70 p-3 px-4 transition-all duration-200 text-left w-full animate-fade-in-scale"
+      style={{ animationDelay: `${cardDelay}ms`, animationFillMode: 'both' }}
     >
       {/* League Logo + Time Header */}
       <div className="flex items-center gap-2 mb-2">

@@ -1,3 +1,35 @@
+.btn-standard,
+.btn-teal,
+.btn-pink,
+.btn-purple,
+.btn-red,
+.btn-green,
+.btn-blue,
+.btn-orange,
+.btn-transparent,
+.btn-hud,
+.btn-tab,
+.btn-special,
+.btn-nav {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65), 0 0 10px currentColor;
+}
+
+.btn-standard:hover,
+.btn-teal:hover,
+.btn-pink:hover,
+.btn-purple:hover,
+.btn-red:hover,
+.btn-green:hover,
+.btn-blue:hover,
+.btn-orange:hover,
+.btn-transparent:hover,
+.btn-hud:hover,
+.btn-tab:hover,
+.btn-special:hover,
+.btn-nav:hover {
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.75), 0 0 16px currentColor;
+}
+
 .btn-standard {
   background: linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.15), rgba(var(--accent-teal-rgb), 0.15), rgba(var(--neon-cyan-rgb), 0.2));
   color: var(--neon-cyan);

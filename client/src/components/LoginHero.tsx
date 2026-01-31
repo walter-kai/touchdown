@@ -69,10 +69,10 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
             {/* Left: Title and Caption */}
             <div className="flex-1 flex flex-col gap-4 text-center md:text-left order-2 md:order-1">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-neon-pink via-neon-cyan to-neon-pink bg-clip-text text-transparent">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-neon-pink via-neon-cyan to-neon-pink bg-clip-text text-transparent animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
                 Games are live!
               </h2>
-              <p className="text-sm sm:text-base text-text-light leading-relaxed">
+              <p className="text-sm sm:text-base text-text-light leading-relaxed animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
                 Use your strategy as coach to swap players in real-time, build streaks, and prove you're the ultimate manager.
               </p>
             </div>
@@ -91,11 +91,13 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
                 {images.map((image, idx) => (
                   <div
                     key={idx}
-                    className="absolute h-full"
+                    className="absolute h-full animate-fade-in-scale"
                     style={{
                       left: `${idx * 50}px`,
                       width: '100px',
                       clipPath: "polygon(50% 0, 100% 0, 85% 100%, 0 100%)",
+                      animationDelay: `${idx * 150}ms`,
+                      animationFillMode: 'both',
                     }}
                   >
                     <img
@@ -111,7 +113,8 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
             {/* Right: Sign Up Button */}
             <button
               onClick={handleGoogleLogin}
-              className="flex items-center justify-center gap-3 flex-shrink-0 px-6 sm:px-8 py-3 sm:py-4 md:px-8 md:py-4 bg-white hover:bg-gray-50 rounded-lg font-bold text-gray-700 border border-gray-300 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-sm sm:text-base md:text-base h-fit shadow-md order-3 md:order-3 md:h-fit"
+              className="btn-orange flex items-center justify-center gap-3 flex-shrink-0 px-6 sm:px-8 py-3 sm:py-4 md:px-8 md:py-4 hover:bg-gray-50 rounded-lg font-bold transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-sm sm:text-base md:text-base order-3 md:order-3 md:h-fit animate-scale-in"
+              style={{ animationDelay: '350ms', animationFillMode: 'both' }}
             >
               <FaGoogle className="text-xl" />
               Sign in with Google

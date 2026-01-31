@@ -51,7 +51,7 @@ const Carousel: React.FC<DashboardCarouselProps> = ({ activeTab, onTabChange }) 
       >
         {/* Dashboard Section */}
         <div className="w-full flex-shrink-0 h-full overflow-y-auto hide-scrollbar" style={{ width: '50%' }}>
-          <Dashboard onInitialReady={handleDashboardReady} onTabChange={onTabChange} />
+          <Dashboard onInitialReady={handleDashboardReady} />
         </div>
 
         {/* Games List Section - Preload games data */}

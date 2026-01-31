@@ -271,11 +271,11 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
   };
 
   return (
-    <div className="rounded-xl mb-4 px-2">
-      <h1 className="">Games this Week</h1>
+    <div className="rounded-xl mb-4 px-2 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
+      <h1 className="animate-fade-in" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>Games this Week</h1>
       
       {/* Week Navigation Chevrons - Above */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-3 animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
         <button
           onClick={handlePreviousWeek}
           className="flex-1 bg-bg-dark/60 hover:bg-bg-dark/80 border border-gray-800/50 hover:border-neon-cyan/30 rounded-lg py-2 transition-all group flex items-center justify-center"
@@ -310,7 +310,7 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
               <div key={idx} className="flex-1 bg-bg-darker/50 rounded-lg h-[72px] animate-pulse" />
             ))
           ) : (
-            weekDays.map((day) => {
+            weekDays.map((day, dayIdx) => {
               const isSingleDaySelected = selectedSingleDay === day.date;
               const isInSelectedRange = isSingleDaySelected || selectedDate?.includes(day.date) || selectedDate?.includes('-');
               const isToday = day.date === today;
@@ -319,8 +319,9 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
                 <button
                   key={day.date}
                   onClick={() => handleDayClick(day.date)}
+                  style={{ animationDelay: `${350 + dayIdx * 80}ms`, animationFillMode: 'both' }}
                   className={`
-                    relative rounded-lg p-2 transition-all h-[68px] flex flex-col items-center justify-center
+                    relative rounded-lg p-2 transition-all h-[68px] flex flex-col items-center justify-center animate-fade-in-up
                     ${day.hasGames ? 'flex-[1.5]' : 'flex-[0.5]'}
                     ${isInSelectedRange
                       ? 'bg-bg-dark/90 border border-neon-cyan/10 shadow-[0_0_8px_rgba(0,255,231,0.15)]' 
