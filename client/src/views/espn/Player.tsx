@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { FaFootballBall, FaArrowLeft, FaCalendar, FaChartLine, FaTrophy, FaNewspaper, FaInfoCircle } from 'react-icons/fa';
 import axios from 'axios';
 import type { AthleteOverview, AthleteBio } from '@/types/espn/athlete';
-import LoadingFootball from '../../components/loading/LoadingFootball';
 import { useLeague } from '@/providers/LeagueContext';
 import { getPlayerOverviewUrl, getPlayerBioUrl } from '@/utils/espnApi';
 
@@ -160,10 +159,6 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
 
     fetchPlayerData();
   }, [playerId, league]);
-
-  if (loading) {
-    return <LoadingFootball message="Loading player data..." />;
-  }
 
   if (error || !overview) {
     return (

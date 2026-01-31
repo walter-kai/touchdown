@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaFootballBall, FaTrophy } from 'react-icons/fa';
-import FootballField from '@/views/dashboard/games/FootballField';
-import BasketballCourt from '@/views/dashboard/games/BasketballCourt';
+import FootballField from '@/views/espn/scoreboard/games/FootballField';
+import BasketballCourt from '@/views/espn/scoreboard/games/BasketballCourt';
 import type { PlayNfl } from '@/types/espn/plays';
 import PlayLog from '@/components/espn/PlayLog';
 import GameLeaders from '@/views/espn/summary/GameLeaders';

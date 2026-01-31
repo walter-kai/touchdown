@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaTrophy, FaGamepad, FaFire, FaChartLine } from 'react-icons/fa';
-import LoadingFootball from '@/components/loading/LoadingFootball';
 
 interface UserStats {
   displayName: string;
@@ -69,10 +68,6 @@ const UserInfo: React.FC = () => {
 
     fetchUserStats();
   }, [userId]);
-
-  if (loading) {
-    return <LoadingFootball message="Loading user profile..." />;
-  }
 
   if (error || !userStats) {
     return (

@@ -1,5 +1,8 @@
 import { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Fetch game data server-side to generate metadata
 async function getGameData(gameId: string) {
   try {
@@ -28,8 +31,8 @@ async function getGameData(gameId: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ gameId: string }> }): Promise<Metadata> {
-  const { gameId } = await params;
+export async function generateMetadata({ params }: { params: { gameId: string } }): Promise<Metadata> {
+  const { gameId } = params;
   const event = await getGameData(gameId);
 
   if (!event) {
@@ -104,22 +107,18 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
     description = `${away.team.displayName} face off against ${home.team.displayName} ${timeUntilText}. Make your picks and join the action on Touchdown!`;
   }
 
-  const image = 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg';
-  const metaTitle = 'Touchdown - Manage your players, rack up points!';
-  const metaDescription = 'Manage your players, rack up points! Fantasy sports picks and predictions for NFL, NBA and more';
-
   return {
-    title: metaTitle,
-    description: metaDescription,
+    title,
+    description,
     openGraph: {
-      title: metaTitle,
-      description: metaDescription,
+      title,
+      description,
       images: [
         {
-          url: image,
+          url: 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg',
           width: 1600,
           height: 630,
-          alt: 'Touchdown - Manage your players, rack up points!',
+          alt: title,
         },
       ],
       type: 'website',
@@ -127,9 +126,9 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
     },
     twitter: {
       card: 'summary_large_image',
-      title: metaTitle,
-      description: metaDescription,
-      images: [image],
+      title,
+      description,
+      images: ['https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg'],
     },
     other: {
       'og:logo': 'https://touchdown-882290629693.us-central1.run.app/logos/Drive-logo.png',

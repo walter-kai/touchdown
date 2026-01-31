@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { FaFootballBall, FaTrophy, FaChartBar, FaGamepad, FaChevronDown, FaChevronUp, FaUser, FaMedal, FaClipboardCheck } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { jwtStorage } from '../../utils/jwtStorage';
-import LoadingFootball from '../../components/loading/LoadingFootball';
 import { CountUpScore } from '../../components/common/CountUpScore';
 import { useAuth } from '../../providers/AuthContext';
 import { useLeague } from '../../providers/LeagueContext';
@@ -67,24 +66,60 @@ interface GameData {
   scores?: GameScores;
   totalUserScore: number;
   status?: 'pre' | 'in' | 'post';
+  gameDate?: string;
   league?: 'nfl' | 'nba';
   rank?: number | null;
   totalUsersInGame?: number | null;
 }
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+  onInitialReady?: () => void;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
   const router = useRouter();
   const { user } = useAuth();
   // Derive league from URL instead of context
   const league = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
-  const [loading, setLoading] = useState(true);
-  const [gamesWithPicks, setGamesWithPicks] = useState<GameData[]>([]);
+  
+  // Initialize from cache if available (synchronous to prevent flash of empty state)
+  const getInitialData = (): GameData[] => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const cacheKey = 'dashboard_processed_cache';
+      const cachedData = sessionStorage.getItem(cacheKey);
+      if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        const cacheAge = Date.now() - timestamp;
+        const CACHE_DURATION = 5 * 60 * 1000;
+        if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
+          console.log(`🎯 Dashboard initialized from cache (${Math.round(cacheAge / 1000)}s old)`);
+          return data;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading initial dashboard cache:', error);
+    }
+    return [];
+  };
+  
+  const [loading, setLoading] = useState(false);
+  const [isInitialCheck, setIsInitialCheck] = useState(true);
+  const [gamesWithPicks, setGamesWithPicks] = useState<GameData[]>(getInitialData());
   const [error, setError] = useState<string | null>(null);
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const fetchedUserRef = useRef<string | null>(null); // Track which user was fetched
+  const initialReadyRef = useRef(false);
+
+  const markInitialReady = useCallback(() => {
+    if (!initialReadyRef.current) {
+      initialReadyRef.current = true;
+      onInitialReady?.();
+    }
+  }, [onInitialReady]);
 
   const profilePicture = user?.photoUrl || user?.googlePicture || user?.providerData?.googlePicture;
   // Helper function to render text with emojis properly
@@ -176,7 +211,9 @@ const Dashboard: React.FC = () => {
     if (!user || !user.email) {
       fetchedUserRef.current = null;
       setLoading(false);
+      setIsInitialCheck(false);
       setGamesWithPicks([]);
+      markInitialReady();
       return;
     }
 
@@ -184,45 +221,49 @@ const Dashboard: React.FC = () => {
     if (fetchedUserRef.current === user.email) return;
     
     const fetchDashboardData = async () => {
-      // Clear cache first to ensure fresh data
-      const cacheKey = 'dashboard_processed_cache';
-      localStorage.removeItem(cacheKey);
-
       try {
-        setLoading(true);
         const token = jwtStorage.getToken();
 
         if (!token) {
           setError('Please log in to view your dashboard');
           setLoading(false);
+          setIsInitialCheck(false);
+          markInitialReady();
           return;
         }
 
-        // Check localStorage cache first (for processed data)
+        // Check sessionStorage cache FIRST (before setting loading) to avoid unnecessary loading state
         const cacheKey = 'dashboard_processed_cache';
-        const cachedData = localStorage.getItem(cacheKey);
+        const cachedData = sessionStorage.getItem(cacheKey);
         
         if (cachedData) {
           try {
             const { data, timestamp } = JSON.parse(cachedData);
             const cacheAge = Date.now() - timestamp;
-            const CACHE_DURATION = 3 * 60 * 1000; // 3 minutes
+            const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
             
-            // Use cached data if less than 3 minutes old
+            // Use cached data if less than 5 minutes old
             if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
               debugLog(`✅ Using cached dashboard data (${Math.round(cacheAge / 1000)}s old)`);
               setGamesWithPicks(data);
               setLoading(false);
+              setIsInitialCheck(false);
+              fetchedUserRef.current = user.email;
+              markInitialReady();
               return;
             } else {
               debugLog('Cache expired, fetching fresh data...');
-              localStorage.removeItem(cacheKey);
+              sessionStorage.removeItem(cacheKey);
             }
           } catch (error) {
             console.error('Error parsing cached dashboard data:', error);
-            localStorage.removeItem(cacheKey);
+            sessionStorage.removeItem(cacheKey);
           }
         }
+
+        // Only set loading to true if we need to fetch fresh data
+        setLoading(true);
+        // showLoading already called at the start
 
         debugLog('🔄 Fetching fresh dashboard data from API...');
 
@@ -241,6 +282,9 @@ const Dashboard: React.FC = () => {
         if (userGames.length === 0) {
           setGamesWithPicks([]);
           setLoading(false);
+          setIsInitialCheck(false);
+          fetchedUserRef.current = user.email;
+          markInitialReady();
           return;
         }
 
@@ -278,8 +322,24 @@ const Dashboard: React.FC = () => {
 
             let gameName = '';
             let gameStatus: 'pre' | 'in' | 'post' = 'post';
+            let gameDate: string | undefined = undefined;
             let homeTeam: any = null;
             let awayTeam: any = null;
+
+            // Fetch game status from ESPN API
+            try {
+              const gameLeague = inferLeague(gamePick);
+              const espnResponse = await axios.get(
+                `https://site.api.espn.com/apis/site/v2/sports/${gameLeague === 'nba' ? 'basketball/nba' : 'football/nfl'}/summary?event=${gamePick.gameId}`
+              );
+              if (espnResponse.data?.header?.competitions?.[0]) {
+                const comp = espnResponse.data.header.competitions[0];
+                gameStatus = (comp.status?.type?.state || 'post').toLowerCase() as 'pre' | 'in' | 'post';
+                gameDate = comp.date || espnResponse.data.header.season?.startDate;
+              }
+            } catch (espnErr) {
+              console.error(`Error fetching game status for ${gamePick.gameId}:`, espnErr);
+            }
 
             // Priority 1: Check if teamData is stored (includes names & abbreviations)
             if (gamePick.teamData) {
@@ -376,6 +436,7 @@ const Dashboard: React.FC = () => {
               scores: gamePick.scores,
               totalUserScore,
               status: gameStatus,
+              gameDate,
               league: inferLeague(gamePick) // Store the resolved league for navigation
             };
           } catch (err) {
@@ -396,6 +457,12 @@ const Dashboard: React.FC = () => {
         // Fetch per-game rank without scanning the whole collection
         const gamesWithRank = await Promise.all(validGames.map(async (game) => {
           if (!game.league) return game;
+
+          // Skip game-data fetch if no picks exist for this game
+          if (!game.picks || game.picks.length === 0) {
+            debugLog(`⏭️ Skipping game-data fetch for ${game.gameId} (no picks)`);
+            return game;
+          }
 
           const gameDataCacheKey = `gameData_${game.league}_${game.gameId}`;
           
@@ -440,7 +507,7 @@ const Dashboard: React.FC = () => {
               : null;
 
             // Cache the gameData with timestamp
-            localStorage.setItem(gameDataCacheKey, JSON.stringify({
+            sessionStorage.setItem(gameDataCacheKey, JSON.stringify({
               data: rankRes.data,
               timestamp: Date.now()
             }));
@@ -460,23 +527,27 @@ const Dashboard: React.FC = () => {
         }));
         
         // Cache the processed results
-        localStorage.setItem(cacheKey, JSON.stringify({
+        sessionStorage.setItem(cacheKey, JSON.stringify({
           data: gamesWithRank,
           timestamp: Date.now()
         }));
         
         setGamesWithPicks(gamesWithRank);
         setLoading(false);
+        setIsInitialCheck(false);
+        markInitialReady();
       } catch (err: any) {
         console.error('Error fetching dashboard data:', err);
         setError(err.response?.data?.message || 'Failed to load dashboard');
         setLoading(false);
+        setIsInitialCheck(false);
+        markInitialReady();
       }
     };
 
     fetchedUserRef.current = user.email; // Mark this user as fetched
     fetchDashboardData();
-  }, [user]);
+  }, [user, markInitialReady]);
 
   // Calculate overall stats
   const overallStats = useMemo(() => {
@@ -493,15 +564,30 @@ const Dashboard: React.FC = () => {
     return { totalGames, totalScore, totalPlayers };
   }, [gamesWithPicks]);
 
+  // Helper function to check if game is pickable
+  const isGamePickable = (game: GameData): boolean => {
+    // Game must not be completed
+    if (game.status === 'post') return false;
+    
+    // If game is in progress, it's pickable
+    if (game.status === 'in') return true;
+    
+    // For pre-game, check if within 2 minutes of start time
+    if (game.status === 'pre' && game.gameDate) {
+      const gameStartTime = new Date(game.gameDate).getTime();
+      const unlockTime = gameStartTime - 2 * 60 * 1000; // 2 minutes before
+      const now = Date.now();
+      return now >= unlockTime;
+    }
+    
+    return false;
+  };
+
   // Toggle game expansion - only one at a time
   const toggleGameExpansion = (gameId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setExpandedGameId(prev => (prev === gameId ? null : gameId));
   };
-
-  if (loading) {
-    return <LoadingFootball message="Loading your dashboard..." />;
-  }
 
   if (error) {
     return (
@@ -604,7 +690,7 @@ const Dashboard: React.FC = () => {
       <div className="space-y-4 mb-16 ">
         <h1 className="mx-2">Game History</h1>
 
-        {gamesWithPicks.length === 0 ? (
+        {isInitialCheck ? null : gamesWithPicks.length === 0 ? (
           <div className="text-center py-6 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg px-6 mx-2">
             <FaFootballBall className="text-6xl text-neon-pink mx-auto my-4 animate-bounce" />
             <h2 className="text-2xl font-bold mb-2">No Picks Yet</h2>
@@ -679,20 +765,7 @@ const Dashboard: React.FC = () => {
                   {game.awayTeam && game.homeTeam && (
                     <button
                       onClick={() => router.push(`/${game.league || 'nfl'}/game/${game.gameId}`)}
-                                        style={{
-                    background: isExpanded 
-                      ? 'linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.25), rgba(var(--blue-light-rgb), 0.25), rgba(var(--purple-dark-rgb), 0.3))' 
-                      : 'linear-gradient(135deg, rgba(var(--blue-light-rgb), 0.15), rgba(var(--neon-cyan-rgb), 0.15), rgba(var(--purple-dark-rgb), 0.2))',
-                    boxShadow: isExpanded 
-                      ? '0 0 25px rgba(var(--neon-cyan-rgb), 0.5), inset 0 0 20px rgba(var(--blue-light-rgb), 0.2)' 
-                      : '0 0 15px rgba(var(--blue-base-rgb), 0.3), inset 0 0 15px rgba(var(--neon-cyan-rgb), 0.1)',
-                    border: '2px solid',
-                    borderImage: isExpanded 
-                      ? 'linear-gradient(135deg, rgba(var(--neon-cyan-rgb), 0.9), rgba(var(--blue-light-rgb), 0.9)) 1' 
-                      : 'linear-gradient(135deg, rgba(var(--blue-light-rgb), 0.6), rgba(var(--neon-cyan-rgb), 0.6)) 1',
-                    transform: isExpanded ? 'scale(0.95)' : 'scale(1)',
-                    transition: 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
-                  }}
+          
                       className="btn-standard flex items-center gap-1.5 px-2 py-1.5 flex-shrink-0 min-w-0"
                     >
                       <img 
@@ -777,6 +850,16 @@ const Dashboard: React.FC = () => {
             {isExpanded && (
               <div className="border-t border-neon-cyan/20 bg-gradient-to-b from-white/[0.02] to-white/[0.005]">
                 <div className="p-4">
+                  {/* Edit Picks Button - Only show if game is pickable */}
+                  {isGamePickable(game) && (
+                    <button
+                      onClick={() => router.push(`/${game.league || 'nfl'}/game/${game.gameId}`)}
+                      className="btn-special mb-4 w-full"
+                    >
+                      Edit Picks
+                    </button>
+                  )}
+                  
                   {/* Stats Header */}
                   <div className="flex items-center gap-0 mb-4">
                     <div className="flex-1 group relative overflow-hidden">
@@ -871,14 +954,6 @@ const Dashboard: React.FC = () => {
                       })}
                     </div>
                   )}
-
-                  {/* Edit Picks Button */}
-                  <button
-                    onClick={() => router.push(`/${game.league || 'nfl'}/game/${game.gameId}`)}
-                    className="btn-special mt-4 w-full"
-                  >
-                    Edit Picks
-                  </button>
                 </div>
               </div>
             )}

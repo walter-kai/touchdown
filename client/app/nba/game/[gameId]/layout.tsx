@@ -1,5 +1,8 @@
 import { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Fetch game data server-side to generate metadata
 async function getGameData(gameId: string) {
   try {
@@ -28,8 +31,8 @@ async function getGameData(gameId: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ gameId: string }> }): Promise<Metadata> {
-  const { gameId } = await params;
+export async function generateMetadata({ params }: { params: { gameId: string } }): Promise<Metadata> {
+  const { gameId } = params;
   const event = await getGameData(gameId);
 
   if (!event) {

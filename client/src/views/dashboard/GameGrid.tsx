@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { FaFootballBall, FaPlay } from "react-icons/fa";
-import LoadingFootball from '../../components/loading/LoadingFootball';
 import LoginHero from '../../components/LoginHero';
 import WeekNav from '../../components/navs/WeekNav';
 import { getScoreboardUrl, getNewsUrl } from '@/utils/espnApi';
@@ -34,12 +33,67 @@ interface GameWithLeague extends Event {
   competitions: Event['competitions'];
 }
 
-const UnifiedGameGrid: React.FC = () => {
+interface UnifiedGameGridProps {
+  preload?: boolean;
+  onInitialReady?: () => void;
+}
+
+const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialReady }) => {
   const router = useRouter();
   const [games, setGames] = useState<GameWithLeague[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const initialReadyRef = useRef(false);
+
+  const markInitialReady = useCallback(() => {
+    if (!initialReadyRef.current) {
+      initialReadyRef.current = true;
+      onInitialReady?.();
+    }
+  }, [onInitialReady]);
+
+  // Initialize from cache on client-side only (before fetch runs)
+  useEffect(() => {
+    if (typeof window === 'undefined' || isInitialized) return;
+    
+    try {
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 7);
+      const endDate = new Date(today);
+      endDate.setDate(endDate.getDate() + 14);
+      
+      const formatDate = (d: Date) => {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}${month}${day}`;
+      };
+      
+      const datesParam = `${formatDate(startDate)}-${formatDate(endDate)}`;
+      const cacheKey = `gamegrid_cache_${datesParam}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      
+      if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        const cacheAge = Date.now() - timestamp;
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+        
+        if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
+          console.log(`✅ Using cached games data on init (${Math.round(cacheAge / 1000)}s old)`);
+          setGames(data);
+          if (data.length > 0) {
+            markInitialReady();
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error reading initial cache:', error);
+    }
+    
+    setIsInitialized(true);
+  }, [isInitialized, markInitialReady]);
 
   // Helper function to get date range for a specific NFL week
   const getWeekDateRange = (week: number): string => {
@@ -62,7 +116,6 @@ const UnifiedGameGrid: React.FC = () => {
   const fetchAllGamesData = useCallback(async (date?: string) => {
     try {
       setError(null);
-      setInitialLoading(true);
 
       console.log('Fetching games for:', { date });
       
@@ -87,6 +140,33 @@ const UnifiedGameGrid: React.FC = () => {
         
         datesParam = `${formatDate(startDate)}-${formatDate(endDate)}`;
         console.log('Default date range:', datesParam);
+      }
+      
+      // Check sessionStorage cache first
+      const cacheKey = `gamegrid_cache_${datesParam}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      
+      if (cachedData) {
+        try {
+          const { data, timestamp } = JSON.parse(cachedData);
+          const cacheAge = Date.now() - timestamp;
+          const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+          
+          if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
+            console.log(`✅ Using cached games data (${Math.round(cacheAge / 1000)}s old)`);
+            setGames(data);
+            if (data.length > 0) {
+              markInitialReady();
+            }
+            return;
+          } else {
+            console.log('Games cache expired, fetching fresh data...');
+            sessionStorage.removeItem(cacheKey);
+          }
+        } catch (error) {
+          console.error('Error parsing cached games data:', error);
+          sessionStorage.removeItem(cacheKey);
+        }
       }
       
       // Fetch both NFL and NBA games
@@ -123,15 +203,23 @@ const UnifiedGameGrid: React.FC = () => {
         new Date(a.date).getTime() - new Date(b.date).getTime()
       );
 
+      // Cache the games data
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        data: allGames,
+        timestamp: Date.now()
+      }));
+
       console.log(`Games fetched: ${nflEvents.length} NFL, ${nbaEvents.length} NBA`);
       setGames(allGames);
-      setInitialLoading(false);
+      if (allGames.length > 0) {
+        markInitialReady();
+      }
     } catch (err) {
       console.error('Error fetching games:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
-      setInitialLoading(false);
+      markInitialReady();
     }
-  }, []);
+  }, [preload, markInitialReady]);
 
   const handleDateSelect = useCallback((dateOrRange: string) => {
     console.log('Date selected:', dateOrRange);
@@ -195,13 +283,8 @@ const UnifiedGameGrid: React.FC = () => {
   <>
   <div className="max-w-7xl mx-auto py-2">
 	
-    {/* Loading State */}
-    {initialLoading ? (
-      <LoadingFootball message="Loading all games..." />
-    ) : (
-      <>
-        {/* Sign Up Banner - When Not Logged In */}
-        <LoginHero league="nfl" />
+    {/* Sign Up Banner - When Not Logged In */}
+    <LoginHero league="nfl" />
 
         {/* Week Navigation */}
         <WeekNav 
@@ -263,15 +346,7 @@ const UnifiedGameGrid: React.FC = () => {
           </div>
         )}
       </div>
-    ) : (
-      /* No Games */
-      <div className="text-center py-12 sm:py-16 md:py-20">
-        <FaFootballBall className="text-4xl sm:text-5xl md:text-6xl text-neon-pink mx-auto mb-3 sm:mb-4" />
-        <p className="text-text-light text-base sm:text-lg md:text-xl">No games scheduled at this time</p>
-      </div>
-    )}
-      </>
-    )}
+    ) : null}
 
   </div>
   </>
@@ -384,4 +459,4 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, onNavigate }) => {
   );
 };
 
-export default UnifiedGameGrid;
+export default GameGrid;
