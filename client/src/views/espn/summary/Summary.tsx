@@ -439,6 +439,22 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 setModalView={setModalView}
               />
               
+              {/* Top Picks - Show for completed games */}
+              {gameStatus === 'post' && homeTeam?.id && awayTeam?.id && (
+                <div className="mt-4 mx-2">
+                  <TopPicks
+                    gameId={event.id}
+                    homeTeamId={homeTeam.id}
+                    awayTeamId={awayTeam.id}
+                    playLog={effectivePlayLog}
+                    getTeamLogo={getTeamLogo}
+                    homeTeam={homeTeam}
+                    awayTeam={awayTeam}
+                    isGameInSession={false}
+                  />
+                </div>
+              )}
+              
               {/* Field/Court Visualization with Play Selector */}
               {!isPreGame && effectivePlayLog.length > 0 && (
                 <div className="mx-2">

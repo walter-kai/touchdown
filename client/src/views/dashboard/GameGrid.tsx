@@ -80,7 +80,7 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
       if (cachedData) {
         const { data, timestamp } = JSON.parse(cachedData);
         const cacheAge = Date.now() - timestamp;
-        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+        const CACHE_DURATION = 1 * 60 * 1000; // 1 minute
         
         if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
           setGames(data);
@@ -149,7 +149,7 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
         try {
           const { data, timestamp } = JSON.parse(cachedData);
           const cacheAge = Date.now() - timestamp;
-          const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+          const CACHE_DURATION = 1 * 60 * 1000; // 1 minute
           
           if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
             setGames(data);
@@ -224,6 +224,50 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
   // Refresh scoreboard whenever date changes
   useEffect(() => {
     fetchAllGamesData(selectedDate || undefined);
+  }, [fetchAllGamesData, selectedDate]);
+
+  // Auto-refresh scoreboard every 1 minute if cache is expired
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      // Check if cache has expired
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 7);
+      const endDate = new Date(today);
+      endDate.setDate(endDate.getDate() + 14);
+      
+      const formatDate = (d: Date) => {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}${month}${day}`;
+      };
+      
+      const datesParam = selectedDate || `${formatDate(startDate)}-${formatDate(endDate)}`;
+      const cacheKey = `gamegrid_cache_${datesParam}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      
+      if (cachedData) {
+        try {
+          const { timestamp } = JSON.parse(cachedData);
+          const cacheAge = Date.now() - timestamp;
+          const CACHE_DURATION = 1 * 60 * 1000; // 1 minute
+          
+          // If cache is older than 1 minute, refresh
+          if (cacheAge >= CACHE_DURATION) {
+            fetchAllGamesData(selectedDate || undefined);
+          }
+        } catch (error) {
+          // If error parsing cache, refresh anyway
+          fetchAllGamesData(selectedDate || undefined);
+        }
+      } else {
+        // No cache, fetch data
+        fetchAllGamesData(selectedDate || undefined);
+      }
+    }, 30 * 1000); // Check every 30 seconds
+
+    return () => clearInterval(intervalId);
   }, [fetchAllGamesData, selectedDate]);
 
   // Helper function to group games by date with league separation
