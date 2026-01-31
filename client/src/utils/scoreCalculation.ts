@@ -156,6 +156,8 @@ export function calculateAthleteScoresFromPlays(
           start: new Date(pick.timestamp).getTime(),
           end: endTime
         });
+      } else {
+        console.warn(`[Dashboard Scoring] Pick at index ${pickIndex} missing timestamp for player ${playerId}`);
       }
     });
 
@@ -183,6 +185,8 @@ export function calculateAthleteScoresFromPlays(
   });
 
   const totalScore = Object.values(userScores).reduce((sum, score) => sum + score, 0);
+
+  console.log(`[Dashboard Scoring] Game ${gameId}: userScores=`, userScores, 'gameScores=', gameScores, 'total=', totalScore, 'picks=', picks.length);
 
   return {
     gameScores,

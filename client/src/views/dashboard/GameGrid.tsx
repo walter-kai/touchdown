@@ -350,7 +350,7 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
             </h1>
             {Object.entries(groupGamesByDateAndLeague(liveGames)).map(([date, gamesByLeague]) => (
               <div key={date} className="mb-6">
-                <h2 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{date}</h2>
+                <h2 className="mx-2 mb-3 text-left">{date}</h2>
                 {renderGamesForDate(gamesByLeague)}
               </div>
             ))}
@@ -365,7 +365,7 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
             </h2>
             {Object.entries(groupGamesByDateAndLeague(upcomingGames)).map(([date, gamesByLeague]) => (
               <div key={date} className="mb-6">
-                <h3 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{date}</h3>
+                <h3 className="mx-2 mb-3 text-left">{date}</h3>
                 {renderGamesForDate(gamesByLeague)}
               </div>
             ))}
@@ -380,7 +380,7 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
             </h1>
             {Object.entries(groupGamesByDateAndLeague(completedGames)).map(([date, gamesByLeague]) => (
               <div key={date} className="mb-6">
-                <h2 className="text-lg font-semibold text-neon-cyan mx-2 mb-3 text-left">{date}</h2>
+                <h2 className="mx-2 mb-3 text-left">{date}</h2>
                 {renderGamesForDate(gamesByLeague)}
               </div>
             ))}

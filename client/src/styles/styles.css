@@ -39,11 +39,10 @@ h1 {
   letter-spacing: 0.025em;
   font-size: 1.6rem;
   line-height: 2.25rem;
-  background: linear-gradient(90deg, var(--neon-cyan), var(--text-light), var(--neon-pink));
+  background: linear-gradient(90deg, var(--blue-dark), var(--neon-cyan));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 6px rgba(var(--neon-cyan-rgb), 0.4);
 }
 
 h2 {
@@ -52,27 +51,30 @@ h2 {
   letter-spacing: 0.025em;
   font-size: 1.4rem;
   line-height: 2rem;
-  background: linear-gradient(90deg, var(--neon-cyan), var(--text-light), var(--neon-pink));
+  background: linear-gradient(90deg, var(--purple-dark), var(--neon-cyan));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 5px rgba(var(--neon-cyan-rgb), 0.35);
 }
 
 h3 {
   font-size: 1.2rem;
   line-height: 2rem;
-  text-align: center;
-  font-weight: 700;
-  color: #00ffe7;
+  background: linear-gradient(90deg, var(--blue-dark), var(--neon-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 h4 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   line-height: 1.75rem;
   text-align: center;
   font-weight: 700;
-  color: #00ffe7;
+  background: linear-gradient(90deg, var(--purple-dark), var(--neon-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 ul {

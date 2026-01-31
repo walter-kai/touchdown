@@ -9,6 +9,7 @@ import { CountUpScore } from '../../components/common/CountUpScore';
 import { useAuth } from '../../providers/AuthContext';
 import { useLeague } from '../../providers/LeagueContext';
 import TelegramCard from './TelegramCard';
+import GameGrid from './GameGrid';
 import { debugLog } from '@/utils/debugLog';
 import { getTeamLogoUrl, getHeadshotUrl as getHeadshotUrlUtil } from '@/utils/espnImages';
 import { calculateAthleteScoresFromPlays, fetchPlaysByPlayFromESPN } from '@/utils/scoreCalculation';
@@ -108,6 +109,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
   const [error, setError] = useState<string | null>(null);
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState(false);
+  const [activeTab, setActiveTab] = useState<'history' | 'games'>('history');
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const fetchedUserRef = useRef<string | null>(null); // Track which user was fetched
@@ -407,9 +409,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
             // Kick off background fetch to get plays and calculate per-athlete scores on the client
             const fetchAndCalculateScores = async () => {
               try {
+                console.log(`[Dashboard] Starting background score calculation for game ${gamePick.gameId}`);
                 const gameLeague = inferLeague(gamePick);
                 const plays = await fetchPlaysByPlayFromESPN(gamePick.gameId, gameLeague);
+                console.log(`[Dashboard] Fetched ${plays.length} plays for game ${gamePick.gameId}`);
+                
                 const calculatedScores = calculateAthleteScoresFromPlays(gamePick.picks, plays, gamePick.gameId);
+                console.log(`[Dashboard] Calculated scores for game ${gamePick.gameId}:`, calculatedScores);
 
                 setGamesWithPicks(prev =>
                   prev.map(g =>
@@ -420,7 +426,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
                 );
                 debugLog(`✅ Calculated per-athlete scores for game ${gamePick.gameId}`);
               } catch (err) {
-                console.error(`Error calculating scores for game ${gamePick.gameId}:`, err);
+                console.error(`[Dashboard] Error calculating scores for game ${gamePick.gameId}:`, err);
               }
             };
 
@@ -548,6 +554,37 @@ const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
     fetchDashboardData();
   }, [user, markInitialReady]);
 
+  // Recalculate scores for all games in the background
+  useEffect(() => {
+    if (gamesWithPicks.length === 0) return;
+
+    console.log(`[Dashboard] Starting background score recalculation for ${gamesWithPicks.length} games`);
+
+    // Process each game
+    gamesWithPicks.forEach(async (gamePick) => {
+      try {
+        console.log(`[Dashboard] Calculating scores for game ${gamePick.gameId}`);
+        // Get league from the game data
+        const gameLeague = (gamePick as any).league || (gamePick as any).teamData?.league || 'nfl';
+        const plays = await fetchPlaysByPlayFromESPN(gamePick.gameId, gameLeague as 'nfl' | 'nba');
+        console.log(`[Dashboard] Fetched ${plays.length} plays for game ${gamePick.gameId}`);
+        
+        const calculatedScores = calculateAthleteScoresFromPlays(gamePick.picks, plays, gamePick.gameId);
+        console.log(`[Dashboard] Calculated scores for game ${gamePick.gameId}:`, calculatedScores);
+
+        setGamesWithPicks(prev =>
+          prev.map(g =>
+            g.gameId === gamePick.gameId
+              ? { ...g, scores: calculatedScores, totalUserScore: calculatedScores.totalScore }
+              : g
+          )
+        );
+      } catch (err) {
+        console.error(`[Dashboard] Error calculating scores for game ${gamePick.gameId}:`, err);
+      }
+    });
+  }, [gamesWithPicks.length]); // Only run when games list changes
+
   // Calculate overall stats
   const overallStats = useMemo(() => {
     const totalGames = gamesWithPicks.length;
@@ -630,7 +667,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
       {/* Leaderboard */}
       {!leaderboardLoading && leaderboard.length > 0 && (
         <div className="mb-2 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg p-4 max-w-md mx-2">
-          <h3 className="flex items-center gap-2 mb-3 text-neon-cyan">
+          <h3 className="flex items-center gap-2 mb-3">
             <FaMedal className="text-neon-pink" />
             Top 10 Leaderboard
           </h3>
@@ -685,24 +722,47 @@ const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
         </div>
       )}
 
-      {/* Games List */}
-      <div className="space-y-4 mb-16 ">
-        <h1 className="mx-2">Game History</h1>
+      {/* Tabs */}
+      <div className="flex gap-2 px-2 mb-4">
+        <button
+          onClick={() => {
+            setActiveTab('history');
+          }}
+          className={`flex-1 btn-tab-base ${activeTab === 'history' ? 'btn-tab-purple-active' : 'btn-tab-purple'}`}
+        >
+          <FaClipboardCheck className="text-sm" />
+          <span>Game History</span>
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('games');
+          }}
+          className={`flex-1 btn-tab-base ${activeTab === 'games' ? 'btn-tab-green-active' : 'btn-tab-green'}`}
+        >
+          <FaGamepad className="text-sm" />
+          <span>Games</span>
+        </button>
+      </div>
 
-        {isInitialCheck ? null : gamesWithPicks.length === 0 ? (
-          <div className="text-center py-6 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg px-6 mx-2">
-            <FaFootballBall className="text-6xl text-neon-pink mx-auto my-4 animate-bounce" />
-            <h2 className="text-2xl font-bold mb-2">No Picks Yet</h2>
-            <p className="text-gray-400 mb-6">Start making picks to see your dashboard!</p>
-            <button
-              onClick={() => router.push('/games')}
-              className="btn-purple"
-            >
-              <FaGamepad className="inline mr-2" />
-              Browse Games
-            </button>
-          </div>
-        ) : (() => {
+      {/* Games List */}
+      {activeTab === 'history' ? (
+        <div className="space-y-4 mb-16 ">
+          <h1 className="mx-2">Game History</h1>
+
+          {isInitialCheck ? null : gamesWithPicks.length === 0 ? (
+            <div className="text-center py-6 bg-bg-dark/30 border border-neon-cyan/20 rounded-lg px-6 mx-2">
+              <FaFootballBall className="text-6xl text-neon-pink mx-auto my-4 animate-bounce" />
+              <h2 className="text-2xl font-bold mb-2">No Picks Yet</h2>
+              <p className="text-gray-400 mb-6">Start making picks to see your dashboard!</p>
+              <button
+                onClick={() => router.push('/games')}
+                className="btn-purple"
+              >
+                <FaGamepad className="inline mr-2" />
+                Browse Games
+              </button>
+            </div>
+          ) : (() => {
           // Group games by date in descending order
           const gamesByDate: Record<string, (typeof gamesWithPicks)> = {};
           
@@ -733,7 +793,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
             <>
               {sortedDates.map((dateKey) => (
                 <div key={dateKey}>
-                  <h2 className="text-lg font-semibold text-neon-cyan mx-2 text-left">{dateKey}</h2>
+                  <h4 className="mx-2 text-left">{dateKey}</h4>
                   <div className="">
                     {gamesByDate[dateKey].map((game) => {
                       const isExpanded = expandedGameId === game.gameId;
@@ -914,40 +974,83 @@ const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
                         return (
                           <div
                             key={playerId}
-                            className="flex items-center justify-between p-3 bg-bg-dark/50 rounded-lg border border-neon-cyan/10 hover:border-neon-cyan/30 transition-all"
+                            className="flex flex-col gap-2 p-3 bg-bg-dark/50 rounded-lg border border-neon-cyan/10 hover:border-neon-cyan/30 transition-all"
                           >
-                            <div className="flex items-center gap-3">
-                              {(() => {
-                                const league = (game as any).league || (game as any).teamData?.league || 'nfl';
-                                const headshotUrl = getHeadshotUrlUtil({ id: player.id, headshot: player.headshot }, league as 'nfl' | 'nba');
-                                return headshotUrl ? (
-                                  <img
-                                  src={headshotUrl}
-                                  alt={player.displayName}
-                                  className="w-12 h-12 rounded-full bg-neon-cyan/10 object-cover"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                {(() => {
+                                  const league = (game as any).league || (game as any).teamData?.league || 'nfl';
+                                  const headshotUrl = getHeadshotUrlUtil({ id: player.id, headshot: player.headshot }, league as 'nfl' | 'nba');
+                                  return headshotUrl ? (
+                                    <img
+                                    src={headshotUrl}
+                                    alt={player.displayName}
+                                    className="w-12 h-12 rounded-full bg-neon-cyan/10 object-cover"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                    />
+                                  ) : null;
+                                })()}
+                                <div>
+                                  <p className="font-semibold text-white">{player.displayName}</p>
+                                  <p className="text-sm text-gray-400">{player.position}</p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="flex items-center gap-2">
+                                  <CountUpScore 
+                                    value={userScore} 
+                                    className="text-2xl font-bold text-neon-cyan"
                                   />
-                                ) : null;
-                              })()}
-                              <div>
-                                <p className="font-semibold text-white">{player.displayName}</p>
-                                <p className="text-sm text-gray-400">{player.position}</p>
+                                  <span className="text-sm text-gray-400">
+                                    / <CountUpScore value={gameScore} duration={800} />
+                                  </span>
+                                </div>
+                                <p className="text-xs text-gray-500">Your Score / Total</p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="flex items-center gap-2">
-                                <CountUpScore 
-                                  value={userScore} 
-                                  className="text-2xl font-bold text-neon-cyan"
-                                />
-                                <span className="text-sm text-gray-400">
-                                  / <CountUpScore value={gameScore} duration={800} />
-                                </span>
-                              </div>
-                              <p className="text-xs text-gray-500">Your Score / Total</p>
-                            </div>
+                            
+                            {/* Timeline bar showing pick lock time relative to game */}
+                            {(() => {
+                              const fallbackStart = game.picks?.[0]?.timestamp || Date.now();
+                              const gameStart = new Date((game as any).gameDate || (game as any).teamData?.date || fallbackStart).getTime();
+                              const gameEnd = new Date(gameStart + 3.5 * 60 * 60 * 1000).getTime();
+                              const pickSubmission = game.picks?.[0]?.timestamp ? new Date(game.picks[0].timestamp).getTime() : gameStart;
+                              
+                              const totalDuration = gameEnd - gameStart;
+                              const pickProgress = Math.max(0, Math.min(100, ((pickSubmission - gameStart) / totalDuration) * 100));
+                              
+                              return (
+                                <div className="pt-1">
+                                  <div className="relative h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                                    {/* Timeline bar background showing game duration */}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600"></div>
+                                    
+                                    {/* Highlight showing when picks were locked */}
+                                    {pickProgress > 0 && (
+                                      <div 
+                                        className="absolute h-full bg-neon-cyan/60 rounded-full"
+                                        style={{ width: `${pickProgress}%` }}
+                                      ></div>
+                                    )}
+                                    
+                                    {/* Marker showing pick lock time */}
+                                    {pickProgress > 0 && pickProgress < 100 && (
+                                      <div
+                                        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-neon-cyan rounded-full border-2 border-bg-dark/50 shadow-lg"
+                                        style={{ left: `${pickProgress}%` }}
+                                      ></div>
+                                    )}
+                                  </div>
+                                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>Game Start</span>
+                                    <span>Picks Locked {pickProgress.toFixed(0)}%</span>
+                                    <span>Game End</span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
                         );
                       })}
@@ -964,8 +1067,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
               ))}
             </>
           );
-        })()}
-      </div>
+          })()}
+        </div>
+      ) : (
+        <div className="mb-16">
+          <GameGrid preload={true} />
+        </div>
+      )}
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import BottomNavbar from './components/navs/BottomNavbar';
 import LoginNav from './components/navs/LoginNavNext';
 
-import Carousel from './views/dashboard/Carousel';
+import Dashboard from './views/dashboard/Dashboard';
 import GameGrid from './views/dashboard/GameGrid';
 import NFLTeamPage from './views/espn/Team';
 import NFLPlayerPage from './views/espn/Player';
@@ -173,12 +173,12 @@ const App: React.FC = () => {
               */}
               <div ref={nodeRef} >
                 <Routes location={location}>
-                  <Route path="/" element={user ? <Carousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/')} /> : <GameGrid />} />
-                  <Route path="/games" element={user ? <Carousel activeTab="games" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/')} /> : <GameGrid />} />
-                  <Route path="/nfl" element={user ? <Carousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nfl')} /> : <GameGrid />} />
-                  <Route path="/nba" element={user ? <Carousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nba')} /> : <GameGrid />} />
-                  <Route path="/nfl/dashboard" element={<Carousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nfl/dashboard')} />} />
-                  <Route path="/nba/dashboard" element={<Carousel activeTab="dashboard" onTabChange={(tab) => navigate(tab === 'games' ? '/games' : '/nba/dashboard')} />} />
+                  <Route path="/" element={user ? <Dashboard /> : <GameGrid />} />
+                  <Route path="/games" element={<GameGrid />} />
+                  <Route path="/nfl" element={user ? <Dashboard /> : <GameGrid />} />
+                  <Route path="/nba" element={user ? <Dashboard /> : <GameGrid />} />
+                  <Route path="/nfl/dashboard" element={<Dashboard />} />
+                  <Route path="/nba/dashboard" element={<Dashboard />} />
                   <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
                   <Route path="/nfl/game/test" element={<TestAnimation />} />
                   <Route path="/nba/game/test" element={<TestAnimation />} />
@@ -201,21 +201,16 @@ const App: React.FC = () => {
         
         {/* Game Navigation Bar - Always rendered, visibility controlled by isVisible prop */}
         <BottomNavbar 
-          activeTab={isDashboardOrGames ? (location.pathname.endsWith('/games') ? 'games' : 'dashboard') : gameTab} 
+          activeTab={gameTab}
           onTabChange={(tab) => {
-            if (tab === 'dashboard' || tab === 'games') {
-              // For dashboard/games tabs, determine if we're in NBA or NFL context
-              const isNBA = location.pathname.startsWith('/nba');
-              const league = isNBA ? 'nba' : 'nfl';
-              navigate(tab === 'games' ? `/${league}/games` : `/${league}/dashboard`);
-            } else if (tab !== 'chat') {
+            if (tab !== 'chat') {
               setGameTab(tab);
             }
           }}
           onTabClick={handleTabClick} 
-          preset={isDashboardOrGames ? 'dashboard' : (isTeamPage ? 'team' : isPlayerPage ? 'player' : navPreset)}
+          preset={isTeamPage ? 'team' : isPlayerPage ? 'player' : navPreset}
           gameStatus={isGamePage ? gameStatus : undefined}
-          isVisible={isGamePage || isTeamPage || isPlayerPage || (isDashboardOrGames && !!user)}
+          isVisible={isGamePage || isTeamPage || isPlayerPage}
         />
         
       </div>

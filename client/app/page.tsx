@@ -34,18 +34,7 @@ export default function Home() {
           <GameGrid />
         )}
       </div>
-      {user && (
-        <BottomNavbarNext 
-          activeTab={activeTab}
-          onTabChange={(tab) => {
-            if (tab === 'dashboard' || tab === 'games') {
-              setActiveTab(tab);
-            }
-          }}
-          preset="dashboard"
-          isVisible={true}
-        />
-      )}
+
     </div>
   );
 }

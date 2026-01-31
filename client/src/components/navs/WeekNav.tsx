@@ -271,7 +271,7 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
   };
 
   return (
-    <div className="rounded-xl py-3 mb-4 px-2">
+    <div className="rounded-xl mb-4 px-2">
       <h1 className="">Games this Week</h1>
       
       {/* Week Navigation Chevrons - Above */}

@@ -893,10 +893,8 @@ const Info: React.FC<InfoProps> = ({
                     <div className="mt-4 mx-2 grid grid-cols-3 gap-2 mb-4">
                       <button
                         onClick={() => setActiveContentView('picks')}
-                        className={`rounded-lg px-3 py-2 flex items-center justify-center gap-2 font-bold text-xs transition-all ${
-                          activeContentView === 'picks'
-                            ? 'bg-gradient-to-r from-purple-500/30 to-purple-400/20 border-2 border-purple-400 text-purple-300 shadow-lg shadow-purple-500/20'
-                            : 'bg-gradient-to-r from-purple-500/10 to-purple-400/5 hover:from-purple-500/20 hover:to-purple-400/10 border border-purple-400/30 text-purple-400'
+                        className={`btn-tab-base ${
+                          activeContentView === 'picks' ? 'btn-tab-purple-active' : 'btn-tab-purple'
                         }`}
                       >
                         <FaClipboardList className="text-sm" />
@@ -904,10 +902,8 @@ const Info: React.FC<InfoProps> = ({
                       </button>
                       <button
                         onClick={() => setActiveContentView('timeline')}
-                        className={`rounded-lg px-3 py-2 flex items-center justify-center gap-2 font-bold text-xs transition-all ${
-                          activeContentView === 'timeline'
-                            ? 'bg-gradient-to-r from-amber-500/30 to-amber-400/20 border-2 border-amber-400 text-amber-300 shadow-lg shadow-amber-500/20'
-                            : 'bg-gradient-to-r from-amber-500/10 to-amber-400/5 hover:from-amber-500/20 hover:to-amber-400/10 border border-amber-400/30 text-amber-400'
+                        className={`btn-tab-base ${
+                          activeContentView === 'timeline' ? 'btn-tab-amber-active' : 'btn-tab-amber'
                         }`}
                       >
                         <FaClock className="text-sm" />
@@ -915,10 +911,8 @@ const Info: React.FC<InfoProps> = ({
                       </button>
                       <button
                         onClick={() => setActiveContentView('playlog')}
-                        className={`rounded-lg px-3 py-2 flex items-center justify-center gap-2 font-bold text-xs transition-all ${
-                          activeContentView === 'playlog'
-                            ? 'bg-gradient-to-r from-green-500/30 to-green-400/20 border-2 border-green-400 text-green-300 shadow-lg shadow-green-500/20'
-                            : 'bg-gradient-to-r from-green-500/10 to-green-400/5 hover:from-green-500/20 hover:to-green-400/10 border border-green-400/30 text-green-400'
+                        className={`btn-tab-base ${
+                          activeContentView === 'playlog' ? 'btn-tab-green-active' : 'btn-tab-green'
                         }`}
                       >
                         <FaListAlt className="text-sm" />
