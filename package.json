@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev-server\" \"npm run dev-client\"",
-    "kill": "killall node; killall npm; killall nodemon; killall -9 node 2>/dev/null || true",
+    "kill": "lsof -ti:3000,3001,9229 | xargs kill -9 2>/dev/null || true",
     "dev-server": "nodemon",
     "dev-server-ts": "node --inspect=9229 --enable-source-maps --require ts-node/register --require source-map-support/register server/server.ts",
     "dev-client": "cd client && npm run dev",

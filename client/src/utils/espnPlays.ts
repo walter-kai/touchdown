@@ -26,6 +26,8 @@ const normalizeParticipants = (
 
   return participants
     .map((participant: any) => {
+      if (!participant) return null;
+      
       const athlete = participant.athlete || participant.player || participant;
       const id =
         athlete?.id ||

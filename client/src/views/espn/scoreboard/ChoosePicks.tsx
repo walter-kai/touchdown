@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react';
 import axios from 'axios';
-import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus, FaCrosshairs, FaHandPointer, FaListUl } from 'react-icons/fa';
+import { FaUsers, FaLock, FaUnlock, FaClock, FaCheckCircle, FaFootballBall, FaTimes, FaArrowRight, FaPlus, FaCrosshairs, FaHandPointer, FaListUl, FaBolt, FaChartLine } from 'react-icons/fa';
 import PlayLog from '@/components/espn/PlayLog';
 import LoadingFootball from '../../../components/loading/LoadingFootball';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
@@ -12,6 +12,7 @@ import FootballField from '@/views/espn/scoreboard/visuals/FootballField';
 import type { Athlete } from '@/types/espn/athlete';
 import { usePicks } from '../../../providers/PicksContext';
 import { useLeague } from '../../../providers/LeagueContext';
+import { useAuth } from '../../../providers/AuthContext';
 import { PlayNfl } from '@/types/espn/plays';
 import { debugLog } from '@/utils/debugLog';
 import { getTeamApiUrl } from '@/utils/espnApi';
@@ -129,7 +130,11 @@ const DraggablePlayerCard: React.FC<DraggablePlayerCardProps> = ({ player, index
 
   return (
     <div
-      ref={(node) => drag(drop(node))}
+      ref={(node) => {
+        if (node) {
+          drag(drop(node));
+        }
+      }}
       className={`relative overflow-hidden bg-bg-dark/90 rounded-lg p-3 border border-neon-pink/30 flex items-center gap-3 h-[72px] transition-all duration-1000 ${
         isDragging ? 'opacity-100' : isAnimating ? '' : 'hover:border-neon-pink'
       }`}
@@ -209,7 +214,7 @@ const EmptySlot: React.FC<EmptySlotProps> = ({ index, movePlayer, isActive, onSl
 
   return (
     <div
-      ref={drop}
+      ref={drop as any}
       onClick={() => onSlotClick(index)}
       className={`bg-bg-dark/50 rounded-lg p-3 border border-dashed flex items-center gap-3 h-[72px] transition-all duration-200 cursor-pointer ${
         isActive
@@ -323,6 +328,7 @@ const ChoosePicks = forwardRef<{ openRoster: () => void }, PlayerPickProps>((
 ref
 ) => {
   const { league } = useLeague();
+  const { isAuthenticated, triggerLoginModal } = useAuth();
   const [homeRoster, setHomeRoster] = useState<Athlete[]>([]);
   const [awayRoster, setAwayRoster] = useState<Athlete[]>([]);
   const [selectedPlayers, setSelectedPlayers] = useState<Athlete[]>([]);
@@ -459,11 +465,14 @@ ref
               setShowStats(true);
               
               // Calculate remaining cooldown time from backend timestamp
-              let lockedAt = null;
+              let lockedAt: number | null = null;
               if (latestPick.timestamp) {
                 lockedAt = latestPick.timestamp._seconds 
                   ? latestPick.timestamp._seconds * 1000 
                   : new Date(latestPick.timestamp).getTime();
+              }
+              
+              if (lockedAt) {
                 const elapsed = Date.now() - lockedAt;
                 const cooldownDuration = 120 * 1000; // 2 minutes in ms
                 const remaining = cooldownDuration - elapsed;
@@ -984,6 +993,94 @@ ref
     return <LoadingFootball message="Loading players..." />;
   }
 
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center px-6">
+        <div className="max-w-md w-full">
+          {/* Hero Section */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neon-cyan/20 via-bg-darkest to-neon-pink/20 border-2 border-neon-cyan/40 shadow-[0_0_30px_rgba(0,255,231,0.3)] p-6 sm:p-8">
+            {/* Animated background elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-neon-cyan/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-neon-pink/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+            
+            <div className="relative z-10">
+              {/* Lock Icon */}
+              <div className="flex justify-center mb-4">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-neon-cyan blur-xl opacity-50 animate-pulse"></div>
+                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-neon-cyan to-neon-pink flex items-center justify-center shadow-lg">
+                    <FaLock className="text-bg-darkest text-2xl" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Headline */}
+              <h1>Unlock Your Picks</h1>
+              <p className="text-text-muted text-center text-base mb-6">
+                Join the game and start making your predictions!
+              </p>
+
+              {/* Features Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-neon-cyan/5 border border-neon-cyan/20">
+                  <div className="w-8 h-8 rounded-lg bg-neon-cyan/20 flex items-center justify-center flex-shrink-0">
+                    <FaCheckCircle className="text-neon-cyan text-base" />
+                  </div>
+                  <div>
+                    <h3 className="text-text-light font-bold text-sm mb-0.5">Track Your Picks</h3>
+                    <p className="text-text-muted text-xs">Follow predictions in real-time</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-neon-pink/5 border border-neon-pink/20">
+                  <div className="w-8 h-8 rounded-lg bg-neon-pink/20 flex items-center justify-center flex-shrink-0">
+                    <FaBolt className="text-neon-pink text-base" />
+                  </div>
+                  <div>
+                    <h3 className="text-text-light font-bold text-sm mb-0.5">Live Updates</h3>
+                    <p className="text-text-muted text-xs">Instant player scoring alerts</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-neon-cyan/5 border border-neon-cyan/20">
+                  <div className="w-8 h-8 rounded-lg bg-neon-cyan/20 flex items-center justify-center flex-shrink-0">
+                    <FaChartLine className="text-neon-cyan text-base" />
+                  </div>
+                  <div>
+                    <h3 className="text-text-light font-bold text-sm mb-0.5">Performance Stats</h3>
+                    <p className="text-text-muted text-xs">Track prediction accuracy</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-neon-pink/5 border border-neon-pink/20">
+                  <div className="w-8 h-8 rounded-lg bg-neon-pink/20 flex items-center justify-center flex-shrink-0">
+                    <FaUsers className="text-neon-pink text-base" />
+                  </div>
+                  <div>
+                    <h3 className="text-text-light font-bold text-sm mb-0.5">Compete & Compare</h3>
+                    <p className="text-text-muted text-xs">See top picks and compete</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <button
+                onClick={() => triggerLoginModal()}
+                className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-pink text-bg-darkest font-bold text-base shadow-[0_0_20px_rgba(0,255,231,0.5)] hover:shadow-[0_0_30px_rgba(0,255,231,0.7)] transform hover:scale-105 transition-all duration-200"
+              >
+                Sign In to Start Picking
+              </button>
+
+              <p className="text-text-muted text-center text-xs mt-3">
+                Free to join • No credit card required
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Show countdown panel when game hasn't started
   if (isPreGameLocked) {
     const preGameUnlockDate = preGameUnlockTimestamp ? new Date(preGameUnlockTimestamp) : null;
@@ -1081,7 +1178,7 @@ ref
               )}
             </div>
 
-            <div className="relative flex gap-2 mx-2">
+            <div className="relative flex gap-2">
               {/* Current Picks Column */}
               <div 
                 className="transition-all duration-800 ease-in-out"

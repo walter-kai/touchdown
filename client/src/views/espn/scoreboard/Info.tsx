@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FaFootballBall, FaTrophy, FaChartBar, FaChartLine, FaUsers, FaTimes, FaClipboardList, FaClock, FaListAlt } from 'react-icons/fa';
 import FootballField from '@/views/espn/scoreboard/visuals/FootballField';
 import BasketballCourt from '@/views/espn/scoreboard/visuals/BasketballCourt';
-import YourPicks from '@/views/espn/scoreboard/YourPicks';
+import ChoosePicks from '@/views/espn/scoreboard/ChoosePicks';
 import type { PlayNfl } from '@/types/espn/plays';
 import PlayLog from '@/components/espn/PlayLog';
 import PointsChart from '@/components/espn/PointsChart';
@@ -475,115 +475,109 @@ const Info: React.FC<InfoProps> = ({
 
         {/* Box Score */}
         <div>
-          {/* Grid for Game Info */}
-          <div className="grid grid-cols-2 gap-2 mb-2">
-        {/* Date & Time */}
-        <div className="bg-bg-dark/50 rounded-lg p-4 border border-neon-cyan/20">
-          <p className="text-text-muted text-xs mb-1">Game Date</p>
-          {competition.date ? (
-              <p className="text-neon-cyan font-bold text-lg">
-                {new Date(competition.date).toLocaleDateString('en-US', { 
-                  month: 'short', 
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
-              </p>
-            ) : (
-              <p className="text-text-light text-sm">-</p>
-            )}
-          </div>
-
-          {/* Game Status */}
-          <div className="bg-bg-dark/50 rounded-lg p-4 border border-neon-cyan/20">
-            <p className="text-text-muted text-xs mb-1">{liveState === 'pre' ? 'Starts In' : 'Status'}</p>
-          {liveState === 'in' ? (
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-              <span className="text-red-500 font-bold text-lg">LIVE</span>
-              <span className="text-text-light font-bold">Q{livePeriod} - {liveClock}</span>
-            </div>
-          ) : liveState === 'post' ? (
-            <span className="text-text-muted font-bold text-lg">FINAL</span>
-          ) : (
-            <div>
-              <span className="text-text-light font-bold text-lg">
-                {(() => {
-                  const days = Math.floor(gameCountdown / (1000 * 60 * 60 * 24));
-                  const hours = Math.floor((gameCountdown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                  const minutes = Math.floor((gameCountdown % (1000 * 60 * 60)) / (1000 * 60));
-                  const seconds = Math.floor((gameCountdown % (1000 * 60)) / 1000);
-                  
-                  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-                  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
-                  if (minutes > 0) return `${minutes}m ${seconds}s`;
-                  return `${seconds}s`;
-                })()}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-        {/* Team Scores */}
-        <div className="border border-neon-cyan/30 rounded-lg bg-bg-dark/30">
-          <div className="flex items-stretch justify-between">
+          {/* Team Scores */}
+          <div className="border border-neon-cyan/30 rounded-lg bg-bg-dark/30">
+            <div className="flex items-start justify-between px-2 pt-2">
             {/* Away Team */}
             <button
           onClick={() => awayTeam?.id && router.push(`/nfl/team/${awayTeam.id}`)}
-          className="flex flex-col items-center hover:bg-neon-cyan/10 active:bg-neon-cyan/20 rounded-lg py-3 transition-all group cursor-pointer flex-1 focus:outline-none"
+          className="flex flex-col items-center hover:bg-neon-cyan/10 active:bg-neon-cyan/20 rounded-lg py-2 transition-all group cursor-pointer flex-1 focus:outline-none"
             >
-          <div className="w-20 h-20 md:w-20 md:h-20 mb-2 flex items-center justify-center">
+          <div className="w-16 h-16 mb-1 flex items-center justify-center">
             <img
               src={getTeamLogo(awayTeam?.team)}
               alt={awayTeam?.team?.displayName}
               className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform"
             />
           </div>
-          <h2 className="text-text-light font-bold text-sm md:text-base text-center px-2 group-hover:text-neon-cyan transition-colors">
+          <h2 className="text-text-light font-bold text-xs text-center px-1 group-hover:text-neon-cyan transition-colors leading-tight">
             {awayTeam?.team?.displayName}
           </h2>
           {awayTeam?.curRank && (
-            <div className="text-neon-cyan text-xs font-bold mb-1">
+            <div className="text-neon-cyan text-[10px] font-bold">
               #{awayTeam.curRank}
             </div>
           )}
-          <p className="text-text-muted text-xs">{awayTeam?.records?.[0]?.summary}</p>
+          <p className="text-text-muted text-[10px]">{awayTeam?.records?.[0]?.summary}</p>
             </button>
 
-            {/* Center Scores */}
-            <div className="flex items-center gap-4 px-6">
-          <CountUpScore 
-            value={currentAwayScore}
-            className="text-neon-cyan text-4xl md:text-5xl font-bold"
-          />
-          <span className="text-text-muted text-2xl">-</span>
-          <CountUpScore 
-            value={currentHomeScore}
-            className="text-neon-cyan text-4xl md:text-5xl font-bold"
-          />
+            {/* Center: Date, Time, and Score */}
+            <div className="flex flex-col items-center justify-center px-4 flex-1">
+              {/* Date */}
+              <p className="text-text-muted text-[10px] font-semibold mb-1">
+                {competition.date ? (
+                  new Date(competition.date).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                  })
+                ) : (
+                  '-'
+                )}
+              </p>
+              
+              {/* Score */}
+              <div className="flex items-center gap-3 my-1">
+                <CountUpScore 
+                  value={currentAwayScore}
+                  className="text-neon-cyan text-4xl font-bold"
+                />
+                <span className="text-text-muted text-xl">-</span>
+                <CountUpScore 
+                  value={currentHomeScore}
+                  className="text-neon-cyan text-4xl font-bold"
+                />
+              </div>
+              
+              {/* Status/Time */}
+              <div className="flex items-center gap-2">
+                {liveState === 'in' ? (
+                  <>
+                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                    <span className="text-red-500 font-bold text-[10px]">LIVE</span>
+                    <span className="text-text-light font-bold text-[10px]">Q{livePeriod} - {liveClock}</span>
+                  </>
+                ) : liveState === 'post' ? (
+                  <span className="text-text-muted font-bold text-[10px]">FINAL</span>
+                ) : (
+                  <span className="text-text-light font-bold text-[10px]">
+                    {(() => {
+                      const days = Math.floor(gameCountdown / (1000 * 60 * 60 * 24));
+                      const hours = Math.floor((gameCountdown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                      const minutes = Math.floor((gameCountdown % (1000 * 60 * 60)) / (1000 * 60));
+                      const seconds = Math.floor((gameCountdown % (1000 * 60)) / 1000);
+                      
+                      if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+                      if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+                      if (minutes > 0) return `${minutes}m ${seconds}s`;
+                      return `${seconds}s`;
+                    })()}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Home Team */}
             <button
           onClick={() => homeTeam?.id && router.push(`/nfl/team/${homeTeam.id}`)}
-          className="flex flex-col items-center hover:bg-neon-cyan/10 active:bg-neon-cyan/20 rounded-lg py-3 transition-all group cursor-pointer flex-1 focus:outline-none"
+          className="flex flex-col items-center hover:bg-neon-cyan/10 active:bg-neon-cyan/20 rounded-lg py-2 transition-all group cursor-pointer flex-1 focus:outline-none"
             >
-          <div className="w-20 h-20 md:w-20 md:h-20 mb-2 flex items-center justify-center">
+          <div className="w-16 h-16 mb-1 flex items-center justify-center">
             <img
               src={getTeamLogo(homeTeam?.team)}
               alt={homeTeam?.team?.displayName}
               className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform"
             />
           </div>
-          <h2 className="text-text-light font-bold text-sm md:text-base text-center px-2 group-hover:text-neon-cyan transition-colors">
+          <h2 className="text-text-light font-bold text-xs text-center px-1 group-hover:text-neon-cyan transition-colors leading-tight">
             {homeTeam?.team?.displayName}
           </h2>
           {homeTeam?.curRank && (
-            <div className="text-neon-cyan text-xs font-bold mb-1">
+            <div className="text-neon-cyan text-[10px] font-bold">
               #{homeTeam.curRank}
             </div>
           )}
-          <p className="text-text-muted text-xs">{homeTeam?.records?.[0]?.summary}</p>
+          <p className="text-text-muted text-[10px]">{homeTeam?.records?.[0]?.summary}</p>
             </button>
           </div>
         </div>
@@ -623,101 +617,29 @@ const Info: React.FC<InfoProps> = ({
 
                     {/* Timeouts, Possession, and Run Tracker - Status Bar */}
                     <div className="mb-3 bg-bg-dark/30 rounded-xl border border-neon-cyan/20 overflow-hidden">
-                      {/* Top Row - Timeouts */}
-                      <div className='flex p-2 border-b border-neon-cyan/10'>
-                      {/* Away Team Timeouts */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-text-muted text-xs font-semibold">{awayTeam?.team.abbreviation}</span>
-                        <div className="flex gap-1">
-                        {[1, 2, 3].map((_, idx) => (
-                          <div
-                          key={idx}
-                          className={`w-2 h-2 rounded-full ${
-                            idx < (situation.awayTimeouts ?? 3)
-                            ? 'bg-neon-cyan shadow-[0_0_8px_rgba(0,255,231,0.6)]'
-                            : 'bg-gray-600'
-                          }`}
-                          />
-                        ))}
-                        </div>
-                      </div>
-                      {/* Play Type - Center */}
-                      <div className="flex-1 flex justify-center">
-                        <div className="px-4 py-1.5 bg-yellow-500/20 border border-yellow-500/50 rounded-full">
-                        <span className="text-yellow-400 font-bold text-sm">
-                          {latestPlayType || 'Play'}
-                        </span>
-                        </div>
-                      </div>
-                      {/* Home Team Timeouts */}
-                      <div className="flex items-center gap-2">
-                        <div className="flex gap-1">
-                        {[1, 2, 3].map((_, idx) => (
-                          <div
-                          key={idx}
-                          className={`w-2 h-2 rounded-full ${
-                            idx < (situation.homeTimeouts ?? 3)
-                            ? 'bg-neon-pink shadow-[0_0_8px_rgba(250,175,232,0.6)]'
-                            : 'bg-gray-600'
-                          }`}
-                          />
-                        ))}
-                        </div>
-                        <span className="text-text-muted text-xs font-semibold">{homeTeam?.team.abbreviation}</span>
-                      </div>
-                      </div>
-
-                      {/* Bottom Row - Possession and Run Info */}
-                      <div className="flex items-center justify-between px-3 py-2">
-                        {/* Left: Possession or Down & Distance */}
+                    
+                      {/* Top Row - Possession and Current Run */}
+                      <div className='flex p-2 border-b border-neon-cyan/10 items-center'>
+                      {/* Left: Possession (NFL) or Possession (NBA) */}
+                      <div className="flex flex-col gap-0.5 flex-1">
+                        <span className="text-text-muted text-[9px] font-bold uppercase tracking-wider">Possession</span>
                         <div className="flex items-center gap-2">
                           {isNba ? (
-                            <>
-                              {livePossession && homeTeam?.id && awayTeam?.id && (
-                                <>
-                                  <img
-                                    src={livePossession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
-                                    alt="Possession"
-                                    className="w-5 h-5"
-                                  />
-                                  <span className="text-text-light font-semibold text-xs">
-                                    {livePossession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
-                                  </span>
-                                </>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              {competition.situation?.downDistanceText ? (
-                                <span className="text-neon-pink font-bold text-xs">{competition.situation.downDistanceText}</span>
-                              ) : (
-                                <span className="text-text-muted text-xs">No down info</span>
-                              )}
-                            </>
-                          )}
-                        </div>
-
-                        {/* Center/Right: Current Run (NBA) or Possession (NFL) */}
-                        <div className="flex items-center gap-2">
-                          {isNba ? (
-                            nbaRun && runTeam ? (
-                              <div className="flex items-center gap-2">
+                            livePossession && homeTeam?.id && awayTeam?.id && (
+                              <>
                                 <img
-                                  src={getTeamLogo(runTeam.team)}
-                                  alt={runTeam.team?.displayName}
+                                  src={livePossession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
+                                  alt="Possession"
                                   className="w-5 h-5"
                                 />
-                                <span className="text-neon-cyan font-bold text-xs">
-                                  {nbaRun.runPoints}-{nbaRun.oppPoints}
+                                <span className="text-text-light font-semibold text-xs">
+                                  {livePossession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
                                 </span>
-                                <span className="text-text-muted text-[10px]">
-                                  {nbaRun.durationLabel}
-                                </span>
-                              </div>
-                            ) : null
+                              </>
+                            )
                           ) : (
-                            livePossession && homeTeam?.id && awayTeam?.id ? (
-                              <div className="flex items-center gap-2">
+                            livePossession && homeTeam?.id && awayTeam?.id && (
+                              <>
                                 <img
                                   src={livePossession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
                                   alt="Possession"
@@ -726,31 +648,102 @@ const Info: React.FC<InfoProps> = ({
                                 <span className="text-neon-cyan font-semibold text-xs">
                                   {livePossession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
                                 </span>
-                              </div>
-                            ) : null
+                              </>
+                            )
                           )}
                         </div>
                       </div>
-                      {isNba ? (
-                        <BasketballCourt
-                          homeTeam={homeTeam?.team || homeTeam}
-                          awayTeam={awayTeam?.team || awayTeam}
-                          lastPlay={situation.lastPlay}
-                          playLog={playLog}
-                          getTeamLogo={getTeamLogo}
-                        />
-                      ) : (
-                        <FootballField
-                          homeTeam={homeTeam}
-                          awayTeam={awayTeam}
-                          leftTeamOverride={(latestPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? homeTeam : awayTeam}
-                          rightTeamOverride={(latestPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? awayTeam : homeTeam}
-                          lastPlay={situation.lastPlay}
-                          situation={situation}
-                          playLog={playLog}
-                          getTeamLogo={getTeamLogo}
-                        />
-                      )}
+
+                      {/* Play Type - Center */}
+                      <div className="flex-1 flex justify-center">
+                        <div className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/50 rounded-full w-max-44 content-center flex items-center gap-2">
+                        <span className="text-yellow-400 text-xs">
+                          {latestPlayType || 'Play'}
+                        </span>
+                        </div>
+                      </div>
+
+                      {/* Right: Current Run (NBA only) */}
+                      <div className="flex-1 flex flex-col items-end gap-0.5">
+                        {isNba && nbaRun && runTeam ? (
+                          <>
+                            <span className="text-text-muted text-[9px] font-bold uppercase tracking-wider">Current Run</span>
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={getTeamLogo(runTeam.team)}
+                                alt={runTeam.team?.displayName}
+                                className="w-5 h-5"
+                              />
+                              <span className="text-neon-cyan font-bold text-xs">
+                                {nbaRun.runPoints}-{nbaRun.oppPoints}
+                              </span>
+                              <span className="text-text-muted text-[10px]">
+                                {nbaRun.durationLabel}
+                              </span>
+                            </div>
+                          </>
+                        ) : null}
+                      </div>
+
+                      </div>
+
+                      {/* Court/Field Container with Timeouts */}
+                      <div className="relative">
+                        {/* Away Team Timeouts - Top Left */}
+                        <div className="absolute top-2 left-2 z-10 flex items-center gap-2">
+                          <span className="text-text-muted text-xs font-semibold">{awayTeam?.team.abbreviation}</span>
+                          <div className="flex gap-1">
+                            {[1, 2, 3].map((_, idx) => (
+                              <div
+                                key={idx}
+                                className={`w-2 h-2 rounded-full ${
+                                  idx < (situation.awayTimeouts ?? 3)
+                                  ? 'bg-neon-cyan shadow-[0_0_8px_rgba(0,255,231,0.6)]'
+                                  : 'bg-gray-600'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Home Team Timeouts - Top Right */}
+                        <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+                          <div className="flex gap-1">
+                            {[1, 2, 3].map((_, idx) => (
+                              <div
+                                key={idx}
+                                className={`w-2 h-2 rounded-full ${
+                                  idx < (situation.homeTimeouts ?? 3)
+                                  ? 'bg-neon-pink shadow-[0_0_8px_rgba(250,175,232,0.6)]'
+                                  : 'bg-gray-600'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-text-muted text-xs font-semibold">{homeTeam?.team.abbreviation}</span>
+                        </div>
+
+                        {isNba ? (
+                          <BasketballCourt
+                            homeTeam={homeTeam?.team || homeTeam}
+                            awayTeam={awayTeam?.team || awayTeam}
+                            lastPlay={situation.lastPlay}
+                            playLog={playLog}
+                            getTeamLogo={getTeamLogo}
+                          />
+                        ) : (
+                          <FootballField
+                            homeTeam={homeTeam}
+                            awayTeam={awayTeam}
+                            leftTeamOverride={(latestPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? homeTeam : awayTeam}
+                            rightTeamOverride={(latestPlay?.quarter ?? competition.status?.period ?? 1) >= 3 ? awayTeam : homeTeam}
+                            lastPlay={situation.lastPlay}
+                            situation={situation}
+                            playLog={playLog}
+                            getTeamLogo={getTeamLogo}
+                          />
+                        )}
+                      </div>
                     </div>
 
 
@@ -897,7 +890,7 @@ const Info: React.FC<InfoProps> = ({
                     {activeContentView === 'picks' && (
                       <div className="mt-2 mx-2">
                         {resolvedHomeTeamId && resolvedAwayTeamId && gameId ? (
-                          <YourPicks
+                          <ChoosePicks
                             gameId={gameId}
                             homeTeamId={resolvedHomeTeamId}
                             awayTeamId={resolvedAwayTeamId}

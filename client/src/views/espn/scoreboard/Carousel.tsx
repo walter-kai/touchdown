@@ -8,7 +8,7 @@ import { useLeague } from '@/providers/LeagueContext';
 import HeadToHead from '@/components/espn/HeadToHead';
 import ProbChart from '@/components/espn/ProbabilityChart';
 import PointsChart from '@/components/espn/PointsChart';
-import PlayerPick from '@/views/espn/scoreboard/PlayerPick';
+import ChoosePicks from '@/views/espn/scoreboard/ChoosePicks';
 import Info from '@/views/espn/scoreboard/Info';
 import Modal from '@/views/espn/scoreboard/games/Modal';
 import TelegramChat from '@/components/TelegramChat';
