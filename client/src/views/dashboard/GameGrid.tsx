@@ -83,7 +83,6 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
         const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
         
         if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
-          console.log(`✅ Using cached games data on init (${Math.round(cacheAge / 1000)}s old)`);
           setGames(data);
           if (data.length > 0) {
             markInitialReady();
@@ -119,8 +118,6 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
     try {
       setError(null);
       setIsLoading(true);
-
-      console.log('Fetching games for:', { date });
       
       // Determine dates parameter - if no date provided, fetch current week
       let datesParam: string | undefined;
@@ -142,7 +139,6 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
         };
         
         datesParam = `${formatDate(startDate)}-${formatDate(endDate)}`;
-        console.log('Default date range:', datesParam);
       }
       
       // Check sessionStorage cache first
@@ -156,7 +152,6 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
           const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
           
           if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
-            console.log(`✅ Using cached games data (${Math.round(cacheAge / 1000)}s old)`);
             setGames(data);
             setIsLoading(false);
             if (data.length > 0) {
@@ -164,7 +159,6 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
             }
             return;
           } else {
-            console.log('Games cache expired, fetching fresh data...');
             sessionStorage.removeItem(cacheKey);
           }
         } catch (error) {
@@ -183,9 +177,6 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
         dates: datesParam,
         limit: 100
       });
-
-      console.log('Fetching NFL URL:', nflUrl);
-      console.log('Fetching NBA URL:', nbaUrl);
 
       const [nflResponse, nbaResponse] = await Promise.all([
         axios.get(nflUrl),
@@ -213,7 +204,6 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
         timestamp: Date.now()
       }));
 
-      console.log(`Games fetched: ${nflEvents.length} NFL, ${nbaEvents.length} NBA`);
       setGames(allGames);
       setIsLoading(false);
       if (allGames.length > 0) {
@@ -228,13 +218,11 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
   }, [preload, markInitialReady]);
 
   const handleDateSelect = useCallback((dateOrRange: string) => {
-    console.log('Date selected:', dateOrRange);
     setSelectedDate(dateOrRange);
   }, []);
 
   // Refresh scoreboard whenever date changes
   useEffect(() => {
-    console.log('Effect triggered - fetching with:', { selectedDate });
     fetchAllGamesData(selectedDate || undefined);
   }, [fetchAllGamesData, selectedDate]);
 

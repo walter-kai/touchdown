@@ -46,7 +46,6 @@ export function calculateAthleteScoresFromPlays(
       if (p?.id) userScores[p.id] = 0;
     });
 
-    console.log(`[Dashboard Scoring] No play log for game ${gameId}, using stored totalScore=${storedTotal}`);
     return {
       gameScores: {},
       sessionScores: {},
@@ -185,11 +184,6 @@ export function calculateAthleteScoresFromPlays(
 
   const totalScore = Object.values(userScores).reduce((sum, score) => sum + score, 0);
 
-  console.log(
-    `[Dashboard Scoring] Calculated scores for game ${gameId}: ` +
-    `${Object.keys(gameScores).length} athletes, total score: ${totalScore}`
-  );
-
   return {
     gameScores,
     sessionScores,
@@ -235,7 +229,6 @@ export async function fetchPlaysByPlayFromESPN(gameId: string, league: 'nfl' | '
       };
     });
 
-    console.log(`[Dashboard Scoring] Fetched ${plays.length} plays for game ${gameId} from ESPN`);
     return plays;
   } catch (error) {
     console.error(`[Dashboard Scoring] Error fetching plays for game ${gameId}:`, error);

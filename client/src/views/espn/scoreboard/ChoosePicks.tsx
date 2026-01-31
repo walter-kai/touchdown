@@ -357,7 +357,6 @@ ref
   const preGameUnlockTimestamp = React.useMemo(() => {
     if (!gameStartDate) return null;
     const timestamp = new Date(gameStartDate).getTime() - 2 * 60 * 1000;
-    console.log('ChoosePicks - Game start:', gameStartDate, 'Unlock timestamp:', new Date(timestamp).toISOString(), 'Diff from now:', timestamp - Date.now());
     return timestamp;
   }, [gameStartDate]);
   const [preGameCountdownMs, setPreGameCountdownMs] = React.useState<number | null>(null);

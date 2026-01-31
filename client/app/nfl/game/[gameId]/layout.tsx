@@ -20,7 +20,6 @@ async function getGameData(gameId: string) {
     clearTimeout(timeoutId);
     
     if (!response.ok) {
-      console.warn(`ESPN API returned status ${response.status} for gameId ${gameId}`);
       return null;
     }
     
@@ -31,20 +30,17 @@ async function getGameData(gameId: string) {
     
     try {
       const data = JSON.parse(text);
-      console.log(`✅ Fetched metadata for NFL game ${gameId}`);
       return data;
     } catch (parseError) {
-      console.error('Failed to parse game data:', parseError);
       return null;
     }
   } catch (error) {
-    console.error('Failed to fetch game data for metadata:', error);
     return null;
   }
 }
 
-export async function generateMetadata({ params }: { params: { gameId: string } }): Promise<Metadata> {
-  const { gameId } = params;
+export async function generateMetadata({ params }: { params: Promise<{ gameId: string }> }): Promise<Metadata> {
+  const { gameId } = await params;
   const event = await getGameData(gameId);
 
   if (!event) {

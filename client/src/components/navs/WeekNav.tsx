@@ -56,7 +56,6 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
 
         // If we found games and at least one is upcoming, return this week and cache the events
         if (events.length > 0 && hasUpcoming) {
-          console.log('Found week with upcoming games starting from:', days[0]);
           return { weekStart: checkDate, events };
         }
       } catch (error) {
@@ -157,8 +156,6 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
 
           const response = await axios.get(url);
           events = response.data.events || [];
-        } else {
-          console.log('Using cached events for game counts');
         }
         
         // Count games per day
@@ -209,14 +206,12 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
     if (onDateSelect && !loading && weekDays.length > 0) {
       // If a single day is already selected, don't override it
       if (selectedSingleDay) {
-        console.log('WeekNav: Keeping single day selection:', selectedSingleDay);
         return;
       }
       
       const startDate = weekDays[0].date;
       const endDate = weekDays[weekDays.length - 1].date;
       const dateRange = `${startDate}-${endDate}`;
-      console.log('WeekNav: Week changed, auto-selecting range:', dateRange);
       onDateSelect(dateRange);
     }
   }, [weekDays, loading, selectedSingleDay]); // Trigger whenever weekDays updates
@@ -225,7 +220,6 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
     if (!currentWeekStart) return;
     const newStart = new Date(currentWeekStart);
     newStart.setDate(newStart.getDate() - 7);
-    console.log('WeekNav: Navigating to last week:', newStart);
     setCachedEvents([]); // Clear cache when navigating
     setSelectedSingleDay(null); // Clear single day selection
     setCurrentWeekStart(newStart);
@@ -235,7 +229,6 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
     if (!currentWeekStart) return;
     const newStart = new Date(currentWeekStart);
     newStart.setDate(newStart.getDate() + 7);
-    console.log('WeekNav: Navigating to next week:', newStart);
     setCachedEvents([]); // Clear cache when navigating
     setSelectedSingleDay(null); // Clear single day selection
     setCurrentWeekStart(newStart);
@@ -245,18 +238,15 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
     if (onDateSelect) {
       // If clicking the same day, untoggle and show full week
       if (selectedSingleDay === date) {
-        console.log('WeekNav: Untoggling day, showing full week');
         setSelectedSingleDay(null);
         if (weekDays.length > 0) {
           const startDate = weekDays[0].date;
           const endDate = weekDays[weekDays.length - 1].date;
           const dateRange = `${startDate}-${endDate}`;
-          console.log('WeekNav: Selecting full week range:', dateRange);
           onDateSelect(dateRange);
         }
       } else {
         // Select single day
-        console.log('WeekNav: Selecting single day:', date);
         setSelectedSingleDay(date);
         onDateSelect(date);
       }

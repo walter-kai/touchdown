@@ -654,8 +654,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
   let returnStartYard: number | null = null; // Where returner catches/recovers
   let returnEndYard: number | null = null; // Final position after return
   const isKickPlay = playViz.animate === 'punt' || playViz.animate === 'kickoff' || playViz.animate === 'kickoff-fail';
-  
-  if (debugLogs) console.log('🏈 Is kick play?', isKickPlay, 'playViz.animate:', playViz.animate);
 
   if (isKickPlay && lastPlay?.text) {
     // Extract punts (optionally include the from yard), plus returns
@@ -918,7 +916,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
       const depthYards = depthBucket === 'short' ? 8 : 18;
       normalizedPassEnd = clampYard(normalizedPassStart + passDirection * depthYards);
       estimatedIncompleteTarget = true;
-      console.log('🎯 Estimated incomplete target', { depthBucket, normalizedPassStart, normalizedPassEnd, passDirection, text: lastPlay.text });
     }
   }
 
@@ -1326,7 +1323,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
       {/* Animated play elements */}
       {(getStartYard(lastPlay) !== undefined) && (getEndYard(lastPlay) !== undefined) && (lastPlay as any)?.athletesInvolved && (lastPlay as any)?.athletesInvolved.length > 0 && (() => {
-        if (debugLogs) console.log('Play data:', lastPlay);
         const resolvedStartYard = normalizedPassStart ?? playStartYard ?? getStartYard(lastPlay);
         const resolvedEndYard = normalizedPassEnd ?? playEndYard ?? getEndYard(lastPlay);
         if (resolvedStartYard === undefined || resolvedEndYard === undefined) return null;
@@ -1360,8 +1356,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
           // Determine rush direction for football positioning
           const rushDirection = Math.sign(distanceWithOffset);
           const footballOnRight = rushDirection >= 0; // rushing right = ball on right side
-          
-          console.log('Rush animation:', { startX: baseStartX, endX: baseEndX, distancePercent, fieldWidth, distanceWithOffset, hasGain, footballOnRight });
           
           return (
             <>
@@ -1674,7 +1668,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
                     willChange: 'transform, opacity'
                   } as React.CSSProperties}
                   onAnimationEnd={() => {
-                    console.log('🏁 Kick arc animation ended');
                     setKickDone(true);
                     setReturnStarted(true);
                     setBallFade(true);

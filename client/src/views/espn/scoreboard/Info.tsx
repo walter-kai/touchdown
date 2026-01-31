@@ -110,7 +110,6 @@ const Info: React.FC<InfoProps> = ({
         // Try to fetch from Firebase via API
         const token = localStorage.getItem('dexter_access_token');
         if (!token) {
-          console.log('No auth token found, skipping API fetch');
           throw new Error('No token');
         }
         
@@ -260,7 +259,6 @@ const Info: React.FC<InfoProps> = ({
   useEffect(() => {
     const fetchGameLeaderboard = async () => {
       if (!gameId) {
-        console.log('[Leaderboard] No gameId provided');
         return;
       }
       try {
@@ -269,19 +267,14 @@ const Info: React.FC<InfoProps> = ({
         // Determine league from URL
         const pathLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
         const endpoint = `/api/game-data/${pathLeague}/${gameId}`;
-        console.log('[Leaderboard] Fetching from', endpoint);
         const response = await fetch(endpoint);
-        console.log('[Leaderboard] Response status:', response.status);
         if (response.status === 404) {
-          console.log('[Leaderboard] Game data not found (404)');
           setGameDataNotFound(true);
           setGameLeaderboard(null);
         } else if (response.ok) {
           const data = await response.json();
-          console.log('[Leaderboard] Data received:', data);
           // Game data structure: { ok: true, docId, leaderboard: { entries: [...], totalUsers, lastCalculated }, ... }
           if (data.ok && data.leaderboard && data.leaderboard.entries) {
-            console.log('[Leaderboard] Setting leaderboard with', data.leaderboard.entries.length, 'entries');
             setGameLeaderboard({
               ok: true,
               leaderboard: data.leaderboard.entries,
@@ -289,7 +282,6 @@ const Info: React.FC<InfoProps> = ({
             });
             setGameDataNotFound(false);
           } else {
-            console.log('[Leaderboard] No leaderboard data in response:', data);
           }
         } else {
           console.warn('[Leaderboard] Response not ok, status:', response.status);

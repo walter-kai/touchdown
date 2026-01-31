@@ -184,7 +184,6 @@ export const getAllUserPicksForDashboard = catchAsync(async (req: Request, res: 
     };
   });
 
-  console.log(`[Dashboard] Returning ${dashboardGames.length} games with stored scores (NO ESPN API calls)`);
   return res.status(200).json({ ok: true, games: dashboardGames });
 });
 

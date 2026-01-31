@@ -34,7 +34,6 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
   // Reset state when league changes to prevent using old player IDs with new league
   useEffect(() => {
     if (currentLeague !== league) {
-      console.log(`League changed from ${currentLeague} to ${league}, clearing player state`);
       setOverview(null);
       setBio(null);
       setError(null);

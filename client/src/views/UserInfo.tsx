@@ -43,7 +43,6 @@ const UserInfo: React.FC = () => {
         }
 
         const data = await response.json();
-        console.log('User stats:', data);
         
         if (data.ok && data.user) {
           // Calculate average score

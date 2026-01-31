@@ -93,7 +93,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
         const cacheAge = Date.now() - timestamp;
         const CACHE_DURATION = 5 * 60 * 1000;
         if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
-          console.log(`🎯 Dashboard initialized from cache (${Math.round(cacheAge / 1000)}s old)`);
           return data;
         }
       }

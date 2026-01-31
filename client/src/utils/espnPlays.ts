@@ -191,7 +191,6 @@ export const fetchEspnPlays = async (
 
   // Fetch plays from ESPN API
   const url = getPlaysUrl(league, gameId, compId);
-  console.log(`[fetchEspnPlays] Fetching plays with league=${league}, gameId=${gameId}, url=${url}`);
   const res = await axios.get(url);
   const data = res.data;
 
