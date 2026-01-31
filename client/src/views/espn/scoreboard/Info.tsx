@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaFootballBall, FaTrophy } from 'react-icons/fa';
-import FootballField from '@/views/espn/scoreboard/games/FootballField';
-import BasketballCourt from '@/views/espn/scoreboard/games/BasketballCourt';
+import { FaFootballBall, FaTrophy, FaChartBar, FaChartLine, FaUsers, FaTimes, FaClipboardList, FaClock, FaListAlt } from 'react-icons/fa';
+import FootballField from '@/views/espn/scoreboard/visuals/FootballField';
+import BasketballCourt from '@/views/espn/scoreboard/visuals/BasketballCourt';
+import PlayerPick from '@/views/espn/scoreboard/PlayerPick';
 import type { PlayNfl } from '@/types/espn/plays';
 import PlayLog from '@/components/espn/PlayLog';
-import GameLeaders from '@/views/espn/summary/GameLeaders';
-import PredictionChart from '@/components/espn/PredictionChart';
+import PointsChart from '@/components/espn/PointsChart';
 import { CountUpScore } from '@/components/common/CountUpScore';
 import { usePlays } from '@/providers/PlaysContext';
 import { useAuth } from '@/providers/AuthContext';
@@ -59,6 +59,8 @@ interface InfoProps {
   homeTeamId?: string;
   awayTeamId?: string;
   onOpenPicks?: () => void;
+  modalView: 'prediction' | 'leaders' | 'stats' | 'scoring' | null;
+  setModalView: (view: 'prediction' | 'leaders' | 'stats' | 'scoring' | null) => void;
 }
 
 const Info: React.FC<InfoProps> = ({
@@ -74,6 +76,8 @@ const Info: React.FC<InfoProps> = ({
   homeTeamId,
   awayTeamId,
   onOpenPicks,
+  modalView,
+  setModalView,
 }) => {
   const router = useRouter();
   const { user } = useAuth();
@@ -92,6 +96,9 @@ const Info: React.FC<InfoProps> = ({
   const [gameLeaderboard, setGameLeaderboard] = useState<any>(null);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [gameDataNotFound, setGameDataNotFound] = useState(false);
+  const [activeContentView, setActiveContentView] = useState<'picks' | 'timeline' | 'playlog'>('picks');
+  const [pickSubTab, setPickSubTab] = useState<'yourpicks' | 'choosepicks'>('yourpicks');
+  const playerPickRef = useRef<{ openRoster: () => void }>(null);
 
   // Load picks from Firebase/API and localStorage
   useEffect(() => {
@@ -203,6 +210,22 @@ const Info: React.FC<InfoProps> = ({
       window.removeEventListener('localStorageUpdate' as any, handleLocalUpdate);
     };
   }, [gameId, user, playLog, homeTeamId, awayTeamId]);
+
+  // Recalculate pick scores whenever playLog updates
+  useEffect(() => {
+    if (!currentPicks || currentPicks.length === 0 || !playLog) return;
+    
+    const scores: Record<string, number> = {};
+    currentPicks.forEach((player: any) => {
+      scores[player.id] = 0;
+      playLog.forEach(play => {
+        if (play.athletesInvolved?.some((a: any) => a?.id === player.id)) {
+          scores[player.id]++;
+        }
+      });
+    });
+    setPicksScores(scores);
+  }, [currentPicks, playLog]);
 
   // Track score increases and show animation
   const prevScoresRef = useRef<Record<string, number>>({});
@@ -335,6 +358,73 @@ const Info: React.FC<InfoProps> = ({
 
   const runTeam = nbaRun ? (nbaRun.teamId === homeTeam?.id ? homeTeam : awayTeam) : null;
 
+  // Calculate scoring plays for PointsChart
+  const scoringPlays = useMemo(() => {
+    const plays: Array<{
+      text: string;
+      quarter: number;
+      clock: string;
+      timestamp: Date;
+      homeScore?: number;
+      awayScore?: number;
+    }> = [];
+    
+    let currentHomeScore = 0;
+    let currentAwayScore = 0;
+    
+    playLog.forEach((play) => {
+      const text = play.text.toLowerCase();
+      const isScoring = 
+        text.includes('touchdown') || 
+        text.includes('field goal') || 
+        text.includes('safety') ||
+        text.includes('extra point') ||
+        text.includes('two point') ||
+        text.includes('pat ') ||
+        text.includes('made') ||  // For NBA shots
+        text.includes('free throw');
+      
+      if (isScoring) {
+        // Determine which team scored based on possession
+        const isHomeTeamPlay = play.possession === homeTeam?.id;
+        
+        // Calculate points based on play text
+        let points = 0;
+        if (isNba) {
+          // NBA scoring
+          if (text.includes('3-pt')) points = 3;
+          else if (text.includes('free throw') && text.includes('made')) points = 1;
+          else if (text.includes('made')) points = 2;
+        } else {
+          // NFL scoring
+          if (text.includes('touchdown')) points = 6;
+          else if (text.includes('field goal')) points = 3;
+          else if (text.includes('safety')) points = 2;
+          else if (text.includes('extra point') || text.includes('pat ')) points = 1;
+          else if (text.includes('two point')) points = 2;
+        }
+        
+        // Update scores
+        if (isHomeTeamPlay) {
+          currentHomeScore += points;
+        } else {
+          currentAwayScore += points;
+        }
+        
+        plays.push({
+          text: play.text,
+          quarter: play.quarter,
+          clock: play.clock,
+          timestamp: typeof play.timestamp === 'string' ? new Date(play.timestamp) : play.timestamp,
+          homeScore: currentHomeScore,
+          awayScore: currentAwayScore
+        });
+      }
+    });
+    
+    return plays;
+  }, [playLog, homeTeam?.id, isNba]);
+
   const latestPlay: PlayNfl | undefined = playLog?.[0];
   const latestPlayType = typeof latestPlay?.type === 'string'
     ? latestPlay.type
@@ -350,6 +440,38 @@ const Info: React.FC<InfoProps> = ({
   return (
     <>
       <div className='mx-2'>
+        {/* Icon Bar for Advanced Stats */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <button
+            onClick={() => setModalView('prediction')}
+            className="bg-gradient-to-r from-neon-cyan/10 to-neon-cyan/5 hover:from-neon-cyan/20 hover:to-neon-cyan/10 border border-neon-cyan/30 rounded-lg px-3 py-2 flex items-center justify-center gap-2 text-neon-cyan font-bold text-xs transition-all"
+          >
+            <FaChartLine className="text-sm" />
+            <span>Prediction</span>
+          </button>
+          <button
+            onClick={() => setModalView('leaders')}
+            className="bg-gradient-to-r from-neon-pink/10 to-neon-pink/5 hover:from-neon-pink/20 hover:to-neon-pink/10 border border-neon-pink/30 rounded-lg px-3 py-2 flex items-center justify-center gap-2 text-neon-pink font-bold text-xs transition-all"
+          >
+            <FaUsers className="text-sm" />
+            <span>Leaders</span>
+          </button>
+          <button
+            onClick={() => setModalView('stats')}
+            className="bg-gradient-to-r from-neon-cyan/10 to-neon-pink/10 hover:from-neon-cyan/20 hover:to-neon-pink/20 border border-neon-cyan/30 rounded-lg px-3 py-2 flex items-center justify-center gap-2 text-white font-bold text-xs transition-all"
+          >
+            <FaChartBar className="text-sm" />
+            <span>Stats</span>
+          </button>
+          <button
+            onClick={() => setModalView('scoring')}
+            className="bg-gradient-to-r from-neon-pink/10 to-neon-cyan/10 hover:from-neon-pink/20 hover:to-neon-cyan/20 border border-neon-pink/30 rounded-lg px-3 py-2 flex items-center justify-center gap-2 text-neon-pink font-bold text-xs transition-all"
+          >
+            <FaChartBar className="text-sm" />
+            <span>Scoring</span>
+          </button>
+        </div>
+
         {/* Box Score */}
         <div>
           {/* Grid for Game Info */}
@@ -419,6 +541,11 @@ const Info: React.FC<InfoProps> = ({
           <h2 className="text-text-light font-bold text-sm md:text-base text-center px-2 group-hover:text-neon-cyan transition-colors">
             {awayTeam?.team?.displayName}
           </h2>
+          {awayTeam?.curRank && (
+            <div className="text-neon-cyan text-xs font-bold mb-1">
+              #{awayTeam.curRank}
+            </div>
+          )}
           <p className="text-text-muted text-xs">{awayTeam?.records?.[0]?.summary}</p>
             </button>
 
@@ -450,6 +577,11 @@ const Info: React.FC<InfoProps> = ({
           <h2 className="text-text-light font-bold text-sm md:text-base text-center px-2 group-hover:text-neon-cyan transition-colors">
             {homeTeam?.team?.displayName}
           </h2>
+          {homeTeam?.curRank && (
+            <div className="text-neon-cyan text-xs font-bold mb-1">
+              #{homeTeam.curRank}
+            </div>
+          )}
           <p className="text-text-muted text-xs">{homeTeam?.records?.[0]?.summary}</p>
             </button>
           </div>
@@ -486,128 +618,12 @@ const Info: React.FC<InfoProps> = ({
               <div className="">
                 <div className="pt-2 ">
                   <div className='mx-2'>
-                    {/* Game Leaderboard Section - Above Current Run */}
-                    {gameLeaderboard && gameLeaderboard.leaderboard && gameLeaderboard.leaderboard.length > 0 && (
-                      <div className="mb-2 bg-bg-dark/50 border border-neon-cyan/20 rounded-lg p-4">
-                        <h3 className="text-neon-cyan font-bold text-sm mb-4 flex items-center gap-2">
-                          <FaTrophy className="text-yellow-400" />
-                          Leaderboard ({gameLeaderboard.totalUsers || 0})
-                        </h3>
-                        <div className="space-y-0">
-                          {gameLeaderboard.leaderboard.slice(0, 5).map((entry: any, idx: number) => (
-                            <div key={`${entry.userId}-${idx}`}>
-                              <button
-                                onClick={() => router.push(`/user/${entry.userId}`)}
-                                className="w-full flex items-center justify-between px-2 py-1 hover:bg-neon-cyan/5 transition-colors text-left group"
-                              >
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                  {/* Rank Badge */}
-                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
-                                    idx === 0 ? 'bg-yellow-500/30 text-yellow-400 border border-yellow-500' :
-                                    idx === 1 ? 'bg-gray-400/30 text-gray-300 border border-gray-500' :
-                                    idx === 2 ? 'bg-orange-700/30 text-orange-400 border border-orange-600' :
-                                    'bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/30'
-                                  }`}>
-                                    {idx + 1}
-                                  </div>
-                                  
-                                  {/* User Info */}
-                                  <div className="flex-1 min-w-0">
-                                    {entry.photoUrl && (
-                                      <img
-                                        src={entry.photoUrl}
-                                        alt={entry.displayName}
-                                        className="w-8 h-8 rounded-full inline-block mr-2 border border-neon-cyan/30"
-                                      />
-                                    )}
-                                    <span className="text-text-light font-semibold text-sm truncate group-hover:text-neon-cyan transition-colors">{entry.displayName}</span>
-                                  </div>
-                                </div>
-                                
-                                {/* Score */}
-                                <div className="text-right ml-2 flex-shrink-0">
-                                  <p className="text-neon-pink font-bold text-base">{entry.totalScore}</p>
-                                  <p className="text-text-muted text-xs">pts</p>
-                                </div>
-                              </button>
-                              {idx < gameLeaderboard.leaderboard.slice(0, 5).length - 1 && (
-                                <div className="border-t border-neon-cyan/10"></div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    {/* Game Leaderboard removed - already shown below box score */}
 
-                    {/* Down & Distance and Possession - Above Field */}
-                    <div className={`grid ${isNba ? 'grid-cols-2' : 'grid-cols-2'} gap-2 mb-2`}>
-                      {/* Run Tracker (NBA) or Down & Distance (NFL) */}
-                      {isNba ? (
-                        <div className="bg-bg-dark/50 rounded-lg p-3 border border-neon-cyan/20">
-                          <p className="text-text-muted text-xs mb-1">Current Run</p>
-                          {nbaRun && runTeam ? (
-                            <div className="flex items-center justify-center gap-4">
-                              <div className="flex items-center gap-2">
-                                {getTeamLogo && runTeam?.team && (
-                                  <img
-                                    src={getTeamLogo(runTeam.team)}
-                                    alt={runTeam.team?.displayName}
-                                    className="w-8 h-8"
-                                  />
-                                )}
-                                <span className="text-text-light font-bold text-sm">
-                                  {runTeam?.team?.abbreviation}
-                                </span>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-neon-cyan font-bold text-lg">
-                                  {nbaRun.runPoints}-{nbaRun.oppPoints}
-                                </div>
-                                <div className="text-text-muted text-[11px] font-semibold">
-                                  last {nbaRun.durationLabel}
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-text-light text-sm">Run will appear after first score</span>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="bg-bg-dark/50 rounded-lg p-3 border border-neon-pink/20">
-                          <p className="text-text-muted text-xs mb-1">Down & Distance</p>
-                          {competition.situation?.downDistanceText ? (
-                            <p className="text-neon-pink font-bold text-base">{competition.situation.downDistanceText}</p>
-                          ) : (
-                            <p className="text-text-light text-sm">-</p>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Possession */}
-                      <div className="bg-bg-dark/50 rounded-lg p-3 border border-neon-cyan/20">
-                        <p className="text-text-muted text-xs mb-1 my-auto">Possession</p>
-                        {livePossession ? (
-                          <div className="flex items-center gap-2 mt-4 justify-center">
-                            {homeTeam?.id && awayTeam?.id && (
-                              <img
-                                src={livePossession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
-                                alt="Possession"
-                                className="w-6 h-6"
-                              />
-                            )}
-                            <p className="text-neon-cyan font-bold text-base">
-                              {livePossession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
-                            </p>
-                          </div>
-                        ) : (
-                          <p className="text-text-light text-sm">-</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Timeouts and Play Type - Combined Row */}
-                    <div className="items-center justify-between gap-3 mb-3 bg-bg-dark/30 rounded-xl border border-neon-cyan/20 overflow-hidden">
-                      <div className='flex p-2'>
+                    {/* Timeouts, Possession, and Run Tracker - Status Bar */}
+                    <div className="mb-3 bg-bg-dark/30 rounded-xl border border-neon-cyan/20 overflow-hidden">
+                      {/* Top Row - Timeouts */}
+                      <div className='flex p-2 border-b border-neon-cyan/10'>
                       {/* Away Team Timeouts */}
                       <div className="flex items-center gap-2">
                         <span className="text-text-muted text-xs font-semibold">{awayTeam?.team.abbreviation}</span>
@@ -649,6 +665,71 @@ const Info: React.FC<InfoProps> = ({
                         <span className="text-text-muted text-xs font-semibold">{homeTeam?.team.abbreviation}</span>
                       </div>
                       </div>
+
+                      {/* Bottom Row - Possession and Run Info */}
+                      <div className="flex items-center justify-between px-3 py-2">
+                        {/* Left: Possession or Down & Distance */}
+                        <div className="flex items-center gap-2">
+                          {isNba ? (
+                            <>
+                              {livePossession && homeTeam?.id && awayTeam?.id && (
+                                <>
+                                  <img
+                                    src={livePossession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
+                                    alt="Possession"
+                                    className="w-5 h-5"
+                                  />
+                                  <span className="text-text-light font-semibold text-xs">
+                                    {livePossession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
+                                  </span>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {competition.situation?.downDistanceText ? (
+                                <span className="text-neon-pink font-bold text-xs">{competition.situation.downDistanceText}</span>
+                              ) : (
+                                <span className="text-text-muted text-xs">No down info</span>
+                              )}
+                            </>
+                          )}
+                        </div>
+
+                        {/* Center/Right: Current Run (NBA) or Possession (NFL) */}
+                        <div className="flex items-center gap-2">
+                          {isNba ? (
+                            nbaRun && runTeam ? (
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src={getTeamLogo(runTeam.team)}
+                                  alt={runTeam.team?.displayName}
+                                  className="w-5 h-5"
+                                />
+                                <span className="text-neon-cyan font-bold text-xs">
+                                  {nbaRun.runPoints}-{nbaRun.oppPoints}
+                                </span>
+                                <span className="text-text-muted text-[10px]">
+                                  {nbaRun.durationLabel}
+                                </span>
+                              </div>
+                            ) : null
+                          ) : (
+                            livePossession && homeTeam?.id && awayTeam?.id ? (
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src={livePossession === homeTeam?.id ? getTeamLogo(homeTeam?.team) : getTeamLogo(awayTeam?.team)}
+                                  alt="Possession"
+                                  className="w-5 h-5"
+                                />
+                                <span className="text-neon-cyan font-semibold text-xs">
+                                  {livePossession === homeTeam?.id ? homeTeam?.team.abbreviation : awayTeam?.team.abbreviation}
+                                </span>
+                              </div>
+                            ) : null
+                          )}
+                        </div>
+                      </div>
                       {isNba ? (
                         <BasketballCourt
                           homeTeam={homeTeam?.team || homeTeam}
@@ -675,12 +756,9 @@ const Info: React.FC<InfoProps> = ({
                     {/* Current Picks Display - Only show if user is logged in */}
                     {user && currentPicks.length > 0 && (
                       <div className="space-y-2">
-                        <button
-                                onClick={onOpenPicks}
-                                className="w-full bg-neon-pink/20 hover:bg-neon-pink/30 border border-neon-pink/50 rounded-lg px-4 py-3 text-neon-pink font-bold text-sm transition-all"
-                              >
+                        <div className="w-full bg-neon-pink/20 border border-neon-pink/50 rounded-lg px-4 py-3 text-neon-pink font-bold text-sm">
                           <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-neon-pink/30">
-                            <span className="text-neon-pink text-xs font-bold">MY SCORE</span>
+                            <span className="text-neon-pink text-xs font-bold">LINE UP</span>
                             <button
                               onClick={onOpenPicks}
                               className="btn-teal px-3 py-1 text-xs h-auto"
@@ -746,7 +824,7 @@ const Info: React.FC<InfoProps> = ({
                             })}
                           </div>
                         </div>
-                        </button>
+                        </div>
                       </div>
                     )}
 
@@ -772,18 +850,211 @@ const Info: React.FC<InfoProps> = ({
                       </div>
                     )}
 
-                    {/* Play Log */}
-                    <div className="mt-2">
-                      <PlayLog
-                        playLog={playLog}
-                        homeTeam={homeTeam}
-                        awayTeam={awayTeam}
-                        getTeamLogo={getTeamLogo}
-                        title="Play Log"
-                        showTitle={true}
-                        countdown={countdown}
-                      />
+                    {/* Content View Buttons */}
+                    <div className="mt-4 mx-2 grid grid-cols-3 gap-2 mb-4">
+                      <button
+                        onClick={() => setActiveContentView('picks')}
+                        className={`rounded-lg px-3 py-2 flex items-center justify-center gap-2 font-bold text-xs transition-all ${
+                          activeContentView === 'picks'
+                            ? 'bg-gradient-to-r from-purple-500/30 to-purple-400/20 border-2 border-purple-400 text-purple-300 shadow-lg shadow-purple-500/20'
+                            : 'bg-gradient-to-r from-purple-500/10 to-purple-400/5 hover:from-purple-500/20 hover:to-purple-400/10 border border-purple-400/30 text-purple-400'
+                        }`}
+                      >
+                        <FaClipboardList className="text-sm" />
+                        <span>Picks</span>
+                      </button>
+                      <button
+                        onClick={() => setActiveContentView('timeline')}
+                        className={`rounded-lg px-3 py-2 flex items-center justify-center gap-2 font-bold text-xs transition-all ${
+                          activeContentView === 'timeline'
+                            ? 'bg-gradient-to-r from-amber-500/30 to-amber-400/20 border-2 border-amber-400 text-amber-300 shadow-lg shadow-amber-500/20'
+                            : 'bg-gradient-to-r from-amber-500/10 to-amber-400/5 hover:from-amber-500/20 hover:to-amber-400/10 border border-amber-400/30 text-amber-400'
+                        }`}
+                      >
+                        <FaClock className="text-sm" />
+                        <span>Timeline</span>
+                      </button>
+                      <button
+                        onClick={() => setActiveContentView('playlog')}
+                        className={`rounded-lg px-3 py-2 flex items-center justify-center gap-2 font-bold text-xs transition-all ${
+                          activeContentView === 'playlog'
+                            ? 'bg-gradient-to-r from-green-500/30 to-green-400/20 border-2 border-green-400 text-green-300 shadow-lg shadow-green-500/20'
+                            : 'bg-gradient-to-r from-green-500/10 to-green-400/5 hover:from-green-500/20 hover:to-green-400/10 border border-green-400/30 text-green-400'
+                        }`}
+                      >
+                        <FaListAlt className="text-sm" />
+                        <span>Play Log</span>
+                      </button>
                     </div>
+
+                    {/* Picks Section */}
+                    {activeContentView === 'picks' && (
+                      <div className="mt-2">
+                        {/* Pick Sub-tabs */}
+                        <div className="mx-2 flex gap-2 mb-4">
+                          <button
+                            onClick={() => setPickSubTab('yourpicks')}
+                            className={`flex-1 rounded-lg px-3 py-2 font-bold text-xs transition-all ${
+                              pickSubTab === 'yourpicks'
+                                ? 'bg-purple-500/30 border-2 border-purple-400 text-purple-300'
+                                : 'bg-purple-500/10 border border-purple-400/30 text-purple-400 hover:bg-purple-500/20'
+                            }`}
+                          >
+                            Your Picks
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPickSubTab('choosepicks');
+                              setTimeout(() => {
+                                playerPickRef.current?.openRoster();
+                              }, 100);
+                            }}
+                            className={`flex-1 rounded-lg px-3 py-2 font-bold text-xs transition-all ${
+                              pickSubTab === 'choosepicks'
+                                ? 'bg-purple-500/30 border-2 border-purple-400 text-purple-300'
+                                : 'bg-purple-500/10 border border-purple-400/30 text-purple-400 hover:bg-purple-500/20'
+                            }`}
+                          >
+                            Choose Picks
+                          </button>
+                        </div>
+
+                        {/* Your Picks Display */}
+                        {pickSubTab === 'yourpicks' && (
+                          <div className="mx-2">
+                            {currentPicks.length > 0 ? (
+                              <div className="space-y-2">
+                                {currentPicks.map((pick, idx) => {
+                                  const playerId = pick.id || pick.playerId || pick.athleteId;
+                                  const score = picksScores[playerId] || 0;
+                                  const headshotUrl = getHeadshotUrl({ id: playerId, headshot: pick.headshot }, urlLeague);
+                                  const isScoreIncreasing = scoreIncreasePlayerIds.has(playerId);
+
+                                  return (
+                                    <div
+                                      key={playerId || idx}
+                                      className="bg-gradient-to-r from-purple-500/5 to-purple-400/5 border border-purple-400/20 rounded-lg p-3 hover:border-purple-400/40 transition-all"
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        {headshotUrl ? (
+                                          <img
+                                            src={headshotUrl}
+                                            alt={pick.displayName || 'Player'}
+                                            className="w-12 h-12 rounded-full border-2 border-purple-400/30"
+                                          />
+                                        ) : (
+                                          <div className="w-12 h-12 rounded-full bg-purple-500/20 border-2 border-purple-400/30 flex items-center justify-center">
+                                            <FaFootballBall className="text-purple-400" />
+                                          </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-text-light font-bold text-sm truncate">
+                                            {pick.displayName || pick.shortName || 'Unknown Player'}
+                                          </p>
+                                          <p className="text-text-muted text-xs">
+                                            {pick.position || 'N/A'} • #{pick.jersey || 'N/A'}
+                                          </p>
+                                        </div>
+                                        <div className="text-right">
+                                          <p className={`font-bold text-lg transition-all duration-300 ${
+                                            isScoreIncreasing ? 'text-purple-300 scale-110' : 'text-purple-400'
+                                          }`}>
+                                            {score}
+                                          </p>
+                                          <p className="text-text-muted text-xs">points</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <div className="bg-purple-500/5 border border-purple-400/20 rounded-lg p-6 text-center">
+                                <p className="text-text-muted mb-2">No picks selected yet</p>
+                                <button
+                                  onClick={() => {
+                                    setPickSubTab('choosepicks');
+                                    setTimeout(() => {
+                                      playerPickRef.current?.openRoster();
+                                    }, 100);
+                                  }}
+                                  className="text-purple-400 hover:text-purple-300 font-bold text-sm"
+                                >
+                                  Choose your picks →
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Choose Picks - PlayerPick Component */}
+                        {pickSubTab === 'choosepicks' && homeTeamId && awayTeamId && (
+                          <div>
+                            <PlayerPick
+                              ref={playerPickRef}
+                              gameId={gameId || ''}
+                              homeTeamId={homeTeamId}
+                              awayTeamId={awayTeamId}
+                              homeTeamInfo={{
+                                name: homeTeam?.team?.displayName || '',
+                                logo: getTeamLogo(homeTeam?.team) || '',
+                                color: homeTeam?.team?.color || '00ffe7'
+                              }}
+                              awayTeamInfo={{
+                                name: awayTeam?.team?.displayName || '',
+                                logo: getTeamLogo(awayTeam?.team) || '',
+                                color: awayTeam?.team?.color || 'faafe8'
+                              }}
+                              gameStatus={competition?.status?.type?.state || 'pre'}
+                              gameStartDate={competition?.date || ''}
+                              isExpanded={true}
+                              onToggle={() => {}}
+                              playLog={playLog}
+                              situation={competition?.situation}
+                              homeTeam={homeTeam}
+                              awayTeam={awayTeam}
+                              getTeamLogo={getTeamLogo}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Timeline Section - Scoring by Time */}
+                    {activeContentView === 'timeline' && scoringPlays.length > 0 && (
+                      <div className="mt-2 mx-2">
+                        <PointsChart
+                          gameId={gameId || ''}
+                          homeTeamInfo={{
+                            name: homeTeam?.team?.displayName || '',
+                            logo: getTeamLogo(homeTeam?.team) || '',
+                            color: homeTeam?.team?.color || '00ffe7'
+                          }}
+                          awayTeamInfo={{
+                            name: awayTeam?.team?.displayName || '',
+                            logo: getTeamLogo(awayTeam?.team) || '',
+                            color: awayTeam?.team?.color || 'faafe8'
+                          }}
+                          scoringPlays={scoringPlays}
+                          gameStatus={competition?.status?.type?.state || 'pre'}
+                        />
+                      </div>
+                    )}
+
+                    {/* Play Log Section */}
+                    {activeContentView === 'playlog' && playLog.length > 0 && (
+                      <div className="mt-2">
+                        <PlayLog
+                          playLog={playLog}
+                          homeTeam={homeTeam}
+                          awayTeam={awayTeam}
+                          getTeamLogo={getTeamLogo}
+                          title="Play Log"
+                          showTitle={true}
+                          countdown={countdown}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -852,124 +1123,6 @@ const Info: React.FC<InfoProps> = ({
             )}
         </div>
       )}
-
-
-            {/* Predictions */}
-      <div className=" ">
-        {/* Divider */}
-        <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
-        
-        {/* Game Data Not Found Message */}
-        {gameDataNotFound && (
-          <div className="mx-2 mb-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-            <p className="text-yellow-400 text-sm text-center">
-              ⚠️ Game leaderboard data is not available yet. Check back later!
-            </p>
-          </div>
-        )}
-        
-        <div className="mx-2">
-          <div className="flex items-center pb-3">
-            <h1>Game Prediction</h1>
-          </div>
-        </div>
-        <div className="mx-2">
-          {homeTeam && awayTeam && gameId && (
-            <PredictionChart
-              gameId={gameId}
-              competitionId={competition.id}
-              homeTeamInfo={{
-                name: homeTeam.team.displayName,
-                logo: getTeamLogo(homeTeam),
-                color: homeTeam.team.color || '00ffe7'
-              }}
-              awayTeamInfo={{
-                name: awayTeam.team.displayName,
-                logo: getTeamLogo(awayTeam),
-                color: awayTeam.team.color || 'faafe8'
-              }}
-              getTeamLogo={getTeamLogo}
-              homeTeam={homeTeam.team}
-              awayTeam={awayTeam.team}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Head-to-Head Leaders - Condensed */}
-      <GameLeaders 
-        summary={summary}
-        homeTeamId={homeTeam?.id}
-        awayTeamId={awayTeam?.id}
-      />
-
-      {/* Team Statistics */}
-      <div className="mt-6">
-        {/* Divider */}
-        <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
-        <div className="mx-2">
-          <div className="flex items-center pb-3">
-            <h1>Team Statistics</h1>
-          </div>
-
-          {summary?.boxscore?.teams && summary.boxscore.teams.length === 2 ? (
-          <div className="space-y-4">
-            {/* Team Headers */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="flex items-center justify-center">
-                <img
-                  src={getTeamLogo(summary.boxscore.teams.find((t: any) => t.homeAway === 'away')?.team)}
-                  alt={summary.boxscore.teams.find((t: any) => t.homeAway === 'away')?.team.displayName}
-                  className="w-10 h-10"
-                />
-              </div>
-              <div className="flex items-center justify-center">
-                <p className="text-text-muted text-sm font-semibold">Stat</p>
-              </div>
-              <div className="flex items-center justify-center">
-                <img
-                  src={getTeamLogo(summary.boxscore.teams.find((t: any) => t.homeAway === 'home')?.team)}
-                  alt={summary.boxscore.teams.find((t: any) => t.homeAway === 'home')?.team.displayName}
-                  className="w-10 h-10"
-                />
-              </div>
-            </div>
-
-            {/* Stats Comparison */}
-            {summary.boxscore.teams[0].statistics.map((_: any, statIdx: number) => {
-              const awayTeamData = summary.boxscore.teams.find((t: any) => t.homeAway === 'away');
-              const homeTeamData = summary.boxscore.teams.find((t: any) => t.homeAway === 'home');
-              const awayStat = awayTeamData?.statistics[statIdx];
-              const homeStat = homeTeamData?.statistics[statIdx];
-
-              if (!awayStat || !homeStat) return null;
-
-              return (
-                <div key={`stat-${statIdx}`} className="grid grid-cols-3 gap-4 items-center bg-bg-darker/50 rounded-lg p-3 border border-neon-cyan/10">
-                  <div className="text-center">
-                    <p className="text-neon-cyan font-bold text-lg">
-                      {awayStat.displayValue}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-text-muted text-sm font-semibold">
-                      {awayStat.label}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-neon-cyan font-bold text-lg">
-                      {homeStat.displayValue}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-text-muted text-center py-8">Team statistics will be available after the game.</p>
-        )}
-        </div>
-      </div>
 
     </>
   );

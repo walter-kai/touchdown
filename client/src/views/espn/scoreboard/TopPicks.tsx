@@ -160,23 +160,21 @@ const TopPicks: React.FC<TopPicksProps> = ({
     debugLog('📊 User pick IDs:', Array.from(userPickIds));
     debugLog('📝 Total plays in log:', playLog.length);
 
-    // Get scores from context
-    const scores = getScores(gameId);
-    
-    if (!scores) {
-      debugLog('⚠️ No scores available from context yet');
-      return [];
-    }
-
-    debugLog('📊 Scores from context:', scores);
-
-    // Build a map of all athletes with scores
+    // Build a map of all athletes with scores calculated from playLog
     const athleteScores = new Map<string, PlayerScore>();
 
-    // First, add all user picks with their stored details
+    // Calculate scores for each picked player based on athletesInvolved in plays
     playerDetailsMap.forEach((playerDetail, playerId) => {
       const hasScore = userPickIds.has(playerId);
       const isCurrentPick = currentPickIds.has(playerId);
+      
+      // Count plays this athlete is involved in
+      let playCount = 0;
+      playLog.forEach(play => {
+        if (play.athletesInvolved?.some((a: any) => a?.id === playerId)) {
+          playCount++;
+        }
+      });
       
       athleteScores.set(playerId, {
         id: playerId,
@@ -187,8 +185,8 @@ const TopPicks: React.FC<TopPicksProps> = ({
         jersey: playerDetail.jersey || '',
         position: playerDetail.position?.abbreviation || playerDetail.position || '',
         teamId: playerDetail.team?.id || '',
-        gameScore: scores.gameScores[playerId] || 0,
-        userScore: scores.userScores[playerId] || 0,
+        gameScore: playCount, // Count of plays involved in
+        userScore: playCount,
         isUserPick: hasScore,
         isCurrentPick: isCurrentPick,
       });
@@ -206,6 +204,14 @@ const TopPicks: React.FC<TopPicksProps> = ({
             const storedDetails = playerDetailsMap.get(athlete.id);
             const playerInfo = storedDetails || athlete;
             
+            // Count plays for this athlete
+            let playCount = 0;
+            playLog.forEach(p => {
+              if (p.athletesInvolved?.some((a: any) => a?.id === athlete.id)) {
+                playCount++;
+              }
+            });
+            
             athleteScores.set(athlete.id, {
               id: athlete.id,
               fullName: playerInfo.fullName || playerInfo.displayName || 'Unknown',
@@ -215,8 +221,8 @@ const TopPicks: React.FC<TopPicksProps> = ({
               jersey: playerInfo.jersey || '',
               position: playerInfo.position?.abbreviation || playerInfo.position || '',
               teamId: playerInfo.team?.id || athlete.team?.id || '',
-              gameScore: scores.gameScores[athlete.id] || 0,
-              userScore: scores.userScores[athlete.id] || 0,
+              gameScore: playCount,
+              userScore: playCount,
               isUserPick: hasScore,
               isCurrentPick: isCurrentPick,
             });
@@ -233,7 +239,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
     debugLog(`✅ Total players with scores: ${sorted.length}, User picks: ${userPicks.length}`);
     
     return sorted;
-  }, [playLog, userPickIds, currentPickIds, gameId, getScores, isLoading, playerDetailsMap]);
+  }, [playLog, userPickIds, currentPickIds, isLoading, playerDetailsMap]);
 
   // Use backend total score from user document
   const userTotalScore = user?.totalScore ?? 0;

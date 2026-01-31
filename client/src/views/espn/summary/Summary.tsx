@@ -7,10 +7,11 @@ import PredictionChart from '@/components/espn/PredictionChart';
 import PlayLog from '@/components/espn/PlayLog';
 import PointsChart from '@/components/espn/PointsChart';
 import Info from '@/views/espn/scoreboard/Info';
+import Modal from '@/views/espn/scoreboard/games/Modal';
 import ChoosePicks from '@/views/espn/scoreboard/ChoosePicks';
 import TopPicks from '@/views/espn/scoreboard/TopPicks';
-import FootballField from '@/views/espn/scoreboard/games/FootballField';
-import BasketballCourt from '@/views/espn/scoreboard/games/BasketballCourt';
+import FootballField from '@/views/espn/scoreboard/visuals/FootballField';
+import BasketballCourt from '@/views/espn/scoreboard/visuals/BasketballCourt';
 import TelegramChat from '@/components/TelegramChat';
 import { useAuth } from '@/providers/AuthContext';
 import type { Summary } from '@/types/espn/summary';
@@ -53,6 +54,9 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   const [isPickExpanded, setIsPickExpanded] = useState(true);
   const [apiPlayLog, setApiPlayLog] = useState<PlayNfl[]>([]);
   const [selectedPlayIndex, setSelectedPlayIndex] = useState<number>(0);
+  const [modalView, setModalView] = useState<'prediction' | 'leaders' | 'stats' | 'scoring' | null>(null);
+  const [gameDataNotFound, setGameDataNotFound] = useState(false);
+  const [statsModalOpen, setStatsModalOpen] = useState<'stats' | 'plays' | false>(false);
 
   const competition = event.competitions[0];
   const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
@@ -236,9 +240,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
   // Get tab index for carousel position
   const getTabIndex = (tab: string) => {
-    const summaryTabs = isPreGame
-      ? ['info', 'pick', 'chat']
-      : ['info', 'pick', 'player', 'plays', 'chat'];
+    const summaryTabs = ['info', 'pick', 'chat'];
     return summaryTabs.indexOf(tab);
   };
 
@@ -247,16 +249,172 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     if (carouselRef.current) {
       const index = getTabIndex(activeTab);
       if (index !== -1) {
-        const totalSlides = isPreGame ? 3 : 5;
+        const totalSlides = 3;
         const slidePercentage = 100 / totalSlides;
         carouselRef.current.style.transform = `translateX(-${index * slidePercentage}%)`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [activeTab, isPreGame]);
+  }, [activeTab]);
 
   return (
     <div className="">
+      {/* Stats/Plays Modal */}
+      {statsModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm" style={{ zIndex: 9999 }} onClick={() => setStatsModalOpen(false)}>
+          <div className="bg-bg-darkest border-2 border-neon-cyan rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto mx-4" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-bg-darkest border-b border-neon-cyan/30 p-4 flex items-center justify-between z-10">
+              <h2 className="text-neon-cyan font-bold text-xl">
+                {statsModalOpen === 'stats' && 'Player Statistics'}
+                {statsModalOpen === 'plays' && 'Play Log'}
+              </h2>
+              <button
+                onClick={() => setStatsModalOpen(false)}
+                className="text-text-muted hover:text-neon-pink transition-colors p-2"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-4">
+              {statsModalOpen === 'stats' && (
+                <div>
+                  {summary?.boxscore?.players && summary.boxscore.players.length > 0 ? (
+                    <div className="space-y-8">
+                      {summary.boxscore.players.map((teamData: any, teamIdx: number) => (
+                        <div key={`team-${teamIdx}`} className="space-y-4">
+                          {/* Team Header */}
+                          <div className="flex items-center gap-3 mb-4">
+                            <img
+                              src={getTeamLogo(teamData.team)}
+                              alt={teamData.team.displayName}
+                              className="w-10 h-10"
+                            />
+                            <h4 className="text-neon-cyan font-bold text-xl">{teamData.team.displayName}</h4>
+                          </div>
+
+                          {/* Statistics Categories */}
+                          {teamData.statistics.map((category: any, catIdx: number) => (
+                            <div key={`${teamData.team.id}-${category.name}-${catIdx}`} className="bg-bg-darker/50 rounded-lg p-2 sm:p-4 border border-neon-cyan/10">
+                              <h5 className="text-text-muted font-semibold text-xs sm:text-sm mb-2">{category.text}</h5>
+
+                              {/* Table for player stats */}
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-xs sm:text-sm">
+                                  <thead>
+                                    <tr className="border-b border-neon-cyan/10">
+                                      <th className="text-left py-2 px-2 sm:px-3 text-text-muted font-semibold">Player</th>
+                                      {category.labels.map((label: any, labelIdx: number) => {
+                                        const isWideColumn = label && (label.toUpperCase().includes('FG') || label.toUpperCase().includes('3PT') || label.toUpperCase().includes('FT'));
+                                        return (
+                                          <th key={`label-${labelIdx}`} className={`text-center py-2 ${isWideColumn ? 'px-4 sm:px-4' : 'px-2 sm:px-3'} text-text-muted font-semibold whitespace-nowrap`}>
+                                            {label}
+                                          </th>
+                                        );
+                                      })}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {category.athletes.map((athleteData: any, athleteIdx: number) => (
+                                      <tr
+                                        key={`${athleteData.athlete.id}-${athleteIdx}`}
+                                        className="border-b border-neon-cyan/5 hover:bg-neon-cyan/5 transition-colors cursor-pointer"
+                                        onClick={() => router.push(`/nfl/player/${athleteData.athlete.id}`)}
+                                      >
+                                        <td className="py-2 px-2 sm:px-3">
+                                          <div className="flex items-center gap-2 sm:gap-3">
+                                            {(() => {
+                                              const headshot = athleteData.athlete.headshot;
+                                              const headshotUrl = typeof headshot === 'string' ? headshot : headshot?.href;
+                                              return headshotUrl ? (
+                                                <img
+                                                  src={headshotUrl}
+                                                  alt={athleteData.athlete.displayName}
+                                                  className="w-7 h-6 sm:w-8 sm:h-8 rounded-full"
+                                                />
+                                              ) : (
+                                                <div className="w-7 h-6 sm:w-8 sm:h-8 rounded-full bg-bg-darker flex items-center justify-center">
+                                                  <FaFootballBall className="text-neon-cyan text-xs" />
+                                                </div>
+                                              );
+                                            })()}
+                                            <div className="min-w-0">
+                                              <p className="text-text-light font-semibold text-xs sm:text-sm truncate">
+                                                {athleteData.athlete.displayName}
+                                              </p>
+                                              <p className="text-text-muted text-[10px] sm:text-xs">
+                                                #{athleteData.athlete.jersey}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </td>
+                                        {athleteData.stats.map((stat: any, statIdx: number) => {
+                                          const label = category.labels[statIdx];
+                                          const isWideColumn = label && (label.toUpperCase().includes('FG') || label.toUpperCase().includes('3PT') || label.toUpperCase().includes('FT'));
+                                          return (
+                                            <td key={`stat-${statIdx}`} className={`text-center py-2 ${isWideColumn ? 'px-3 sm:px-4' : 'px-2 sm:px-3'} text-text-light text-xs sm:text-sm`}>
+                                              {stat}
+                                            </td>
+                                          );
+                                        })}
+                                      </tr>
+                                    ))}
+                                    {/* Totals row */}
+                                    {category.totals && category.totals.length > 0 && (
+                                      <tr className="border-t-2 border-neon-cyan/20 font-bold bg-neon-cyan/5">
+                                        <td className="py-2 px-2 sm:px-3 text-neon-cyan text-xs sm:text-sm">Total</td>
+                                        {category.totals.map((total: any, totalIdx: number) => {
+                                          const label = category.labels[totalIdx];
+                                          const isWideColumn = label && (label.toUpperCase().includes('FG') || label.toUpperCase().includes('3PT') || label.toUpperCase().includes('FT'));
+                                          return (
+                                            <td key={`total-${totalIdx}`} className={`text-center py-2 ${isWideColumn ? 'px-3 sm:px-4' : 'px-2 sm:px-3'} text-neon-cyan text-xs sm:text-sm`}>
+                                              {total}
+                                            </td>
+                                          );
+                                        })}
+                                      </tr>
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-text-muted text-center py-8">Player statistics will be available after the game.</p>
+                  )}
+                </div>
+              )}
+
+              {statsModalOpen === 'plays' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-neon-cyan/10">
+                    <h3 className="text-neon-cyan font-bold text-lg">Play by Play</h3>
+                    {effectivePlayLog.length > 0 && (
+                      <span className="text-text-muted text-xs">
+                        {effectivePlayLog.length} {effectivePlayLog.length === 1 ? 'play' : 'plays'}
+                      </span>
+                    )}
+                  </div>
+                  <PlayLog
+                    playLog={effectivePlayLog}
+                    homeTeam={homeTeam as any}
+                    awayTeam={awayTeam as any}
+                    getTeamLogo={getTeamLogo}
+                    title="Plays"
+                    showTitle={false}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         {/* Carousel Container */}
         <div className="overflow-hidden relative">
@@ -277,6 +435,8 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                 summary={summary}
                 gameId={gameId}
                 onOpenPicks={() => onTabChange('pick')}
+                modalView={modalView}
+                setModalView={setModalView}
               />
               
               {/* Field/Court Visualization with Play Selector */}
@@ -372,6 +532,24 @@ const SummaryView: React.FC<SummaryViewProps> = ({
                       gameStatus={competition.status.type.state || ''}
                     />
                   </div>
+                </div>
+              )}
+
+              {/* Buttons for Stats and Plays Modals */}
+              {!isPreGame && (
+                <div className="mt-4 mx-2 grid grid-cols-2 gap-2 mb-4">
+                  <button
+                    onClick={() => setStatsModalOpen('stats')}
+                    className="bg-gradient-to-r from-neon-cyan/10 to-neon-cyan/5 hover:from-neon-cyan/20 hover:to-neon-cyan/10 border border-neon-cyan/30 rounded-lg px-3 py-2 text-neon-cyan font-bold text-xs transition-all"
+                  >
+                    Player Stats
+                  </button>
+                  <button
+                    onClick={() => setStatsModalOpen('plays')}
+                    className="bg-gradient-to-r from-neon-pink/10 to-neon-pink/5 hover:from-neon-pink/20 hover:to-neon-pink/10 border border-neon-pink/30 rounded-lg px-3 py-2 text-neon-pink font-bold text-xs transition-all"
+                  >
+                    Plays Log
+                  </button>
                 </div>
               )}
             </div>
@@ -520,169 +698,26 @@ const SummaryView: React.FC<SummaryViewProps> = ({
               )}
             </div>
 
-            {/* Player Statistics Section */}
-            {!isPreGame && (
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '20%' }}>
-              {/* Divider */}
-              <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
-              <div className="mx-2">
-                <div className="flex items-center pb-3">
-                  <h1>Player Statistics</h1>
-                </div>
-              </div>
-
-              <div className="mx-2">
-                {summary?.boxscore?.players && summary.boxscore.players.length > 0 ? (
-                  <div className="space-y-8">
-                  {summary.boxscore.players.map((teamData: any, teamIdx: number) => ( 
-
-                    <div key={`team-${teamIdx}`} className="space-y-4">
-                      {/* Team Header */}
-                      <div className="flex items-center gap-3 mb-4">
-                        <img
-                          src={getTeamLogo(teamData.team)}
-                          alt={teamData.team.displayName}
-                          className="w-10 h-10"
-                        />
-                        <h4 className="text-neon-cyan font-bold text-xl">{teamData.team.displayName}</h4>
-                      </div>
-
-                      {/* Statistics Categories */}
-                      {teamData.statistics.map((category: any, catIdx: number) => (
-                        <div key={`${teamData.team.id}-${category.name}-${catIdx}`} className="bg-bg-darker/50 rounded-lg p-2 sm:p-4 border border-neon-cyan/10">
-                          <h5 className="text-text-muted font-semibold text-xs sm:text-sm mb-2">{category.text}</h5>
-
-                          {/* Table for player stats */}
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-xs sm:text-sm">
-                              <thead>
-                                <tr className="border-b border-neon-cyan/10">
-                                  <th className="text-left py-2 px-2 sm:px-3 text-text-muted font-semibold">Player</th>
-                                  {category.labels.map((label: any, labelIdx: number) => {
-                                    const isWideColumn = label && (label.toUpperCase().includes('FG') || label.toUpperCase().includes('3PT') || label.toUpperCase().includes('FT'));
-                                    return (
-                                      <th key={`label-${labelIdx}`} className={`text-center py-2 ${isWideColumn ? 'px-4 sm:px-4' : 'px-2 sm:px-3'} text-text-muted font-semibold whitespace-nowrap`}>
-                                        {label}
-                                      </th>
-                                    );
-                                  })}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {category.athletes.map((athleteData: any, athleteIdx: number) => (
-                                  <tr
-                                    key={`${athleteData.athlete.id}-${athleteIdx}`}
-                                    className="border-b border-neon-cyan/5 hover:bg-neon-cyan/5 transition-colors cursor-pointer"
-                                    onClick={() => router.push(`/nfl/player/${athleteData.athlete.id}`)}
-                                  >
-                                    <td className="py-2 px-2 sm:px-3">
-                                      <div className="flex items-center gap-2 sm:gap-3">
-                                        {(() => {
-                                          const headshot = athleteData.athlete.headshot;
-                                          const headshotUrl = typeof headshot === 'string' ? headshot : headshot?.href;
-                                          return headshotUrl ? (
-                                            <img
-                                              src={headshotUrl}
-                                              alt={athleteData.athlete.displayName}
-                                              className="w-7 h-6 sm:w-8 sm:h-8 rounded-full"
-                                            />
-                                          ) : (
-                                            <div className="w-7 h-6 sm:w-8 sm:h-8 rounded-full bg-bg-darker flex items-center justify-center">
-                                              <FaFootballBall className="text-neon-cyan text-xs" />
-                                            </div>
-                                          );
-                                        })()}
-                                        <div className="min-w-0">
-                                          <p className="text-text-light font-semibold text-xs sm:text-sm truncate">
-                                            {athleteData.athlete.displayName}
-                                          </p>
-                                          <p className="text-text-muted text-[10px] sm:text-xs">
-                                            #{athleteData.athlete.jersey}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </td>
-                                    {athleteData.stats.map((stat: any, statIdx: number) => {
-                                      const label = category.labels[statIdx];
-                                      const isWideColumn = label && (label.toUpperCase().includes('FG') || label.toUpperCase().includes('3PT') || label.toUpperCase().includes('FT'));
-                                      return (
-                                        <td key={`stat-${statIdx}`} className={`text-center py-2 ${isWideColumn ? 'px-3 sm:px-4' : 'px-2 sm:px-3'} text-text-light text-xs sm:text-sm`}>
-                                          {stat}
-                                        </td>
-                                      );
-                                    })}
-                                  </tr>
-                                ))}
-                                {/* Totals row */}
-                                {category.totals && category.totals.length > 0 && (
-                                  <tr className="border-t-2 border-neon-cyan/20 font-bold bg-neon-cyan/5">
-                                    <td className="py-2 px-2 sm:px-3 text-neon-cyan text-xs sm:text-sm">Total</td>
-                                    {category.totals.map((total: any, totalIdx: number) => {
-                                      const label = category.labels[totalIdx];
-                                      const isWideColumn = label && (label.toUpperCase().includes('FG') || label.toUpperCase().includes('3PT') || label.toUpperCase().includes('FT'));
-                                      return (
-                                        <td key={`total-${totalIdx}`} className={`text-center py-2 ${isWideColumn ? 'px-3 sm:px-4' : 'px-2 sm:px-3'} text-neon-cyan text-xs sm:text-sm`}>
-                                          {total}
-                                        </td>
-                                      );
-                                    })}
-                                  </tr>
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-text-muted text-center py-8">Player statistics will be available after the game.</p>
-                )}
-              </div>
-            </div>
-            )}
-
-            {/* Plays Section - Drive by Drive */}
-            {!isPreGame && (
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] py-6 overflow-y-auto" style={{ width: '20%' }}>
-              {/* Divider */}
-              <div className="border-t-2 border-neon-cyan/20 pt-2 mb-4"></div>
-              <div className="mx-2">
-                <div className="flex items-center justify-between mb-6 pb-3 border-b border-neon-cyan/10">
-                  <h1>Plays</h1>
-                  {playLog.length > 0 && (
-                    <span className="text-text-muted text-xs">
-                      {playLog.length} {playLog.length === 1 ? 'play' : 'plays'} recorded
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Always use the PlayLog component for consistency */}
-              <div className="mx-2">
-                <div className="relative">
-                  <div className="space-y-6">
-                    <PlayLog
-                      playLog={effectivePlayLog}
-                      homeTeam={homeTeam as any}
-                      awayTeam={awayTeam as any}
-                      getTeamLogo={getTeamLogo}
-                      title="Plays"
-                      showTitle={false}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            )}
-
             {/* Chat Section */}
-            <div className="w-full flex-shrink-0 overflow-hidden" style={{ width: isPreGame ? '33.33%' : '20%' }}>
+            <div className="w-full flex-shrink-0 overflow-hidden" style={{ width: '33.33%' }}>
               <TelegramChat gameId={gameId} league={urlLeague} awayTeam={awayTeam} homeTeam={homeTeam} />
             </div>
           </div>
         </div>
+
+        {/* Modal for Advanced Stats */}
+        <Modal
+          modalView={modalView}
+          onClose={() => setModalView(null)}
+          gameDataNotFound={gameDataNotFound}
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          gameId={gameId}
+          competition={competition}
+          getTeamLogo={getTeamLogo}
+          summary={summary}
+          scoringPlays={scoringPlays}
+        />
       </div>
     </div>
   );

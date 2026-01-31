@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import FootballField from '@/views/espn/scoreboard/games/FootballField';
-import BasketballCourt from '@/views/espn/scoreboard/games/BasketballCourt';
+import FootballField from '@/views/espn/scoreboard/visuals/FootballField';
+import BasketballCourt from '@/views/espn/scoreboard/visuals/BasketballCourt';
 import Info from '@/pages/espn/scoreboard/Info';
 import { useLoading } from '@/providers/LoadingContext';
 import { fetchEspnPlays } from '@/utils/espnPlays';

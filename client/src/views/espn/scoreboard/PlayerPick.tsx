@@ -7,7 +7,7 @@ import { HTML5Backend, getEmptyImage } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { MultiBackend, TouchTransition, MouseTransition } from 'react-dnd-multi-backend';
 import { usePreview } from 'react-dnd-preview';
-import FootballField from '@/views/espn/scoreboard/games/FootballField';
+import FootballField from '@/views/espn/scoreboard/visuals/FootballField';
 import ChoosePicks from '@/pages/espn/scoreboard/ChoosePicks';
 import { useAuth } from '@/providers/AuthContext';
 import { useLeague } from '@/providers/LeagueContext';

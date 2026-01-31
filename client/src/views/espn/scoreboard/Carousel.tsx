@@ -10,6 +10,7 @@ import ProbChart from '@/components/espn/ProbabilityChart';
 import PointsChart from '@/components/espn/PointsChart';
 import PlayerPick from '@/views/espn/scoreboard/PlayerPick';
 import Info from '@/views/espn/scoreboard/Info';
+import Modal from '@/views/espn/scoreboard/games/Modal';
 import TelegramChat from '@/components/TelegramChat';
 import type { Event } from '@/types/espn/scoreboard';
 import { PlayNfl } from '@/types/espn/plays';
@@ -47,6 +48,8 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [isPickExpanded, setIsPickExpanded] = useState(true); // Default to true so picker is visible
   const [gameCountdown, setGameCountdown] = useState<number>(0);
+  const [modalView, setModalView] = useState<'prediction' | 'leaders' | 'stats' | 'scoring' | null>(null);
+  const [gameDataNotFound, setGameDataNotFound] = useState(false);
   
   const competition = event.competitions[0];
   const homeTeam = competition.competitors.find(c => c.homeAway === 'home');
@@ -113,7 +116,7 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
   }, [playLog, homeTeam?.id]);
 
   // Get tab index for carousel position
-  const scoreboardTabs = ['info', 'pick', 'odds', 'headtohead', 'chat'] as const;
+  const scoreboardTabs = ['info', 'odds', 'headtohead', 'chat'] as const;
   const totalSlides = scoreboardTabs.length;
   const slideWidth = `${100 / totalSlides}%`;
 
@@ -206,15 +209,10 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                 gameCountdown={gameCountdown}
                 playLog={playLog}
                 countdown={countdown}
-                homeTeamId={homeTeam?.id}
-                awayTeamId={awayTeam?.id}
-                onOpenPicks={() => {
-                  onTabChange('pick');
-                  // Wait for tab change animation, then open roster
-                  setTimeout(() => {
-                    playerPickRef.current?.openRoster();
-                  }, 300);
-                }}
+                homeTeamId={homeTeam?.team?.id || homeTeam?.id}
+                awayTeamId={awayTeam?.team?.id || awayTeam?.id}
+                modalView={modalView}
+                setModalView={setModalView}
               />
               
               {/* Points Chart - Show for all games with scoring data */}
@@ -239,37 +237,6 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
                     />
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Pick Section - Your Picks */}
-            <div className="w-full flex-shrink-0 h-[calc(100dvh-72px)] space-y-6 py-4 pb-16 overflow-y-auto hide-scrollbar" style={{ width: slideWidth }}>
-              {homeTeam?.id && awayTeam?.id && (
-                <PlayerPick
-                  ref={playerPickRef}
-                  gameId={event.id}
-                  homeTeamId={homeTeam.id}
-                  awayTeamId={awayTeam.id}
-                  homeTeamInfo={{
-                    name: homeTeam.team.displayName,
-                    logo: getTeamLogo(homeTeam),
-                    color: homeTeam.team.color || '00ffe7'
-                  }}
-                  awayTeamInfo={{
-                    name: awayTeam.team.displayName,
-                    logo: getTeamLogo(awayTeam),
-                    color: awayTeam.team.color || 'faafe8'
-                  }}
-                  gameStatus={statusState || 'pre'}
-                  gameStartDate={competition.date}
-                  isExpanded={isPickExpanded}
-                  onToggle={() => setIsPickExpanded(!isPickExpanded)}
-                  playLog={playLog}
-                  situation={safeSituation}
-                  homeTeam={homeTeam}
-                  awayTeam={awayTeam}
-                  getTeamLogo={getTeamLogo}
-                />
               )}
             </div>
 
@@ -321,6 +288,20 @@ const ScoreboardView: React.FC<ScoreboardViewProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Modal for Advanced Stats - Rendered at top level to avoid overflow clipping */}
+        <Modal
+          modalView={modalView}
+          onClose={() => setModalView(null)}
+          gameDataNotFound={gameDataNotFound}
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          gameId={event.id}
+          competition={competition}
+          getTeamLogo={getTeamLogo}
+          summary={null}
+          scoringPlays={scoringPlays}
+        />
       </div>
     </div>
   );
