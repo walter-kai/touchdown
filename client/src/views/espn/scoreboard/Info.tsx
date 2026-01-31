@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FaFootballBall, FaTrophy, FaChartBar, FaChartLine, FaUsers, FaTimes, FaClipboardList, FaClock, FaListAlt } from 'react-icons/fa';
 import FootballField from '@/views/espn/scoreboard/visuals/FootballField';
 import BasketballCourt from '@/views/espn/scoreboard/visuals/BasketballCourt';
-import PlayerPick from '@/views/espn/scoreboard/PlayerPick';
+import YourPicks from '@/views/espn/scoreboard/YourPicks';
 import type { PlayNfl } from '@/types/espn/plays';
 import PlayLog from '@/components/espn/PlayLog';
 import PointsChart from '@/components/espn/PointsChart';
@@ -84,6 +84,8 @@ const Info: React.FC<InfoProps> = ({
   const { homeScore: contextHomeScore, awayScore: contextAwayScore } = usePlays();
   const currentHomeScore = contextHomeScore ?? (homeTeam?.score !== undefined ? Number(homeTeam.score) : 0);
   const currentAwayScore = contextAwayScore ?? (awayTeam?.score !== undefined ? Number(awayTeam.score) : 0);
+  const resolvedHomeTeamId = homeTeamId || homeTeam?.team?.id || homeTeam?.id;
+  const resolvedAwayTeamId = awayTeamId || awayTeam?.team?.id || awayTeam?.id;
 
   // Derive league from URL to avoid race condition with LeagueContext
   const urlLeague = window.location.pathname.startsWith('/nba') ? 'nba' : 'nfl';
@@ -97,7 +99,6 @@ const Info: React.FC<InfoProps> = ({
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [gameDataNotFound, setGameDataNotFound] = useState(false);
   const [activeContentView, setActiveContentView] = useState<'picks' | 'timeline' | 'playlog'>('picks');
-  const [pickSubTab, setPickSubTab] = useState<'yourpicks' | 'choosepicks'>('yourpicks');
   const playerPickRef = useRef<{ openRoster: () => void }>(null);
 
   // Load picks from Firebase/API and localStorage
@@ -156,8 +157,8 @@ const Info: React.FC<InfoProps> = ({
       }
       
       // Fallback to localStorage if API fails
-      if (homeTeamId && awayTeamId) {
-        const savedState = localStorage.getItem(`playerPick_${homeTeamId}_${awayTeamId}`);
+      if (resolvedHomeTeamId && resolvedAwayTeamId) {
+        const savedState = localStorage.getItem(`playerPick_${resolvedHomeTeamId}_${resolvedAwayTeamId}`);
         if (savedState) {
           try {
             const parsed = JSON.parse(savedState);
@@ -199,7 +200,7 @@ const Info: React.FC<InfoProps> = ({
     
     // Listen for custom event from same tab when picks are saved
     const handleLocalUpdate = (e: CustomEvent) => {
-      if (e.detail.key === `playerPick_${homeTeamId}_${awayTeamId}`) {
+      if (e.detail.key === `playerPick_${resolvedHomeTeamId}_${resolvedAwayTeamId}`) {
         loadPicks();
       }
     };
@@ -209,7 +210,7 @@ const Info: React.FC<InfoProps> = ({
     return () => {
       window.removeEventListener('localStorageUpdate' as any, handleLocalUpdate);
     };
-  }, [gameId, user, playLog, homeTeamId, awayTeamId]);
+  }, [gameId, user, playLog, resolvedHomeTeamId, resolvedAwayTeamId]);
 
   // Recalculate pick scores whenever playLog updates
   useEffect(() => {
@@ -840,7 +841,12 @@ const Info: React.FC<InfoProps> = ({
                               </div>
                             </div>
                             <button
-                              onClick={onOpenPicks}
+                              onClick={() => {
+                                setActiveContentView('picks');
+                                setTimeout(() => {
+                                  playerPickRef.current?.openRoster();
+                                }, 100);
+                              }}
                               className="btn-pink px-4 py-2 text-sm font-bold whitespace-nowrap"
                             >
                               Choose Picks
@@ -889,132 +895,35 @@ const Info: React.FC<InfoProps> = ({
 
                     {/* Picks Section */}
                     {activeContentView === 'picks' && (
-                      <div className="mt-2">
-                        {/* Pick Sub-tabs */}
-                        <div className="mx-2 flex gap-2 mb-4">
-                          <button
-                            onClick={() => setPickSubTab('yourpicks')}
-                            className={`flex-1 rounded-lg px-3 py-2 font-bold text-xs transition-all ${
-                              pickSubTab === 'yourpicks'
-                                ? 'bg-purple-500/30 border-2 border-purple-400 text-purple-300'
-                                : 'bg-purple-500/10 border border-purple-400/30 text-purple-400 hover:bg-purple-500/20'
-                            }`}
-                          >
-                            Your Picks
-                          </button>
-                          <button
-                            onClick={() => {
-                              setPickSubTab('choosepicks');
-                              setTimeout(() => {
-                                playerPickRef.current?.openRoster();
-                              }, 100);
+                      <div className="mt-2 mx-2">
+                        {resolvedHomeTeamId && resolvedAwayTeamId && gameId ? (
+                          <YourPicks
+                            gameId={gameId}
+                            homeTeamId={resolvedHomeTeamId}
+                            awayTeamId={resolvedAwayTeamId}
+                            homeTeamInfo={{
+                              name: homeTeam?.team?.displayName || '',
+                              logo: getTeamLogo(homeTeam?.team) || '',
+                              color: homeTeam?.team?.color || '00ffe7'
                             }}
-                            className={`flex-1 rounded-lg px-3 py-2 font-bold text-xs transition-all ${
-                              pickSubTab === 'choosepicks'
-                                ? 'bg-purple-500/30 border-2 border-purple-400 text-purple-300'
-                                : 'bg-purple-500/10 border border-purple-400/30 text-purple-400 hover:bg-purple-500/20'
-                            }`}
-                          >
-                            Choose Picks
-                          </button>
-                        </div>
-
-                        {/* Your Picks Display */}
-                        {pickSubTab === 'yourpicks' && (
-                          <div className="mx-2">
-                            {currentPicks.length > 0 ? (
-                              <div className="space-y-2">
-                                {currentPicks.map((pick, idx) => {
-                                  const playerId = pick.id || pick.playerId || pick.athleteId;
-                                  const score = picksScores[playerId] || 0;
-                                  const headshotUrl = getHeadshotUrl({ id: playerId, headshot: pick.headshot }, urlLeague);
-                                  const isScoreIncreasing = scoreIncreasePlayerIds.has(playerId);
-
-                                  return (
-                                    <div
-                                      key={playerId || idx}
-                                      className="bg-gradient-to-r from-purple-500/5 to-purple-400/5 border border-purple-400/20 rounded-lg p-3 hover:border-purple-400/40 transition-all"
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        {headshotUrl ? (
-                                          <img
-                                            src={headshotUrl}
-                                            alt={pick.displayName || 'Player'}
-                                            className="w-12 h-12 rounded-full border-2 border-purple-400/30"
-                                          />
-                                        ) : (
-                                          <div className="w-12 h-12 rounded-full bg-purple-500/20 border-2 border-purple-400/30 flex items-center justify-center">
-                                            <FaFootballBall className="text-purple-400" />
-                                          </div>
-                                        )}
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-text-light font-bold text-sm truncate">
-                                            {pick.displayName || pick.shortName || 'Unknown Player'}
-                                          </p>
-                                          <p className="text-text-muted text-xs">
-                                            {pick.position || 'N/A'} • #{pick.jersey || 'N/A'}
-                                          </p>
-                                        </div>
-                                        <div className="text-right">
-                                          <p className={`font-bold text-lg transition-all duration-300 ${
-                                            isScoreIncreasing ? 'text-purple-300 scale-110' : 'text-purple-400'
-                                          }`}>
-                                            {score}
-                                          </p>
-                                          <p className="text-text-muted text-xs">points</p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ) : (
-                              <div className="bg-purple-500/5 border border-purple-400/20 rounded-lg p-6 text-center">
-                                <p className="text-text-muted mb-2">No picks selected yet</p>
-                                <button
-                                  onClick={() => {
-                                    setPickSubTab('choosepicks');
-                                    setTimeout(() => {
-                                      playerPickRef.current?.openRoster();
-                                    }, 100);
-                                  }}
-                                  className="text-purple-400 hover:text-purple-300 font-bold text-sm"
-                                >
-                                  Choose your picks →
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Choose Picks - PlayerPick Component */}
-                        {pickSubTab === 'choosepicks' && homeTeamId && awayTeamId && (
-                          <div>
-                            <PlayerPick
-                              ref={playerPickRef}
-                              gameId={gameId || ''}
-                              homeTeamId={homeTeamId}
-                              awayTeamId={awayTeamId}
-                              homeTeamInfo={{
-                                name: homeTeam?.team?.displayName || '',
-                                logo: getTeamLogo(homeTeam?.team) || '',
-                                color: homeTeam?.team?.color || '00ffe7'
-                              }}
-                              awayTeamInfo={{
-                                name: awayTeam?.team?.displayName || '',
-                                logo: getTeamLogo(awayTeam?.team) || '',
-                                color: awayTeam?.team?.color || 'faafe8'
-                              }}
-                              gameStatus={competition?.status?.type?.state || 'pre'}
-                              gameStartDate={competition?.date || ''}
-                              isExpanded={true}
-                              onToggle={() => {}}
-                              playLog={playLog}
-                              situation={competition?.situation}
-                              homeTeam={homeTeam}
-                              awayTeam={awayTeam}
-                              getTeamLogo={getTeamLogo}
-                            />
+                            awayTeamInfo={{
+                              name: awayTeam?.team?.displayName || '',
+                              logo: getTeamLogo(awayTeam?.team) || '',
+                              color: awayTeam?.team?.color || 'faafe8'
+                            }}
+                            gameStatus={competition?.status?.type?.state || 'pre'}
+                            gameStartDate={competition?.date || ''}
+                            isExpanded={true}
+                            onToggle={() => {}}
+                            playLog={playLog}
+                            situation={competition?.situation}
+                            homeTeam={homeTeam}
+                            awayTeam={awayTeam}
+                            getTeamLogo={getTeamLogo}
+                          />
+                        ) : (
+                          <div className="bg-purple-500/5 border border-purple-400/20 rounded-lg p-6 text-center">
+                            <p className="text-text-muted">Loading picks...</p>
                           </div>
                         )}
                       </div>

@@ -6,12 +6,21 @@ export const revalidate = 0;
 // Fetch game data server-side to generate metadata
 async function getGameData(gameId: string) {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
     const response = await fetch(
       `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/events/${gameId}`,
-      { next: { revalidate: 60 } } // Cache for 60 seconds
+      { 
+        next: { revalidate: 0 },
+        signal: controller.signal,
+      }
     );
     
+    clearTimeout(timeoutId);
+    
     if (!response.ok) {
+      console.warn(`ESPN API returned status ${response.status} for gameId ${gameId}`);
       return null;
     }
     
@@ -21,8 +30,11 @@ async function getGameData(gameId: string) {
     }
     
     try {
-      return JSON.parse(text);
+      const data = JSON.parse(text);
+      console.log(`✅ Fetched metadata for NBA game ${gameId}`);
+      return data;
     } catch (parseError) {
+      console.error('Failed to parse game data:', parseError);
       return null;
     }
   } catch (error) {

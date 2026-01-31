@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { FaFootballBall, FaPlay } from "react-icons/fa";
 import LoginHero from '../../components/LoginHero';
 import WeekNav from '../../components/navs/WeekNav';
+import LoadingFootball from '../../components/loading/LoadingFootball';
 import { getScoreboardUrl, getNewsUrl } from '@/utils/espnApi';
 import type {
   Event,
@@ -44,6 +45,7 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const initialReadyRef = useRef(false);
 
   const markInitialReady = useCallback(() => {
@@ -116,6 +118,7 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
   const fetchAllGamesData = useCallback(async (date?: string) => {
     try {
       setError(null);
+      setIsLoading(true);
 
       console.log('Fetching games for:', { date });
       
@@ -155,6 +158,7 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
           if (cacheAge < CACHE_DURATION && Array.isArray(data)) {
             console.log(`✅ Using cached games data (${Math.round(cacheAge / 1000)}s old)`);
             setGames(data);
+            setIsLoading(false);
             if (data.length > 0) {
               markInitialReady();
             }
@@ -211,12 +215,14 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
 
       console.log(`Games fetched: ${nflEvents.length} NFL, ${nbaEvents.length} NBA`);
       setGames(allGames);
+      setIsLoading(false);
       if (allGames.length > 0) {
         markInitialReady();
       }
     } catch (err) {
       console.error('Error fetching games:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
+      setIsLoading(false);
       markInitialReady();
     }
   }, [preload, markInitialReady]);
@@ -298,6 +304,9 @@ const GameGrid: React.FC<UnifiedGameGridProps> = ({ preload = false, onInitialRe
             <p className="text-red-400 font-bold mb-2 text-sm sm:text-base">Error loading data</p>
             <p className="text-text-light text-xs sm:text-sm">{error}</p>
           </div>
+        ) : isLoading && games.length === 0 ? (
+          /* Loading State */
+          <LoadingFootball message="Loading games..." />
         ) : games.length > 0 ? (
       /* Games Grid */
       <div className="space-y-8 mb-16">
