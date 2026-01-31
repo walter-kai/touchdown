@@ -50,6 +50,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
   const [userPickIds, setUserPickIds] = useState<Set<string>>(new Set());
   const [currentPickIds, setCurrentPickIds] = useState<Set<string>>(new Set()); // Currently active picks only
   const [playerDetailsMap, setPlayerDetailsMap] = useState<Map<string, any>>(new Map()); // Store full player details
+  const [pickLockTimeMs, setPickLockTimeMs] = useState<number | null>(null); // Store lock time from picks
   const [isLoading, setIsLoading] = useState(true);
   
   // Use picks context for scores
@@ -89,6 +90,11 @@ const TopPicks: React.FC<TopPicksProps> = ({
           // Get the most recent pick (last in array)
           const latestPick = picksResponse.data.picks.picks[picksResponse.data.picks.picks.length - 1];
           const players = latestPick.players || [];
+          
+          // Store lock time from pick submission
+          const pickLockTime = latestPick.timestamp;
+          const lockTimeMs = typeof pickLockTime === 'string' ? new Date(pickLockTime).getTime() : pickLockTime;
+          setPickLockTimeMs(lockTimeMs);
           
           // Extract CURRENT pick IDs from latest submission
           const currentIds = new Set<string>(players.map((p: any) => p.id).filter(Boolean));
@@ -168,11 +174,24 @@ const TopPicks: React.FC<TopPicksProps> = ({
       const hasScore = userPickIds.has(playerId);
       const isCurrentPick = currentPickIds.has(playerId);
       
-      // Count plays this athlete is involved in
-      let playCount = 0;
+      // Count ALL plays this athlete is involved in (for total game score)
+      let gamePlayCount = 0;
+      let sessionPlayCount = 0;
+      
       playLog.forEach(play => {
         if (play.athletesInvolved?.some((a: any) => a?.id === playerId)) {
-          playCount++;
+          gamePlayCount++;
+          
+          // Only count for session if play is after lock time
+          if (pickLockTimeMs) {
+            const playTimeMs = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
+            if (playTimeMs >= pickLockTimeMs) {
+              sessionPlayCount++;
+            }
+          } else {
+            // No lock time, count all plays for session
+            sessionPlayCount++;
+          }
         }
       });
       
@@ -185,8 +204,8 @@ const TopPicks: React.FC<TopPicksProps> = ({
         jersey: playerDetail.jersey || '',
         position: playerDetail.position?.abbreviation || playerDetail.position || '',
         teamId: playerDetail.team?.id || '',
-        gameScore: playCount, // Count of plays involved in
-        userScore: playCount,
+        gameScore: gamePlayCount, // ALL plays in the game
+        userScore: sessionPlayCount, // Only plays AFTER pick lock time
         isUserPick: hasScore,
         isCurrentPick: isCurrentPick,
       });
@@ -205,10 +224,22 @@ const TopPicks: React.FC<TopPicksProps> = ({
             const playerInfo = storedDetails || athlete;
             
             // Count plays for this athlete
-            let playCount = 0;
+            let gamePlayCount = 0;
+            let sessionPlayCount = 0;
+            
             playLog.forEach(p => {
               if (p.athletesInvolved?.some((a: any) => a?.id === athlete.id)) {
-                playCount++;
+                gamePlayCount++;
+                
+                // Only count for session if play is after lock time
+                if (pickLockTimeMs) {
+                  const playTimeMs = p.timestamp instanceof Date ? p.timestamp.getTime() : new Date(p.timestamp).getTime();
+                  if (playTimeMs >= pickLockTimeMs) {
+                    sessionPlayCount++;
+                  }
+                } else {
+                  sessionPlayCount++;
+                }
               }
             });
             
@@ -221,8 +252,8 @@ const TopPicks: React.FC<TopPicksProps> = ({
               jersey: playerInfo.jersey || '',
               position: playerInfo.position?.abbreviation || playerInfo.position || '',
               teamId: playerInfo.team?.id || athlete.team?.id || '',
-              gameScore: playCount,
-              userScore: playCount,
+              gameScore: gamePlayCount,
+              userScore: sessionPlayCount,
               isUserPick: hasScore,
               isCurrentPick: isCurrentPick,
             });
@@ -239,7 +270,7 @@ const TopPicks: React.FC<TopPicksProps> = ({
     debugLog(`✅ Total players with scores: ${sorted.length}, User picks: ${userPicks.length}`);
     
     return sorted;
-  }, [playLog, userPickIds, currentPickIds, isLoading, playerDetailsMap]);
+  }, [playLog, userPickIds, currentPickIds, isLoading, playerDetailsMap, pickLockTimeMs]);
 
   // Use backend total score from user document
   const userTotalScore = user?.totalScore ?? 0;

@@ -93,6 +93,7 @@ const Info: React.FC<InfoProps> = ({
 
   const [currentPicks, setCurrentPicks] = useState<any[]>([]);
   const [picksScores, setPicksScores] = useState<Record<string, number>>({});
+  const [pickLockTimeMs, setPickLockTimeMs] = useState<number | null>(null);
   const [hasFetchedUserScores, setHasFetchedUserScores] = useState(false);
   const [scoreIncreasePlayerIds, setScoreIncreasePlayerIds] = useState<Set<string>>(new Set());
   const [gameLeaderboard, setGameLeaderboard] = useState<any>(null);
@@ -133,6 +134,19 @@ const Info: React.FC<InfoProps> = ({
               // Calculate MY SCORE (session score - only plays after lock time)
               const pickLockTime = latestPick.timestamp;
               const lockTimeMs = typeof pickLockTime === 'string' ? new Date(pickLockTime).getTime() : pickLockTime;
+              setPickLockTimeMs(lockTimeMs); // Store lock time for use in second useEffect
+              
+              console.log('[Info LoadPicks] From API:', {
+                pickLockTime,
+                lockTimeMs,
+                playersCount: players.length,
+                playLogLength: playLog.length,
+                firstPlayerToMatch: players[0]?.id,
+                playLogAthletesSample: playLog.slice(0, 3).map((p: any) => ({
+                  text: p.text?.substring(0, 50),
+                  athleteIds: p.athletesInvolved?.map((a: any) => a?.id) || []
+                }))
+              });
               
               const scores: Record<string, number> = {};
               players.forEach((player: any) => {
@@ -146,6 +160,7 @@ const Info: React.FC<InfoProps> = ({
                   }
                 });
               });
+              console.log('[Info LoadPicks] Calculated scores from API:', scores);
               setPicksScores(scores);
               return;
             }
@@ -167,6 +182,14 @@ const Info: React.FC<InfoProps> = ({
               // Calculate MY SCORE (session score - only plays after lock time)
               const pickLockTime = parsed.lockedAt;
               const lockTimeMs = typeof pickLockTime === 'number' ? pickLockTime : new Date(pickLockTime).getTime();
+              setPickLockTimeMs(lockTimeMs); // Store lock time for use in second useEffect
+              
+              console.log('[LoadPicks] LocalStorage picks loaded:', {
+                pickLockTime,
+                lockTimeMs,
+                playersCount: parsed.players.length,
+                playLogLength: playLog.length
+              });
               
               const scores: Record<string, number> = {};
               parsed.players.forEach((player: any) => {
@@ -180,6 +203,7 @@ const Info: React.FC<InfoProps> = ({
                   }
                 });
               });
+              console.log('[LoadPicks] Calculated scores from localStorage:', scores);
               setPicksScores(scores);
               return;
             }
@@ -216,16 +240,40 @@ const Info: React.FC<InfoProps> = ({
     if (!currentPicks || currentPicks.length === 0 || !playLog) return;
     
     const scores: Record<string, number> = {};
+    let playsSkipped = 0;
+    let playsCountedByPlayer: Record<string, number> = {};
+    
     currentPicks.forEach((player: any) => {
       scores[player.id] = 0;
+      playsCountedByPlayer[player.id] = 0;
+      
       playLog.forEach(play => {
+        // CRITICAL FIX: Filter by lock time to only count plays after picks were locked in
+        const playTimeMs = play.timestamp instanceof Date ? play.timestamp.getTime() : new Date(play.timestamp).getTime();
+        
+        if (pickLockTimeMs && playTimeMs < pickLockTimeMs) {
+          playsSkipped++;
+          return; // Skip plays before lock time
+        }
+        
         if (play.athletesInvolved?.some((a: any) => a?.id === player.id)) {
           scores[player.id]++;
+          playsCountedByPlayer[player.id]++;
         }
       });
     });
+    
+    console.log('[Score Recalc] Scores with filter:', {
+      scores,
+      pickLockTimeMs,
+      playsSkipped,
+      totalPlays: playLog.length,
+      playsCountedByPlayer,
+      firstPlayTime: playLog[0]?.timestamp ? new Date(playLog[0].timestamp).getTime() : null,
+    });
+    
     setPicksScores(scores);
-  }, [currentPicks, playLog]);
+  }, [currentPicks, playLog, pickLockTimeMs]);
 
   // Track score increases and show animation
   const prevScoresRef = useRef<Record<string, number>>({});
