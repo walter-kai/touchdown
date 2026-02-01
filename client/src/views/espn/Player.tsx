@@ -402,7 +402,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
                       return (
                         <button 
                           key={eventIdx} 
-                          onClick={() => router.push(`/game/${event.eventId}`)}
+                          onClick={() => router.push(`/nfl/game/${event.eventId}`)}
                           className="w-full mb-4 hover:bg-neon-cyan/10 rounded-lg p-3 transition-all cursor-pointer"
                         >
                           {/* Game matchup as header */}
@@ -456,7 +456,7 @@ const NFLPlayer: React.FC<NFLPlayerProps> = ({ activeTab = 'info', onTabChange, 
             {overview.nextGame.league.events.map((game, idx) => (
               <button 
                 key={idx} 
-                onClick={() => router.push(`/game/${game.id}`)}
+                onClick={() => router.push(`/nfl/game/${game.id}`)}
                 className="w-full bg-bg-darker/50 p-6 rounded-lg hover:bg-neon-cyan/10 transition-all cursor-pointer"
               >
                 <div className="text-center mb-4">

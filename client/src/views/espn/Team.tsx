@@ -724,7 +724,7 @@ const NFLTeam: React.FC<NFLTeamProps> = ({ activeTab, onTabChange, onRegisterTab
                           : 'from-red-500/10 to-red-500/5 border-red-500/40 hover:border-red-500/60 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]'
                         : 'from-bg-darker/80 to-bg-dark/60 border-neon-pink/30 hover:border-neon-pink/50 hover:shadow-[0_0_20px_rgba(250,175,232,0.2)]'
                     }`}
-                    onClick={() => router.push(`/game/${event.id}`)}
+                    onClick={() => router.push(`/nfl/game/${event.id}`)}
                   >
                     <div className="flex items-center justify-between gap-4">
                       {/* Week & Date Info - Left */}

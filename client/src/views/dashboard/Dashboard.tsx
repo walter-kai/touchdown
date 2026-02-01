@@ -823,7 +823,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
                   {/* Team Logos Pill Button */}
                   {game.awayTeam && game.homeTeam && (
                     <button
-                      onClick={() => router.push(`/game/${game.gameId}`)}
+                      onClick={() => router.push(`/${game.league || 'nfl'}/game/${game.gameId}`)}
           
                       className="btn-standard flex items-center gap-1.5 px-2 py-1.5 flex-shrink-0 min-w-0"
                     >
@@ -912,7 +912,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onInitialReady }) => {
                   {/* Edit Picks Button - Only show if game is pickable */}
                   {isGamePickable(game) && (
                     <button
-                      onClick={() => router.push(`/game/${game.gameId}`)}
+                      onClick={() => router.push(`/${game.league || 'nfl'}/game/${game.gameId}`)}
                       className="btn-special mb-4 w-full"
                     >
                       Edit Picks
