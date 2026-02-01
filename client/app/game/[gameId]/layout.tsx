@@ -4,12 +4,14 @@ export const dynamic = 'force-dynamic';
 export const revalidate = false;
 
 // Fetch game data server-side to generate metadata
+// Automatically detects league from game data
 async function getGameData(gameId: string) {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    const response = await fetch(
+    // Try NFL first
+    let response = await fetch(
       `https://site.api.espn.com/apis/site/v2/sports/football/nfl/events/${gameId}`,
       { 
         next: { revalidate: 0 },
@@ -19,21 +21,45 @@ async function getGameData(gameId: string) {
     
     clearTimeout(timeoutId);
     
-    if (!response.ok) {
-      return null;
+    if (response.ok) {
+      const text = await response.text();
+      if (text) {
+        try {
+          const data = JSON.parse(text);
+          return { data, league: 'nfl' };
+        } catch (parseError) {
+          // Continue to try NBA
+        }
+      }
     }
+
+    // Try NBA
+    const nbaController = new AbortController();
+    const nbaTimeoutId = setTimeout(() => nbaController.abort(), 5000);
     
-    const text = await response.text();
-    if (!text) {
-      return null;
-    }
+    response = await fetch(
+      `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/events/${gameId}`,
+      { 
+        next: { revalidate: 0 },
+        signal: nbaController.signal,
+      }
+    );
     
-    try {
-      const data = JSON.parse(text);
-      return data;
-    } catch (parseError) {
-      return null;
+    clearTimeout(nbaTimeoutId);
+    
+    if (response.ok) {
+      const text = await response.text();
+      if (text) {
+        try {
+          const data = JSON.parse(text);
+          return { data, league: 'nba' };
+        } catch (parseError) {
+          return null;
+        }
+      }
     }
+
+    return null;
   } catch (error) {
     return null;
   }
@@ -41,7 +67,9 @@ async function getGameData(gameId: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ gameId: string }> }): Promise<Metadata> {
   const { gameId } = await params;
-  const event = await getGameData(gameId);
+  const result = await getGameData(gameId);
+  const event = result?.data;
+  const league = result?.league || 'nfl';
 
   if (!event) {
     const image = 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg';
@@ -53,7 +81,7 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
         description: 'Watch the game on Touchdown - Live sports picks and analysis',
         images: [{ url: image, width: 1600, height: 630, alt: 'Touchdown Game' }],
         type: 'website',
-        url: `https://touchdown-882290629693.us-central1.run.app/nfl/game/${gameId}`,
+        url: `https://touchdown-882290629693.us-central1.run.app/game/${gameId}`,
       },
       twitter: {
         card: 'summary_large_image',
@@ -75,7 +103,7 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
         description: 'Watch the game on Touchdown - Live sports picks and analysis',
         images: [{ url: image, width: 1600, height: 630, alt: 'Touchdown Game' }],
         type: 'website',
-        url: `https://touchdown-882290629693.us-central1.run.app/nfl/game/${gameId}`,
+        url: `https://touchdown-882290629693.us-central1.run.app/game/${gameId}`,
       },
       twitter: {
         card: 'summary_large_image',
@@ -100,7 +128,7 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
         description: 'Watch the game on Touchdown - Live sports picks and analysis',
         images: [{ url: image, width: 1600, height: 630, alt: 'Touchdown Game' }],
         type: 'website',
-        url: `https://touchdown-882290629693.us-central1.run.app/nfl/game/${gameId}`,
+        url: `https://touchdown-882290629693.us-central1.run.app/game/${gameId}`,
       },
       twitter: {
         card: 'summary_large_image',
@@ -157,6 +185,8 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
     description = `${away.team.displayName} face off against ${home.team.displayName} ${timeUntilText}. Make your picks and join the action on Touchdown!`;
   }
 
+  const image = 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg';
+
   return {
     title,
     description,
@@ -165,20 +195,20 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
       description,
       images: [
         {
-          url: 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg',
+          url: image,
           width: 1600,
           height: 630,
           alt: title,
         },
       ],
       type: 'website',
-      url: `https://touchdown-882290629693.us-central1.run.app/nfl/game/${gameId}`,
+      url: `https://touchdown-882290629693.us-central1.run.app/game/${gameId}`,
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: ['https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg'],
+      images: [image],
     },
     other: {
       'og:logo': 'https://touchdown-882290629693.us-central1.run.app/logos/Drive-logo.png',

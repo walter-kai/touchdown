@@ -420,7 +420,7 @@ const GameGridCard: React.FC<GameGridCardProps> = ({ game, onNavigate, cardDelay
 
   return (
     <button
-      onClick={() => onNavigate(`/${game.leagueType}/game/${game.id}`)}
+      onClick={() => onNavigate(`/game/${game.id}`)}
       className="relative rounded-md border border-neon-pink/20  bg-bg-dark/50 hover:bg-bg-dark/70 p-3 px-4 transition-all duration-200 text-left w-full animate-fade-in-scale"
       style={{ animationDelay: `${cardDelay}ms`, animationFillMode: 'both' }}
     >
