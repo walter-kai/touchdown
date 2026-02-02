@@ -32,14 +32,30 @@ const TelegramChat: React.FC<TelegramChatProps> = ({ gameId, league = 'nba', awa
           })
         });
 
+        if (response.status === 404) {
+          // No game data yet - show "Be the first to comment"
+          setChatId(null);
+          setIsFirstComment(true);
+          setError(null);
+          return;
+        }
+
+        if (!response.ok) {
+          setError('Failed to load comments');
+          return;
+        }
+
         const data = await response.json();
 
         if (data.success) {
           // Chat exists, use the chatId
           setChatId(data.chatId);
+          setIsFirstComment(false);
+          setError(null);
         } else if (data.notFound) {
           // Chat doesn't exist, show "Be the first to comment" message
           setIsFirstComment(true);
+          setError(null);
         } else {
           setError(data.error || 'Failed to load comments');
         }

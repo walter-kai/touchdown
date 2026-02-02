@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import admin from 'firebase-admin';
 import { sendTelegramMessage, createTelegramTopic } from './telegram.service';
+import ApiError from '../../utils/api-error';
 
 export const sendMessageController = async (req: Request, res: Response) => {
   try {
@@ -68,46 +69,34 @@ ${message}
 };
 
 export const getChatIdController = async (req: Request, res: Response) => {
-  try {
-    const { gameId, league = 'nba' } = req.body;
+  const { gameId, league = 'nba' } = req.body;
 
-    // Validate required fields
-    if (!gameId) {
-      return res.status(400).json({
-        success: false,
-        error: 'gameId is required'
-      });
-    }
+  // Validate required fields
+  if (!gameId) {
+    throw new ApiError(400, 'gameId is required');
+  }
 
-    // Construct the document ID (use : instead of / for document ID)
-    const docId = `epsn:${league}:${gameId}`;
-    const docRef = admin.firestore().collection('gameData').doc(docId);
+  // Construct the document ID (use : instead of / for document ID)
+  const docId = `espn:${league}:${gameId}`;
+  const docRef = admin.firestore().collection('gameData').doc(docId);
 
-    // Check if the document exists
-    const docSnap = await docRef.get();
+  // Check if the document exists
+  const docSnap = await docRef.get();
 
-    if (docSnap.exists) {
-      // Document exists, return the chatId
-      const data = docSnap.data();
-      res.json({
-        success: true,
-        chatId: data?.chatId
-      });
-    } else {
-      // Document doesn't exist
-      res.json({
-        success: false,
-        notFound: true
-      });
-    }
-
-  } catch (error) {
-    console.error('Error in getChatId endpoint:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
+  if (docSnap.exists) {
+    // Document exists, return the chatId
+    const data = docSnap.data();
+    return res.json({
+      success: true,
+      chatId: data?.chatId
     });
   }
+
+  // Document doesn't exist yet
+  return res.status(200).json({
+    success: false,
+    notFound: true
+  });
 };
 
 export const createTopicController = async (req: Request, res: Response) => {
@@ -157,7 +146,7 @@ export const createTopicController = async (req: Request, res: Response) => {
     }
 
     // Store the chatId in Firebase
-    const docId = `epsn:${league}:${gameId}`;
+    const docId = `espn:${league}:${gameId}`;
     const docRef = admin.firestore().collection('gameData').doc(docId);
 
     const chatId = `${superGroupId}/${topicResult.topicId}`;

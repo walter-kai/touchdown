@@ -40,6 +40,19 @@ app.use('/api/*', (req: Request, res: Response) => {
   res.status(404).json({ error: "API route not found" });
 });
 
+// Error handler
+app.use((err: any, req: Request, res: Response, next: express.NextFunction) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  const statusCode = err?.statusCode || 500;
+  const message = err?.message || 'Internal server error';
+
+  logger.error(err);
+  return res.status(statusCode).json({ ok: false, error: message });
+});
+
 // Start HTTP server
 const server = app.listen(port, () => {
   logger.info(`=== SERVER STARTED ===`);

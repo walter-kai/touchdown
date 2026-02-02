@@ -309,6 +309,12 @@ const Info: React.FC<InfoProps> = ({
       if (!gameId) {
         return;
       }
+      if (gameDataNotFound) {
+        return;
+      }
+      if (!user && currentPicks.length === 0) {
+        return;
+      }
       try {
         setLeaderboardLoading(true);
         setGameDataNotFound(false);
@@ -341,7 +347,7 @@ const Info: React.FC<InfoProps> = ({
       }
     };
     fetchGameLeaderboard();
-  }, [gameId]);
+  }, [gameId, gameDataNotFound, user, currentPicks.length]);
 
   // Update picks display when playLog changes (already handled in useEffect above)
   // No need to fetch from backend - use session scores calculated from playLog

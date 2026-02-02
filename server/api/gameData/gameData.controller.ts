@@ -19,7 +19,7 @@ export const getGameDataDoc = catchAsync(async (req: Request, res: Response) => 
   const docSnap = await docRef.get();
 
   if (!docSnap.exists) {
-    return res.status(404).json({ ok: false, message: 'Game data not found', docId });
+    throw new ApiError(404, 'Game data not found');
   }
 
   return res.status(200).json({ ok: true, docId, ...docSnap.data() });
