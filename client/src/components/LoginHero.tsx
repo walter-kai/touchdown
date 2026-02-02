@@ -93,7 +93,7 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
             {/* Left: Title and Caption */}
             <div className="flex-1 flex flex-col gap-4 text-center md:text-left order-2 md:order-1">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-neon-pink via-neon-cyan to-neon-pink bg-clip-text text-transparent animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-clip-text text-transparent animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
                 Games are live!
               </h2>
               <p className="text-sm sm:text-base text-text-light leading-relaxed animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
@@ -102,51 +102,44 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
             </div>
 
             {/* Center: Diagonal Stripe Images */}
-            {!loading && processedImages.length > 0 && (() => {
-              // Dynamically calculate image width based on count
-              const imageCount = processedImages.length;
-              const baseWidth = imageCount <= 3 ? 150 : imageCount <= 4 ? 120 : 100;
-              const overlap = 50;
-              const totalWidth = (imageCount - 1) * overlap + baseWidth;
-              
-              return (
-                <div 
-                  className="relative flex-shrink-0 h-32 md:h-40 order-1 md:order-2"
-                  style={{
-                    clipPath: "polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)",
-                    width: `${totalWidth}px`,
-                    maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)",
-                    WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-                  }}
-                >
-                  {processedImages.map((imageData, idx) => {
-                    const { dataUrl, eyePositionX } = JSON.parse(imageData);
-                    return (
-                      <div
-                        key={idx}
-                        className="absolute h-full animate-fade-in-scale"
+            {(loading || processedImages.length === 0) && (
+              <div className="w-full h-32 md:h-40 order-1 md:order-2" aria-hidden />
+            )}
+
+            {processedImages.length > 0 && (
+              <div 
+                className="relative flex w-full h-32 md:h-40 order-1 md:order-2"
+                style={{
+                  clipPath: "polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%)",
+                  maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)",
+                  WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                }}
+              >
+                {processedImages.map((imageData, idx) => {
+                  const { dataUrl, eyePositionX } = JSON.parse(imageData);
+                  return (
+                    <div
+                      key={idx}
+                      className="flex-1 h-full animate-fade-in-scale"
+                      style={{
+                        clipPath: "polygon(6% 0, 100% 0, 94% 100%, 0 100%)",
+                        animationDelay: `${idx * 150}ms`,
+                        animationFillMode: 'both',
+                      }}
+                    >
+                      <img
+                        src={dataUrl}
+                        alt={`Article ${idx + 1}`}
+                        className="w-full h-full object-cover"
                         style={{
-                          left: `${idx * overlap}px`,
-                          width: `${baseWidth}px`,
-                          clipPath: "polygon(50% 0, 100% 0, 85% 100%, 0 100%)",
-                          animationDelay: `${idx * 150}ms`,
-                          animationFillMode: 'both',
+                          objectPosition: `${eyePositionX}% center`
                         }}
-                      >
-                        <img
-                          src={dataUrl}
-                          alt={`Article ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                          style={{
-                            objectPosition: `${eyePositionX}% center`
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Right: Sign Up Button */}
             <button

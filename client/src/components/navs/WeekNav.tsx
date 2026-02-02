@@ -272,7 +272,7 @@ const WeekNav: React.FC<WeekNavProps> = ({ onDateSelect, selectedDate }) => {
 
   return (
     <div className="rounded-xl mb-4 px-2 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
-      <h1 className="animate-fade-in" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>Games this Week</h1>
+      <h1 className="animate-fade-in my-4" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>Games this Week</h1>
       
       {/* Week Navigation Chevrons - Above */}
       <div className="flex items-center gap-2 mb-3 animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
