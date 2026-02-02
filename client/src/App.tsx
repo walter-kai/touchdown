@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 import BottomNavbar from './components/navs/BottomNavbar';
-import LoginNav from './components/navs/LoginNavNext';
+import LoginNav from './components/navs/LoginNav';
 
 import Dashboard from './views/dashboard/Dashboard';
 import GameGrid from './views/dashboard/GameGrid';

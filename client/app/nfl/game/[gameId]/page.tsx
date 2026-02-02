@@ -7,6 +7,23 @@ export const revalidate = 300;
 
 const DEFAULT_IMAGE = 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg';
 
+const formatGameTime = (event: any, competition: any): string => {
+  const state = competition?.status?.type?.state;
+  if (state === 'in') {
+    const period = competition?.status?.period || 1;
+    const clock = competition?.status?.displayClock || '';
+    return `${`Q${period}`} ${clock}`.trim();
+  }
+  if (state === 'post') return 'Final';
+  if (state === 'pre') {
+    const eventDate = event?.date ? new Date(event.date) : null;
+    return eventDate
+      ? eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+      : (competition?.status?.type?.description || 'Scheduled');
+  }
+  return competition?.status?.type?.description || '';
+};
+
 const fetchJson = async (url: string) => {
   try {
     const response = await fetch(url, {
@@ -77,18 +94,23 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
 
     const homeTeamName = homeTeam?.team?.displayName || 'Home Team';
     const awayTeamName = awayTeam?.team?.displayName || 'Away Team';
-    const homeTeamAbbr = homeTeam?.team?.abbreviation || 'HOME';
-    const awayTeamAbbr = awayTeam?.team?.abbreviation || 'AWAY';
+    const homeTeamAbbr = homeTeam?.team?.abbreviation || homeTeam?.team?.shortDisplayName || 'HOME';
+    const awayTeamAbbr = awayTeam?.team?.abbreviation || awayTeam?.team?.shortDisplayName || 'AWAY';
     const homeTeamLogo = homeTeam?.team?.logo || '';
     const awayTeamLogo = awayTeam?.team?.logo || '';
     const homeScore = homeTeam?.score || '0';
     const awayScore = awayTeam?.score || '0';
-    const status = competition?.status?.type?.description || '';
     const eventDate = event?.date ? new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    const gameTime = formatGameTime(event, competition);
 
     // Construct metadata
-    const title = `${awayTeamAbbr} vs ${homeTeamAbbr} ${awayScore}-${homeScore} ${eventDate} ${status}`.trim();
-    const description = `${awayTeamName} vs ${homeTeamName} - Live NFL game analysis and picks on Touchdown`;
+    const titleParts = [
+      `${awayTeamAbbr} vs ${homeTeamAbbr}`,
+      `${awayScore}-${homeScore}`,
+      gameTime || eventDate
+    ].filter(Boolean);
+    const title = titleParts.join(', ');
+    const description = 'Touchdown helps you be the best manager and climb to the top with live game insights, picks, and predictions.';
 
     // Use team logo as OG image or fallback
     let ogImage = homeTeamLogo || awayTeamLogo || DEFAULT_IMAGE;

@@ -4,8 +4,8 @@ import { useAuth } from '../src/providers/AuthContext';
 import { useLoading } from '../src/providers/LoadingContext';
 import Carousel from '../src/views/dashboard/Carousel';
 import GameGrid from '../src/views/dashboard/GameGrid';
-import LoginNavNext from '../src/components/navs/LoginNavNext';
-import BottomNavbarNext from '../src/components/navs/BottomNavbarNext';
+import LoginNav from '../src/components/navs/LoginNav';
+import BottomNavbar from '../src/components/navs/BottomNavbar';
 import LoadingFootball from '../src/components/loading/LoadingFootball';
 import { useState } from 'react';
 
@@ -18,7 +18,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen overflow-x-hidden relative bg-black bg-blend-overlay">
-      <LoginNavNext />
+      <LoginNav />
       {isLoading && (
         <div className="fixed inset-0 z-40">
           <LoadingFootball message={loadingMessage} />

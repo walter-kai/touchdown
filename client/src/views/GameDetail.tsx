@@ -247,8 +247,8 @@ const GameDetail: React.FC<GameDetailProps> = ({ activeTab, onTabChange, onPrese
 
   // Update Open Graph meta tags when event changes
   useEffect(() => {
-    updateOpenGraphMeta(event, league);
-  }, [event, league]);
+    updateOpenGraphMeta(event, league, playLog);
+  }, [event, league, playLog]);
 
   // Shared helper to merge latest play from ESPN situation into playLog without duplicates
   const mergeLatestPlay = (currentEvent: Event | undefined, previousEvent: Event | null) => {

@@ -1,11 +1,119 @@
 import { Metadata } from 'next';
-import { getEventApiUrl, getSummaryUrl } from '../../../../src/utils/espnApi';
+import { getEventApiUrl, getSummaryUrl, getPlaysUrl } from '../../../../src/utils/espnApi';
 import GamePageClient from '@/pages/GamePageClient';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300;
 
 const DEFAULT_IMAGE = 'https://touchdown-882290629693.us-central1.run.app/logos/opengraph.jpg';
+
+const NBA_REGULATION_SECONDS = 12 * 60;
+const NBA_OT_SECONDS = 5 * 60;
+const RUN_WINDOW_SECONDS = 240; // 4 minutes of game time
+
+const clockToSeconds = (clock: string): number => {
+  if (!clock) return 0;
+  const parts = clock.split(':').map(part => Number(part));
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return Number.isFinite(Number(clock)) ? Number(clock) : 0;
+};
+
+const elapsedGameSeconds = (quarter: number, clock: string): number => {
+  const q = Number.isFinite(quarter) && quarter > 0 ? quarter : 1;
+  const clockSeconds = clockToSeconds(clock);
+  const periodLength = q <= 4 ? NBA_REGULATION_SECONDS : NBA_OT_SECONDS;
+  const boundedClock = Math.max(0, Math.min(periodLength, clockSeconds));
+  let elapsed = 0;
+  for (let p = 1; p < q; p += 1) {
+    elapsed += p <= 4 ? NBA_REGULATION_SECONDS : NBA_OT_SECONDS;
+  }
+  return elapsed + (periodLength - boundedClock);
+};
+
+const formatDuration = (totalSeconds: number): string => {
+  const seconds = Math.max(0, Math.round(totalSeconds));
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${minutes}:${remainder.toString().padStart(2, '0')}`;
+};
+
+const formatGameTime = (event: any, competition: any): string => {
+  const state = competition?.status?.type?.state;
+  if (state === 'in') {
+    const period = competition?.status?.period || 1;
+    const clock = competition?.status?.displayClock || '';
+    return `${`Q${period}`} ${clock}`.trim();
+  }
+  if (state === 'post') return 'Final';
+  if (state === 'pre') {
+    const eventDate = event?.date ? new Date(event.date) : null;
+    return eventDate
+      ? eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+      : (competition?.status?.type?.description || 'Scheduled');
+  }
+  return competition?.status?.type?.description || '';
+};
+
+const computeNbaRunFromRawPlays = (plays: any[], homeTeamId?: string, awayTeamId?: string) => {
+  if (!homeTeamId || !awayTeamId || !Array.isArray(plays) || plays.length === 0) return null;
+
+  const scoringPlays = plays.filter(play => {
+    const points = Number(play?.scoreValue ?? play?.score ?? 0);
+    const teamId = play?.team?.id || play?.team || play?.possession?.id || play?.possession;
+    return points > 0 && !!teamId;
+  });
+
+  if (scoringPlays.length === 0) return null;
+
+  const latest = scoringPlays[0];
+  const latestElapsed = elapsedGameSeconds(
+    Number(latest?.period?.number ?? latest?.period ?? 0),
+    latest?.clock?.displayValue ?? latest?.clock ?? '0:00'
+  );
+
+  const windowPlays = scoringPlays.filter(play => {
+    const elapsed = elapsedGameSeconds(
+      Number(play?.period?.number ?? play?.period ?? 0),
+      play?.clock?.displayValue ?? play?.clock ?? '0:00'
+    );
+    return latestElapsed - elapsed <= RUN_WINDOW_SECONDS;
+  });
+
+  if (windowPlays.length === 0) return null;
+
+  const totals: Record<string, number> = {};
+  windowPlays.forEach(play => {
+    const teamId = play?.team?.id || play?.team || play?.possession?.id || play?.possession;
+    if (!teamId) return;
+    const points = Number(play?.scoreValue ?? play?.score ?? 0);
+    if (!Number.isFinite(points) || points <= 0) return;
+    totals[teamId] = (totals[teamId] || 0) + points;
+  });
+
+  const homePoints = totals[homeTeamId] || 0;
+  const awayPoints = totals[awayTeamId] || 0;
+  if (homePoints === awayPoints || (homePoints === 0 && awayPoints === 0)) return null;
+
+  const runTeamId = homePoints > awayPoints ? homeTeamId : awayTeamId;
+  const runPoints = runTeamId === homeTeamId ? homePoints : awayPoints;
+  const oppPoints = runTeamId === homeTeamId ? awayPoints : homePoints;
+
+  const earliestElapsed = Math.min(
+    ...windowPlays.map(play => elapsedGameSeconds(
+      Number(play?.period?.number ?? play?.period ?? 0),
+      play?.clock?.displayValue ?? play?.clock ?? '0:00'
+    ))
+  );
+  const durationSeconds = Math.max(5, latestElapsed - earliestElapsed);
+
+  return {
+    teamId: runTeamId,
+    runPoints,
+    oppPoints,
+    durationLabel: formatDuration(durationSeconds)
+  };
+};
 
 const fetchJson = async (url: string) => {
   try {
@@ -77,18 +185,49 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
 
     const homeTeamName = homeTeam?.team?.displayName || 'Home Team';
     const awayTeamName = awayTeam?.team?.displayName || 'Away Team';
-    const homeTeamAbbr = homeTeam?.team?.abbreviation || 'HOME';
-    const awayTeamAbbr = awayTeam?.team?.abbreviation || 'AWAY';
+    const homeTeamAbbr = homeTeam?.team?.abbreviation || homeTeam?.team?.shortDisplayName || 'HOME';
+    const awayTeamAbbr = awayTeam?.team?.abbreviation || awayTeam?.team?.shortDisplayName || 'AWAY';
     const homeTeamLogo = homeTeam?.team?.logo || '';
     const awayTeamLogo = awayTeam?.team?.logo || '';
     const homeScore = homeTeam?.score || '0';
     const awayScore = awayTeam?.score || '0';
-    const status = competition?.status?.type?.description || '';
     const eventDate = event?.date ? new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    const gameTime = formatGameTime(event, competition);
+    const homeTeamId = String(homeTeam?.id || homeTeam?.team?.id || '');
+    const awayTeamId = String(awayTeam?.id || awayTeam?.team?.id || '');
+    let runText = '';
+
+    if (competition?.status?.type?.state === 'in') {
+      try {
+        const playsUrl = getPlaysUrl('nba', gameId, competition?.id || gameId);
+        const playsData = await fetchJson(playsUrl);
+        const items = Array.isArray(playsData?.items) ? playsData.items : [];
+        const recentItems = items.slice(0, 120);
+        const resolved = await Promise.all(
+          recentItems.map(async (item: any) => (item?.$ref ? await fetchJson(item.$ref) : item))
+        );
+        const run = computeNbaRunFromRawPlays(resolved.filter(Boolean), homeTeamId, awayTeamId);
+        const runTeam = run ? (run.teamId === homeTeamId ? homeTeam : awayTeam) : null;
+        if (run && runTeam) {
+          const runLabel = runTeam?.team?.abbreviation || runTeam?.team?.shortDisplayName || runTeam?.team?.displayName || '';
+          if (runLabel) {
+            runText = `Run ${runLabel} ${run.runPoints}-${run.oppPoints} (${run.durationLabel})`;
+          }
+        }
+      } catch {
+        // Ignore run calculation errors
+      }
+    }
 
     // Construct metadata
-    const title = `${awayTeamAbbr} vs ${homeTeamAbbr} ${awayScore}-${homeScore} ${eventDate} ${status}`.trim();
-    const description = `${awayTeamName} vs ${homeTeamName} - Live NBA game analysis and picks on Touchdown`;
+    const titleParts = [
+      `${awayTeamAbbr} vs ${homeTeamAbbr}`,
+      `${awayScore}-${homeScore}`,
+      gameTime || eventDate,
+      runText
+    ].filter(Boolean);
+    const title = titleParts.join(', ');
+    const description = 'Touchdown helps you be the best manager and climb to the top with live game insights, picks, and predictions.';
 
     // Use team logo as OG image or fallback
     let ogImage = homeTeamLogo || awayTeamLogo || DEFAULT_IMAGE;

@@ -1,6 +1,106 @@
 import type { Event } from '@/types/espn/scoreboard';
+import type { PlayNfl } from '@/types/espn/plays';
 
-export const updateOpenGraphMeta = (event: Event | null, league: string) => {
+const NBA_REGULATION_SECONDS = 12 * 60;
+const NBA_OT_SECONDS = 5 * 60;
+const RUN_WINDOW_SECONDS = 240; // 4 minutes of game time
+
+const clockToSeconds = (clock: string): number => {
+  if (!clock) return 0;
+  const parts = clock.split(':').map(part => Number(part));
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return Number.isFinite(Number(clock)) ? Number(clock) : 0;
+};
+
+const elapsedGameSeconds = (quarter: number, clock: string): number => {
+  const q = Number.isFinite(quarter) && quarter > 0 ? quarter : 1;
+  const clockSeconds = clockToSeconds(clock);
+  const periodLength = q <= 4 ? NBA_REGULATION_SECONDS : NBA_OT_SECONDS;
+  const boundedClock = Math.max(0, Math.min(periodLength, clockSeconds));
+  let elapsed = 0;
+  for (let p = 1; p < q; p += 1) {
+    elapsed += p <= 4 ? NBA_REGULATION_SECONDS : NBA_OT_SECONDS;
+  }
+  return elapsed + (periodLength - boundedClock);
+};
+
+const formatDuration = (totalSeconds: number): string => {
+  const seconds = Math.max(0, Math.round(totalSeconds));
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${minutes}:${remainder.toString().padStart(2, '0')}`;
+};
+
+const formatGameTime = (event: Event, competition: any): string => {
+  const state = competition?.status?.type?.state;
+  if (state === 'in') {
+    const period = competition?.status?.period || 1;
+    const clock = competition?.status?.displayClock || '';
+    return `${`Q${period}`} ${clock}`.trim();
+  }
+  if (state === 'post') return 'Final';
+  if (state === 'pre') {
+    const eventDate = event?.date ? new Date(event.date) : null;
+    return eventDate
+      ? eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+      : (competition?.status?.type?.description || 'Scheduled');
+  }
+  return competition?.status?.type?.description || '';
+};
+
+const computeNbaRun = (playLog: PlayNfl[], homeTeamId?: string, awayTeamId?: string) => {
+  if (!homeTeamId || !awayTeamId || !Array.isArray(playLog) || playLog.length === 0) return null;
+
+  const scoringPlays = playLog.filter(play => {
+    const points = Number(play?.scoreValue ?? 0);
+    const teamId = play?.team || play?.possession;
+    return points > 0 && !!teamId;
+  });
+
+  if (scoringPlays.length === 0) return null;
+
+  const latest = scoringPlays[0];
+  const latestElapsed = elapsedGameSeconds(Number(latest.quarter || 0), latest.clock || '0:00');
+
+  const windowPlays = scoringPlays.filter(play => {
+    const elapsed = elapsedGameSeconds(Number(play.quarter || 0), play.clock || '0:00');
+    return latestElapsed - elapsed <= RUN_WINDOW_SECONDS;
+  });
+
+  if (windowPlays.length === 0) return null;
+
+  const totals: Record<string, number> = {};
+  windowPlays.forEach(play => {
+    const teamId = play.team || play.possession;
+    if (!teamId) return;
+    const points = Number(play.scoreValue || 0);
+    if (!Number.isFinite(points) || points <= 0) return;
+    totals[teamId] = (totals[teamId] || 0) + points;
+  });
+
+  const homePoints = totals[homeTeamId] || 0;
+  const awayPoints = totals[awayTeamId] || 0;
+  if (homePoints === awayPoints || (homePoints === 0 && awayPoints === 0)) return null;
+
+  const runTeamId = homePoints > awayPoints ? homeTeamId : awayTeamId;
+  const runPoints = runTeamId === homeTeamId ? homePoints : awayPoints;
+  const oppPoints = runTeamId === homeTeamId ? awayPoints : homePoints;
+
+  const earliestElapsed = Math.min(
+    ...windowPlays.map(play => elapsedGameSeconds(Number(play.quarter || 0), play.clock || '0:00'))
+  );
+  const durationSeconds = Math.max(5, latestElapsed - earliestElapsed);
+
+  return {
+    teamId: runTeamId,
+    runPoints,
+    oppPoints,
+    durationLabel: formatDuration(durationSeconds)
+  };
+};
+
+export const updateOpenGraphMeta = (event: Event | null, league: string, playLog: PlayNfl[] = []) => {
   // Safety check - ensure we're in browser environment
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return;
@@ -24,54 +124,31 @@ export const updateOpenGraphMeta = (event: Event | null, league: string) => {
   const awayScore = away.score !== undefined ? Number(away.score) : 0;
   const homeScore = home.score !== undefined ? Number(home.score) : 0;
 
-  // Calculate time until game starts
-  const now = new Date();
-  const gameTime = new Date(event.date);
-  const diff = gameTime.getTime() - now.getTime();
-  const gameDate = new Date(event.date);
-  const dateStr = gameDate.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric',
-    year: 'numeric'
-  });
-  
-  let timeUntilText = '';
-  let title = '';
-  let description = '';
-  const status = competition.status?.type?.state;
+  const awayLabel = away.team.abbreviation || away.team.shortDisplayName || away.team.displayName;
+  const homeLabel = home.team.abbreviation || home.team.shortDisplayName || home.team.displayName;
+  const gameTime = formatGameTime(event, competition);
 
-  if (status === 'post') {
-    // Game finished - show final score
-    timeUntilText = 'FINAL';
-    title = `${away.team.displayName} ${awayScore} - ${homeScore} ${home.team.displayName} | ${timeUntilText} | ${dateStr}`;
-    description = `Final Score: ${away.team.displayName} ${awayScore}, ${home.team.displayName} ${homeScore}. View full game stats, highlights, and analysis on Touchdown.`;
-  } else if (status === 'in') {
-    // Game in progress - show live score
-    timeUntilText = 'LIVE';
-    const period = competition.status?.period || 1;
-    const clock = competition.status?.displayClock || '';
-    title = `${away.team.displayName} ${awayScore} - ${homeScore} ${home.team.displayName} | ${timeUntilText} Q${period} ${clock} | ${dateStr}`;
-    description = `Live now! ${away.team.displayName} ${awayScore}, ${home.team.displayName} ${homeScore}. Follow the action in real-time on Touchdown.`;
-  } else {
-    // Game hasn't started - show countdown
-    if (diff > 0) {
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-      if (days > 0) {
-        timeUntilText = `Starts in ${days}d ${hours}h`;
-      } else if (hours > 0) {
-        timeUntilText = `Starts in ${hours}h ${minutes}m`;
-      } else {
-        timeUntilText = `Starts in ${minutes}m`;
-      }
-    } else {
-      timeUntilText = 'Starting Soon';
+  let runText = '';
+  if (league === 'nba' && playLog.length > 0) {
+    const homeTeamId = home?.id || home?.team?.id;
+    const awayTeamId = away?.id || away?.team?.id;
+    const run = computeNbaRun(playLog, String(homeTeamId || ''), String(awayTeamId || ''));
+    const runTeam = run ? (run.teamId === String(homeTeamId) ? home : away) : null;
+    if (run && runTeam) {
+      const runLabel = runTeam.team?.abbreviation || runTeam.team?.shortDisplayName || runTeam.team?.displayName || '';
+      runText = runLabel ? `Run ${runLabel} ${run.runPoints}-${run.oppPoints} (${run.durationLabel})` : '';
     }
-    title = `${away.team.displayName} vs ${home.team.displayName} | ${timeUntilText} | ${dateStr}`;
-    description = `${away.team.displayName} face off against ${home.team.displayName} ${timeUntilText}. Make your picks and join the action on Touchdown!`;
   }
+
+  const titleParts = [
+    `${awayLabel} vs ${homeLabel}`,
+    `${awayScore}-${homeScore}`,
+    gameTime,
+    runText
+  ].filter(Boolean);
+
+  const title = titleParts.join(', ');
+  const description = 'Touchdown helps you be the best manager and climb to the top with live game insights, picks, and predictions.';
 
   // Use team logo or a generic image
   const image = home.team.logo || `https://a.espncdn.com/media/motion/2024/1009/dm_240924_nfl_logo.png`;

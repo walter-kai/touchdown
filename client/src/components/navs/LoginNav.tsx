@@ -4,7 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import GoogleLoginButton from './GoogleLoginButton';
 
-const LoginNavNext = React.forwardRef<HTMLElement>((props, ref) => {
+const LoginNav = React.forwardRef<HTMLElement>((props, ref) => {
 	const router = useRouter();
 
 	return (
@@ -22,7 +22,7 @@ const LoginNavNext = React.forwardRef<HTMLElement>((props, ref) => {
 							className="h-8 w-8 rounded-sm"
 						/>
 						<div className="flex items-center gap-2 leading-tight">
-							<h2 className="mb-0">Touchdown</h2>
+							<h1 className="mb-0 flex text-red-dark italic">Touch<div className="text-blue-dark">down</div></h1>
 							<span className="ml-1 text-xs text-neon-cyan">v0.9</span>
 						</div>
 					</button>
@@ -37,6 +37,6 @@ const LoginNavNext = React.forwardRef<HTMLElement>((props, ref) => {
 	);
 });
 
-LoginNavNext.displayName = 'LoginNavNext';
+LoginNav.displayName = 'LoginNavNext';
 
-export default LoginNavNext;
+export default LoginNav;

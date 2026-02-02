@@ -14,7 +14,7 @@ interface GameNavBarProps {
   isVisible?: boolean;
 }
 
-const BottomNavbarNext: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabClick, preset = 'scoreboard', gameStatus, isVisible = true }) => {
+const BottomNavbar: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, onTabClick, preset = 'scoreboard', gameStatus, isVisible = true }) => {
   const router = useRouter();
   const pathname = usePathname();
   const league = pathname.startsWith('/nba') ? 'nba' : 'nfl';
@@ -101,4 +101,4 @@ const BottomNavbarNext: React.FC<GameNavBarProps> = ({ activeTab, onTabChange, o
   );
 };
 
-export default BottomNavbarNext;
+export default BottomNavbar;

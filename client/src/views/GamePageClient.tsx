@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import LoginNavNext from '../components/navs/LoginNavNext';
-import BottomNavbarNext from '../components/navs/BottomNavbarNext';
+import LoginNav from '../components/navs/LoginNav';
+import BottomNavbar from '../components/navs/BottomNavbar';
 import GameDetail from './GameDetail';
 
 export default function GamePageClient({
@@ -21,7 +21,7 @@ export default function GamePageClient({
 
   return (
     <div className="min-h-screen overflow-x-hidden relative bg-black/90 bg-blend-overlay">
-      <LoginNavNext />
+      <LoginNav />
       <div className="flex-1 relative mx-0 pt-14">
         <GameDetail
           activeTab={gameTab}
@@ -31,7 +31,7 @@ export default function GamePageClient({
           onRegisterTabClick={(callback) => (tabClickCallbackRef.current = callback)}
         />
       </div>
-      <BottomNavbarNext
+      <BottomNavbar
         activeTab={gameTab}
         onTabChange={setGameTab}
         onTabClick={(tab) => {
