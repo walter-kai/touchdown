@@ -19,6 +19,7 @@
     "migrate:add-team-logos": "ts-node server/scripts/addTeamLogosToPickDocs.ts"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.18.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.10",
@@ -26,7 +27,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
-    "firebase-admin": "^12.6.0",
+    "firebase-admin": "^13.6.0",
     "google-auth-library": "^10.5.0",
     "http-proxy-middleware": "^3.0.2",
     "jsonwebtoken": "^9.0.2",
@@ -55,5 +56,8 @@
     "concurrently": "^9.0.1",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2"
+  },
+  "overrides": {
+    "fast-xml-parser": "^5.3.4"
   }
 }

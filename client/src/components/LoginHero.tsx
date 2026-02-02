@@ -4,6 +4,7 @@ import { useAuth } from "../providers/AuthContext";
 import { getNewsUrl } from "@/utils/espnApi";
 import type { NewsArticle } from "@/types/espn/news";
 import { FaGoogle } from "react-icons/fa";
+import { processImagesWithEyeDetection } from "@/utils/imageCropper";
 
 interface LoginHeroProps {
   league?: string;
@@ -13,6 +14,7 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
   const { isAuthenticated } = useAuth();
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processedImages, setProcessedImages] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -31,15 +33,37 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
     fetchNews();
   }, [league]);
 
+  // Process images with eye detection when news updates
+  useEffect(() => {
+    if (news.length === 0) return;
+
+    const processImages = async () => {
+      // Get images from news articles - one primary image per article
+      const imageUrls = news
+        .filter((article) => article.images && article.images.length > 0)
+        .slice(0, 8) // Get more than we need since some might be filtered out
+        .map((article) => article.images[0].url);
+
+      if (imageUrls.length === 0) return;
+
+      try {
+        // Process images and filter out those without detectable eyes
+        // Pass dummy dimensions since we're keeping original size
+        const processed = await processImagesWithEyeDetection(imageUrls, 0, 0);
+        setProcessedImages(processed.slice(0, 6)); // Keep max 6 images
+      } catch (error) {
+        console.error('Error processing images:', error);
+        // Fallback to raw images if face detection fails
+        setProcessedImages(imageUrls.slice(0, 6));
+      }
+    };
+
+    processImages();
+  }, [news]);
+
   if (isAuthenticated) {
     return null;
   }
-
-  // Get images from news articles - one primary image per article
-  const images = news
-    .filter((article) => article.images && article.images.length > 0)
-    .slice(0, 6)
-    .map((article) => article.images[0]);
 
   const handleGoogleLogin = () => {
     const popupWidth = 500;
@@ -78,37 +102,51 @@ const LoginHero: React.FC<LoginHeroProps> = ({ league = "nfl" }) => {
             </div>
 
             {/* Center: Diagonal Stripe Images */}
-            {!loading && images.length > 0 && (
-              <div 
-                className="relative flex-shrink-0 h-32 md:h-40 order-1 md:order-2"
-                style={{
-                  clipPath: "polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)",
-                  width: `${(images.length - 1) * 50 + 100}px`,
-                  maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)",
-                  WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-                }}
-              >
-                {images.map((image, idx) => (
-                  <div
-                    key={idx}
-                    className="absolute h-full animate-fade-in-scale"
-                    style={{
-                      left: `${idx * 50}px`,
-                      width: '100px',
-                      clipPath: "polygon(50% 0, 100% 0, 85% 100%, 0 100%)",
-                      animationDelay: `${idx * 150}ms`,
-                      animationFillMode: 'both',
-                    }}
-                  >
-                    <img
-                      src={image.url}
-                      alt={`Article ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+            {!loading && processedImages.length > 0 && (() => {
+              // Dynamically calculate image width based on count
+              const imageCount = processedImages.length;
+              const baseWidth = imageCount <= 3 ? 150 : imageCount <= 4 ? 120 : 100;
+              const overlap = 50;
+              const totalWidth = (imageCount - 1) * overlap + baseWidth;
+              
+              return (
+                <div 
+                  className="relative flex-shrink-0 h-32 md:h-40 order-1 md:order-2"
+                  style={{
+                    clipPath: "polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)",
+                    width: `${totalWidth}px`,
+                    maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)",
+                    WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+                  }}
+                >
+                  {processedImages.map((imageData, idx) => {
+                    const { dataUrl, eyePositionX } = JSON.parse(imageData);
+                    return (
+                      <div
+                        key={idx}
+                        className="absolute h-full animate-fade-in-scale"
+                        style={{
+                          left: `${idx * overlap}px`,
+                          width: `${baseWidth}px`,
+                          clipPath: "polygon(50% 0, 100% 0, 85% 100%, 0 100%)",
+                          animationDelay: `${idx * 150}ms`,
+                          animationFillMode: 'both',
+                        }}
+                      >
+                        <img
+                          src={dataUrl}
+                          alt={`Article ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                          style={{
+                            objectPosition: `${eyePositionX}% center`
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             {/* Right: Sign Up Button */}
             <button
