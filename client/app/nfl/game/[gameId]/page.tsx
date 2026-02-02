@@ -77,11 +77,17 @@ export async function generateMetadata({ params }: { params: Promise<{ gameId: s
 
     const homeTeamName = homeTeam?.team?.displayName || 'Home Team';
     const awayTeamName = awayTeam?.team?.displayName || 'Away Team';
+    const homeTeamAbbr = homeTeam?.team?.abbreviation || 'HOME';
+    const awayTeamAbbr = awayTeam?.team?.abbreviation || 'AWAY';
     const homeTeamLogo = homeTeam?.team?.logo || '';
     const awayTeamLogo = awayTeam?.team?.logo || '';
+    const homeScore = homeTeam?.score || '0';
+    const awayScore = awayTeam?.score || '0';
+    const status = competition?.status?.type?.description || '';
+    const eventDate = event?.date ? new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
 
     // Construct metadata
-    const title = `${awayTeamName} @ ${homeTeamName} | Touchdown`;
+    const title = `${awayTeamAbbr} vs ${homeTeamAbbr} ${awayScore}-${homeScore} ${eventDate} ${status}`.trim();
     const description = `${awayTeamName} vs ${homeTeamName} - Live NFL game analysis and picks on Touchdown`;
 
     // Use team logo as OG image or fallback
